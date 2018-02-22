@@ -18,10 +18,17 @@ from StdFile import class <<<
 	| Ipush2_a !Int
 	| Iput_a !Int
 	| Iupdates2pop_a !Int !Int !Int
+	| Ifillh !String !Int !Int
+	| Irepl_args !Int !Int
+	| Irepl_r_args !Int !Int
+	| Ipush_args !Int !Int !Int
+	| Ipush_r_args !Int !Int !Int
+	| Ieq_desc !String !Int !Int
 	| IIns !String
 	| Line !String
-	| ABCInstruction
-	| ErrorABCInstruction
+	// TODO: are these ever used?
+	//| ABCInstruction
+	//| ErrorABCInstruction
 
 instance <<< ABCInstruction
 instance <<< [a] | <<< a
