@@ -1,53 +1,54 @@
 #include <stdlib.h>
 
 #include "parse.h"
+#include "util.h"
 
 void init_parser(struct parser *state) {
 	state->state = PS_init_code;
 	state->ptr = 0;
-	state->program = malloc(sizeof(struct program));
+	state->program = safe_malloc(sizeof(struct program));
 }
 
 int parse_elem(struct parser *state, int elem) {
 	switch (state->state) {
 		case PS_init_code:
 			state->program->code_size = elem;
-			if ((state->program->code = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_data;
 			return 0;
 		case PS_init_data:
 			state->program->data_size = elem;
-			if ((state->program->data = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_code_code;
 			return 0;
 		case PS_init_code_code:
 			state->program->code_code_size = elem;
-			if ((state->program->code_code = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code_code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_code_data;
 			return 0;
 		case PS_init_code_data:
 			state->program->code_data_size = elem;
-			if ((state->program->code_data = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code_data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_data_code;
 			return 0;
 		case PS_init_data_code:
 			state->program->data_code_size = elem;
-			if ((state->program->data_code = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->data_code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_data_data;
 			return 0;
 		case PS_init_data_data:
 			state->program->data_data_size = elem;
-			if ((state->program->data_data = malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->data_data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_code;

@@ -6,6 +6,7 @@
 #include "bytecode.h"
 #include "interpret.h"
 #include "parse.h"
+#include "util.h"
 
 const char usage[] = "Usage: %s [-l] FILE\n";
 
@@ -15,7 +16,7 @@ int main(int argc, char **argv) {
 	int list_program = 0;
 	FILE *input = NULL;
 
-	char *line = malloc(1024);
+	char *line = safe_malloc(1024);
 	size_t n;
 	struct parser state;
 	init_parser(&state);
