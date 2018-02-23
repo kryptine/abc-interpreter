@@ -1,7 +1,9 @@
 #ifndef _H_ABCINT_PARSE
 #define _H_ABCINT_PARSE
 
-#include "interpret.h"
+#define PARSE_STRICT
+
+#include "bytecode.h"
 
 enum parse_state {
 	PS_init_code,
@@ -19,28 +21,14 @@ enum parse_state {
 	PS_end
 };
 
-struct program {
-	uint32_t code_size;
-	uint32_t data_size;
-	uint32_t code_code_size;
-	uint32_t code_data_size;
-	uint32_t data_code_size;
-	uint32_t data_data_size;
-	WORD *code;
-	WORD *data;
-	WORD *code_code;
-	WORD *code_data;
-	WORD *data_code;
-	WORD *data_data;
-};
-
 struct parser {
 	enum parse_state state;
 	uint32_t ptr;
 	struct program *program;
 };
 
-int parse_elem(struct parser *, int);
-int parse_line(struct parser *, char *);
+void init_parser(struct parser*);
+int parse_elem(struct parser*, int);
+int parse_line(struct parser*, char*);
 
 #endif

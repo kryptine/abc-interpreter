@@ -2,6 +2,12 @@
 
 #include "parse.h"
 
+void init_parser(struct parser *state) {
+	state->state = PS_init_code;
+	state->ptr = 0;
+	state->program = malloc(sizeof(struct program));
+}
+
 int parse_elem(struct parser *state, int elem) {
 	switch (state->state) {
 		case PS_init_code:
@@ -101,7 +107,7 @@ int parse_line(struct parser *state, char *line) {
 	int res;
 
 	while (cont) {
-		while ('0' <= *end && *end <= '9' || *end == '-') {
+		while (('0' <= *end && *end <= '9') || *end == '-') {
 			end++;
 		}
 
@@ -112,6 +118,11 @@ int parse_line(struct parser *state, char *line) {
 		if (*end == '\0') {
 			cont = 0;
 		} else {
+#ifdef PARSE_STRICT
+			if (*end != '\n' && *end != '\r' && *end != '\t' && *end != ' ') {
+				return 4;
+			}
+#endif
 			*end = '\0';
 		}
 
