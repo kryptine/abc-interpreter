@@ -1,0 +1,6 @@
+build:
+  image: "camilstaps/clean:nightly"
+  before_script:
+    - install_clean.sh bundle-complete && apt-get update -qq && apt-get install -y -qq build-essential
+  script:
+    - make -C src
