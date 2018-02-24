@@ -9,9 +9,6 @@
 // The type of byte code words, relocations, etc. during interpretation
 #define BC_WORD uint64_t
 
-// The type of values
-#define DATA_WORD uint64_t
-
 struct program {
 	uint32_t code_size;
 	uint32_t data_size;

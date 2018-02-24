@@ -4,4 +4,6 @@
 void *safe_malloc(size_t);
 void *safe_calloc(size_t, size_t);
 
+size_t string_to_size(char*);
+
 #endif

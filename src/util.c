@@ -29,3 +29,32 @@ void *safe_calloc(size_t num, size_t size) {
 	}
 	return mem;
 }
+
+size_t string_to_size(char *size) {
+	size_t res = 0;
+	while ('0' <= *size && *size <= '9') {
+		res *= 10;
+		res += *size - '0';
+		size++;
+	}
+
+	switch (*size) {
+		case 'm':
+		case 'M':
+			res <<= 10;
+		case 'k':
+		case 'K':
+			res <<= 10;
+			break;
+		case '\0':
+			return res;
+		default:
+			return -1;
+	}
+
+	if (*(size+1) == '\0') {
+		return res;
+	} else {
+		return -1;
+	}
+}
