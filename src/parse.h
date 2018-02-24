@@ -7,15 +7,15 @@
 
 enum parse_state {
 	PS_init_code,
-	PS_init_data,
 	PS_init_code_code,
 	PS_init_code_data,
+	PS_init_data,
 	PS_init_data_code,
 	PS_init_data_data,
 	PS_code,
-	PS_data,
 	PS_code_code_rel,
 	PS_code_data_rel,
+	PS_data,
 	PS_data_code_rel,
 	PS_data_data_rel,
 	PS_end
