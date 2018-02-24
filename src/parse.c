@@ -13,42 +13,42 @@ int parse_elem(struct parser *state, int elem) {
 	switch (state->state) {
 		case PS_init_code:
 			state->program->code_size = elem;
-			if ((state->program->code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
-				return 2;
-			}
-			state->state = PS_init_data;
-			return 0;
-		case PS_init_data:
-			state->program->data_size = elem;
-			if ((state->program->data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_code_code;
 			return 0;
 		case PS_init_code_code:
 			state->program->code_code_size = elem;
-			if ((state->program->code_code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_code_data;
 			return 0;
 		case PS_init_code_data:
 			state->program->code_data_size = elem;
-			if ((state->program->code_data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+				return 2;
+			}
+			state->state = PS_init_data;
+			return 0;
+		case PS_init_data:
+			state->program->data_size = elem;
+			if ((state->program->data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_data_code;
 			return 0;
 		case PS_init_data_code:
 			state->program->data_code_size = elem;
-			if ((state->program->data_code = safe_malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_init_data_data;
 			return 0;
 		case PS_init_data_data:
 			state->program->data_data_size = elem;
-			if ((state->program->data_data = safe_malloc(sizeof(WORD) * elem)) == NULL) {
+			if ((state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
 				return 2;
 			}
 			state->state = PS_code;
@@ -56,13 +56,6 @@ int parse_elem(struct parser *state, int elem) {
 		case PS_code:
 			state->program->code[state->ptr++] = elem;
 			if (state->ptr >= state->program->code_size) {
-				state->ptr = 0;
-				state->state = PS_data;
-			}
-			return 0;
-		case PS_data:
-			state->program->data[state->ptr++] = elem;
-			if (state->ptr >= state->program->data_size) {
 				state->ptr = 0;
 				state->state = PS_code_code_rel;
 			}
@@ -77,6 +70,13 @@ int parse_elem(struct parser *state, int elem) {
 		case PS_code_data_rel:
 			state->program->code_data[state->ptr++] = elem;
 			if (state->ptr >= state->program->code_data_size) {
+				state->ptr = 0;
+				state->state = PS_data;
+			}
+			return 0;
+		case PS_data:
+			state->program->data[state->ptr++] = elem;
+			if (state->ptr >= state->program->data_size) {
 				state->ptr = 0;
 				state->state = PS_data_code_rel;
 			}
