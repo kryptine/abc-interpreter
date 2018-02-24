@@ -1,3 +1,5 @@
+#ifndef _H_ABCINT_ABC_INSTRUCTIONS
+#define _H_ABCINT_ABC_INSTRUCTIONS
 
 enum {
 	CaddI,
@@ -458,3 +460,5 @@ enum {
 	Cfill2a012,
 	Cfill3
 };
+
+#endif

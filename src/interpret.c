@@ -3,10 +3,54 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "abc_instructions.h"
 #include "bytecode.h"
 #include "interpret.h"
 #include "parse.h"
 #include "util.h"
+
+#define _2chars2int(a,b)             (a+(b<<8))
+#define _3chars2int(a,b,c)           (a+(b<<8)+(c<<16))
+#define _4chars2int(a,b,c,d)         (a+(b<<8)+(c<<16)+(d<<24))
+#define _5chars2int(a,b,c,d,e)       (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32))
+#define _6chars2int(a,b,c,d,e,f)     (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40))
+#define _7chars2int(a,b,c,d,e,f,g)   (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48))
+#define _8chars2int(a,b,c,d,e,f,g,h) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48)+((BC_WORD)h<<56))
+
+static BC_WORD m____system[] = {7, _7chars2int('_','s','y','s','t','e','m')};
+
+static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, (void*) _7chars2int('_','A','R','R','A','Y','_')};
+static void* __STRING__[] = {0, 0, &m____system, (void*) 8, (void*) _8chars2int('_','S','T','R','I','N','G','_')};
+static void* INT[]        = {0, 0, &m____system, (void*) 3, (void*) _3chars2int('I','N','T')};
+static void* BOOL[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('B','O','O','L')};
+static void* CHAR[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('C','H','A','R')};
+static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, (void*) _4chars2int('_','N','i','l')};
+#define __Nil (d___Nil[1])
+static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), (void*) _2chars2int('i','i'), (void*) 4, (void*) _4chars2int('F','I','L','E')};
+#define dFILE (d_FILE[2])
+
+static BC_WORD __cycle__in__spine = Chalt;
+
+static BC_WORD Fjmp_ap1 = Cjmp_ap1;
+static BC_WORD Fjmp_ap2 = Cjmp_ap2;
+static BC_WORD Fjmp_ap3 = Cjmp_ap3;
+
+int interpret(BC_WORD *code, BC_WORD *data,
+		BC_WORD *stack, size_t stack_size,
+		BC_WORD *heap, size_t heap_size) {
+	BC_WORD *pc = code;
+	BC_WORD *asp = stack;
+	BC_WORD *bsp = &stack[stack_size];
+	BC_WORD *hp = heap;
+	size_t heap_free = heap_size;
+
+	for (;;) {
+		switch (*pc) {
+#include "interpret_instructions.h"
+		}
+		//collect(); // TODO
+	}
+}
 
 const char usage[] = "Usage: %s [-l] [-h SIZE] [-s SIZE] FILE\n";
 
