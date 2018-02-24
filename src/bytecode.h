@@ -4,11 +4,13 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-// The type of byte code words, relocations, etc.
-#define BC_WORD uint32_t
+// The type of byte code words, relocations, etc. for cross-platform output
+#define COMMON_BC_WORD int32_t
+// The type of byte code words, relocations, etc. during interpretation
+#define BC_WORD uint64_t
 
 // The type of values
-#define DATA_WORD uint32_t
+#define DATA_WORD uint64_t
 
 struct program {
 	uint32_t code_size;
@@ -26,5 +28,7 @@ struct program {
 };
 
 void print_program(FILE*, struct program*);
+
+void handle_relocations(struct program *pgm);
 
 #endif

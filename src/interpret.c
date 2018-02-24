@@ -59,5 +59,7 @@ int main(int argc, char **argv) {
 		print_program(stdout, state.program);
 	}
 
+	handle_relocations(state.program);
+
 	return 0;
 }
