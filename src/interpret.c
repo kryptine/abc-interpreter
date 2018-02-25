@@ -7,6 +7,7 @@
 #include "bytecode.h"
 #include "interpret.h"
 #include "parse.h"
+#include "traps.h"
 #include "util.h"
 
 #define _2chars2int(a,b)             (a+(b<<8))
@@ -20,7 +21,7 @@
 static BC_WORD m____system[] = {7, _7chars2int('_','s','y','s','t','e','m')};
 
 static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, (void*) _7chars2int('_','A','R','R','A','Y','_')};
-static void* __STRING__[] = {0, 0, &m____system, (void*) 8, (void*) _8chars2int('_','S','T','R','I','N','G','_')};
+void* __STRING__[] = {0, 0, &m____system, (void*) 8, (void*) _8chars2int('_','S','T','R','I','N','G','_')};
 static void* INT[]        = {0, 0, &m____system, (void*) 3, (void*) _3chars2int('I','N','T')};
 static void* BOOL[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('B','O','O','L')};
 static void* CHAR[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('C','H','A','R')};
@@ -35,16 +36,35 @@ static BC_WORD Fjmp_ap1 = Cjmp_ap1;
 static BC_WORD Fjmp_ap2 = Cjmp_ap2;
 static BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
+BC_WORD *g_asp, *g_bsp, *g_hp;
+size_t g_heap_free;
+
+static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
+
+static void* __indirection[9] = { // TODO what does this do?
+	(void*) Cjsr_eval0,
+	(void*) Cfill_a01_pop_rtn,
+	(void*) Chalt,
+	(void*) Chalt,
+	(void*) -2,
+	(void*) Cpush_node1,
+	(void*) &__cycle__in__spine,
+	(void*) Cjsr_eval0,
+	(void*) Cfill_a01_pop_rtn
+};
+
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size) {
 	BC_WORD *pc = code;
 	BC_WORD *asp = stack;
 	BC_WORD *bsp = &stack[stack_size];
+	BC_WORD *csp = &stack[stack_size >> 1]; // TODO why?
 	BC_WORD *hp = heap;
 	size_t heap_free = heap_size;
 
 	for (;;) {
+		printf(":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
@@ -128,6 +148,10 @@ int main(int argc, char **argv) {
 
 	stack = safe_malloc(stack_size);
 	heap = safe_malloc(heap_size);
+
+	interpret(state.program->code, state.program->data,
+			stack, stack_size,
+			heap, heap_size);
 
 	return 0;
 }

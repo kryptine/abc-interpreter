@@ -2346,7 +2346,7 @@ case Cfillcaf:
 	if (n_a!=0){
 		a=(BC_WORD*)caf_list[1];
 		a[-1]=(BC_WORD)n;
-		caf_list[1]=(BC_WORD)n;
+		caf_list[1]=n;
 	}
 	continue;
 }
@@ -2608,7 +2608,7 @@ case Cfill_ra0:
 case Cfill_ra1:
 {
 	BC_WORD_S ao,bo;
-	BC_WORD *n,n_a,*ao_p,*bo_p;
+	BC_WORD *n,n_a,*ao_p;
 
 	n_a=pc[1];
 	if ((heap_free-=n_a)<0)
@@ -2940,14 +2940,14 @@ case CgtI:
 	pc+=1;
 	continue;
 case Chalt:
-	printf ("halt at %d\n",pc-program);
+	printf("halt at %d\n", (int) (pc-code));
 #if 0
 	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
 #endif
 #ifdef COUNT_INSTRUCTIONS
-	printf ("%d\n",n_instructions);
+	printf("%d\n", n_instructions);
 #endif
-	printf ("%d %d %d\n",hp-heap,heap_free,(hp-heap)+heap_free);
+	printf("%d %d %d\n", (int) (hp-heap), (int) heap_free, (int) (hp-heap+heap_free));
 	return 0;
 /*				exit (1); */
 case CincI:
@@ -2955,7 +2955,7 @@ case CincI:
 	pc+=1;
 	continue;
 case Cjmp:
-	pc=*(BC_WORD**)&pc[1];
+	pc=(BC_WORD*)pc[1];
 	continue;
 case Cjmp_eval:
 {
@@ -3157,7 +3157,7 @@ case Cprint_symbol_sc:
 		int l,i;
 		char *cs;
 
-		s=(BC_WORD*)((int)d+10+*(US*)d);
+		s=(BC_WORD*)((BC_WORD)d+10+*(uint16_t*)d);
 		l=s[0];
 #if 0
 		printf ("? %d %d ",(int)d-(int)data,l);
@@ -5634,6 +5634,7 @@ case Cjmp_eqACio:
 	n+=2;
 	s+=1;
 	for (;;){
+		// TODO make 64/32 bit agnostic
 		if (length>=4){
 			if (*n!=*s)
 				break;
@@ -5643,14 +5644,14 @@ case Cjmp_eqACio:
 			continue;
 		}
 		if (length>=2){
-			if (*(US*)n!=*(US*)s)
+			if (*(uint16_t*)n!=*(uint16_t*)s)
 				break;
 			if (length>2)
-				if (((BC_BOOL*)n)[2]!=((BC_BOOL*)s)[2])
+				if (((uint8_t*)n)[2]!=((uint8_t*)s)[2])
 					break;
 		} else {
 			if (length>0)
-				if (((BC_BOOL*)n)[0]!=((BC_BOOL*)s)[0])
+				if (((uint8_t*)n)[0]!=((uint8_t*)s)[0])
 					break;
 		}
 		pc=*(BC_WORD**)&pc[-1];
@@ -6293,10 +6294,10 @@ case Cjmp_ap4:
 
 	n=(BC_WORD*)asp[0];
 	d=n[0];
-	if (((US*)d)[0]==32){
+	if (((uint16_t*)d)[0]==32){
 		BC_WORD arity;
 		
-		arity=((US*)d)[-1];
+		arity=((uint16_t*)d)[-1];
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+32-6)) - 12);
 		if (arity<=1){
 			if (arity<1){
@@ -6336,10 +6337,10 @@ case Cjmp_ap3:
 
 	n=(BC_WORD*)asp[0];
 	d=n[0];
-	if (((US*)d)[0]==24){
+	if (((uint16_t*)d)[0]==24){
 		BC_WORD arity;
 		
-		arity=((US*)d)[-1];
+		arity=((uint16_t*)d)[-1];
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+24-6)) - 12);
 		if (arity<=1){
 			if (arity<1){
@@ -6379,10 +6380,10 @@ case Cjmp_ap2:
 
 	n=(BC_WORD*)asp[0];
 	d=n[0];
-	if (((US*)d)[0]==16){
+	if (((uint16_t*)d)[0]==16){
 		BC_WORD arity;
 		
-		arity=((US*)d)[-1];
+		arity=((uint16_t*)d)[-1];
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16-6)) - 12);
 		if (arity<=1){
 			if (arity<1){
@@ -6567,14 +6568,14 @@ case Cjsr_stack_check:
 	pc=(BC_WORD*)pc[1];
 	continue;
 case Cstack_check:
-	if (csp[0]!=(int)asp){
-		printf ("Cstack_check asp incorrect %d %d %d %d\n",csp[0],(int)asp,csp[1],(int)bsp);
-		printf ("%d %d %d %d\n",*pc,pc-program,asp-stack,&stack[stack_size]-bsp);
+	if (csp[0]!=(BC_WORD)asp){
+		printf("Cstack_check asp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
-	if (csp[1]!=(int)bsp){
-		printf ("Cstack_check bsp incorrect %d %d %d %d\n",csp[0],(int)asp,csp[1],(int)bsp);
-		printf ("%d %d %d %d\n",*pc,pc-program,asp-stack,&stack[stack_size]-bsp);
+	if (csp[1]!=(BC_WORD)bsp){
+		printf("Cstack_check bsp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;
@@ -6690,5 +6691,5 @@ case Cjesr:
 			continue;
 	}
 default:
-	fprintf(stderr, "Unimplemented instruction at %d\n", pc);
+	fprintf(stderr, "Unimplemented instruction at %d\n", (int) (pc-code));
 	return 1;

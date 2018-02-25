@@ -1,6 +1,8 @@
 #ifndef _H_ABCINT_ABC_INSTRUCTIONS
 #define _H_ABCINT_ABC_INSTRUCTIONS
 
+#include "bytecode.h"
+
 enum {
 	CaddI,
 	Cadd_empty_node2,
@@ -460,5 +462,7 @@ enum {
 	Cfill2a012,
 	Cfill3
 };
+
+char *instruction_name (BC_WORD i);
 
 #endif

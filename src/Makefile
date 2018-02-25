@@ -8,7 +8,7 @@ all: optimise interpret
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) -nr ABC.Optimise -o $@
 
-SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c
+SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c traps.c abc_instructions.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
@@ -23,6 +23,8 @@ bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
 clean:
 	$(RM) -r \
 		optimise\
+		interpret\
+		bytecode\
 		**/Clean\ System\ Files
 
 .FORCE:
