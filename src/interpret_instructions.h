@@ -2940,7 +2940,7 @@ case CgtI:
 	pc+=1;
 	continue;
 case Chalt:
-	printf("halt at %d\n", (int) (pc-code));
+	printf("\nhalt at %d\n", (int) (pc-code));
 #if 0
 	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
 #endif
@@ -3124,7 +3124,7 @@ case Cpop_a:
 	pc+=2;
 	continue;
 case Cpop_b:
-	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+pc[1]);
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (#4)
 	pc+=2;
 	continue;
 case Cprint:
@@ -3145,7 +3145,7 @@ case Cprint:
 case Cprint_symbol_sc:
 {
 	BC_WORD *n,d;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
 	if (d==(BC_WORD)&INT+2){
@@ -5854,7 +5854,7 @@ case Cpop_b_pushBTRUE:
 	pc+=2;
 	continue;
 case Cpop_b_rtn:
-	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+pc[1]);
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (see #4)
 	pc=(BC_WORD*)*csp++;
 	continue;
 case CpushD_a_jmp_eqD_b2:

@@ -64,11 +64,14 @@ int interpret(BC_WORD *code, BC_WORD *data,
 	size_t heap_free = heap_size;
 
 	for (;;) {
+#ifdef DEBUG_ALL_INSTRUCTIONS
 		printf(":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+#endif
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		//collect(); // TODO
+		fprintf(stderr,"Need a garbage collector\n");
+		exit(1);
 	}
 }
 
@@ -146,8 +149,8 @@ int main(int argc, char **argv) {
 
 	handle_relocations(state.program);
 
-	stack = safe_malloc(stack_size);
-	heap = safe_malloc(heap_size);
+	stack = safe_malloc(stack_size * sizeof(BC_WORD));
+	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
 	interpret(state.program->code, state.program->data,
 			stack, stack_size,
