@@ -2944,9 +2944,6 @@ case Chalt:
 #if 0
 	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
 #endif
-#ifdef COUNT_INSTRUCTIONS
-	printf("%d\n", n_instructions);
-#endif
 	printf("%d %d %d\n", (int) (hp-heap), (int) heap_free, (int) (hp-heap+heap_free));
 	return 0;
 /*				exit (1); */
