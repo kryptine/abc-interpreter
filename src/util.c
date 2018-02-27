@@ -29,3 +29,7 @@ void *safe_calloc(size_t num, size_t size) {
 	}
 	return mem;
 }
+
+int starts_with(const char* prefix, char* str) {
+	return strncmp(prefix, str, strlen(prefix)) == 0;
+}
