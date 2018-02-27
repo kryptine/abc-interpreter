@@ -4,10 +4,9 @@
 #include <string.h>
 
 #include "abci_types.h"
-/*#include "abci_code_l.h"*/
 #include "abc_instructions.h"
 
-char *instruction_name (SS i)
+char *instruction_name (BC_WORD i)
 {
 	char *s;
 	static char instruction_and_number[64];
@@ -928,7 +927,7 @@ char *instruction_name (SS i)
 	}
 	
 #if 1
-	sprintf (instruction_and_number,"%s(%d)",s,i);
+	sprintf (instruction_and_number,"%s(%d)",s,(int)i);
 	return instruction_and_number;
 #else
 	return s;

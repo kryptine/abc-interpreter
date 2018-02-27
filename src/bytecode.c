@@ -41,6 +41,7 @@ void handle_relocations_section(BC_WORD *section, BC_WORD *target, BC_WORD **rel
 	uint32_t i;
 
 	for (i = 0; i < *size; i++) {
+		section[(*relocations)[i]] *= 2; // TODO: only for 64 bit (?)
 		section[(*relocations)[i]] += (BC_WORD) target;
 	}
 

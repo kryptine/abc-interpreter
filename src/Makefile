@@ -1,15 +1,15 @@
 SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -IL Dynamics
-CFLAGS:=-Wall -pedantic
+CFLAGS:=-Wall -pedantic -Wno-misleading-indentation
 
 all: optimise interpret
 
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) -nr ABC.Optimise -o $@
 
-SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c
-DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))
+SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c traps.c abc_instructions.c
+DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
@@ -23,6 +23,8 @@ bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
 clean:
 	$(RM) -r \
 		optimise\
+		interpret\
+		bytecode\
 		**/Clean\ System\ Files
 
 .FORCE:
