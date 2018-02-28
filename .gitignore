@@ -1,1 +1,6 @@
 Clean System Files/
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
