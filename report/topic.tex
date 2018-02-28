@@ -2,7 +2,7 @@
 
 \usepackage{authblk}
 
-\title{Cross-platform Dynamics in Clean}
+\title{Cross-Platform Dynamics in Clean}
 \subtitle{Topic and Research Plan}
 
 \author[1]{Camil Staps}
@@ -14,18 +14,22 @@
 \maketitle
 
 \section{Topic}
-Dynamics are data types that store both a value, and a descriptor of the type of that value.
-Such types allow storing different types in data structures that are typically homogeneous.
-Clean is a pure lazy functional programming language that has an implementation of dynamics.
-In Clean, dynamics are implemented as a language construct.
-The fact that they are implemented as such has the added benefit that it is possible to serialize them.
-In fact, it is even possible to serialize dynamics that have not been completely evaluated.
+Dynamics are data types that store both a value and the type of that value.
+Such types are useful in strongly typed languages to store values of different types in homogeneous data structures.
+Clean is a pure, lazy, strongly-typed functional programming language with builtin support for dynamics.
+On 32-bit Windows, it is possible to store a dynamic on disk, together with all the corresponding object code,
+	which allows for sharing of dynamics between different applications.
+This is also possible with expressions that are not completely evaluated.
 
-Currently, Clean has the ability to serialize the dynamics (by using a string representation of the internal graph), but the dynamic can subsequently only be deserialized by the executable that serialized it.
-The reason for this limitation is that the graph rewriting code is only available to this executable (including relocations).
+Clean also supports serialization of any value, but these values can only be deserializid by the same executable.
+Cross-executable serialization can be obtained by generic JSON functions, but these are not able to serialize functions or unevaluated expressions.
+Thus, there is currently no way to communicate values of arbitrary type between different executables on different platforms in a type-safe manner.
 
 \section{Research Approach}
-In our research, we extend the Clean runtime system with a ABC-interpreter\footnote{ABC-code is the code that describes how a graph should be rewritten} and an executable independent \texttt{graph\_to\_string} function.
+In our study, we extend the Clean runtime system with a custom bytecode interpreter.
+We add an executable-independent serialization function,
+	which can look up the ABC code\footnote{ABC code is the intermediate target language of the Clean compiler. It is a high-level assembly language for an abstract graph rewriting machine.} corresponding to the serialized expression.
+This ABC code is optimised and compiled to an efficient, platform-independent bytecode.
+This bytecode can then be interpreted by any client application, allowing for type-safe cross-platform communication of arbitrary types.
 
 \end{document}
-
