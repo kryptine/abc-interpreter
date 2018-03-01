@@ -9,7 +9,7 @@ optimise: .FORCE
 	$(CLM) $(CLMFLAGS) -nr ABC.Optimise -o $@
 
 SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c traps.c abc_instructions.c
-DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h
+DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@

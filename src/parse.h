@@ -4,6 +4,7 @@
 #define PARSE_STRICT
 
 #include "bytecode.h"
+#include "settings.h"
 
 enum parse_state {
 	PS_init_code,

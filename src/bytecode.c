@@ -25,23 +25,30 @@ void print_program(FILE *f, struct program *pgm) {
 
 	fprintf(f, "\n");
 	print_section(f, pgm->code, pgm->code_size);
+#ifndef PARSE_HANDLE_RELOCATIONS
 	fprintf(f, "\n");
 	print_section(f, pgm->code_code, pgm->code_code_size);
 	fprintf(f, "\n");
 	print_section(f, pgm->code_data, pgm->code_data_size);
+#endif
 	fprintf(f, "\n");
 	print_section(f, pgm->data, pgm->data_size);
+#ifndef PARSE_HANDLE_RELOCATIONS
 	fprintf(f, "\n");
 	print_section(f, pgm->data_code, pgm->data_code_size);
 	fprintf(f, "\n");
 	print_section(f, pgm->data_data, pgm->data_data_size);
+#endif
 }
 
+#ifndef PARSE_HANDLE_RELOCATIONS
 void handle_relocations_section(BC_WORD *section, BC_WORD *target, BC_WORD **relocations, uint32_t *size) {
 	uint32_t i;
 
 	for (i = 0; i < *size; i++) {
-		section[(*relocations)[i]] *= 2; // TODO: only for 64 bit (?)
+#if (WORD_WIDTH == 64)
+		section[(*relocations)[i]] *= 2;
+#endif
 		section[(*relocations)[i]] += (BC_WORD) target;
 	}
 
@@ -49,10 +56,13 @@ void handle_relocations_section(BC_WORD *section, BC_WORD *target, BC_WORD **rel
 	*relocations = NULL;
 	*size = 0;
 }
+#endif
 
 void handle_relocations(struct program *pgm) {
+#ifndef PARSE_HANDLE_RELOCATIONS
 	handle_relocations_section(pgm->code, pgm->code, &pgm->code_code, &pgm->code_code_size);
 	handle_relocations_section(pgm->code, pgm->data, &pgm->code_data, &pgm->code_data_size);
 	handle_relocations_section(pgm->data, pgm->code, &pgm->data_code, &pgm->data_code_size);
 	handle_relocations_section(pgm->data, pgm->data, &pgm->data_data, &pgm->data_data_size);
+#endif
 }
