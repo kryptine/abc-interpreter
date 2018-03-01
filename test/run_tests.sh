@@ -16,6 +16,10 @@ FAILED=0
 
 while IFS=$'\t' read -r line deps
 do
+	if [[ "${line:0:1}" == "#" ]]; then
+		continue
+	fi
+
 	echo -e "${YELLOW}Running $line...$RESET"
 	$CLM -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $line || continue
 	for dep in $deps; do
