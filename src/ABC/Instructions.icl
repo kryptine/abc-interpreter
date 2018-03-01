@@ -46,6 +46,10 @@ where
 		Ipush_args i0 i1 i2     -> "push_args " <+ i0 <+ " " <+ i1 <+ " " <+ i2
 		Ipush_r_args i0 i1 i2   -> "push_r_args " <+ i0 <+ " " <+ i1 <+ " " <+ i2
 		Ieq_desc d i0 i1        -> "eq_desc " <+ d <+ " " <+ i0 <+ " " <+ i1
+		Ibuildh id n            -> "buildh " <+ id <+ " " <+ n
+		Ijmp id                 -> "jmp " <+ id
+		Ijmp_true id            -> "jmp_true " <+ id
+		Ijmp_false id           -> "jmp_false " <+ id
 		) <<< "\n"
 
 instance <<< [a] | <<< a

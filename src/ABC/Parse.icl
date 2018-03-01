@@ -30,6 +30,10 @@ parseLine l
 | startsWith "\tpush_args "   l = parse3 Ipush_args   int   int int 11 l
 | startsWith "\tpush_r_args " l = parse3 Ipush_r_args int   int int 13 l
 | startsWith "\teq_desc "     l = parse3 Ieq_desc     ident int int  9 l
+| startsWith "\tbuildh "      l = parse2 Ibuildh      ident int      8 l
+| startsWith "\tjmp "         l = parse  Ijmp         ident          5 l
+| startsWith "\tjmp_true "    l = parse  Ijmp_true    ident         10 l
+| startsWith "\tjmp_false "   l = parse  Ijmp_false   ident         11 l
 | startsWith "\t"             l = IIns (l % (1, size l - 1))
 | otherwise                     = Line l
 where

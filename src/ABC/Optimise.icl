@@ -36,11 +36,7 @@ opt_abc [i0=:Ipush_a 0,IIns "pushB_a 1":is] = opt_abc [IIns "pushB_a 0",i0:is]
 opt_abc [Ipush_a ai,Irepl_args   n0 n1:is] = opt_abc [Ipush_args   ai n0 n1:is]
 opt_abc [Ipush_a ai,Irepl_r_args n0 n1:is] = opt_abc [Ipush_r_args ai n0 n1:is]
 
-// TODO
-//opt_abc [IIns i1,IIns i2,ll=:Line l:is]
-//| size i1>=9 && begins_with_jmp_ i1 && true_after_jmp_ i1 && begins_with_jmp i2 && i1 % (9,size i1-1)==l
-//	#! s="jmp_false "+++i2 % (4,size i2-1)
-//	= [IIns s,ll:opt_abc is]
+opt_abc [Ijmp_true lt,Ijmp lf,label=:Line l:is] | l == lt = opt_abc [Ijmp_false lf:is]
 
 opt_abc [Ipush_a 1,Ipush_a 1,                                                  Ifillh id 2  4,Ipop_a 2:is] = opt_abc [Ifillh id 2 2:is]
 opt_abc [Ipush_a 2,Ipush_a 2,Ipush_a 2,                                        Ifillh id 3  6,Ipop_a 3:is] = opt_abc [Ifillh id 3 3:is]
@@ -49,10 +45,7 @@ opt_abc [Ipush_a 4,Ipush_a 4,Ipush_a 4,Ipush_a 4,Ipush_a 4,                    I
 opt_abc [Ipush_a 5,Ipush_a 5,Ipush_a 5,Ipush_a 5,Ipush_a 5,Ipush_a 5,          Ifillh id 6 12,Ipop_a 6:is] = opt_abc [Ifillh id 6 6:is]
 opt_abc [Ipush_a 6,Ipush_a 6,Ipush_a 6,Ipush_a 6,Ipush_a 6,Ipush_a 6,Ipush_a 6,Ifillh id 7 14,Ipop_a 7:is] = opt_abc [Ifillh id 7 7:is]
 
-// TODO
-//opt_abc [Ipush_a 1,Ipush_a 1,ll=:IIns s,Iupdatepop_a 0 2:is]
-//| begins_with_buildh s && s.[size s-2]==' ' && s.[size s-1]=='2'
-//	= opt_abc [IIns s:is]
+opt_abc [Ipush_a 1,Ipush_a 1,i=:(Ibuildh id 2),Iupdatepop_a 0 2:instructions] = opt_abc [i:instructions]
 
 opt_abc [Irepl_r_args 2 0,Ipop_a 1:is] = opt_abc [IIns "repl_r_args_a 2 0 2 1":is]
 opt_abc [Irepl_r_args 0 n0,Ipop_b n1:is] | n0 == n1 = opt_abc [Ipop_a 1:is]
