@@ -3,11 +3,11 @@
 unsigned int nr_abc_files;
 FILE **abc_files;
 
-program* pgrm;
+struct program pgrm;
 
 void parse_file(FILE *file) {
 	char* line;
-	unsigned int size;
+	size_t size;
 	while(getline(&line, &size, file) > 0) {
 		parse_line(line);
 	}
@@ -16,24 +16,24 @@ void parse_file(FILE *file) {
 void parse_files() {
 	unsigned int i;
 	for(i = 0; i < nr_abc_files; i++) {
-		read_file(abc_files[i]);
+		parse_file(abc_files[i]);
 	}
 }
 
 void initialize_program() {
-	pgrm = {0,
-	        0,
-	        0,
-	        0,
-	        0,
-	        0,
-	        safe_malloc(512 * sizeof(BC_WORD)),
-	        safe_malloc(512 * sizeof(BC_WORD)),
-	        safe_malloc(512 * sizeof(BC_WORD)),
-	        safe_malloc(512 * sizeof(BC_WORD)),
-	        safe_malloc(512 * sizeof(BC_WORD)),
-	        safe_malloc(512 * sizeof(BC_WORD))
-	}
+	pgrm = (struct program) {0,
+	                         0,
+	                         0,
+	                         0,
+	                         0,
+	                         0,
+	                         safe_malloc(512 * sizeof(BC_WORD)),
+	                         safe_malloc(512 * sizeof(BC_WORD)),
+	                         safe_malloc(512 * sizeof(BC_WORD)),
+	                         safe_malloc(512 * sizeof(BC_WORD)),
+	                         safe_malloc(512 * sizeof(BC_WORD)),
+	                         safe_malloc(512 * sizeof(BC_WORD))
+	                        };
 }
 
 int main (int argc, char *argv[]) {

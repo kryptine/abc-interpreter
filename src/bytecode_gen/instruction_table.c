@@ -1,7 +1,12 @@
 #include "instruction_table.h"
 
+#include "instruction_parse.h"
+
+// Global instruction table
+inst_element** inst_table;
+
 // Calculate "hash" of string
-static int instruction_hash(char *s) {
+static unsigned int instruction_hash(char *s) {
 	unsigned int h = 0;
 	while (*s != '\0')
 		h += *s++;
@@ -11,20 +16,21 @@ static int instruction_hash(char *s) {
 static void put_instruction_name(char *name, int (*parse_function)(), void (code_function)()) {
 	// Create new element
 	instruction* new_instruction;
-	new_instruction = (instruction*) safe_malloc(sizeof(struct instruction));
-	new_instruction->instruction_name = name;
-	new_instruction->instruction_parse_function = parse_function;
-	new_instruction->instruction_code_function = code_function;
+	new_instruction = (instruction*) safe_malloc(sizeof(instruction));
+	new_instruction->name = name;
+	new_instruction->parse_function = parse_function;
+	new_instruction->code_function = code_function;
 
 	// Lookup in hash table
-	struct in_name *head_elem;
-	head_elem = &inst_table[instruction_hash(new_instruction->instruction_name) % IN_NAME_TABLE_SIZE];
+	inst_element *head_elem;
+	head_elem = inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE];
 
 	// If hask table already has entry, add new entry to the front
 	if(head_elem->instruction != NULL){
-		struct in_name *new_head_elem = safe_malloc(sizeof(struct in_name));
-		new_head_elem->in_name_next = head_elem;
+		inst_element *new_head_elem = safe_malloc(sizeof(inst_element));
+		new_head_elem->next = head_elem;
 		new_head_elem->instruction = new_instruction;
+		inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE] = new_head_elem;
 	} else {
 		// Else, set it as the instruction
 		head_elem->instruction = new_instruction;
@@ -33,7 +39,7 @@ static void put_instruction_name(char *name, int (*parse_function)(), void (code
 
 // Loads all ABC instructions into a table
 // Also stores how they should be parsed, and their behavior
-void load_instruction_table() {
+void load_instruction_table(void) {
 	put_instruction_name("addI",                  parse_instruction,               code_addI );
 	put_instruction_name("and%",                  parse_instruction,               code_and );
 	put_instruction_name("build",                 parse_instruction_a_n_a,         code_build );
@@ -269,27 +275,29 @@ void load_instruction_table() {
 }
 
 instruction* instruction_lookup(char* inst) {
-	struct in_name *instruction;
+	inst_element *elem;
 
-	instruction = &inst_table[instruction_hash(s) % IN_NAME_TABLE_SIZE];
+	elem = inst_table[instruction_hash(inst) % INSTRUCTION_TABLE_SIZE];
 
-	while (instruction != NULL && instruction->in_name_instruction != NULL){
-		if (strcmp(instruction->in_name_instruction->instruction_name, inst) == 0)
-			return in_name->in_name_instruction;
+	while (elem != NULL && elem->instruction != NULL){
+		if (strcmp(elem->instruction->name, inst) == 0)
+			return elem->instruction;
 
-		in_name = in_name->in_name_next;
+		elem = elem->next;
 	}
 
 	return NULL;
 }
 
 // Create and Load instruction table
-static void init_instruction_table() {
-	inst_table = (struct in_name*) safe_malloc(sizeof(struct in_name) * IN_NAME_TABLE_SIZE);
+void init_instruction_table(void) {
+	inst_table = (inst_element**) safe_malloc(sizeof(inst_element*) * INSTRUCTION_TABLE_SIZE);
+	inst_element **inst_pointer = inst_table;
 
 	unsigned int i;
-	for (i = 0; i < IN_NAME_TABLE_SIZE; ++i){
-		local_in_name_table[i].in_name_next = NULL;
-		local_in_name_table[i].in_name_instruction = NULL;
+	for (i = 0; i < INSTRUCTION_TABLE_SIZE; ++i){
+		(*inst_pointer)->next = NULL;
+		(*inst_pointer)->instruction = NULL;
+		inst_pointer++;
 	}
 }

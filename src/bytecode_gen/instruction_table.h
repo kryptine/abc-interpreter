@@ -1,22 +1,25 @@
+#pragma once
+
+#include<string.h>
+
+#include "instruction_code.h"
 #include "../util.h"
+#include "../settings.h"
 
 // Holds information on instructions
 // Their name, and what functions to call for them
-struct instruction {
-	char* instruction_name;
-	int (* instruction_parse_function)();
-	void (* instruction_code_function)();
-};
+typedef struct instruction {
+	char* name;
+	int (* parse_function)();
+	void (* code_function)();
+} instruction;
 
 // Linked List of instructions element
-struct in_name {
-	struct in_name* in_name_next;
-	Instruction* instruction;
-};
+typedef struct inst_element {
+	struct inst_element *next;
+	instruction* instruction;
+} inst_element;
 
-// Global instruction table
-struct in_name* inst_table;
-
-void load_instruction_table(struct in_name*);
+void load_instruction_table(void);
 instruction* instruction_lookup(char*);
-void init_instruction_table();
+void init_instruction_table(void);

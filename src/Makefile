@@ -15,10 +15,10 @@ interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
 
 SRC_BYTECODE:=bytecode_gen/bytecode_gen.c bytecode_gen/instruction_table.c util.c
-DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE))
+DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h bytecode_gen/instruction_code.h bytecode_gen/instruction_parse.h
 
 bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
-	$(CC) $(CFLAGS) $(SRC_BYTECODE) -o $@
+	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
 
 clean:
 	$(RM) -r \
