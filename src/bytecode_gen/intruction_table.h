@@ -18,4 +18,5 @@ struct in_name {
 struct in_name* inst_table;
 
 void load_instruction_table(struct in_name*);
-instruction instruction_lookup(char*);
+instruction* instruction_lookup(char*);
+void init_instruction_table();

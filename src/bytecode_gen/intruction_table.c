@@ -2,7 +2,7 @@
 
 // Calculate "hash" of string
 static int instruction_hash(char *s) {
-	int h = 0;
+	unsigned int h = 0;
 	while (*s != '\0')
 		h += *s++;
 	return h;
@@ -281,4 +281,15 @@ instruction* instruction_lookup(char* inst) {
 	}
 
 	return NULL;
+}
+
+// Create and Load instruction table
+static void init_instruction_table() {
+	inst_table = (struct in_name*) safe_malloc(sizeof(struct in_name) * IN_NAME_TABLE_SIZE);
+
+	unsigned int i;
+	for (i = 0; i < IN_NAME_TABLE_SIZE; ++i){
+		local_in_name_table[i].in_name_next = NULL;
+		local_in_name_table[i].in_name_instruction = NULL;
+	}
 }
