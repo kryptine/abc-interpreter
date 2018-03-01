@@ -1,0 +1,5 @@
+*.result
+*.abc
+!i_system.abc
+program
+program.js
