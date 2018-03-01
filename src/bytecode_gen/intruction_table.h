@@ -14,5 +14,8 @@ struct in_name {
 	Instruction* instruction;
 };
 
+// Global instruction table
+struct in_name* inst_table;
+
 void load_instruction_table(struct in_name*);
 instruction instruction_lookup(char*);
