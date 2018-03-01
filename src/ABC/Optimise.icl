@@ -16,9 +16,9 @@ optimise :: ([ABCInstruction] -> [ABCInstruction])
 optimise =
 	// TODO: opt_abc_new2 o
 	// TODO: opt_abc_new o
-	// TODO: opt_abc4 o
+	opt_abc4 o
 	opt_abc1 o
-	// TODO: opt_abc4 o
+	opt_abc4 o
 	opt_abc1 o
 	opt_abc1 o
 	// TODO: reorder_a_and_b_stack o
@@ -127,6 +127,35 @@ opt_abc1 [Iupdate_b 1 2,i0=:Iupdatepop_b 0 1,i1=:IIns "subI":is] = opt_abc1 [i1,
 opt_abc1 [i0:is] = [i0:opt_abc1 is]
 opt_abc1 [] = []
 
+opt_abc4 :: ![ABCInstruction] -> [ABCInstruction]
+opt_abc4 [Ipush_a 0,i=:Ijsr_eval 0,Iupdatepop_a 0 1:is] = opt_abc4 [i:is]
+opt_abc4 [Ipush_a 1,i=:Ijsr_eval 0,Iupdatepop_a 0 2:is] = opt_abc4 [Ipop_a 1,i:is]
+opt_abc4 [Ipush_b 1,i=:IIns "addI":Iupdatepop_b 0 1:is] = opt_abc4 [i:is]
+
+// TODO
+/*opt_abc4 [i0=:Ipush_b 0,i1=:IIns s:is] | s=="incI" || s=="decI"
+		# (instructions2,n_a_instructions) = skip_a_instructions is 0
+		= case instructions2 of
+			[Iupdatepop_b 0 1:instructions2]
+				-> opt_abc4 [i1:add_instructions n_a_instructions is instructions2]
+			_
+				-> [i0,i1:opt_abc4 is]*/
+
+opt_abc4 [i0=:Ipush_b a,Iupdate_b    0 b:is]
+| b == a+1  = opt_abc4 [i0:is]
+opt_abc4 [i0=:Ipush_b a,Iupdatepop_b 0 b:is]
+| b == a+1  = opt_abc4 [Ipop_b (b-1):is]
+| otherwise = opt_abc4 [Iupdatepop_b a (b-1):is]
+
+opt_abc4 [Ipush_b _,Ipop_b 1:is]                   = opt_abc4 is
+opt_abc4 [Ipush_b _,Ipop_b n:is] | n > 1           = opt_abc4 [Ipop_b (n-1):is]
+opt_abc4 [Ipush_b _,Ipush_b _,Ipop_b 2:is]         = opt_abc4 is
+opt_abc4 [Ipush_b _,Ipush_b _,Ipop_b n:is] | n > 2 = opt_abc4 [Ipop_b (n-2):is]
+
+opt_abc4 [Iupdate_b a0 b0,Ipop_b n:instructions2] | b0 == n = [Iupdatepop_b a0 b0:opt_abc4 instructions2]
+
+opt_abc4 [i0:is] = [i0:opt_abc4 is]
+opt_abc4 [] = []
 
 Start :: *World -> *World
 Start w
