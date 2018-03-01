@@ -1,6 +1,8 @@
 #!/bin/bash
 
-make -C ../src
+make -C ../src || exit 1
+
+rm -r Clean\ System\ Files
 
 CLM=clm
 CG=../../interpret_abc_git/abc_bytecode_generator/bcgen
@@ -14,24 +16,33 @@ RESET="\033[0m"
 
 FAILED=0
 
-while IFS=$'\t' read -r line deps
+while IFS=$'\t' read -r -a line
 do
-	if [[ "${line:0:1}" == "#" ]]; then
+	MODULE=${line[0]}
+	IFS=',' read -r -a DEPS <<< "${line[1]}"
+
+	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
 	fi
 
-	echo -e "${YELLOW}Running $line...$RESET"
-	$CLM -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $line || continue
-	for dep in $deps; do
+	echo -e "${YELLOW}Running $MODULE...$RESET"
+
+	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE || continue
+
+	ABCDEPS=()
+	for dep in ${DEPS[@]}; do
 		$OPT < StdEnv/Clean\ System\ Files/$dep.abc > StdEnv/$dep.opt.abc
+		ABCDEPS+=(StdEnv/$dep.opt.abc)
 	done
-	$OPT < Clean\ System\ Files/$line.abc > $line.opt.abc
-	# TODO: this does not work yet for multiple dependencies
-	$CG $line.opt.abc i_system.abc StdEnv/$dep.opt.abc >/dev/null
-	/usr/bin/time $IP program > $line.result
-	diff $line.expected $line.result
+	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
+
+	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
+
+	/usr/bin/time $IP program > $MODULE.result
+
+	diff $MODULE.expected $MODULE.result
 	if [ $? -ne 0 ]; then
-		echo -e "${RED}FAILED: $line$RESET"
+		echo -e "${RED}FAILED: $MODULE$RESET"
 		FAILED=1
 	fi
 done < tests.txt
