@@ -75,8 +75,18 @@ opt_abc [IIns "no_op":is] = opt_abc is
 
 opt_abc [Ipush_a n1,Ieq_desc d n2 0,Ipop_a n3:is] = opt_abc [Ieq_desc d n2 n1,Ipop_a (n3-1):opt_abc is]
 
+opt_abc [IIns s:is] | isComment 0 s = opt_abc is
+opt_abc [Line s:is] | isComment 0 s = opt_abc is
+
 opt_abc [i:is] = [i:opt_abc is]
 opt_abc [] = []
+
+isComment :: !Int !String -> Bool
+isComment i s
+| i >= size s   = True
+| s.[i] == '|'  = True
+| isSpace s.[i] = isComment (i+1) s
+| otherwise     = False
 
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
 opt_abc1 [Line "":is] = opt_abc1 is
