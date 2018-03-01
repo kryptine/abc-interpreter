@@ -12,16 +12,26 @@ GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
 RESET="\033[0m"
 
-$OPT < i_system.abc > i_system.opt.abc
+FAILED=0
 
-while read line
+while IFS=$'\t' read -r line deps
 do
 	echo -e "${YELLOW}Running $line...$RESET"
-	$CLM -ABC $line
+	$CLM -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $line || continue
+	for dep in $deps; do
+		$OPT < StdEnv/Clean\ System\ Files/$dep.abc > StdEnv/$dep.opt.abc
+	done
 	$OPT < Clean\ System\ Files/$line.abc > $line.opt.abc
-	$CG $line.opt.abc i_system.opt.abc >/dev/null
+	# TODO: this does not work yet for multiple dependencies
+	$CG $line.opt.abc i_system.abc StdEnv/$dep.opt.abc >/dev/null
 	/usr/bin/time $IP program > $line.result
-	diff $line.expected $line.result || (echo -e "${RED}FAILED: $line$RESET"; exit 1)
+	diff $line.expected $line.result
+	if [ $? -ne 0 ]; then
+		echo -e "${RED}FAILED: $line$RESET"
+		FAILED=1
+	fi
 done < tests.txt
 
-echo -e "${GREEN}All tests passed$RESET"
+if [ $FAILED -eq 0 ]; then
+	echo -e "${GREEN}All tests passed$RESET"
+fi

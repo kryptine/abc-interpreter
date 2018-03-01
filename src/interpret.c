@@ -7,6 +7,7 @@
 #include "bytecode.h"
 #include "interpret.h"
 #include "parse.h"
+#include "settings.h"
 #include "traps.h"
 #include "util.h"
 
