@@ -1,6 +1,10 @@
 Clean System Files/
 *.aux
+*.bbl
+*.bcf
+*.blg
 *.fdb_latexmk
 *.fls
 *.log
 *.pdf
+*.run.xml
