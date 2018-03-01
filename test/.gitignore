@@ -1,5 +1,6 @@
 *.result
 *.abc
 !i_system.abc
+a.out
 program
 program.js
