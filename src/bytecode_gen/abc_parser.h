@@ -8,4 +8,11 @@ struct instruction {
 	void (* instruction_code_function)();
 };
 
-instruction* parse(char*);
+// Linked List of instructions element
+struct in_name {
+	struct in_name* in_name_next;
+	Instruction* instruction;
+};
+
+void load_instruction_table(struct in_name*);
+instruction instruction_lookup(char*);

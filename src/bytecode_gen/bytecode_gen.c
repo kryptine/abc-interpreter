@@ -1,29 +1,42 @@
-#include <stdio.h>
-#include <unistd.h>
-
 #include "bytecode_gen.h"
-#include "abc_parser.h"
 
 unsigned int nr_abc_files;
 FILE **abc_files;
 
-char **read_file(FILE *file) {
+program* pgrm;
+
+void parse_file(FILE *file) {
 	char* line;
 	unsigned int size;
 	while(getline(&line, &size, file) > 0) {
-		char 
+		parse_line(line);
 	}
 }
 
-char ***parse_file() {
+void parse_files() {
 	unsigned int i;
 	for(i = 0; i < nr_abc_files; i++) {
 		read_file(abc_files[i]);
 	}
 }
 
-int main (int argc, char *argv[])
-{
+void initialize_program() {
+	pgrm = {0,
+	        0,
+	        0,
+	        0,
+	        0,
+	        0,
+	        safe_malloc(512 * sizeof(BC_WORD)),
+	        safe_malloc(512 * sizeof(BC_WORD)),
+	        safe_malloc(512 * sizeof(BC_WORD)),
+	        safe_malloc(512 * sizeof(BC_WORD)),
+	        safe_malloc(512 * sizeof(BC_WORD)),
+	        safe_malloc(512 * sizeof(BC_WORD))
+	}
+}
+
+int main (int argc, char *argv[]) {
 	if(argc < 2) {
 		fprintf(stderr, "Error: No ABC file specified\n");
 		return -1;
@@ -43,8 +56,9 @@ int main (int argc, char *argv[])
 	nr_abc_files = argc - 1;
 
 	// List of lines per file
-	char ***input_strings;
-	input_strings = read_files();
+	initialize_program();
+
+	parse_files();
 
 	return 0;
 }
