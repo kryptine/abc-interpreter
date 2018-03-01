@@ -1,6 +1,6 @@
 SHELL:=bash
 CLM:=clm
-CLMFLAGS:=-IL Platform -IL Dynamics
+CLMFLAGS:=-IL Platform -nr -nt
 CFLAGS:=-Wall -pedantic -Wno-misleading-indentation
 
 all: optimise interpret
