@@ -37,13 +37,17 @@ do
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
+	mv program $MODULE.bc
+	rm program.js
 
-	/usr/bin/time $IP program > $MODULE.result
+	/usr/bin/time $IP $MODULE.bc > $MODULE.result
 
 	diff $MODULE.expected $MODULE.result
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE$RESET"
 		FAILED=1
+	else
+		echo -e "${GREEN}Passed: $MODULE$RESET"
 	fi
 done < tests.txt
 
