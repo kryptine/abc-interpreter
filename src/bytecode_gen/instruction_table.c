@@ -25,15 +25,17 @@ static void put_instruction_name(char *name, int (*parse_function)(), void (code
 	inst_element *head_elem;
 	head_elem = inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE];
 
-	// If hask table already has entry, add new entry to the front
-	if(head_elem->instruction != NULL){
-		inst_element *new_head_elem = safe_malloc(sizeof(inst_element));
+	if (head_elem == NULL) {
+		head_elem = (inst_element*) safe_malloc(sizeof(inst_element));
+		head_elem->next = NULL;
+		head_elem->instruction = new_instruction;
+		inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE] = head_elem;
+	} else {
+		// If hask table already has entry, add new entry to the front
+		inst_element *new_head_elem = (inst_element*) safe_malloc(sizeof(inst_element));
 		new_head_elem->next = head_elem;
 		new_head_elem->instruction = new_instruction;
 		inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE] = new_head_elem;
-	} else {
-		// Else, set it as the instruction
-		head_elem->instruction = new_instruction;
 	}
 }
 
@@ -296,8 +298,7 @@ void init_instruction_table(void) {
 
 	unsigned int i;
 	for (i = 0; i < INSTRUCTION_TABLE_SIZE; ++i){
-		(*inst_pointer)->next = NULL;
-		(*inst_pointer)->instruction = NULL;
+		*inst_pointer = NULL;
 		inst_pointer++;
 	}
 }

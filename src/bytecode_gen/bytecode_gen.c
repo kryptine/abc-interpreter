@@ -5,15 +5,41 @@ FILE **abc_files;
 
 struct program pgrm;
 
+char* skip_whitespace(char* string) {
+	while(isspace(*string)) {
+		string++;
+	}
+	return string;
+}
+
+// Parse the current line
+// size argument might not be needed
+void parse_line(char* line, size_t size) {
+	char *end, *token;
+	end = line;
+
+	end = skip_whitespace(end);
+
+	if ((token = strsep(&end, " \n\t")) != NULL) {
+		instruction* i = instruction_lookup(token);
+		printf("%s | %s", token, i -> name);
+		printf("\n");
+	}
+}
+
 void parse_file(FILE *file) {
 	char* line;
 	size_t size;
 	while(getline(&line, &size, file) > 0) {
-		parse_line(line);
+		parse_line(line, size);
 	}
 }
 
 void parse_files() {
+	init_instruction_table();
+	load_instruction_table();
+
+	// Parse every file
 	unsigned int i;
 	for(i = 0; i < nr_abc_files; i++) {
 		parse_file(abc_files[i]);
@@ -27,12 +53,12 @@ void initialize_program() {
 	                         0,
 	                         0,
 	                         0,
-	                         safe_malloc(512 * sizeof(BC_WORD)),
-	                         safe_malloc(512 * sizeof(BC_WORD)),
-	                         safe_malloc(512 * sizeof(BC_WORD)),
-	                         safe_malloc(512 * sizeof(BC_WORD)),
-	                         safe_malloc(512 * sizeof(BC_WORD)),
-	                         safe_malloc(512 * sizeof(BC_WORD))
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD))
 	                        };
 }
 
@@ -46,7 +72,7 @@ int main (int argc, char *argv[]) {
 
 	int i;
 	for(i = 1; i < argc; i++) {
-		if((input_files[i] = fopen(argv[i], "r")) == NULL) {
+		if((input_files[i - 1] = fopen(argv[i], "r")) == NULL) {
 			fprintf(stderr, "Error: Could not open abc file: %s\n", argv[i]);
 			return -1;
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "instruction_table.h"
+#include "instruction_table.h"
 
 int parse_instruction(instruction* instruction);
 int parse_instruction_a(instruction* instruction);

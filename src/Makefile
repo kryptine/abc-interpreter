@@ -1,6 +1,6 @@
 SHELL:=bash
 CLM:=clm
-CLMFLAGS:=-IL Platform -IL Dynamics
+CLMFLAGS:=-IL Platform
 CFLAGS:=-Wall -pedantic -Wno-misleading-indentation
 
 all: optimise interpret bytecode
@@ -14,8 +14,8 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h settings
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
 
-SRC_BYTECODE:=bytecode_gen/bytecode_gen.c bytecode_gen/instruction_table.c util.c
-DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h bytecode_gen/instruction_code.h bytecode_gen/instruction_parse.h
+SRC_BYTECODE:=bytecode_gen/bytecode_gen.c util.c bytecode_gen/instruction_table.c bytecode_gen/instruction_code.c bytecode_gen/instruction_parse.c
+DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
 
 bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
 	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
