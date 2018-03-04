@@ -22,14 +22,17 @@ void parse_line(char* line, size_t size) {
 
 	if ((token = strsep(&end, " \n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
-		printf("%s | %s", token, i -> name);
+		if (i != NULL)
+			printf("%s | %s", token, i -> name);
+		else
+			printf("%s", token);
 		printf("\n");
 	}
 }
 
 void parse_file(FILE *file) {
-	char* line;
-	size_t size;
+	char* line = NULL;
+	size_t size = 0;
 	while(getline(&line, &size, file) > 0) {
 		parse_line(line, size);
 	}
