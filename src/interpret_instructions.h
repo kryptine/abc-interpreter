@@ -5948,11 +5948,11 @@ case Cpush2_a:
 }
 case Cpush2_b:
 {
-	BC_WORD_S bo_s;
+	BC_WORD bo_s;
 
-	bo_s=((BC_WORD_S*)pc)[1];
-	bsp[-1]=asp[bo_s];
-	bsp[-2]=asp[bo_s-1];
+	bo_s=((BC_WORD*)pc)[1];
+	bsp[-1]=bsp[bo_s];
+	bsp[-2]=bsp[bo_s-1];
 	bsp-=2;
 	pc+=2;
 	continue;
@@ -5971,12 +5971,12 @@ case Cpush3_a:
 }
 case Cpush3_b:
 {
-	BC_WORD_S bo_s;
+	BC_WORD bo_s;
 
-	bo_s=((BC_WORD_S*)pc)[1];
-	bsp[-1]=asp[bo_s];
-	bsp[-2]=asp[bo_s-1];
-	bsp[-3]=asp[bo_s-2];
+	bo_s=((BC_WORD*)pc)[1];
+	bsp[-1]=bsp[bo_s];
+	bsp[-2]=bsp[bo_s-1];
+	bsp[-3]=bsp[bo_s-2];
 	bsp-=3;
 	pc+=2;
 	continue;
