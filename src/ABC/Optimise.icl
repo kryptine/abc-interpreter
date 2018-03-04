@@ -9,13 +9,15 @@ import StdInt
 import StdList
 import StdString
 
+from Text import <+
+
 import ABC.Instructions
 import ABC.Parse
 
 optimise :: ([ABCInstruction] -> [ABCInstruction])
 optimise =
 	// TODO: opt_abc_new2 o
-	// TODO: opt_abc_new o
+	opt_abc_new o
 	opt_abc4 o
 	opt_abc1 o
 	opt_abc4 o
@@ -106,7 +108,7 @@ opt_abc1 [Ipush_b 1,Iupdate_b 1 2,Iupdatepop_b 0 1,i:is]
 | isCommutativeBStackInstruction i = opt_abc1 [i:is]
 opt_abc1 [Irepl_args i0 i1,Ipop_a i2:is] | i0 == i1 && i1 == i2 = opt_abc1 [Ipop_a 1:is]
 
-opt_abc1 [Irepl_args 2 2,Ipop_a 1:is] = opt_abc1 [IIns "repl_arg 2 2":is]
+opt_abc1 [Irepl_args 2 2,Ipop_a 1:is] = opt_abc1 [Irepl_arg 2 2:is]
 
 opt_abc1 [Irepl_r_args 1 1,i2=:Ipop_a 1,Ipop_b 1:is] = opt_abc1 [i2:is]
 opt_abc1 [IpushI 1,Ipush_b n,IIns "subI":is] | n>0 = [Ipush_b (n-1),IIns "decI":opt_abc1 is]
@@ -166,6 +168,46 @@ opt_abc4 [Iupdate_b a0 b0,Ipop_b n:instructions2] | b0 == n = [Iupdatepop_b a0 b
 
 opt_abc4 [i0:is] = [i0:opt_abc4 is]
 opt_abc4 [] = []
+
+opt_abc_new :: [ABCInstruction] -> [ABCInstruction]
+opt_abc_new [Ipush_a 1,Iupdate_a 1 2,Iupdatepop_a 0 1:is] = [Iswap_a1:opt_abc_new is]
+opt_abc_new [Ipush_b 1,Iupdate_b 1 2,Iupdatepop_b 0 1:is] = [Iswap_b1:opt_abc_new is]
+
+opt_abc_new [Iupdate_a s0 d0,Iupdate_a s1 d1,Iupdatepop_a s2 d2:is]
+| s0==s2+2 && d0==d2+2 && s1==s2+1 && d1==d2+1 = [Iupdate3pop_a s2 d2:opt_abc_new is]
+| s0==d1 && s1==d2 = [Iupdates3pop_a s2 s1 s0 d0:opt_abc_new is]
+opt_abc_new [Iupdate_a s0 d0,Iupdatepop_a s1 d1:is]
+| s0==s1+1 && d0==d1+1 = [Iupdate2pop_a s1 d1:opt_abc_new is]
+| s0==d1 = [Iupdates2pop_a s1 s0 d0:opt_abc_new is]
+
+opt_abc_new [Iupdate_b s0 d0,Iupdate_b s1 d1,Iupdatepop_b s2 d2:is]
+| s0==s2+2 && d0==d2+2 && s1==s2+1 && d1==d2+1 = [Iupdate3pop_b s2 d2:opt_abc_new is]
+| s0==d1 && s1==d2 = [Iupdates3pop_b s2 s1 s0 d0:opt_abc_new is]
+opt_abc_new [Iupdate_b s0 d0,Iupdatepop_b s1 d1:is]
+| s0==s1+1 && d0==d1+1 = [Iupdate2pop_b s1 d1:opt_abc_new is]
+| s0==d1 = [Iupdates2pop_b s1 s0 d0:opt_abc_new is]
+
+opt_abc_new [Ipush_a s0,Ipush_a s1,Ipush_a s2:is]
+| s0==s1 && s0==s2 && s0>0 = [Ipush3_a s0:opt_abc_new is]
+opt_abc_new [Ipush_a s0,Ipush_a s1:is]
+| s0==s1 && s0>0 = case is of
+	[Ibuildh id 2:is] -> [Ibuildho2 id (s1-1) s0:opt_abc_new is]
+	_                 -> [Ipush2_a s0:opt_abc_new is]
+opt_abc_new [Ipush_b s0,Ipush_b s1,Ipush_b s2:is] | s0==s1 && s0==s2 && s0>0 = [Ipush3_b s0:opt_abc_new is]
+opt_abc_new [Ipush_b s0,Ipush_b s1:is] | s0==s1 && s0>0 = [Ipush2_b s0:opt_abc_new is]
+
+opt_abc_new [IeqD_b d n,Ijmp_true  l:is] = [Ijmp_eqD_b d n l:opt_abc_new is]
+opt_abc_new [IeqC_b c n,Ijmp_true  l:is] = [Ijmp_eqC_b c n l:opt_abc_new is]
+opt_abc_new [IeqC_b c n,Ijmp_false l:is] = [Ijmp_neC_b c n l:opt_abc_new is]
+opt_abc_new [IeqI_b i n,Ijmp_true  l:is] = [Ijmp_eqI_b i n l:opt_abc_new is]
+opt_abc_new [IeqI_b i n,Ijmp_false l:is] = [Ijmp_neI_b i n l:opt_abc_new is]
+
+opt_abc_new [Ipush_b n,IpushI i,IIns "and%":is]         = [IandIio i n:opt_abc_new is]
+opt_abc_new [IpushI i,IIns "and%":is]                   = [IandIi i:opt_abc_new is]
+opt_abc_new [IpushI i,Ipush_b n,IIns "and%":is] | n > 0 = [IandIio i (n-1):opt_abc_new is]
+
+opt_abc_new [i:is] = [i:opt_abc_new is]
+opt_abc_new [] = []
 
 Start :: *World -> *World
 Start w
