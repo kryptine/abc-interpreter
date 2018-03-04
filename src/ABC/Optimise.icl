@@ -38,9 +38,9 @@ isCommutativeBStackInstruction _ = False
 opt_abc :: [ABCInstruction] -> [ABCInstruction]
 opt_abc [Ipop_a 0:is] = opt_abc is
 opt_abc [Ipop_b 0:is] = opt_abc is
-opt_abc [IpushI 0:Iupdate_b 1 0:is]                          = opt_abc [Ipush_b 0:is]
-opt_abc [Ipush_a 0,i=:IIns "jsr_eval 0",Iupdatepop_a 0 1:is] = opt_abc [i:is]
-opt_abc [i0=:Ipush_a 0,i1=:IIns "jsr_eval 0":is]             = opt_abc [i1,i0:is]
+opt_abc [IpushI 0:Iupdate_b 1 0:is]                    = opt_abc [Ipush_b 0:is]
+opt_abc [Ipush_a 0,i=:Ijsr_eval 0,Iupdatepop_a 0 1:is] = opt_abc [i:is]
+opt_abc [i0=:Ipush_a 0,i1=:Ijsr_eval 0:is]             = opt_abc [i1,i0:is]
 
 opt_abc [i0=:Ipush_a 0,IpushI_a 1:is] = opt_abc [IpushI_a 0,i0:is]
 opt_abc [i0=:Ipush_a 0,IpushC_a 1:is] = opt_abc [IpushC_a 0,i0:is]

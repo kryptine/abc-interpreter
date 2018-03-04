@@ -2,9 +2,16 @@ implementation module ABC.Parse
 
 import StdArray
 import StdBool
+from StdFunc import o
+import StdGeneric
 import StdList
 import StdTuple
 
+import Control.Applicative
+import Control.Monad
+import Data.Functor
+import Data.Maybe
+import Data.Tuple
 from Text import class Text(startsWith), instance Text String
 
 import ABC.Instructions
@@ -12,105 +19,7 @@ import ABC.Instructions
 parse :: ([String] -> [ABCInstruction])
 parse = map parseLine
 
-:: Parser t :== Int String -> (t, Int)
-
-parseLine :: !String -> ABCInstruction
-parseLine l
-| startsWith "\tpop_a "       l = parse  Ipop_a       int            7 l
-| startsWith "\tpop_b "       l = parse  Ipop_b       int            7 l
-| startsWith "\tpush_a "      l = parse  Ipush_a      int            8 l
-| startsWith "\tpush_b "      l = parse  Ipush_b      int            8 l
-| startsWith "\tupdate_a "    l = parse2 Iupdate_a    int   int     10 l
-| startsWith "\tupdate_b "    l = parse2 Iupdate_b    int   int     10 l
-| startsWith "\tupdatepop_a " l = parse2 Iupdatepop_a int   int     13 l
-| startsWith "\tupdatepop_b " l = parse2 Iupdatepop_b int   int     13 l
-| startsWith "\tfillh "       l = parse3 Ifillh       ident int int  7 l
-| startsWith "\trepl_args "   l = parse2 Irepl_args   int   int     11 l
-| startsWith "\trepl_r_args " l = parse2 Irepl_r_args int   int     13 l
-| startsWith "\tpush_args "   l = parse3 Ipush_args   int   int int 11 l
-| startsWith "\tpush_r_args " l = parse3 Ipush_r_args int   int int 13 l
-| startsWith "\teq_desc "     l = parse3 Ieq_desc     ident int int  9 l
-| startsWith "\tbuildh "      l = parse2 Ibuildh      ident int      8 l
-| startsWith "\tjmp "         l = parse  Ijmp         ident          5 l
-| startsWith "\tjmp_true "    l = parse  Ijmp_true    ident         10 l
-| startsWith "\tjmp_false "   l = parse  Ijmp_false   ident         11 l
-| startsWith "\tpushC "       l = parse  IpushC       char           7 l
-| startsWith "\teqC_b "       l = parse2 IeqC_b       char  int      7 l
-| startsWith "\tpushI "       l = parse  IpushI       int            7 l
-| startsWith "\teqI_b "       l = parse2 IeqI_b       int   int      7 l
-| startsWith "\tpushI_a "     l = parse  IpushI_a     int            9 l
-| startsWith "\tpushB_a "     l = parse  IpushB_a     int            9 l
-| startsWith "\tpushC_a "     l = parse  IpushC_a     int            9 l
-| startsWith "\tpushD_a "     l = parse  IpushD_a     int            9 l
-| startsWith "\tpushB "       l = parse  IpushB       bool           7 l
-| startsWith "\tpushD "       l = parse  IpushD       ident          7 l
-| startsWith "\tjsr_eval "    l = parse  Ijsr_eval    int           10 l
-| startsWith "\t"             l = IIns (l % (1, size l - 1))
-| otherwise                     = Line l
-where
-	uncurry3 f (x,y,z) = f x y z
-
-	parse :: (t -> a) (Parser t) Int String -> a
-	parse f p start line = f (fst (p start line))
-
-	parse2 :: (t u -> a) (Parser t) (Parser u) Int String -> a
-	parse2 f p1 p2 start line
-	# (x,rest) = p1 start line
-	# rest = skipSpace rest line
-	# (y,rest) = p2 rest line
-	= f x y
-
-	parse3 :: (t u v -> a) (Parser t) (Parser u) (Parser v) Int String -> a
-	parse3 f p1 p2 p3 start line
-	# (x,rest) = p1 start line
-	# rest = skipSpace rest line
-	# (y,rest) = p2 rest line
-	# rest = skipSpace rest line
-	# (z,rest) = p3 rest line
-	= f x y z
-
-	parse4 :: (t u v w -> a) (Parser t) (Parser u) (Parser v) (Parser w) Int String -> a
-	parse4 f p1 p2 p3 p4 start line
-	# (x,rest) = p1 start line
-	# rest = skipSpace rest line
-	# (y,rest) = p2 rest line
-	# rest = skipSpace rest line
-	# (z,rest) = p3 rest line
-	# rest = skipSpace rest line
-	# (z2,rest) = p4 rest line
-	= f x y z z2
-
-	skipSpace :: !Int !String -> Int
-	skipSpace n s
-	| n >= size s   = n
-	| isSpace s.[n] = skipSpace (n+1) s
-	| otherwise     = n
-
-int :: Parser Int
-int = int` 0
-where
-	int` :: !Int !Int !String -> (Int, Int)
-	int` n start line
-	| start >= size line   = (n, start)
-	| isDigit line.[start] = int` (n * 10 + digitToInt line.[start]) (start + 1) line
-	| otherwise            = (n, start)
-
-bool :: Parser Bool
-bool = bool`
-where
-	bool` :: !Int !String -> (Bool, Int)
-	bool` start line
-	| line.[start] == 'T'
-		&& line.[start+1] == 'R'
-		&& line.[start+2] == 'U'
-		&& line.[start+3] == 'E'
-		= (True, start+4)
-	| line.[start] == 'F'
-		&& line.[start+1] == 'A'
-		&& line.[start+2] == 'L'
-		&& line.[start+3] == 'S'
-		&& line.[start+4] == 'E'
-		= (False, start+5)
+:: Parser t :== Int String -> Maybe (t, Int)
 
 :: CharParseState
 	= CPS_Start
@@ -118,8 +27,31 @@ where
 	| CPS_Oct !Int
 	| CPS_Hex !Int
 
-char :: Parser Char
-char = char` CPS_Start
+generic parseLine` a :: Parser a
+parseLine`{|Int|} = \i s -> Just (int` 0 i s) // TODO this can fail
+where
+	int` :: !Int !Int !String -> (Int, Int)
+	int` n start line
+	| start >= size line   = (n, start)
+	| isDigit line.[start] = int` (n * 10 + digitToInt line.[start]) (start + 1) line
+	| otherwise            = (n, start)
+parseLine`{|Bool|} = bool`
+where
+	bool` :: !Int !String -> Maybe (Bool, Int)
+	bool` start line
+	| line.[start] == 'T'
+		&& line.[start+1] == 'R'
+		&& line.[start+2] == 'U'
+		&& line.[start+3] == 'E'
+		= Just (True, start+4)
+	| line.[start] == 'F'
+		&& line.[start+1] == 'A'
+		&& line.[start+2] == 'L'
+		&& line.[start+3] == 'S'
+		&& line.[start+4] == 'E'
+		= Just (False, start+5)
+	| otherwise = Nothing
+parseLine`{|Char|} = \i s -> Just (char` CPS_Start i s) // TODO this can fail
 where
 	char` :: !CharParseState !Int !String -> (Char, Int)
 	char` CPS_Start start line
@@ -150,15 +82,40 @@ where
 	| isDigit line.[start] = char` (CPS_Hex (n*16 + digitToInt line.[start])) (start+1) line
 	| line.[start] < 'a'   = char` (CPS_Hex (n*16 + toInt (line.[start] - 'A') + 10)) (start+1) line
 	| otherwise            = char` (CPS_Hex (n*16 + toInt (line.[start] - 'a') + 10)) (start+1) line
-
-ident :: Parser String
-ident = id []
+parseLine`{|String|} = \i s -> Just (id [] i s) // TODO can this fail?
 where
 	id :: [Char] !Int !String -> (String, Int)
 	id cs start line
 	| start >= size line   = (toString (reverse cs), start)
 	| isSpace line.[start] = (toString (reverse cs), start)
 	| otherwise            = id [line.[start]:cs] (start + 1) line
+
+parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
+	"IIns" -> Nothing
+	"Line" -> Nothing
+	instr  -> if (startsWith ((instr +++ " "):=(0,'\t')) line)
+		(appFst CONS <$> fx (size instr + 1) line)
+		Nothing
+parseLine`{|OBJECT|} fx = \i s -> appFst OBJECT <$> fx i s
+parseLine`{|EITHER|} fl fr = \i s -> appFst LEFT <$> fl i s <|> appFst RIGHT <$> fr i s
+parseLine`{|UNIT|} = \i _ -> Just (UNIT, i)
+parseLine`{|PAIR|} fx fy = \i s -> fx i s >>= \(x,i) -> fy (skipSpace i s) s >>= \(y,i) -> Just (PAIR x y, skipSpace i s)
+where
+	skipSpace :: !Int !String -> Int
+	skipSpace n s
+	| n >= size s   = n
+	| isSpace s.[n] = skipSpace (n+1) s
+	| otherwise     = n
+
+derive bimap (,), Maybe
+derive parseLine` ABCInstruction
+
+parseLine :: !String -> ABCInstruction
+parseLine s = case parseLine`{|*|} 0 s of
+	Just (i,_) -> i
+	Nothing -> case s.[0] of
+		'\t' -> IIns (s % (1,size s-1))
+		_    -> Line s
 
 import StdFile
 import StdString
