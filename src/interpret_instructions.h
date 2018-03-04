@@ -5763,7 +5763,7 @@ case Cjmp_neI_b:
 	BC_WORD_S bo;
 	
 	bo=((BC_WORD_S*)pc)[1];
-	if (bsp[bo]!=(BC_WORD_S)pc[2]){
+	if (bsp[bo]==(BC_WORD_S)pc[2]){
 		pc+=4;
 		continue;
 	}
