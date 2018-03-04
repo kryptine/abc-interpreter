@@ -144,14 +144,21 @@ opt_abc4 [Ipush_a 0,i=:Ijsr_eval 0,Iupdatepop_a 0 1:is] = opt_abc4 [i:is]
 opt_abc4 [Ipush_a 1,i=:Ijsr_eval 0,Iupdatepop_a 0 2:is] = opt_abc4 [Ipop_a 1,i:is]
 opt_abc4 [Ipush_b 1,i=:IIns "addI":Iupdatepop_b 0 1:is] = opt_abc4 [i:is]
 
-// TODO
-/*opt_abc4 [i0=:Ipush_b 0,i1=:IIns s:is] | s=="incI" || s=="decI"
-		# (instructions2,n_a_instructions) = skip_a_instructions is 0
-		= case instructions2 of
-			[Iupdatepop_b 0 1:instructions2]
-				-> opt_abc4 [i1:add_instructions n_a_instructions is instructions2]
-			_
-				-> [i0,i1:opt_abc4 is]*/
+opt_abc4 [i0=:Ipush_b 0,i1=:IIns s:is] | s=="incI" || s=="decI"
+# (is2,n_a) = skip_a_instructions is 0
+= case is2 of
+	[Iupdatepop_b 0 1:is2] -> opt_abc4 [i1:take n_a is ++ is2]
+	_                      -> [i0,i1:opt_abc4 is]
+where
+	skip_a_instructions :: ![ABCInstruction] !Int -> (![ABCInstruction],!Int);
+	skip_a_instructions [Ipush_a _:is]        n = skip_a_instructions is (n+1)
+	skip_a_instructions [Iupdate_a _ _:is]    n = skip_a_instructions is (n+1)
+	skip_a_instructions [Iupdatepop_a _ _:is] n = skip_a_instructions is (n+1)
+	skip_a_instructions [Ipop_a _:is]         n = skip_a_instructions is (n+1)
+	skip_a_instructions [Ibuildh _ _:is]      n = skip_a_instructions is (n+1)
+	skip_a_instructions [Ibuild _ _ _:is]     n = skip_a_instructions is (n+1)
+	skip_a_instructions [Ijsr_eval _:is]      n = skip_a_instructions is (n+1)
+	skip_a_instructions is                    n = (is,n)
 
 opt_abc4 [i0=:Ipush_b a,Iupdate_b    0 b:is]
 | b == a+1  = opt_abc4 [i0:is]

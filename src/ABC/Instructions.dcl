@@ -5,6 +5,7 @@ from StdFile import class <<<
 :: ABCInstruction
 	= IandIi !Int
 	| IandIio !Int !Int
+	| Ibuild !String !Int !String
 	| Ibuildh !String !Int
 	| Ibuildho2 !String !Int !Int
 	| Idup2_a !Int
