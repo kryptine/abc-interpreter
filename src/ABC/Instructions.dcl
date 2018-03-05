@@ -122,21 +122,18 @@ from StdFile import class <<<
 
 	| Annotation !Annotation
 
-	| IIns !String
-	| Line !String
-	// TODO: are these ever used?
-	//| ABCInstruction
-	//| ErrorABCInstruction
+	| IIns !String //* An unimplemented instruction
+	| Line !String //* An unrecognised line
 
 :: Annotation
-	= Ad !Int !Int !String
-	| Ao !Int !Int !String
+	= Ad !Int !Int !String //* .d
+	| Ao !Int !Int !String //* .o
 	| OtherAnnotation !String
 
 :: StringLiteral = StringLit !String
 
-instance <<< ABCInstruction
-instance <<< [a] | <<< a
-
 isAStackInstruction :: ABCInstruction -> Bool
 isBStackInstruction :: ABCInstruction -> Bool
+
+instance <<< ABCInstruction
+instance <<< [a] | <<< a

@@ -101,22 +101,6 @@ reorder_a_and_b_stack [i:is]
 	([],_) -> [i:reorder_a_and_b_stack is]
 	(bis,rest) -> let bis` = [i:bis] in opt_reorder BStack bis` ++ reorder_a_and_b_stack rest
 | otherwise = [i:reorder_a_and_b_stack is]
-where
-	isAStackInstruction :: ABCInstruction -> Bool
-	isAStackInstruction i = case i of
-		Ipush_a _        -> True
-		Iupdate_a _ _    -> True
-		Iupdatepop_a _ _ -> True
-		Ipop_a _         -> True
-		_                -> False
-
-	isBStackInstruction :: ABCInstruction -> Bool
-	isBStackInstruction i = case i of
-		Ipush_b _        -> True
-		Iupdate_b _ _    -> True
-		Iupdatepop_b _ _ -> True
-		Ipop_b _         -> True
-		_                -> False
 reorder_a_and_b_stack [] = []
 
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
