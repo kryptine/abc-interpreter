@@ -106,7 +106,7 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 	"Line"            -> Nothing
 	"Annotation"      -> Nothing
 	"OtherAnnotation" -> Nothing
-	instr             -> if (startsWith ((instr +++ " "):=(0, first_char)) line)
+	instr             -> if (startsWith ((if (d.gcd_arity == 0) instr (instr +++ " ")):=(0, first_char)) line)
 		(appFst CONS <$> fx (size instr + 1) line)
 		Nothing
 	with
