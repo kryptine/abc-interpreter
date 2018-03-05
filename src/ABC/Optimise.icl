@@ -12,6 +12,7 @@ import StdString
 from Text import <+
 
 import ABC.Instructions
+import ABC.Optimise.Reorder
 import ABC.Parse
 
 optimise :: ([ABCInstruction] -> [ABCInstruction])
@@ -23,7 +24,8 @@ optimise =
 	opt_abc4 o
 	opt_abc1 o
 	opt_abc1 o
-	// TODO: reorder_a_and_b_stack o
+	reorder_a_and_b_stack o
+	// TODO: reorder_abc o
 	opt_abc
 
 isCommutativeBStackInstruction :: !ABCInstruction -> Bool
@@ -89,6 +91,33 @@ isComment i s
 | s.[i] == '|'  = True
 | isSpace s.[i] = isComment (i+1) s
 | otherwise     = False
+
+reorder_a_and_b_stack :: ![ABCInstruction] -> [ABCInstruction]
+reorder_a_and_b_stack [i:is]
+| isAStackInstruction i = case span isAStackInstruction is of
+	([],_) -> [i:reorder_a_and_b_stack is]
+	(ais,rest) -> let ais` = [i:ais] in opt_reorder AStack ais` ++ reorder_a_and_b_stack rest
+| isBStackInstruction i = case span isBStackInstruction is of
+	([],_) -> [i:reorder_a_and_b_stack is]
+	(bis,rest) -> let bis` = [i:bis] in opt_reorder BStack bis` ++ reorder_a_and_b_stack rest
+| otherwise = [i:reorder_a_and_b_stack is]
+where
+	isAStackInstruction :: ABCInstruction -> Bool
+	isAStackInstruction i = case i of
+		Ipush_a _        -> True
+		Iupdate_a _ _    -> True
+		Iupdatepop_a _ _ -> True
+		Ipop_a _         -> True
+		_                -> False
+
+	isBStackInstruction :: ABCInstruction -> Bool
+	isBStackInstruction i = case i of
+		Ipush_b _        -> True
+		Iupdate_b _ _    -> True
+		Iupdatepop_b _ _ -> True
+		Ipop_b _         -> True
+		_                -> False
+reorder_a_and_b_stack [] = []
 
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
 opt_abc1 [Line "":is] = opt_abc1 is
@@ -315,8 +344,8 @@ opt_abc_new2 [Ijmp_eqD_b d0 b0 d0`,Ijmp_eqD_b d1 b1 d1`:is] = [Ijmp_eqD_b2 d0 b0
 opt_abc_new2 [Ijmp_eqC_b c0 b0 d0, Ijmp_eqC_b c1 b1 d1 :is] = [Ijmp_eqC_b2 c0 b0 d0  c1 b1 d1 :opt_abc_new2 is]
 opt_abc_new2 [Ijmp_eqI_b i0 b0 d0, Ijmp_eqI_b i1 b1 d1 :is] = [Ijmp_eqI_b2 i0 b0 d0  i1 b1 d1 :opt_abc_new2 is]
 
-opt_abc_new2 [IIns "eqI",Ijmp_true  l:is] = [Ijmp_eqI l:is]
-opt_abc_new2 [IIns "eqI",Ijmp_false l:is] = [Ijmp_neI l:is]
+opt_abc_new2 [IIns "eqI",Ijmp_true  l:is] = [Ijmp_eqI l:opt_abc_new2 is]
+opt_abc_new2 [IIns "eqI",Ijmp_false l:is] = [Ijmp_neI l:opt_abc_new2 is]
 opt_abc_new2 [IIns "eqI",IIns "notB":is] = [IIns "neI":opt_abc_new2 is]
 opt_abc_new2 [IIns "ltC",IIns "notB":is] = [IIns "geC":opt_abc_new2 is]
 
@@ -340,12 +369,12 @@ opt_abc_new2 [i0=:Ipop_a n:is] = case skip_b_instructions is 0 of
 
 opt_abc_new2 [Ipop_b n,Ijmp l:is] = [Ipop_b_jmp n l:opt_abc_new2 is]
 opt_abc_new2 [Ipop_b n,IpushB b:is] = [Ipop_b_pushB n b:opt_abc_new2 is]
-opt_abc_new2 [i0=:Ipop_b n,annot=:Annotation (Ad _ _ _):is] = case opt_abc_new2 is of
-	[Irtn:is]          -> [annot,Ipop_b_rtn n:is]
-	[Ijmp l:is]        -> [annot,Ipop_b_jmp n l:is]
-	[Ijsr l:is]        -> [annot,Ipop_b_jsr n l:is]
-	[Ipop_a_rtn n2:is] -> [annot,Ipop_ab_rtn n2 n:is]
-	is                 -> [i0,annot:is]
+opt_abc_new2 [i0=:Ipop_b n,annot=:Annotation (Ad _ _ _):is] = case is of
+	[Irtn:is]          -> [annot,Ipop_b_rtn n:opt_abc_new2 is]
+	[Ijmp l:is]        -> [annot,Ipop_b_jmp n l:opt_abc_new2 is]
+	[Ijsr l:is]        -> [annot,Ipop_b_jsr n l:opt_abc_new2 is]
+	[Ipop_a_rtn n2:is] -> [annot,Ipop_ab_rtn n2 n:opt_abc_new2 is]
+	is                 -> [i0,annot:opt_abc_new2 is]
 opt_abc_new2 [i0=:Ipop_b n:is] = case opt_abc_new2 is of
 	[annot=:Annotation (Ad _ _ _),Ipop_a_rtn n2:is] -> [Ipop_ab_rtn n2 n:is]
 	is                                              -> [i0:is]
