@@ -3117,7 +3117,7 @@ case CorI:
 	pc+=1;
 	continue;
 case Cpop_a:
-	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD_S*)pc)[1]);
+	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1] * 2); // TODO the *2 is 64-bit specific (#4)
 	pc+=2;
 	continue;
 case Cpop_b:

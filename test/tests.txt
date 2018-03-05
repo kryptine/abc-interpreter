@@ -1,0 +1,4 @@
+acker	StdInt
+invperm	StdInt
+nfib	StdInt
+tak	StdInt

@@ -7,6 +7,7 @@
 #include "bytecode.h"
 #include "interpret.h"
 #include "parse.h"
+#include "settings.h"
 #include "traps.h"
 #include "util.h"
 
@@ -65,7 +66,7 @@ int interpret(BC_WORD *code, BC_WORD *data,
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
-		printf(":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+		fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 #endif
 		switch (*pc) {
 #include "interpret_instructions.h"

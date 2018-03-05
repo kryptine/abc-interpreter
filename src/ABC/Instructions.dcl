@@ -24,6 +24,21 @@ from StdFile import class <<<
 	| Ipush_args !Int !Int !Int
 	| Ipush_r_args !Int !Int !Int
 	| Ieq_desc !String !Int !Int
+	| Ibuildh !String !Int
+	| Ijmp !String
+	| Ijmp_true !String
+	| Ijmp_false !String
+	| IpushC !Char
+	| IeqC_b !Char !Int
+	| IpushI !Int
+	| IeqI_b !Int !Int
+	| IpushI_a !Int
+	| IpushB_a !Int
+	| IpushC_a !Int
+	| IpushD_a !Int
+	| IpushB !Bool
+	| IpushD !String
+	| Ijsr_eval !Int
 	| IIns !String
 	| Line !String
 	// TODO: are these ever used?
