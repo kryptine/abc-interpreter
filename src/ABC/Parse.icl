@@ -89,13 +89,30 @@ where
 	| start >= size line   = (toString (reverse cs), start)
 	| isSpace line.[start] = (toString (reverse cs), start)
 	| otherwise            = id [line.[start]:cs] (start + 1) line
+parseLine`{|StringLiteral|} = \i s -> case s.[i] of
+	'"' -> let (sl,i) = stringlit [] (i+1) s in case s.[i] of
+		'"' -> Just (sl,i+1)
+		_   -> Nothing
+	_   -> Nothing
+where
+	stringlit :: [Char] !Int !String -> (StringLiteral, Int) // TODO escaping
+	stringlit cs start line
+	| start >= size line   = (StringLit (toString (reverse cs)), start)
+	| isSpace line.[start] = (StringLit (toString (reverse cs)), start)
+	| otherwise            = stringlit [line.[start]:cs] (start + 1) line
 
 parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
-	"IIns" -> Nothing
-	"Line" -> Nothing
-	instr  -> if (startsWith ((instr +++ " "):=(0,'\t')) line)
+	"IIns"            -> Nothing
+	"Line"            -> Nothing
+	"Annotation"      -> Nothing
+	"OtherAnnotation" -> Nothing
+	instr             -> if (startsWith ((instr +++ " "):=(0, first_char)) line)
 		(appFst CONS <$> fx (size instr + 1) line)
 		Nothing
+	with
+		first_char = case instr.[0] of
+			'I' -> '\t' // Instruction
+			'A' -> '.' // Annotation
 parseLine`{|OBJECT|} fx = \i s -> appFst OBJECT <$> fx i s
 parseLine`{|EITHER|} fl fr = \i s -> appFst LEFT <$> fl i s <|> appFst RIGHT <$> fr i s
 parseLine`{|UNIT|} = \i _ -> Just (UNIT, i)
@@ -108,14 +125,20 @@ where
 	| otherwise     = n
 
 derive bimap (,), Maybe
-derive parseLine` ABCInstruction
+derive parseLine` ABCInstruction, Annotation
 
 parseLine :: !String -> ABCInstruction
 parseLine s = case parseLine`{|*|} 0 s of
 	Just (i,_) -> i
 	Nothing -> case s.[0] of
 		'\t' -> IIns (s % (1,size s-1))
+		'.'  -> Annotation (parseAnnot s)
 		_    -> Line s
+where
+	parseAnnot :: !String -> Annotation
+	parseAnnot s = case parseLine`{|*|} 0 s of
+		Just (a,_) -> a
+		Nothing    -> OtherAnnotation (s % (1, size s - 1))
 
 import StdFile
 import StdString

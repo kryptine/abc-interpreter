@@ -278,77 +278,25 @@ opt_abc_new2 [Ipush_a a0,Iupdate_a a1 a2:is]
 	is -> [Ipush_update_a a0 (a1-1):is]
 opt_abc_new2 [Ipush_a a0,Iupdates2pop_a 0 1 a2:is]
 | a0+1==a2 && a0>1 = [Iswap_a a0:opt_abc_new2 is]
-// TODO
-//opt_abc_new2 [i0=:Ipush_a a0,i1=:Iupdates2pop_a 0 a1 a2:instructions2=:[i2=:Line s1,IIns s2:is]]
-//	| a0+1==a2 && a0>1 && a1>0 && a1<>a2
-//		| begins_with_dot_d s1
-//		 	| begins_with_jsr s2
-//				#! s1="exchange_a "+++toString a0+++" "+++toString (a1-1)
-//				#! s2="pop_a_jsr "+++toString (a1-1)+++s2 % (3,size s2-1)
-//				= [IIns s1,i2,IIns s2:opt_abc_new2 is]
-//		 	| begins_with_jmp s2
-//				#! s1="exchange_a "+++toString a0+++" "+++toString (a1-1)
-//				#! s2="pop_a_jmp "+++toString (a1-1)+++s2 % (3,size s2-1)
-//				= [IIns s1,i2,IIns s2:opt_abc_new2 is]
-//			| s2=="rtn"
-//				#! s1="exchange_a "+++toString a0+++" "+++toString (a1-1)
-//				#! s2="pop_a_rtn "+++toString (a1-1)
-//				= [IIns s1,i2,IIns s2:opt_abc_new2 is]
-//				= [i0,i1:opt_abc_new2 instructions2]
-//			= [i0,i1:opt_abc_new2 instructions2]
-//opt_abc_new2 [Ipush_a n,IIns s2,IIns s3:is]
-//	| begins_with7 'e' 'q' 'A' 'C' '_' 'a' ' ' s2 && size s3>=9 && begins_with_jmp_ s3 && true_after_jmp_ s3
-//		#! s="jmp_eqACio "+++s2 % (7,size s2-1)+++" "+++toString n+++s3 % (8,size s3-1)
-//		= [IIns s:opt_abc_new2 is]
-//opt_abc_new2 [i0=:Ipush_a n,i1=:IIns s1:is]
-//	| begins_with6 'b' 'u' 'i' 'l' 'd' ' ' s1 && is_build1 6 s1
-//		#! s="buildo1 "+++get_code_label 6 s1+++" "+++toString n
-//		= [IIns s:opt_abc_new2 is]
-//	| begins_with15 'p' 'u' 's' 'h' '_' 'a' 'r' 'r' 'a' 'y' 's' 'i' 'z' 'e' ' ' s1
-//		= case is of {
-//			[Ipush_b n2,IIns "ltI",IIns s2:is]
-//				| n2>0 && size s2>=9 && begins_with_jmp_ s2 && false_after_jmp_ s2
-//					#! space_index_after_descriptor = skip_to_space 15 s1; 
-//					#! s = "jmp_o_geI_arraysize_a "+++ s1 % (15,space_index_after_descriptor-1)
-//							+++" "+++toString (n2-1)+++" "+++toString n+++s2 % (9,size s2-1)
-//					-> [IIns s:opt_abc_new2 is]
-//			_
-//				#! s="push_arraysize_a "+++s1 % (15,size s1-1)+++" "+++toString n
-//				-> [IIns s:opt_abc_new2 is]
-//		  }
-//{}{
-//	is_build1 i s
-//		| i==size s
-//			= False
-//		| s.[i]<>' '
-//			= is_build1 (i+1) s
-//		| i+2>=size s 
-//			= False
-//		| s.[i+1]=='1'
-//			= s.[i+2]==' '
-//		| s.[i+1]=='-' && s.[i+2]>='1' && s.[i+2]<='9'
-//			= i+3<size s && s.[i+3]==' '
-//			= False
-//
-//	get_code_label i s
-//		| s.[i]<>' '
-//			= get_code_label (i+1) s
-//		| s.[i+1]=='1'
-//			= s % (i+3,size s-1)
-//			= s % (i+4,size s-1)
-//}
-//opt_abc_new2 [i0=:Ipush_a n:is]
-//	# (instructions2,n_b_instructions) = skip_b_instructions is 0
-//	= case instructions2 of {
-//		[i1=:Line s,IIns s2:instructions3]
-//			| begins_with_dot_d s && begins_with_jsr s2
-//				#! s="push_a_jsr "+++toString n+++s2 % (3,size s2-1)
-//				| n_b_instructions==0
-//					-> [i1,IIns s:opt_abc_new2 instructions3]
-//					-> opt_abc_new2 (add_instructions n_b_instructions is [i1,IIns s:instructions3])
-//		_
-//			-> [i0:opt_abc_new2 is]
-//	  }
+
+opt_abc_new2 [i0=:Ipush_a a0,i1=:Iupdates2pop_a 0 a1 a2:rest=:[a=:Annotation (Ad da db dbs),i:is]]
+| a0+1==a2 && a0>1 && a1>0 && a1<>a2 = case i of
+	Ijsr l -> [Iexchange_a a0 (a1-1),a,Ipop_a_jsr (a1-1) l:opt_abc_new2 is]
+	Ijmp l -> [Iexchange_a a0 (a1-1),a,Ipop_a_jmp (a1-1) l:opt_abc_new2 is]
+	Irtn   -> [Iexchange_a a0 (a1-1),a,Ipop_a_rtn (a1-1)  :opt_abc_new2 is]
+	i      -> [i0,i1:opt_abc_new2 rest]
+
+opt_abc_new2 [Ipush_a n,IeqAC_a s,Ijmp_true l:is] = [Ijmp_eqACio s n l:opt_abc_new2 is]
+
+opt_abc_new2 [Ipush_a n,Ibuild d1 1 d2:is] = [Ibuildo1 d2 n:opt_abc_new2 is]
+opt_abc_new2 [Ipush_a n,Ipush_arraysize t i0 i1:is] = case is of
+	[Ipush_b n2,IIns "ltI",Ijmp_false l:is] | n2 > 0 -> [Ijmp_o_geI_arraysize_a t (n2-1) n l:opt_abc_new2 is]
+	is                                               -> [Ipush_arraysize_a t i0 i1 n:opt_abc_new2 is]
+opt_abc_new2 [i0=:Ipush_a n:is] = case skip_b_instructions is 0 of
+	([annot=:Annotation (Ad da db dbs),jsr=:Ijsr l:is`], n_b) -> case n_b of
+		0 -> [annot,jsr:opt_abc_new2 is`]
+		_ -> opt_abc_new2 (take n_b is ++ [annot,jsr:is`])
+	_     -> [i0:opt_abc_new2 is]
 opt_abc_new2 [Ipush_b s0,Ipush_b s1:is]
 | s0==s1 && s0>0 = [Ipush2_b s0:opt_abc_new2 is]
 | s1>0 = [Ipush_b2 s0 (s1-1):opt_abc_new2 is]
@@ -357,165 +305,70 @@ opt_abc_new2 [Ipush_b sb,Ipush_a sa:is] = [Ipush_ab sa sb:opt_abc_new2 is]
 opt_abc_new2 [Ipush_b n,Ijmp_false l:is] = [Ijmp_b_false n l:opt_abc_new2 is]
 opt_abc_new2 [Ipush_b n,IIns "incI":is] = [Ipush_b_incI n:opt_abc_new2 is]
 opt_abc_new2 [Ipush_b n,IIns "ltI",Ijmp_false l:is] = [Ijmp_o_geI n l:opt_abc_new2 is]
-//TODO
-//opt_abc_new2 [i0=:Ipush_b n,i1=:Line s1,IIns s2:is]
-//	| begins_with_dot_d s1 && begins_with_jsr s2
-//		#! s="push_b_jsr "+++toString n+++s2 % (3,size s2-1)
-//		= [i1,IIns s:opt_abc_new2 is]
-//opt_abc_new2 [IIns s1,IIns s2:is]
-//	| begins_with8 'e' 'q' '_' 'd' 'e' 's' 'c' ' ' s1 && size s2>=9 && begins_with_jmp_ s2
-//		| true_after_jmp_ s2
-//			#! s = "jmp_"+++s1+++s2 % (8,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//		| false_after_jmp_ s2
-//			#! s = "jmp_ne_desc "+++s1 % (8,size s1-1)+++s2 % (9,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//			= [IIns s1,IIns s2:opt_abc_new2 is]
-//opt_abc_new2 [IIns s1,IIns s2,IIns s3:is]
-//	| begins_with8 'p' 'u' 's' 'h' 'D' '_' 'a' ' ' s1 &&
-//	  begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'D' '_' 'b' ' ' s2 &&
-//	  begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'D' '_' 'b' ' ' s3
-//		#! s = "pushD_a_jmp_eqD_b2 "+++s1 % (8,size s1)+++s2 % (9,size s2)+++s3 % (9,size s3-1)
-//		= [IIns s:opt_abc_new2 is]
-//opt_abc_new2 [IIns s1,IIns s2:is]
-//	| begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'D' '_' 'b' ' ' s1 &&
-//	  begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'D' '_' 'b' ' ' s2
-//		#! s = "jmp_eqD_b2 "+++s1 % (10,size s1)+++s2 % (9,size s2-1)
-//		= [IIns s:opt_abc_new2 is]
-//opt_abc_new2 [i1=:IIns s1,i2=:IIns s2:is]
-//	|  begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'C' '_' 'b' ' ' s1
-//	&& begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'C' '_' 'b' ' ' s2
-//		# (begin_offset1,after_offset1) = find_offset_before_label (size s1-1) s1
-//		# (begin_offset2,after_offset2) = find_offset_before_label (size s2-1) s2
-//		| begin_offset1>=0 && begin_offset2>=0
-//		  && s1 % (begin_offset1,after_offset1-1) == s2 % (begin_offset2,after_offset2-1)
-//			#! s = "jmp_eqC_b2 "+++s1 % (10,begin_offset1-2)+++s2 % (9,after_offset2-1)
-//								+++s1 % (after_offset1,size s1-1)+++s2 % (after_offset2,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//			= [i1,i2:opt_abc_new2 is]
-//opt_abc_new2 [i1=:IIns s1,i2=:IIns s2:is]
-//	|  begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'I' '_' 'b' ' ' s1
-//	&& begins_with10 'j' 'm' 'p' '_' 'e' 'q' 'I' '_' 'b' ' ' s2
-//		# (begin_offset1,after_offset1) = find_offset_before_label (size s1-1) s1
-//		# (begin_offset2,after_offset2) = find_offset_before_label (size s2-1) s2
-//		| begin_offset1>=0 && begin_offset2>=0
-//		  && s1 % (begin_offset1,after_offset1-1) == s2 % (begin_offset2,after_offset2-1)
-//			#! s = "jmp_eqI_b2 "+++s1 % (10,begin_offset1-2)+++s2 % (9,after_offset2-1)
-//								+++s1 % (after_offset1,size s1-1)+++s2 % (after_offset2,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//			= [i1,i2:opt_abc_new2 is]
-//opt_abc_new2 [i1=:IIns "eqI",i2=:IIns s2:is]
-//	| size s2>=9 && begins_with_jmp_ s2
-//		| true_after_jmp_ s2
-//			#! s = "jmp_eqI "+++s2 % (9,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//		| false_after_jmp_ s2
-//			#! s = "jmp_neI "+++s2 % (10,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//			= [i1,i2:opt_abc_new2 is]
+opt_abc_new2 [Ipush_b n,annot=:Annotation (Ad _ _ _),Ijsr l:is] = [annot,Ipush_b_jsr n l:opt_abc_new2 is]
+
+opt_abc_new2 [Ieq_desc d i0 i1,Ijmp_true  l:is] = [Ijmp_eq_desc d i0 i1 l:opt_abc_new2 is]
+opt_abc_new2 [Ieq_desc d i0 i1,Ijmp_false l:is] = [Ijmp_ne_desc d i0 i1 l:opt_abc_new2 is]
+
+opt_abc_new2 [IpushD_a i0,Ijmp_eqD_b d0 b0 d0`,Ijmp_eqD_b d1 b1 d1`:is] = [IpushD_a_jmp_eqD_b2 i0 d0 b0 d0` d1 b1 d1`:opt_abc_new2 is]
+opt_abc_new2 [Ijmp_eqD_b d0 b0 d0`,Ijmp_eqD_b d1 b1 d1`:is] = [Ijmp_eqD_b2 d0 b0 d0` d1 b1 d1`:opt_abc_new2 is]
+opt_abc_new2 [Ijmp_eqC_b c0 b0 d0, Ijmp_eqC_b c1 b1 d1 :is] = [Ijmp_eqC_b2 c0 b0 d0  c1 b1 d1 :opt_abc_new2 is]
+opt_abc_new2 [Ijmp_eqI_b i0 b0 d0, Ijmp_eqI_b i1 b1 d1 :is] = [Ijmp_eqI_b2 i0 b0 d0  i1 b1 d1 :opt_abc_new2 is]
+
+opt_abc_new2 [IIns "eqI",Ijmp_true  l:is] = [Ijmp_eqI l:is]
+opt_abc_new2 [IIns "eqI",Ijmp_false l:is] = [Ijmp_neI l:is]
 opt_abc_new2 [IIns "eqI",IIns "notB":is] = [IIns "neI":opt_abc_new2 is]
 opt_abc_new2 [IIns "ltC",IIns "notB":is] = [IIns "geC":opt_abc_new2 is]
-// TODO
-//opt_abc_new2 [i1=:IIns "ltI",i2=:IIns s2:is]
-//	| size s2>=9 && begins_with_jmp_ s2
-//		| true_after_jmp_ s2
-//			#! s = "jmp_ltI "+++s2 % (9,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//		| false_after_jmp_ s2
-//			#! s = "jmp_geI "+++s2 % (10,size s2-1)
-//			= [IIns s:opt_abc_new2 is]
-//			= [i1,i2:opt_abc_new2 is]
-//opt_abc_new2 [i0=:Ipop_a n:is]
-//	# (instructions2,n_b_instructions) = skip_b_instructions is 0
-//	= case instructions2 of {
-//		[IIns s2:instructions3]
-//			| begins_with_jmp s2
-//				#! s="pop_a_jmp "+++toString n+++s2 % (3,size s2-1)
-//				| n_b_instructions==0
-//					-> [IIns s:opt_abc_new2 is]
-//					-> opt_abc_new2 (add_instructions n_b_instructions is [IIns s:instructions3])
-//		[i1=:Line s,IIns "rtn":instructions3]
-//			| begins_with_dot_d s
-//				#! s="pop_a_rtn "+++toString n
-//				| n_b_instructions==0
-//					-> [i1,IIns s:opt_abc_new2 instructions3]
-//					-> opt_abc_new2 (add_instructions n_b_instructions is [i1,IIns s:instructions3])
-//		[i1=:Line s,IIns s2:instructions3]
-//			| begins_with_dot_d s && begins_with_jmp s2
-//				#! s="pop_a_jmp "+++toString n+++s2 % (3,size s2-1)
-//				| n_b_instructions==0
-//					-> [i1,IIns s:opt_abc_new2 instructions3]
-//					-> opt_abc_new2 (add_instructions n_b_instructions is [i1,IIns s:instructions3])
-//			| begins_with_dot_d s && begins_with_jsr s2
-//				#! s="pop_a_jsr "+++toString n+++s2 % (3,size s2-1)
-//				| n_b_instructions==0
-//					-> [i1,IIns s:opt_abc_new2 instructions3]
-//					-> opt_abc_new2 (add_instructions n_b_instructions is [i1,IIns s:instructions3])
-//		_
-//			-> [i0:opt_abc_new2 is]
-//	  }
-//opt_abc_new2 [Ipop_b n,IIns s:is]
-//	| begins_with_jmp s
-//		#! s="pop_b_jmp "+++toString n+++s % (3,size s-1)
-//		= [IIns s:opt_abc_new2 is]
-//	| s=="pushB FALSE"
-//		#! s="pop_b_pushB "+++toString n+++" FALSE"
-//		= [IIns s:opt_abc_new2 is];		
-//	| s=="pushB TRUE"
-//		#! s="pop_b_pushB "+++toString n+++" TRUE"
-//		= [IIns s:opt_abc_new2 is];		
-//opt_abc_new2 [i0=:Ipop_b n,i1=:Line s1:instructions2=:[IIns s2:is]]
-//	| begins_with_dot_d s1
-//		| s2=="rtn"
-//			#! s="pop_b_rtn "+++toString n
-//			= [i1,IIns s:opt_abc_new2 is]
-//		| begins_with_jmp s2
-//			#! s="pop_b_jmp "+++toString n+++s2 % (3,size s2-1)
-//			= [i1,IIns s:opt_abc_new2 is]
-//		| begins_with_jsr s2
-//			#! s="pop_b_jsr "+++toString n+++s2 % (3,size s2-1)
-//			= [i1,IIns s:opt_abc_new2 is]
-//		| begins_with10 'p' 'o' 'p' '_' 'a' '_' 'r' 't' 'n' ' ' s2
-//			#! s="pop_ab_rtn "+++s2 % (10,size s2-1)+++" "+++toString n
-//			= [i1,IIns s:opt_abc_new2 is]
-//			= [i0,i1:opt_abc_new2 instructions2]
-//opt_abc_new2 [i0=:Ipop_b n:is]
-//	= case opt_abc_new2 is of {
-//		[i1=:Line s1,IIns s2:is]
-//			| begins_with_dot_d s1 && begins_with10 'p' 'o' 'p' '_' 'a' '_' 'r' 't' 'n' ' ' s2
-//				#! s="pop_ab_rtn "+++s2 % (10,size s2-1)+++" "+++toString n
-//				-> [i1,IIns s:is]
-//		is
-//			-> [i0:is]
-//	  }
-//opt_abc_new2 [i1=:IIns s1:is]
-//	| begins_with_buildh s1 && s1.[size s1-2]==' ' && s1.[size s1-1]=='0'
-//		# is = opt_abc_new2 is
-//		= case is of {
-//			[Iput_a n,i3=:Line s2,IIns s3:is]
-//				| begins_with_dot_d s2 && begins_with_jsr s3
-//					#! s="buildh0_put_a_jsr "+++s1 % (7,size s1-2)+++" "+++toString n+++s3 % (3,size s3-1)
-//					-> [i3,IIns s:is]
-//			[Iput_a n:is]
-//				#! s="buildh0_put_a "+++s1 % (7,size s1-2)+++" "+++toString n
-//				-> [IIns s:is]
-//			[Idup_a n:is]
-//				#! s="buildh0_dup_a "+++s1 % (7,size s1-2)+++" "+++toString n
-//				-> [IIns s:is]
-//			[Idup2_a n:is]
-//				#! s="buildh0_dup2_a "+++s1 % (7,size s1-2)+++" "+++toString n
-//				-> [IIns s:is]
-//			[Idup3_a n:is]
-//				#! s="buildh0_dup3_a "+++s1 % (7,size s1-2)+++" "+++toString n
-//				-> [IIns s:is]
-//			_
-//				-> [i1:is]
-//		}
-//opt_abc_new2 [IIns "fill_a 0 1",Ipop_a 1,i2=:Line s,IIns "rtn":is]
-//	| begins_with_dot_d s
-//		= [i2,IIns "fill_a01_pop_rtn":opt_abc_new2 is]
+
+opt_abc_new2 [IIns "ltI",Ijmp_true  l:is] = [Ijmp_ltI l:opt_abc_new2 is]
+opt_abc_new2 [IIns "ltI",Ijmp_false l:is] = [Ijmp_geI l:opt_abc_new2 is]
+
+opt_abc_new2 [i0=:Ipop_a n:is] = case skip_b_instructions is 0 of
+	([jmp=:Ijmp l:is`], n_b) -> case n_b of
+		0 -> [Ipop_a_jmp n l:opt_abc_new2 is]
+		_ -> opt_abc_new2 (take n_b is ++ [Ipop_a_jmp n l:is`])
+	([annot=:Annotation (Ad _ _ _),Irtn:is`], n_b) -> case n_b of
+		0 -> [annot,Ipop_a_rtn n:opt_abc_new2 is`]
+		_ -> opt_abc_new2 (take n_b is ++ [annot,Ipop_a_rtn n:is`])
+	([annot=:Annotation (Ad _ _ _),Ijmp l:is`], n_b) -> case n_b of
+		0 -> [annot,Ipop_a_jmp n l:opt_abc_new2 is`]
+		_ -> opt_abc_new2 (take n_b is ++ [annot,Ipop_a_jmp n l:is`])
+	([annot=:Annotation (Ad _ _ _),Ijsr l:is`], n_b) -> case n_b of
+		0 -> [annot,Ipop_a_jsr n l:opt_abc_new2 is`]
+		_ -> opt_abc_new2 (take n_b is ++ [annot,Ipop_a_jsr n l:is`])
+	_     -> [i0:opt_abc_new2 is]
+
+opt_abc_new2 [Ipop_b n,Ijmp l:is] = [Ipop_b_jmp n l:opt_abc_new2 is]
+opt_abc_new2 [Ipop_b n,IpushB b:is] = [Ipop_b_pushB n b:opt_abc_new2 is]
+opt_abc_new2 [i0=:Ipop_b n,annot=:Annotation (Ad _ _ _):is] = case opt_abc_new2 is of
+	[Irtn:is]          -> [annot,Ipop_b_rtn n:is]
+	[Ijmp l:is]        -> [annot,Ipop_b_jmp n l:is]
+	[Ijsr l:is]        -> [annot,Ipop_b_jsr n l:is]
+	[Ipop_a_rtn n2:is] -> [annot,Ipop_ab_rtn n2 n:is]
+	is                 -> [i0,annot:is]
+opt_abc_new2 [i0=:Ipop_b n:is] = case opt_abc_new2 is of
+	[annot=:Annotation (Ad _ _ _),Ipop_a_rtn n2:is] -> [Ipop_ab_rtn n2 n:is]
+	is                                              -> [i0:is]
+opt_abc_new2 [i1=:Ibuildh id 0:is] = case opt_abc_new2 is of
+	[Iput_a n,annot=:Annotation (Ad _ _ _),Ijsr l:is] -> [annot,Ibuildh0_put_a_jsr id n l:is]
+	[Iput_a  n:is] -> [Ibuildh0_put_a  id n:is]
+	[Idup_a  n:is] -> [Ibuildh0_dup_a  id n:is]
+	[Idup2_a n:is] -> [Ibuildh0_dup2_a id n:is]
+	[Idup3_a n:is] -> [Ibuildh0_dup3_a id n:is]
+	is             -> [i1:is]
+opt_abc_new2 [Ifill_a 0 1,Ipop_a 1,annot=:Annotation (Ad _ _ _),IIns "rtn":is] = [annot,Ifill_a01_pop_rtn:opt_abc_new2 is]
 opt_abc_new2 [i:is] = [i:opt_abc_new2 is]
 opt_abc_new2 [] = []
+
+skip_b_instructions :: ![ABCInstruction] !Int -> (![ABCInstruction],!Int);
+skip_b_instructions [IpushB _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions [IIns "eqI":is] n = skip_b_instructions is (n+1)
+skip_b_instructions [IpushB _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions [IpushC _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions [IpushD _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions [IpushI _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions [Ipop_b _:is]   n = skip_b_instructions is (n+1)
+skip_b_instructions is              n = (is,n)
 
 Start :: *World -> *World
 Start w

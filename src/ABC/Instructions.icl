@@ -41,17 +41,24 @@ where
 	printBool :: !Bool -> String
 	printBool b = if b "TRUE" "FALSE"
 printInstruction{|String|} s = s
+printInstruction{|StringLiteral|} (StringLit s) = "\"" +++ s +++ "\"" // TODO escape
 printInstruction{|UNIT|} UNIT = ""
 printInstruction{|PAIR|} fx fy (PAIR x y) = fx x +++ " " +++ fy y
 printInstruction{|EITHER|} fl _  (LEFT x)  = fl x
 printInstruction{|EITHER|} _  fr (RIGHT x) = fr x
 printInstruction{|OBJECT|} fx (OBJECT x) = fx x
 printInstruction{|CONS of d|} fx (CONS x) = case d.gcd_name of
-	"IIns" -> "\t" +++ fx x +++ "\n"
-	"Line" -> fx x +++ "\n"
-	instr  -> (instr +++ " " +++ fx x +++ "\n"):=(0, '\t')
+	"IIns"            -> "\t" +++ fx x +++ "\n"
+	"Line"            -> fx x +++ "\n"
+	"Annotation"      -> fx x
+	"OtherAnnotation" -> "." +++ fx x +++ "\n"
+	instr             -> (instr +++ " " +++ fx x +++ "\n"):=(0, first_char)
+	with
+		first_char = case instr.[0] of
+			'I' -> '\t' // Instruction
+			'A' -> '.' // Annotation
 
-derive printInstruction ABCInstruction
+derive printInstruction ABCInstruction, Annotation
 
 instance <<< ABCInstruction where <<< f i = f <<< printInstruction{|*|} i
 
