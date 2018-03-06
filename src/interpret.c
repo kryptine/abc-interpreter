@@ -76,12 +76,14 @@ int interpret(BC_WORD *code, BC_WORD *data,
 	}
 }
 
-const char usage[] = "Usage: %s [-l] [-h SIZE] [-s SIZE] FILE\n";
+const char usage[] = "Usage: %s [-l] [-H] [-R] [-h SIZE] [-s SIZE] FILE\n";
 
 int main(int argc, char **argv) {
 	int opt;
 
 	int list_program = 0;
+	int human_readable = 0;
+	int run = 1;
 	FILE *input = NULL;
 	size_t stack_size = 512 << 10;
 	size_t heap_size = 2 << 20;
@@ -94,10 +96,16 @@ int main(int argc, char **argv) {
 	struct parser state;
 	init_parser(&state);
 
-	while ((opt = getopt(argc, argv, "ls:h:")) != -1) {
+	while ((opt = getopt(argc, argv, "lHRs:h:")) != -1) {
 		switch (opt) {
 			case 'l':
 				list_program = 1;
+				break;
+			case 'H':
+				human_readable = 1;
+				break;
+			case 'R':
+				run = 0;
 				break;
 			case 's':
 				stack_size = string_to_size(optarg);
@@ -145,8 +153,11 @@ int main(int argc, char **argv) {
 	}
 
 	if (list_program) {
-		print_program(stdout, state.program);
+		print_program(stdout, state.program, human_readable);
 	}
+
+	if (!run)
+		return 0;
 
 	handle_relocations(state.program);
 

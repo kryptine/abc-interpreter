@@ -134,7 +134,7 @@ enum {
 	Cfillh3,
 	Cfillh4,
 	CfillB_b,
-	CfillC_b,	
+	CfillC_b,
 	CfillF_b,
 	CfillI_b,
 	Cfill_a,
@@ -463,6 +463,7 @@ enum {
 	Cfill3
 };
 
-char *instruction_name (BC_WORD i);
+char *instruction_name(BC_WORD i, int with_nr);
+char *instruction_type(BC_WORD i);
 
 #endif

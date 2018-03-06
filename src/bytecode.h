@@ -31,7 +31,7 @@ struct program {
 #endif
 };
 
-void print_program(FILE*, struct program*);
+void print_program(FILE*, struct program*, int human_readable);
 
 void handle_relocations(struct program *pgm);
 
