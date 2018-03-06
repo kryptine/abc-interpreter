@@ -4,7 +4,7 @@
 #include "instruction_table.h"
 
 void init_parser(void);
-void parse_instruction_line(struct instruction*, char*, int);
+void parse_instruction_line(instruction*, char*, int);
 
 int parse_instruction(instruction*);
 int parse_instruction_a(instruction*, char*);
@@ -15,7 +15,6 @@ int parse_instruction_a_n_a_n(instruction*);
 int parse_instruction_a_n_n(instruction*);
 int parse_instruction_a_n_n_a(instruction*);
 int parse_instruction_a_n_n_n(instruction*);
-void parse_bit_string(char*);
 int parse_instruction_a_n_n_b(instruction*);
 int parse_instruction_a_n_n_n_b(instruction*);
 int parse_instruction_a_n_n_n_n(instruction*);

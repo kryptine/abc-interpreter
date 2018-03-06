@@ -18,8 +18,8 @@ typedef struct program {
 	uint32_t data_reloc_size;
 	BC_WORD *code;
 	BC_WORD *data;
-	relocation *code_relocations;
-	relocation *data_relocations;
+	struct relocation *code_relocations;
+	struct relocation *data_relocations;
 } program;
 
 extern program pgrm;

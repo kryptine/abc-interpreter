@@ -63,7 +63,7 @@ static int skip_spaces_and_tabs (void)
 		return 0;
 }
 
-void parse_instruction_line(struct instruction *instr, char *line, int line_nr) {
+void parse_instruction_line(instruction *instr, char *line, int line_nr) {
 	line_number = line_nr;
 	current_line = line;
 	last_char = next_character();

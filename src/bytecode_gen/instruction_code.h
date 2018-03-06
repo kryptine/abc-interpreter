@@ -2,10 +2,7 @@
 
 #include<inttypes.h>
 
-#include "../parse.h"
 #include "bytecode_gen.h"
-
-#define CleanInt int64_t
 
 typedef struct relocation {
 	int relocation_offset;
