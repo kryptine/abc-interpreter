@@ -9,6 +9,7 @@ import StdInt
 import StdList
 import StdString
 
+import Data.Maybe
 from Text import <+
 
 import ABC.Instructions
@@ -25,7 +26,7 @@ optimise =
 	opt_abc1 o
 	opt_abc1 o
 	reorder_a_and_b_stack o
-	// TODO: reorder_abc o
+	reorder_abc o
 	opt_abc
 
 isCommutativeBStackInstruction :: !ABCInstruction -> Bool
@@ -91,6 +92,35 @@ isComment i s
 | s.[i] == '|'  = True
 | isSpace s.[i] = isComment (i+1) s
 | otherwise     = False
+
+reorder_abc :: ![ABCInstruction] -> [ABCInstruction]
+reorder_abc [i:is]
+| isAStackInstruction i = reorder_a i is
+| isBStackInstruction i = reorder_b i is
+| otherwise             = [i:reorder_abc is]
+where
+	reorder_a :: !ABCInstruction ![ABCInstruction] -> [ABCInstruction]
+	reorder_a i is = case findInstr is 0 of
+		Nothing         -> [i:reorder_abc is]
+		Just (n,i2,is2) -> [i,i2:take n is ++ is2]
+	where
+		findInstr [i:is] n
+		| isAStackInstruction i                     = Just (n,i,is)
+		| isBStackInstruction i                     = findInstr is (n+1)
+		| i=:IpushB _ || i=:IpushC _ || i=:IpushI _ = findInstr is (n+1)
+		findInstr _ _ = Nothing
+
+	reorder_b :: !ABCInstruction ![ABCInstruction] -> [ABCInstruction]
+	reorder_b i is = case findInstr is 0 of
+		Nothing         -> [i:reorder_abc is]
+		Just (n,i2,is2) -> [i,i2:take n is ++ is2]
+	where
+		findInstr [i:is] n
+		| isBStackInstruction i             = Just (n,i,is)
+		| isAStackInstruction i             = findInstr is (n+1)
+		| i=:(Ibuildh _ 0) || i=:IbuildAC _ = findInstr is (n+1)
+		findInstr _ _ = Nothing
+reorder_abc [] = []
 
 reorder_a_and_b_stack :: ![ABCInstruction] -> [ABCInstruction]
 reorder_a_and_b_stack [i:is]

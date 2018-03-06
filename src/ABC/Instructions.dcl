@@ -6,6 +6,7 @@ from StdFile import class <<<
 	= IandIi !Int
 	| IandIio !Int !Int
 	| Ibuild !String !Int !String
+	| IbuildAC !StringLiteral
 	| Ibuildh !String !Int
 	| Ibuildh0_dup2_a !String !Int
 	| Ibuildh0_dup3_a !String !Int
