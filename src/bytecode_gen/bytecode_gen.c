@@ -12,6 +12,8 @@ char* skip_whitespace(char* string) {
 	return string;
 }
 
+static int line_number = 0;
+
 // Parse the current line
 // size argument might not be needed
 void parse_line(char* line, size_t size) {
@@ -22,11 +24,11 @@ void parse_line(char* line, size_t size) {
 
 	if ((token = strsep(&end, " \n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
-		if (i != NULL)
-			i->parse_function(line);
-		else
-			printf("%s", token);
-		printf("\n");
+		if (i != NULL) {
+			printf("%s\t%s %s", i->name, line, end);
+			parse_instruction_line(i, end, line_number);
+		} else
+			printf("???\t%s %s\n", line, end);
 	}
 }
 
@@ -34,11 +36,13 @@ void parse_file(FILE *file) {
 	char* line = NULL;
 	size_t size = 0;
 	while(getline(&line, &size, file) > 0) {
+		line_number++;
 		parse_line(line, size);
 	}
 }
 
 void parse_files() {
+	init_parser();
 	init_instruction_table();
 	load_instruction_table();
 
