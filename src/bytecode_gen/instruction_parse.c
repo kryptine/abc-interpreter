@@ -1,4 +1,6 @@
 #include <inttypes.h>
+#include "instruction_parse.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -615,13 +617,13 @@ static char *parse_string2 (char *string,int *string_length_p)
 	return string;
 }
 
-int parse_instruction (struct instruction *instruction)
+int parse_instruction (instruction *instruction)
 {
 	instruction->code_function();
 	return 1;
 }
 
-int parse_instruction_a (struct instruction *instruction)
+int parse_instruction_a (instruction *instruction)
 {
 	STRING a;
 
@@ -630,7 +632,7 @@ int parse_instruction_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n (struct instruction *instruction)
+int parse_instruction_a_n (instruction *instruction)
 {
 	STRING a;
 	LONG n;
@@ -642,7 +644,7 @@ int parse_instruction_a_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_a (struct instruction *instruction)
+int parse_instruction_a_n_a (instruction *instruction)
 {
 	STRING a1,a2;
 	LONG n1;
@@ -655,7 +657,7 @@ int parse_instruction_a_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_a_a_n_a (struct instruction *instruction)
+int parse_instruction_a_n_a_a_n_a (instruction *instruction)
 {
 	STRING a1,a2,a3,a4;
 	LONG n1,n2;
@@ -672,7 +674,7 @@ int parse_instruction_a_n_a_a_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_a_n (struct instruction *instruction)
+int parse_instruction_a_n_a_n (instruction *instruction)
 {
 	STRING a1,a2;
 	LONG n1,n2;
@@ -687,7 +689,7 @@ int parse_instruction_a_n_a_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n (struct instruction *instruction)
+int parse_instruction_a_n_n (instruction *instruction)
 {
 	STRING a;
 	LONG n1,n2;
@@ -699,7 +701,7 @@ int parse_instruction_a_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n_a (struct instruction *instruction)
+int parse_instruction_a_n_n_a (instruction *instruction)
 {
 	STRING a1,a2;
 	LONG n1,n2;
@@ -714,7 +716,7 @@ int parse_instruction_a_n_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n_n (struct instruction *instruction)
+int parse_instruction_a_n_n_n (instruction *instruction)
 {
 	STRING a;
 	LONG n1,n2,n3;
@@ -741,7 +743,7 @@ static void parse_bit_string (char *s_p)
 	*s_p='\0';
 }
 
-int parse_instruction_a_n_n_b (struct instruction *instruction)
+int parse_instruction_a_n_n_b (instruction *instruction)
 {
 	STRING a1,a2;
 	LONG n1,n2;
@@ -760,7 +762,7 @@ int parse_instruction_a_n_n_b (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n_n_b (struct instruction *instruction)
+int parse_instruction_a_n_n_n_b (instruction *instruction)
 {
 	STRING a1,a2;
 	LONG n1,n2,n3;
@@ -781,7 +783,7 @@ int parse_instruction_a_n_n_n_b (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n_n_n (struct instruction *instruction)
+int parse_instruction_a_n_n_n_n (instruction *instruction)
 {
 	STRING a1;
 	LONG n1,n2,n3,n4;
@@ -794,7 +796,7 @@ int parse_instruction_a_n_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_a_n_n_n_n_n (struct instruction *instruction)
+int parse_instruction_a_n_n_n_n_n (instruction *instruction)
 {
 	STRING a1;
 	LONG n1,n2,n3,n4,n5;
@@ -808,7 +810,7 @@ int parse_instruction_a_n_n_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_b (struct instruction *instruction)
+int parse_instruction_b (instruction *instruction)
 {
 	int b;
 
@@ -818,7 +820,7 @@ int parse_instruction_b (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_b_n (struct instruction *instruction)
+int parse_instruction_b_n (instruction *instruction)
 {
 	int b;
 	LONG n;
@@ -829,7 +831,7 @@ int parse_instruction_b_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_c (struct instruction *instruction)
+int parse_instruction_c (instruction *instruction)
 {
 	unsigned char c;
 
@@ -839,7 +841,7 @@ int parse_instruction_c (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_c_c_n_a_a (struct instruction *instruction)
+int parse_instruction_c_c_n_a_a (instruction *instruction)
 {
 	unsigned char c1,c2;
 	LONG n;
@@ -853,7 +855,7 @@ int parse_instruction_c_c_n_a_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_c_n (struct instruction *instruction)
+int parse_instruction_c_n (instruction *instruction)
 {
 	unsigned char c;
 	LONG n;
@@ -864,7 +866,7 @@ int parse_instruction_c_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_c_n_a (struct instruction *instruction)
+int parse_instruction_c_n_a (instruction *instruction)
 {
 	unsigned char c;
 	LONG n;
@@ -877,7 +879,7 @@ int parse_instruction_c_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_i (struct instruction *instruction)
+int parse_instruction_i (instruction *instruction)
 {
 	CleanInt i;
 
@@ -887,7 +889,7 @@ int parse_instruction_i (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_i_i_n_a_a (struct instruction *instruction)
+int parse_instruction_i_i_n_a_a (instruction *instruction)
 {
 	CleanInt i1,i2;
 	LONG n;
@@ -901,7 +903,7 @@ int parse_instruction_i_i_n_a_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_i_n (struct instruction *instruction)
+int parse_instruction_i_n (instruction *instruction)
 {
 	CleanInt i;
 	LONG n;
@@ -912,7 +914,7 @@ int parse_instruction_i_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_i_n_a (struct instruction *instruction)
+int parse_instruction_i_n_a (instruction *instruction)
 {
 	CleanInt i;
 	LONG n;
@@ -925,7 +927,7 @@ int parse_instruction_i_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_l (struct instruction *instruction)
+int parse_instruction_l (instruction *instruction)
 {
 	STRING a;
 
@@ -934,7 +936,7 @@ int parse_instruction_l (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n (struct instruction *instruction)
+int parse_instruction_n (instruction *instruction)
 {
 	LONG n;
 
@@ -945,7 +947,7 @@ int parse_instruction_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_a (struct instruction *instruction)
+int parse_instruction_n_a (instruction *instruction)
 {
 	STRING a;
 	LONG n;
@@ -957,7 +959,7 @@ int parse_instruction_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_a_n_a_a_n_a (struct instruction *instruction)
+int parse_instruction_n_a_n_a_a_n_a (instruction *instruction)
 {
 	STRING a1,a2,a3,a4;
 	LONG n0,n1,n2;
@@ -976,7 +978,7 @@ int parse_instruction_n_a_n_a_a_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_b (struct instruction *instruction)
+int parse_instruction_n_b (instruction *instruction)
 {
 	int b;
 	LONG n;
@@ -987,7 +989,7 @@ int parse_instruction_n_b (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_n (struct instruction *instruction)
+int parse_instruction_n_n (instruction *instruction)
 {
 	LONG n1,n2;
 
@@ -997,7 +999,7 @@ int parse_instruction_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_n_n (struct instruction *instruction)
+int parse_instruction_n_n_n (instruction *instruction)
 {
 	LONG n1,n2,n3;
 
@@ -1008,7 +1010,7 @@ int parse_instruction_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_n_n_n (struct instruction *instruction)
+int parse_instruction_n_n_n_n (instruction *instruction)
 {
 	LONG n1,n2,n3,n4;
 
@@ -1019,7 +1021,7 @@ int parse_instruction_n_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_n_n_n_n (struct instruction *instruction)
+int parse_instruction_n_n_n_n_n (instruction *instruction)
 {
 	LONG n1,n2,n3,n4,n5;
 
@@ -1031,7 +1033,7 @@ int parse_instruction_n_n_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_n_n_n_n_n_n_n (struct instruction *instruction)
+int parse_instruction_n_n_n_n_n_n_n (instruction *instruction)
 {
 	LONG n1,n2,n3,n4,n5,n6,n7;
 
@@ -1044,7 +1046,7 @@ int parse_instruction_n_n_n_n_n_n_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_on (struct instruction *instruction)
+int parse_instruction_on (instruction *instruction)
 {
 	LONG n;
 
@@ -1058,7 +1060,7 @@ int parse_instruction_on (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_s (struct instruction *instruction)
+int parse_instruction_s (instruction *instruction)
 {
 	STRING s;
 	int length;
@@ -1069,7 +1071,7 @@ int parse_instruction_s (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_s2 (struct instruction *instruction)
+int parse_instruction_s2 (instruction *instruction)
 {
 	STRING s;
 	int length;
@@ -1085,7 +1087,7 @@ int parse_instruction_s2 (struct instruction *instruction)
 	return 1;
 }
 
-int parse_instruction_s2_n_a (struct instruction *instruction)
+int parse_instruction_s2_n_a (instruction *instruction)
 {
 	STRING s1,s2;
 	int length;
@@ -1105,13 +1107,13 @@ int parse_instruction_s2_n_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive (struct instruction *instruction)
+int parse_directive (instruction *instruction)
 {
 	instruction->code_function();
 	return 1;
 }
 
-int parse_directive_a (struct instruction *instruction)
+int parse_directive_a (instruction *instruction)
 {
 	LONG n;
 	STRING s;
@@ -1125,7 +1127,7 @@ int parse_directive_a (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_depend (struct instruction *instruction)
+int parse_directive_depend (instruction *instruction)
 {
 	STRING a;
 	int l;
@@ -1156,7 +1158,7 @@ int parse_directive_depend (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_desc (struct instruction *instruction)
+int parse_directive_desc (instruction *instruction)
 {
 	STRING a1,a2,a3,s;
 	int l;
@@ -1173,7 +1175,7 @@ int parse_directive_desc (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_desc0 (struct instruction *instruction)
+int parse_directive_desc0 (instruction *instruction)
 {
 	STRING a1,s;
 	int l;
@@ -1187,7 +1189,7 @@ int parse_directive_desc0 (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_descn (struct instruction *instruction)
+int parse_directive_descn (instruction *instruction)
 {
 	STRING a1,a2,s;
 	int l;
@@ -1202,7 +1204,7 @@ int parse_directive_descn (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_implab (struct instruction *instruction)
+int parse_directive_implab (instruction *instruction)
 {
 	STRING s;
 
@@ -1220,7 +1222,7 @@ int parse_directive_implab (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_labels (struct instruction *instruction)
+int parse_directive_labels (instruction *instruction)
 {
 	STRING s;
 
@@ -1241,7 +1243,7 @@ int parse_directive_labels (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_module (struct instruction *instruction)
+int parse_directive_module (instruction *instruction)
 {
 	STRING a,s;
 	int l;
@@ -1262,7 +1264,7 @@ int parse_directive_module (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_n (struct instruction *instruction)
+int parse_directive_n (instruction *instruction)
 {
 	LONG n;
 	STRING s;
@@ -1285,7 +1287,7 @@ int parse_directive_n (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_nu (struct instruction *instruction)
+int parse_directive_nu (instruction *instruction)
 {
 	LONG n1,n2;
 	STRING s;
@@ -1308,7 +1310,7 @@ int parse_directive_nu (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_n_l (struct instruction *instruction)
+int parse_directive_n_l (instruction *instruction)
 {
 	LONG n;
 	STRING s;
@@ -1327,7 +1329,7 @@ int parse_directive_n_l (struct instruction *instruction)
 #define LOG_SMALL_VECTOR_SIZE 5
 #define MASK_SMALL_VECTOR_SIZE 31
 
-int parse_directive_n_n_t (struct instruction *instruction)
+int parse_directive_n_n_t (instruction *instruction)
 {
 	LONG n1,n2;
 	int i;
@@ -1379,7 +1381,7 @@ int parse_directive_n_n_t (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_label (struct instruction *instruction)
+int parse_directive_label (instruction *instruction)
 {
 	STRING s;
 
@@ -1390,7 +1392,7 @@ int parse_directive_label (struct instruction *instruction)
 	return 1;
 }
 
-int parse_directive_record (struct instruction *instruction)
+int parse_directive_record (instruction *instruction)
 {
 	STRING a1,a2,s;
 	LONG n1,n2;
@@ -1426,7 +1428,7 @@ int parse_directive_record (struct instruction *instruction)
 	}
 }
 
-int parse_directive_string (struct instruction *instruction)
+int parse_directive_string (instruction *instruction)
 {
 	STRING a,s;
 	int l;
