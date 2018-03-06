@@ -25,10 +25,8 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 						fprintf(f, " %lu", label);
 						break; }
 					case 'i':
-						fprintf(f, " %ld", section[i]);
-						break;
 					case 'n':
-						fprintf(f, " %lu", section[i]);
+						fprintf(f, " %ld", section[i]);
 						break;
 					case '?':
 						fprintf(f, " ?");
