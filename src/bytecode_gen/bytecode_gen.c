@@ -3,7 +3,7 @@
 unsigned int nr_abc_files;
 FILE **abc_files;
 
-struct program pgrm;
+program pgrm;
 
 char* skip_whitespace(char* string) {
 	while(isspace(*string)) {
@@ -22,10 +22,12 @@ void parse_line(char* line, size_t size) {
 
 	if ((token = strsep(&end, " \n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
-		if (i != NULL)
+		if (i != NULL) {
+			printf("%s \t %s", end, i->name);
 			i->parse_function(line);
-		else
+		} else {
 			printf("%s", token);
+		}
 		printf("\n");
 	}
 }

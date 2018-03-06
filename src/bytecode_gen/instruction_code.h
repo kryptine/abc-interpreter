@@ -1,6 +1,19 @@
 #pragma once
 
-#define CleanInt long
+#include<inttypes.h>
+
+#include "../parse.h"
+#include "bytecode_gen.h"
+
+#define CleanInt int64_t
+
+extern int list_code;
+
+void initialize_code(void);
+void code_next_module(void);
+UI *relocate_code_and_data(int add_code_or_data_offset);
+void write_program(void);
+void add_code_and_data_offsets(void);
 
 void code_addI(void);
 void code_and(void);
