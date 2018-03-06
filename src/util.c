@@ -30,6 +30,18 @@ void *safe_calloc(size_t num, size_t size) {
 	return mem;
 }
 
+void *safe_realloc(void *ptr, size_t size) {
+	ptr = realloc(ptr, size);
+	if (!ptr) {
+		fprintf(stderr,
+				"Failed to realloc to %d bytes: %s\n",
+				(int) size,
+				strerror(errno));
+		exit(-1);
+	}
+	return ptr;
+}
+
 int starts_with(const char* prefix, char* str) {
 	return strncmp(prefix, str, strlen(prefix)) == 0;
 }
