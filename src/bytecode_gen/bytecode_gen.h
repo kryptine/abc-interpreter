@@ -7,22 +7,19 @@
 
 #include "instruction_table.h"
 #include "instruction_parse.h"
+#include "instruction_code.h"
 #include "../bytecode.h"
 #include "../util.h"
 
 typedef struct program {
 	uint32_t code_size;
 	uint32_t data_size;
-	uint32_t code_code_size;
-	uint32_t code_data_size;
-	uint32_t data_code_size;
-	uint32_t data_data_size;
+	uint32_t code_reloc_size;
+	uint32_t data_reloc_size;
 	BC_WORD *code;
 	BC_WORD *data;
-	 *code_code;
-	 *code_data;
-	 *data_code;
-	 *data_data;
+	relocation *code_relocations;
+	relocation *data_relocations;
 } program;
 
 extern program pgrm;

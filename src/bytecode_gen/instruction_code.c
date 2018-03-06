@@ -9,6 +9,9 @@
 
 #define max_implemented_instruction_n Cstack_check
 
+#define N_ADD_ARG_LABELS 32
+#define MAX_Cadd_arg_INSTRUCTION_N 16
+
 struct label {
 	char *label_name;
 	int label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
@@ -23,17 +26,19 @@ struct label_node {
 
 struct label_node *labels;
 
-struct relocation {
+typedef struct relocation {
 	int relocation_offset;
 	struct label *relocation_label;
-};
+} relocation;
 
 int module_n;
 
 int list_code = 0;
 
-#define N_ADD_ARG_LABELS 32
-#define MAX_Cadd_arg_INSTRUCTION_N 16
+int allocated_code_size;
+int allocated_data_size;
+int allocated_code_relocations_size;
+int allocated_data_relocations_size;
 
 static int Fadd_arg_label_used[N_ADD_ARG_LABELS];
 
@@ -57,7 +62,22 @@ void code_next_module(void) {
 
 static void realloc_code(void) {
 	allocated_code_size *= 2;
-	pgrm.code = safe_realloc(pgrm.code, code_size * sizeof(BC_WORD));
+	pgrm.code = (BC_WORD*) safe_realloc(pgrm.code, allocated_code_size * sizeof(BC_WORD));
+}
+
+static void realloc_data(void) {
+	allocated_data_size *= 2;
+	pgrm.data = (BC_WORD*) safe_realloc(pgrm.data, allocated_data_size * sizeof(BC_WORD));
+}
+
+static void realloc_code_relocations(void) {
+	allocated_code_relocations_size *= 2;
+	pgrm.code_relocations = (relocation*) safe_realloc(pgrm.code_relocations, allocated_code_relocations * sizeof(relocation));
+}
+
+static void realloc_data_relocations(void) {
+	allocated_data_relocations_size *= 2;
+	pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations * sizeof(relocation));
 }
 
 void store_code_w(BC_WORD w) {
@@ -123,7 +143,7 @@ struct label *enter_label(char *label_name) {
 	new_label_node_p->label_node_left = NULL;
 	new_label_node_p->label_node_right = NULL;
 	new_label_node_p->label_node_label_p = new_label_p;
-	new_label_p->label_name = (char*) save_malloc(strlen(label_name) + 1);
+	new_label_p->label_name = (char*) safe_malloc(strlen(label_name) + 1);
 	strcpy(new_label_p->label_name, label_name);
 	new_label_p->label_module_n = module_n;
 	new_label_p->label_offset = -1;
@@ -133,42 +153,25 @@ struct label *enter_label(char *label_name) {
 }
 
 void store_code_l(BC_WORD v) {
-	if (pgrm.code_size>=allocated_code_size)
+	if (pgrm.code_size >= allocated_code_size)
 		realloc_code();
 	*(SI*)&code[pgrm.code_size++] = v;
 }
 
 void store_data_l(BC_WORD v) {
-	if (data_size>=allocated_data_size) {
-		int new_allocated_data_size;
-		
-		new_allocated_data_size=allocated_data_size+((allocated_data_size>>1)&-4);
-		data = safe_realloc(data,new_allocated_data_size*sizeof (BC_WORD));
-		allocated_data_size=new_allocated_data_size;
-	}
+	if (pgrm.data_size >= allocated_data_size)
+		realloc_data();
 	*(SI*)&data[data_size++] = v;
 }
 
-static void realloc_code_relocations(void) {
-	int new_n_allocated_code_relocations;
-	
-	new_n_allocated_code_relocations=n_allocated_code_relocations+((n_allocated_code_relocations>>1)&-4);
-	code_relocations=realloc(code_relocations,new_n_allocated_code_relocations*sizeof (struct relocation));
-	if (code_relocations==NULL) {
-		printf("Reallocating memory for code relocations failed (%d bytes)\n",new_n_allocated_code_relocations*sizeof (struct relocation));
-		exit(1);	
-	}
-	n_allocated_code_relocations=new_n_allocated_code_relocations;
-}
-
 void store_code_internal_label_value(struct label *label,int offset) {
-	if (n_code_relocations>=n_allocated_code_relocations)
+	if (pgrm.code_reloc_size>=allocated_code_relocations_size)
 		realloc_code_relocations();
 
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&code_relocations[n_code_relocations++];
+		relocation_p=&code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
 	}
@@ -181,13 +184,13 @@ void store_code_label_value(char *label_name,int offset) {
 	
 	label=enter_label(label_name);
 
-	if (n_code_relocations>=n_allocated_code_relocations)
+	if (pgrm.code_reloc_size>=allocated_code_relocations_size)
 		realloc_code_relocations();
 
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&code_relocations[n_code_relocations++];
+		relocation_p=&code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
 	}
@@ -195,26 +198,14 @@ void store_code_label_value(char *label_name,int offset) {
 	store_code_l(offset);
 }
 
-static void realloc_data_relocations(void) {
-	int new_n_allocated_data_relocations;
-	
-	new_n_allocated_data_relocations=n_allocated_data_relocations+((n_allocated_data_relocations>>1)&-4);
-	data_relocations=realloc(data_relocations,new_n_allocated_data_relocations*sizeof (struct relocation));
-	if (data_relocations==NULL) {
-		printf("Reallocating memory for data relocations failed (%d bytes)\n",new_n_allocated_data_relocations*sizeof (struct relocation));
-		exit(1);
-	}
-	n_allocated_data_relocations=new_n_allocated_data_relocations;
-}
-
 static void store_data_label_value_of_label(struct label *label,int offset) {
-	if (n_data_relocations>=n_allocated_data_relocations)
+	if (pgrm.data_reloc_size>=allocated_data_relocations_size)
 		realloc_data_relocations();
 
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&data_relocations[n_data_relocations++];
+		relocation_p=&data_relocations[pgrm.data_reloc_size++];
 		relocation_p->relocation_offset=data_size;
 		relocation_p->relocation_label=label;
 	}
@@ -316,7 +307,7 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		data_offset = 0;	
 	}
 
-	for(i=0; i<n_code_relocations; ++i) {
+	for(i=0; i<pgrm.code_reloc_size; ++i) {
 		struct relocation *relocation_p;
 		int offset;
 
@@ -335,7 +326,7 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 			*(SI*)&code[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
 	}
 
-	for(i=0; i<n_data_relocations; ++i) {
+	for(i=0; i<pgrm.data_reloc_size; ++i) {
 		struct relocation *relocation_p;
 		int offset;
 
@@ -369,7 +360,7 @@ void add_code_and_data_offsets(void) {
 	code_offset =(int)code;
 	data_offset =(int)data;
 
-	for(i=0; i<n_code_relocations; ++i) {
+	for(i=0; i<pgrm.code_reloc_size; ++i) {
 		struct relocation *relocation_p;
 
 		relocation_p=&code_relocations[i];
@@ -379,7 +370,7 @@ void add_code_and_data_offsets(void) {
 			*(SI*)&code[relocation_p->relocation_offset] += data_offset;
 	}
 
-	for(i=0; i<n_data_relocations; ++i) {
+	for(i=0; i<pgrm.data_reloc_size; ++i) {
 		struct relocation *relocation_p;
 
 		relocation_p=&data_relocations[i];
@@ -4065,7 +4056,7 @@ static void print_code_or_data(int segment_size,BC_WORD *segment,int comma_separ
 }
 
 static void print_code_or_data_code_relocations
-	(int n_code_relocations,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
+	(int pgrm.code_reloc_size,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
 	int i;
 	char *f1,*f2;
 
@@ -4077,7 +4068,7 @@ static void print_code_or_data_code_relocations
 		f2="%d\n";
 	}
 	
-	if (n_code_relocations>0) {
+	if (pgrm.code_reloc_size>0) {
 		int n;
 
 		n=0;
@@ -4086,7 +4077,7 @@ static void print_code_or_data_code_relocations
 				int v;
 				
 				v=relocations[i].relocation_offset;
-				if (n==n_code_relocations-1) {
+				if (n==pgrm.code_reloc_size-1) {
 					fprintf(program_file,"%d\n",v);
 					break;
 				} else
@@ -4100,7 +4091,7 @@ static void print_code_or_data_code_relocations
 }
 
 static void print_code_or_data_data_relocations
-	(int n_data_relocations,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
+	(int pgrm.data_reloc_size,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
 	int i;
 	char *f1,*f2;
 
@@ -4112,7 +4103,7 @@ static void print_code_or_data_data_relocations
 		f2="%d\n";
 	}
 	
-	if (n_data_relocations>0) {
+	if (pgrm.data_reloc_size>0) {
 		int n;
 
 		n=0;
@@ -4121,7 +4112,7 @@ static void print_code_or_data_data_relocations
 				int v;
 				
 				v=relocations[i].relocation_offset;
-				if (n==n_data_relocations-1) {
+				if (n==pgrm.data_reloc_size-1) {
 					fprintf(program_file,"%d\n",v);
 					break;
 				} else
@@ -4141,30 +4132,30 @@ void write_program(void) {
 	printf("Program\n");
 
 	program_file = fopen("program","w");
-	if (program_file==NULL) {
+	if (program_file == NULL) {
 		printf("Could not create program file\n");
 		exit(1);
 	}
 
 	n_code_data_relocations=0;
-	for(i=0; i<n_code_relocations; ++i)
+	for(i=0; i<pgrm.code_reloc_size; ++i)
 		n_code_data_relocations += code_relocations[i].relocation_label->label_offset & 1;
-	n_code_code_relocations=n_code_relocations-n_code_data_relocations;
+	n_code_code_relocations=pgrm.code_reloc_size-n_code_data_relocations;
 	n_data_data_relocations=0;
-	for(i=0; i<n_data_relocations; ++i)
+	for(i=0; i<pgrm.data_reloc_size; ++i)
 		n_data_data_relocations += data_relocations[i].relocation_label->label_offset & 1;
-	n_data_code_relocations=n_data_relocations-n_data_data_relocations;
+	n_data_code_relocations=pgrm.data_reloc_size-n_data_data_relocations;
 
 	fprintf(program_file,"%d %d %d\n",pgrm.code_size,n_code_code_relocations,n_code_data_relocations);
 	fprintf(program_file,"%d %d %d\n",data_size,n_data_code_relocations,n_data_data_relocations);
 
 	print_code_or_data(pgrm.code_size,code,0,program_file);
-	print_code_or_data_code_relocations(n_code_code_relocations,n_code_relocations,code_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_code_data_relocations,n_code_relocations,code_relocations,0,program_file);
+	print_code_or_data_code_relocations(n_code_code_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
+	print_code_or_data_data_relocations(n_code_data_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
 
 	print_code_or_data(data_size,data,0,program_file);
-	print_code_or_data_code_relocations(n_data_code_relocations,n_data_relocations,data_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_data_data_relocations,n_data_relocations,data_relocations,0,program_file);
+	print_code_or_data_code_relocations(n_data_code_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
+	print_code_or_data_data_relocations(n_data_data_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
 	
 	if (fclose(program_file)) {
 		printf("Error writing program file\n");

@@ -7,6 +7,11 @@
 
 #define CleanInt int64_t
 
+typedef struct relocation {
+	int relocation_offset;
+	struct label *relocation_label;
+} relocation;
+
 extern int list_code;
 
 void initialize_code(void);
