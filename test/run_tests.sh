@@ -16,6 +16,10 @@ RESET="\033[0m"
 
 FAILED=0
 
+if [[ "$1" == "--no-opt" ]]; then
+	OPT="cat -"
+fi
+
 while IFS=$'\t' read -r -a line
 do
 	MODULE=${line[0]}
