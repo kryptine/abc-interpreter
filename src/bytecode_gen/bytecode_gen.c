@@ -23,7 +23,7 @@ void parse_line(char* line, size_t size) {
 	if ((token = strsep(&end, " \n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
 		if (i != NULL)
-			printf("%s | %s", token, i -> name);
+			i->parse_function(line);
 		else
 			printf("%s", token);
 		printf("\n");

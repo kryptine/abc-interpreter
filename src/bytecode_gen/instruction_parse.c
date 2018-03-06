@@ -5,17 +5,15 @@ int parse_instruction(instruction* instruction) {
 	return 1;
 }
 
-int parse_instruction_a (instruction* instruction)
-{
-	STRING a;
-	
-	parse_label(a);
-	instruction->instruction_code_function (a);
+int parse_instruction_a (instruction* instruction, char* args) {
+	char* a;
+
+	parse_label(args, a);
+	instruction->code_function(label);
 	return 1;
 }
 
-int parse_instruction_a_n (instruction* instruction)
-{
+int parse_instruction_a_n (instruction* instruction, char* args) {
 	STRING a;
 	LONG n;
 	
