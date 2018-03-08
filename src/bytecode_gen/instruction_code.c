@@ -4112,13 +4112,13 @@ void write_program(void) {
 	fprintf(program_file,"%d %d %d\n",pgrm.code_size,n_code_code_relocations,n_code_data_relocations);
 	fprintf(program_file,"%d %d %d\n",pgrm.data_size,n_data_code_relocations,n_data_data_relocations);
 
-	print_code_or_data(pgrm.code_size,code,0,program_file);
-	print_code_or_data_code_relocations(n_code_code_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_code_data_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
+	print_code_or_data(pgrm.code_size,pgrm.code,0,program_file);
+	print_code_or_data_code_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,0,program_file);
+	print_code_or_data_data_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,0,program_file);
 
-	print_code_or_data(pgrm.data_size,data,0,program_file);
-	print_code_or_data_code_relocations(n_data_code_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_data_data_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
+	print_code_or_data(pgrm.data_size,pgrm.data,0,program_file);
+	print_code_or_data_code_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,0,program_file);
+	print_code_or_data_data_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,0,program_file);
 	
 	if (fclose(program_file)) {
 		printf("Error writing program file\n");
