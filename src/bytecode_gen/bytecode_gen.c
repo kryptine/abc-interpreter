@@ -63,10 +63,8 @@ void initialize_program() {
 	                         0,
 	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
 	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD))
+	                         (struct relocation *) safe_malloc(512 * sizeof(BC_WORD)),
+	                         (struct relocation *) safe_malloc(512 * sizeof(BC_WORD)),
 	                        };
 }
 

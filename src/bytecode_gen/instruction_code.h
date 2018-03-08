@@ -2,6 +2,7 @@
 
 #include<inttypes.h>
 
+#include "../abci_types.h"
 #include "bytecode_gen.h"
 
 typedef struct relocation {

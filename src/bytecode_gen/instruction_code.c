@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../abci_types.h"
 #include "../abc_instructions.h"
 
 #define max_implemented_instruction_n Cstack_check
@@ -4055,8 +4054,7 @@ static void print_code_or_data(int segment_size,BC_WORD *segment,int comma_separ
 	}
 }
 
-static void print_code_or_data_code_relocations
-	(int pgrm.code_reloc_size,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
+static void print_code_or_data_code_relocations(int reloc_size, int n_relocations,struct relocation *relocations, int comma_separator, FILE *program_file) {
 	int i;
 	char *f1,*f2;
 
@@ -4068,7 +4066,7 @@ static void print_code_or_data_code_relocations
 		f2="%d\n";
 	}
 	
-	if (pgrm.code_reloc_size>0) {
+	if (reloc_size>0) {
 		int n;
 
 		n=0;
@@ -4077,42 +4075,7 @@ static void print_code_or_data_code_relocations
 				int v;
 				
 				v=relocations[i].relocation_offset;
-				if (n==pgrm.code_reloc_size-1) {
-					fprintf(program_file,"%d\n",v);
-					break;
-				} else
-					if ((n & 15)!=15)
-						fprintf(program_file,f1,v);
-					else
-						fprintf(program_file,f2,v);
-				++n;
-			}
-	}
-}
-
-static void print_code_or_data_data_relocations
-	(int pgrm.data_reloc_size,int n_relocations,struct relocation *relocations,int comma_separator,FILE *program_file) {
-	int i;
-	char *f1,*f2;
-
-	if (comma_separator) {
-		f1="%d,";
-		f2="%d,\n";
-	} else {
-		f1="%d ";
-		f2="%d\n";
-	}
-	
-	if (pgrm.data_reloc_size>0) {
-		int n;
-
-		n=0;
-		for(i=0; i<n_relocations; ++i)
-			if ((relocations[i].relocation_label->label_offset & 1)!=0) {
-				int v;
-				
-				v=relocations[i].relocation_offset;
-				if (n==pgrm.data_reloc_size-1) {
+				if (n==reloc_size-1) {
 					fprintf(program_file,"%d\n",v);
 					break;
 				} else
