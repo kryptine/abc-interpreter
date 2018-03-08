@@ -154,13 +154,13 @@ struct label *enter_label(char *label_name) {
 void store_code_l(BC_WORD v) {
 	if (pgrm.code_size >= allocated_code_size)
 		realloc_code();
-	*(SI*)&code[pgrm.code_size++] = v;
+	*(SI*)&pgrm.code[pgrm.code_size++] = v;
 }
 
 void store_data_l(BC_WORD v) {
 	if (pgrm.data_size >= allocated_data_size)
 		realloc_data();
-	*(SI*)&data[data_size++] = v;
+	*(SI*)&pgrm.data[pgrm.data_size++] = v;
 }
 
 void store_code_internal_label_value(struct label *label,int offset) {
@@ -205,7 +205,7 @@ static void store_data_label_value_of_label(struct label *label,int offset) {
 		struct relocation *relocation_p;
 		
 		relocation_p=&data_relocations[pgrm.data_reloc_size++];
-		relocation_p->relocation_offset=data_size;
+		relocation_p->relocation_offset=pgrm.data_size;
 		relocation_p->relocation_label=label;
 	}
 
@@ -320,9 +320,9 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		}
 			
 		if ((offset & 1)==0)
-			*(SI*)&code[relocation_p->relocation_offset] += offset + code_offset;
+			*(SI*)&pgrm.code[relocation_p->relocation_offset] += offset + code_offset;
 		else
-			*(SI*)&code[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
+			*(SI*)&pgrm.code[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
 	}
 
 	for(i=0; i<pgrm.data_reloc_size; ++i) {
@@ -364,9 +364,9 @@ void add_code_and_data_offsets(void) {
 
 		relocation_p=&code_relocations[i];
 		if ((relocation_p->relocation_label->label_offset & 1)==0)
-			*(SI*)&code[relocation_p->relocation_offset] += code_offset;
+			*(SI*)&pgrm.code[relocation_p->relocation_offset] += code_offset;
 		else
-			*(SI*)&code[relocation_p->relocation_offset] += data_offset;
+			*(SI*)&pgrm.code[relocation_p->relocation_offset] += data_offset;
 	}
 
 	for(i=0; i<pgrm.data_reloc_size; ++i) {
@@ -853,7 +853,7 @@ void code_buildB(int value) {
 void print_string_directive(char *string,int string_length) {
 	int i;
 
-	printf("%d\t.string \"",data_size<<2);
+	printf("%d\t.string \"",pgrm.data_size<<2);
 	for(i=0; i<string_length; ++i)
 		putchar(string[i]);
 	printf("\"\n");
@@ -885,7 +885,7 @@ void code_buildAC(char *string,int string_length) {
 	struct label *string_label;
 
 	string_label=new_internal_label();
-	string_label->label_offset=(data_size<<2)+1;
+	string_label->label_offset=(pgrm.data_size<<2)+1;
 
 	add_instruction_internal_label(CbuildAC,string_label);
 	if (list_code) {
@@ -896,7 +896,7 @@ void code_buildAC(char *string,int string_length) {
 //	store_data_label_value("__STRING__",2);
 	store_data_l(2);
 	if (list_code) {
-		printf("%d\t.data4 %d\n",data_size<<2,string_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
 	}
 	store_data_l(string_length);
 	if (list_code)
@@ -1282,13 +1282,13 @@ void code_eqAC_a(char *string,int string_length) {
 	struct label *string_label;
 
 	string_label=new_internal_label();
-	string_label->label_offset=(data_size<<2)+1;
+	string_label->label_offset=(pgrm.data_size<<2)+1;
 
 	add_instruction_internal_label(CeqAC_a,string_label);
 
 	if (list_code) {
 		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",data_size<<2,string_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
 	}
 	store_data_l(string_length);
 	if (list_code)
@@ -2065,13 +2065,13 @@ void code_print(char *string,int length) {
 	struct label *string_label;
 
 	string_label=new_internal_label();
-	string_label->label_offset=(data_size<<2)+1;
+	string_label->label_offset=(pgrm.data_size<<2)+1;
 
 	add_instruction_internal_label(Cprint,string_label);
 
 	if (list_code) {
 		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",data_size<<2,length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,length);
 	}
 	store_data_l(length);
 	if (list_code)
@@ -2085,13 +2085,13 @@ void code_print_sc(char *string,int length) {
 	struct label *string_label;
 
 	string_label=new_internal_label();
-	string_label->label_offset=(data_size<<2)+1;
+	string_label->label_offset=(pgrm.data_size<<2)+1;
 
 	add_instruction_internal_label(Cprint,string_label);
 
 	if (list_code) {
 		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",data_size<<2,length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,length);
 	}
 	store_data_l(length);
 	if (list_code)
@@ -3066,13 +3066,13 @@ void code_jmp_eqACio(char *string,int string_length,int a_offset,char label_name
 	struct label *string_label;
 
 	string_label=new_internal_label();
-	string_label->label_offset=(data_size<<2)+1;
+	string_label->label_offset=(pgrm.data_size<<2)+1;
 
 	add_instruction_w_internal_label_label(Cjmp_eqACio,-a_offset,string_label,label_name);
 
 	if (list_code) {
 		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",data_size<<2,string_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
 	}
 	store_data_l(string_length);
 	if (list_code)
@@ -3529,7 +3529,7 @@ void code_caf(char *label_name,int a_size,int b_size) {
 
 	if (a_size>0) {
 		if (list_code)
-			printf("%d\t.data4 %d\n",data_size<<2,0);
+			printf("%d\t.data4 %d\n",pgrm.data_size<<2,0);
 		store_data_l(0);
 	}
 
@@ -3537,12 +3537,12 @@ void code_caf(char *label_name,int a_size,int b_size) {
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	s=a_size+b_size+1;
 	while(s!=0) {
 		if (list_code)
-			printf("%d\t.data4 %d\n",data_size<<2,0);
+			printf("%d\t.data4 %d\n",pgrm.data_size<<2,0);
 		store_data_l(0);
 		--s;
 	}
@@ -3586,32 +3586,32 @@ struct label *code_descriptor
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	for(n=0; n<=arity; ++n) {
 		if (list_code)
-			printf("%d\t.data2 %d %d\n",data_size<<2,n,(arity-n)<<3);
+			printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,n,(arity-n)<<3);
 		store_data_l(n + (((arity-n)<<3)<<16));
 		if (n<arity-1 || (n==arity-1 && !strcmp (code_label_name,"__add__arg"))) {
 			if (list_code)
-				printf("%d\t.data4 _add_arg%d\n",data_size<<2,n);
+				printf("%d\t.data4 _add_arg%d\n",pgrm.data_size<<2,n);
 			Fadd_arg_label_used[n]=1;
 			store_data_label_value_of_label(&Fadd_arg_labels[n],0);
 		} else if (n==arity-1) {
 			if (list_code)
-				printf("%d\t.data4 %s\n",data_size<<2,code_label_name);
+				printf("%d\t.data4 %s\n",pgrm.data_size<<2,code_label_name);
 			store_data_label_value(code_label_name,0);
 		}
 	}
 
 	if (list_code)
-		printf("%d\t.data2 %d %d\n",data_size<<2,lazy_record_flag,arity);
+		printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,lazy_record_flag,arity);
 	store_data_l(lazy_record_flag+(arity<<16));
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 	if (list_code)
-		printf("%d\t.data4 %d\n",data_size<<2,descriptor_name_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
 	store_data_l(descriptor_name_length);
 	if (list_code)
 		print_string_directive(descriptor_name,descriptor_name_length);
@@ -3635,7 +3635,7 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 		printf("\t.data\n");
 
 	if (list_code)
-		printf("%d\t.data4 %d\n",data_size<<2,desc0_number);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,desc0_number);
 	store_data_l(desc0_number);
 
 	if (list_code)
@@ -3649,20 +3649,20 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	if (list_code)
-		printf("%d\t.data2 %d %d\n",data_size<<2,0,0);
+		printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,0,0);
 	store_data_l(0);
 
 	if (list_code)
-		printf("%d\t.data2 %d %d\n",data_size<<2,0,0);
+		printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,0,0);
 	store_data_l(0);
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 	if (list_code)
-		printf("%d\t.data4 %d\n",data_size<<2,descriptor_name_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
 	store_data_l(descriptor_name_length);
 	if (list_code)
 		print_string_directive(descriptor_name,descriptor_name_length);
@@ -3691,16 +3691,16 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	if (list_code)
-		printf("%d\t.data2 %d %d\n",data_size<<2,lazy_record_flag,arity);
+		printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,lazy_record_flag,arity);
 	store_data_l(lazy_record_flag+(arity<<16));
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 	if (list_code)
-		printf("%d\t.data4 %d\n",data_size<<2,descriptor_name_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
 	store_data_l(descriptor_name_length);
 	if (list_code)
 		print_string_directive(descriptor_name,descriptor_name_length);
@@ -3728,26 +3728,26 @@ void code_descs(char label_name[],char node_entry_label_name[],char *result_desc
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	if (list_code)
-		printf("%d\t.data2 0 8\n",data_size<<2);
+		printf("%d\t.data2 0 8\n",pgrm.data_size<<2);
 	store_data_l(8<<16);
 	if (list_code)
-		printf("%d\t.data2 %d %d\n",data_size<<2,offset1<<2,offset2<<2);
+		printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,offset1<<2,offset2<<2);
 	store_data_l((offset1<<2) | (offset2<<18));
 	if (list_code)
-		printf("%d\t.data2 1 0\n",data_size<<2);
+		printf("%d\t.data2 1 0\n",pgrm.data_size<<2);
 	store_data_l(1);
 
 	if (list_code)
-		printf("%d\t.data2 0 1\n",data_size<<2);
+		printf("%d\t.data2 0 1\n",pgrm.data_size<<2);
 	store_data_l(1<<16);
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 	if (list_code)
-		printf("%d\t.data4 %d\n",data_size<<2,descriptor_name_length);
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
 	store_data_l(descriptor_name_length);
 	if (list_code)
 		print_string_directive(descriptor_name,descriptor_name_length);
@@ -3813,7 +3813,7 @@ void code_module(char label_name[],char string[],int string_length) {
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	if (list_code)
 		print_string_directive(string,string_length);
@@ -3908,12 +3908,12 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 
 void code_o(int oa,int ob,ULONG vector[]) {
 	if (last_jsr_with_d) {
-		if (code[pgrm.code_size-2]!=Cjsr) {
+		if (pgrm.code[pgrm.code_size-2]!=Cjsr) {
 			int i;
 			
-			i=code[pgrm.code_size-3];
+			i=pgrm.code[pgrm.code_size-3];
 			if (i!=Cpop_a_jsr && i!=Cpop_b_jsr && i!=Cpush_a_jsr && i!=Cpush_b_jsr
-				&& code[pgrm.code_size-4]!=Cbuildh0_put_a_jsr)
+				&& pgrm.code[pgrm.code_size-4]!=Cbuildh0_put_a_jsr)
 			{
 				printf(".o directive used incorrectly near jsr\n");
 				exit(1);
@@ -3950,13 +3950,13 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 		printf("Label %s already defined\n",record_label_name);
 		exit(1);
 	}
-	record_label->label_offset=(data_size<<2)+1;
+	record_label->label_offset=(pgrm.data_size<<2)+1;
 
 
 	/* to do record descriptor instead of 0 */
 
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 
 	/* */
@@ -3976,12 +3976,12 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 		printf("Label %s already defined\n",record_label_name);
 		exit(1);
 	}
-	record_label->label_offset=(data_size<<2)+1;
+	record_label->label_offset=(pgrm.data_size<<2)+1;
 
 	/* to do record descriptor instead of 0 */
 
 	if (list_code)
-		printf("%d\t.data4 0\n",data_size<<2);
+		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
 
 	/* */
@@ -4009,7 +4009,7 @@ void code_string(char label_name[],char string[],int string_length) {
 		printf("Label %s already defined\n",label_name);
 		exit(1);
 	}
-	label->label_offset=(data_size<<2)+1;
+	label->label_offset=(pgrm.data_size<<2)+1;
 
 	if (list_code)
 		print_string_directive(string,string_length);
@@ -4102,21 +4102,21 @@ void write_program(void) {
 
 	n_code_data_relocations=0;
 	for(i=0; i<pgrm.code_reloc_size; ++i)
-		n_code_data_relocations += code_relocations[i].relocation_label->label_offset & 1;
+		n_code_data_relocations += pgrm.code_relocations[i].relocation_label->label_offset & 1;
 	n_code_code_relocations=pgrm.code_reloc_size-n_code_data_relocations;
 	n_data_data_relocations=0;
 	for(i=0; i<pgrm.data_reloc_size; ++i)
-		n_data_data_relocations += data_relocations[i].relocation_label->label_offset & 1;
+		n_data_data_relocations += pgrm.data_relocations[i].relocation_label->label_offset & 1;
 	n_data_code_relocations=pgrm.data_reloc_size-n_data_data_relocations;
 
 	fprintf(program_file,"%d %d %d\n",pgrm.code_size,n_code_code_relocations,n_code_data_relocations);
-	fprintf(program_file,"%d %d %d\n",data_size,n_data_code_relocations,n_data_data_relocations);
+	fprintf(program_file,"%d %d %d\n",pgrm.data_size,n_data_code_relocations,n_data_data_relocations);
 
 	print_code_or_data(pgrm.code_size,code,0,program_file);
 	print_code_or_data_code_relocations(n_code_code_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
 	print_code_or_data_data_relocations(n_code_data_relocations,pgrm.code_reloc_size,code_relocations,0,program_file);
 
-	print_code_or_data(data_size,data,0,program_file);
+	print_code_or_data(pgrm.data_size,data,0,program_file);
 	print_code_or_data_code_relocations(n_data_code_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
 	print_code_or_data_data_relocations(n_data_data_relocations,pgrm.data_reloc_size,data_relocations,0,program_file);
 	
