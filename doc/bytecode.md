@@ -204,9 +204,11 @@ Push `b[i] == TRUE` to the B-stack.
 ### eqC
 `b[1] := b[0] == b[1]`
 
-### eqC_a
+### eqC_a *n* *i*
+Push `a[n] == i` to the B-stack.
 
-### eqC_b
+### eqC_b *n* *i*
+Push `b[n] == i` to the B-stack.
 
 ### eqD_b
 
@@ -215,9 +217,11 @@ Push `b[i] == TRUE` to the B-stack.
 ### eqI
 `b[1] := b[0] == b[1]`
 
-### eqI_a
+### eqI_a *n* *i*
+Push `a[n] == i` to the B-stack.
 
-### eqI_b
+### eqI_b *n* *i*
+Push `b[n] == i` to the B-stack.
 
 ### fill
 
@@ -322,34 +326,63 @@ Push `b[i] == TRUE` to the B-stack.
 ### get_node_arity
 
 ### gtI
+`b[1] := b[0] > b[1]`
 
 ### halt
+Halts the program.
 
 ### incI
+`b[0] = b[0] + 1`
 
-### jesr
+### jesr *n*
+Jumps to a *trap* subroutine. The traps are defined in `traps.c`.
+Which trap is used depends on *n*:
 
-### jmp
+ 1\. `catAC`  
+ 2\. `sliceAC`  
+ 3\. `ItoAC`  
+ 5\. `print_string_`  
+ 6\. `openF`  
+ 8\. `closeF`  
+ 9\. `readLineF`  
+10\. `endF`  
+11\. `cmpAC`  
+12\. `writeFI`  
+13\. `writeFS`  
+14\. `writeFC`
 
-### jmp_eval
+### jmp *l*
+`pc := l`
+
+### jmp_eval *n*
+Jump to `a[n][0]` if `a[n]` is not in HNF (see `jsr_eval`).
 
 ### jmp_eval_upd
 
-### jmp_false
+### jmp_false *l*
+Jump to *l* if `b[0]` is false.
 
-### jmp_true
+### jmp_true *l*
+Jump to *l* if `b[0]` is true.
 
-### jsr
+### jsr *l*
+Push the instruction *after* the `jsr` to the C-stack and jump to *l*.
 
-### jsr_eval
+### jsr_eval *n*
+Evaluate `a[n]` to HNF. That is: If `a[n][0]` is marked as in HNF (the 2nd bit
+is set), do nothing. Otherwise, jump to `a[n][0]` as a subroutine.
 
 ### jsr_eval0
+Evaluate `a[0]` to HNF. See `jsr_eval`.
 
 ### jsr_eval1
+Evaluate `a[1]` to HNF. See `jsr_eval`.
 
 ### jsr_eval2
+Evaluate `a[2]` to HNF. See `jsr_eval`.
 
 ### jsr_eval3
+Evaluate `a[3]` to HNF. See `jsr_eval`.
 
 ### ltC
 `b[1] := b[0] < b[1]`
@@ -629,6 +662,7 @@ Push `b[i]` to the B-stack.
 `b[1] := b[0] % b[1]` (remainder after division)
 
 ### rtn
+Pop `c[0]` and jump to it.
 
 ### select
 
@@ -655,8 +689,10 @@ Push `b[i]` to the B-stack.
 ### select_ra1
 
 ### shiftlI
+`b[1] := b[0] << b[1]`
 
 ### shiftrI
+`b[1] := b[0] >> b[1]`
 
 ### subI
 `b[1] := b[0] - b[1]`
@@ -675,9 +711,11 @@ Push `b[i]` to the B-stack.
 
 ### updatepop_b
 
-### update_a
+### update_a *n* *m*
+`a[m] := a[n]`
 
-### update_b
+### update_b *n* *m*
+`b[m] := b[n]`
 
 ### update_r
 
@@ -768,10 +806,13 @@ Push `b[i]` to the B-stack.
 ### fill_a01_pop_rtn
 
 ### swap_a1
+Swap `a[0]` and `a[1]`.
 
 ### swap_a2
+Swap `a[0]` and `a[2]`.
 
 ### swap_a3
+Swap `a[0]` and `a[3]`.
 
 ### swap_a
 
@@ -800,46 +841,63 @@ Push `b[i] & n` (bitwise and) to the B-stack.
 
 ### buildo2
 
-### dup_a
+### dup_a *n*
+`a[n] := a[0]`
 
-### dup2_a
+### dup2_a *n*
+`a[n+1] := a[n] := a[0]`
 
-### dup3_a
+### dup3_a *n*
+`a[n+2] := a[n+1] := a[n] := a[0]`
 
-### exchange_a
+### exchange_a *n* *m*
+Swap `a[n]` and `a[m]`.
 
 ### geC
 `b[1] := b[0] >= b[1]`
 
-### jmp_b_false
+### jmp_b_false *n* *l*
+Jump to *l* if `b[n]` is false.
 
 ### jmp_eqACio
 
-### jmp_eqC_b
+### jmp_eqC_b *n* *m* *l*
+Jump to *l* if `b[n] == b[m]`.
 
-### jmp_eqC_b2
+### jmp_eqC_b2 *m* *n* *l* *n'* *l'*
+Jump to *l* if `b[m] == b[n]`.  
+If not, jump to *l'* if `b[m] == b[n']`.
 
 ### jmp_eqD_b
 
 ### jmp_eqD_b2
 
-### jmp_eqI
+### jmp_eqI *l*
+Jump to *l* if `b[0] == b[1]`.
 
-### jmp_eqI_b
+### jmp_eqI_b *n* *m* *l*
+Jump to *l* if `b[n] == b[m]`.
 
-### jmp_eqI_b2
+### jmp_eqI_b2 *m* *n* *l* *n'* *l'*
+Jump to *l* if `b[m] == b[n]`.  
+If not, jump to *l'* if `b[m] == b[n']`.
 
 ### jmp_eq_desc
 
-### jmp_geI
+### jmp_geI *l*
+Jump to *l* if `b[0] >= b[1]`.
 
-### jmp_ltI
+### jmp_ltI *l*
+Jump to *l* if `b[0] < b[1]`.
 
-### jmp_neC_b
+### jmp_neC_b *n* *c* *l*
+Jump to *l* if `b[n] <> c`.
 
-### jmp_neI
+### jmp_neI *l*
+Jump to *l* if `b[0] <> b[1]`.
 
-### jmp_neI_b
+### jmp_neI_b *n* *i* *l*
+Jump to *l* if `b[n] <> i`.
 
 ### jmp_ne_desc
 
@@ -854,56 +912,78 @@ Push `b[i] & n` (bitwise and) to the B-stack.
 `b[1] := b[0] != b[1]`
 
 ### swap_b1
+Swap `b[0]` and `b[1]`.1
 
-### pop_a_jmp
+### pop_a_jmp *n* *l*
+Pop *n* elements from the A-stack and jump to *l*.
 
-### pop_a_jsr
+### pop_a_jsr *n* *l*
+Pop *n* elements from the A-stack and jump to *l* as a subroutine.
 
-### pop_a_rtn
+### pop_a_rtn *n*
+Pop *n* elements from the A-stack and return to `c[0]`.
 
-### pop_ab_rtn
+### pop_ab_rtn *n* *m*
+Pop *n* elements from the A-stack, *m* from the B-stack and return to `c[0]`.
 
-### pop_b_jmp
+### pop_b_jmp *n* *l*
+Pop *n* elements from the B-stack and jump to *l*.
 
-### pop_b_jsr
+### pop_b_jsr *n* *l*
+Pop *n* elements from the B-stack and jump to *l* as a subroutine.
 
-### pop_b_pushBFALSE
+### pop_b_pushBFALSE *n*
+Pop *n+1* elements from the B-stack and push False.
 
-### pop_b_pushBTRUE
+### pop_b_pushBTRUE *n*
+Pop *n+1* elements from the B-stack and push True.
 
-### pop_b_rtn
+### pop_b_rtn *n*
+Pop *n* elements from the B-stack and return to `c[0]`.
 
 ### pushD_a_jmp_eqD_b2
 
-### push_a_jsr
+### push_a_jsr *n* *l*
+Push `a[n]` to the A-stack and jump to *l* as a subroutine.
 
-### push_b_incI
+### push_b_incI *n*
+Push `b[n]+1` to the B-stack.
 
-### push_b_jsr
+### push_b_jsr *n* *l*
+Push `b[n]` to the B-stack and jump to *l* as a subroutine.
 
 ### push_arraysize_a
 
 ### push_jsr_eval
 
-### push_a2
+### push_a2 *n* *m*
+Push `a[n]` and `a[m]` to the A-stack.
 
-### push_ab
+### push_ab *n* *m*
+Push `a[n]` to the A-stack and `b[m]` to the B-stack.
 
-### push_b2
+### push_b2 *n* *m*
+Push `b[n]` and `b[m]` to the A-stack.
 
-### push2_a
+### push2_a *n*
+Push `a[n]` and `a[n-1]` to the A-stack.
 
-### push2_b
+### push2_b *n*
+Push `b[n]` and `b[n-1]` to the B-stack.
 
-### push3_a
+### push3_a *n*
+Push `a[n]`, `a[n-1]` and `a[n-2]` to the A-stack.
 
-### push3_b
+### push3_b *n*
+Push `b[n]`, `b[n-1]` and `b[n-2]` to the B-stack.
 
 ### push_update_a
 
-### put_a
+### put_a *n*
+`a[n] := a[0]` and pop one element from the A-stack.
 
-### put_b
+### put_b *n*
+`b[n] := b[0]` and pop one element from the B-stack.
 
 ### selectCHARoo
 
