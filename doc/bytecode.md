@@ -294,9 +294,11 @@ See `fill n 4 d`.
 
 ### fillh0
 
-### fillh1
+### fillh1 *n* *d*
+Same as `fill1 n d` (TODO: check with John).
 
-### fillh2
+### fillh2 *n* *d*
+Same as `fill2 n d` (TODO: check with John).
 
 ### fillh3
 
@@ -310,7 +312,8 @@ See `fill n 4 d`.
 
 ### fillI_b
 
-### fill_a
+### fill_a *n* *m*
+Copy the contents of `a[n]` into `a[m]`.
 
 ### fill_r
 
@@ -479,23 +482,29 @@ Push the integer *n* to the A-stack.
 ### push_a *i*
 Push `a[i]` to the A-stack.
 
-### push_arg
+### push_arg *n* *m*, *m* &gt; 4
+Push argument *m* of `a[n]` to the A-stack.
 
-### push_arg1
+### push_arg1 *n*
+Push argument 1 of `a[n]` to the A-stack.
 
-### push_arg2
+### push_arg2 *n*
+Push argument 2 of `a[n]` to the A-stack.
 
 ### push_arg2l
 
-### push_arg3
+### push_arg3 *n*
+Push argument 3 of `a[n]` to the A-stack.
 
-### push_arg4
+### push_arg4 *n*
+Push argument 4 of `a[n]` to the A-stack.
 
 ### push_arg_b
 
 ### push_args
 
-### push_args1
+### push_args1 *n*
+Push argument 1 of `a[n]` to the A-stack.
 
 ### push_args2
 
