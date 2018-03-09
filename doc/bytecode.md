@@ -6,25 +6,37 @@ Top two B-stack values are destroyed.
 Result is stored on the top of the B-stack.
 
 ### add_empty_node2
+Create a node with descriptor `__cycle__in__spine` on the heap and insert it at
+position 2 on the A-stack.
 
 ### add_empty_node3
+Create a node with descriptor `__cycle__in__spine` on the heap and insert it at
+position 3 on the A-stack.
 
 ### andI
 Bitwise and on the top two integers of the B-stack.
 Top two B-stack values are destroyed.
 Result is stored on the top of the B-stack.
 
-### build nr
+### build *n* *d*, *n* &gt; 4
+Create an *n*-ary node with descriptor *d* on the heap.
+Pop *n* elements from the A-stack as its arguments.
+Push a reference to the new node to the A-stack.
 
-### build0
+### build0 *d*
+See `build 0 d`.
 
-### build1
+### build1 *d*
+See `build 1 d`.
 
 ### build2
+See `build 2 d`.
 
 ### build3
+See `build 3 d`.
 
 ### build4
+See `build 4 d`.
 
 ### buildAC
 
@@ -212,7 +224,8 @@ Push `b[n] == i` to the B-stack.
 
 ### eqD_b
 
-### eq_desc
+### eq_desc *n* *d*
+Push whether the descriptor of `a[n]` equals *d* to the B-stack.
 
 ### eqI
 `b[1] := b[0] == b[1]`
@@ -223,9 +236,12 @@ Push `a[n] == i` to the B-stack.
 ### eqI_b *n* *i*
 Push `b[n] == i` to the B-stack.
 
-### fill
+### fill *n* *m* *d*, *m* > 4
+Set the descriptor of `a[n]` to *d*.
+Pop *m* values from the A-stack and set them as arguments to the original `a[n]`.
 
-### fill1
+### fill1 *n* *d*
+See `fill n 1 d`.
 
 ### fill1001
 
@@ -233,11 +249,14 @@ Push `b[n] == i` to the B-stack.
 
 ### fill1011
 
-### fill2
+### fill2 *n* *d*
+See `fill n 2 d`.
 
 ### fill2a001
 
 ### fill2a011
+
+### fill2a012
 
 ### fill2ab011
 
@@ -255,6 +274,9 @@ Push `b[n] == i` to the B-stack.
 
 ### fill2b012
 
+### fill3 *n* *d*
+See `fill n 3 d`.
+
 ### fill3a10
 
 ### fill3a11
@@ -263,7 +285,8 @@ Push `b[n] == i` to the B-stack.
 
 ### fill3aaab13
 
-### fill4
+### fill4 *n* *d*
+See `fill n 4 d`.
 
 ### fillcaf
 
@@ -1032,7 +1055,3 @@ Push `b[n]`, `b[n-1]` and `b[n-2]` to the B-stack.
 ### stack_check
 
 ### build_r0b
-
-### fill2a012
-
-### fill3
