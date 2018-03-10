@@ -16,16 +16,18 @@
 
 struct program {
 	uint32_t code_size;
-	uint32_t data_size;
 	uint32_t code_code_size;
 	uint32_t code_data_size;
+	uint32_t data_size;
 	uint32_t data_code_size;
 	uint32_t data_data_size;
 	BC_WORD *code;
-	BC_WORD *data;
 #ifndef PARSE_HANDLE_RELOCATIONS
 	BC_WORD *code_code;
 	BC_WORD *code_data;
+#endif
+	BC_WORD *data;
+#ifndef PARSE_HANDLE_RELOCATIONS
 	BC_WORD *data_code;
 	BC_WORD *data_data;
 #endif
