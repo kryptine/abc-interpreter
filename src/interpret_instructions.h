@@ -3121,7 +3121,12 @@ case Cpop_a:
 	pc+=2;
 	continue;
 case Cpop_b:
-	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (#4)
+	/* TODO should be possible without ifdef (#4) */
+#if (WORD_WIDTH == 64)
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1]));
+#else
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(pc[1]));
+#endif
 	pc+=2;
 	continue;
 case Cprint:
