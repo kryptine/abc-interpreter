@@ -9,8 +9,13 @@
 // The type of byte code words, relocations, etc. for cross-platform output
 #define COMMON_BC_WORD int32_t
 // The type of byte code words, relocations, etc. during interpretation
-#define BC_WORD uint64_t
-#define BC_WORD_S int64_t
+#if (WORD_WIDTH == 64)
+# define BC_WORD uint64_t
+# define BC_WORD_S int64_t
+#else
+# define BC_WORD uint32_t
+# define BC_WORD_S int32_t
+#endif
 #define BC_BOOL uint8_t
 #define SS short /* TODO check what to do with this */
 

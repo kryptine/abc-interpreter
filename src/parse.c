@@ -133,7 +133,7 @@ int parse_elem(struct parser *state, int elem) {
 		case PS_code_data_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
 # if (WORD_WIDTH == 64)
-			//state->program->code[elem] *= 2; // TODO: why should this not be done here? What about data_data?
+			state->program->code[elem] *= 2; // TODO: why should this not be done here? What about data_data?
 # endif
 			state->program->code[elem] += (BC_WORD) state->program->data;
 #else

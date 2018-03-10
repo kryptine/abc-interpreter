@@ -3135,8 +3135,14 @@ case Cprint:
 	pc+=2;
 	length=s[0];
 	cs=(char*)&s[1];
-	for (i=0; i<length; ++i)
-		putchar (cs[i]);
+	for (i=0; i<length; ++i) {
+		putchar(*cs++);
+#if (WORD_WIDTH == 64)
+	/* TODO: strings need to be stored properly on 64-bit */
+		if (i > 0 && i % 4 == 3)
+			cs += 4;
+#endif
+	}
 	continue;
 }
 case Cprint_symbol_sc:

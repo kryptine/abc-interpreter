@@ -2,6 +2,7 @@
 
 #include "abc_instructions.h"
 #include "bytecode.h"
+#include "util.h"
 
 void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is_code) {
 	uint32_t i;
@@ -12,7 +13,7 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 			for (; *fmt; fmt++) {
 				i++;
 				switch (*fmt) {
-					case 'l': {
+					case 'l': { /* Code label */
 						BC_WORD label = section[i];
 #ifdef PARSE_HANDLE_RELOCATIONS
 						label -= (BC_WORD) section;
@@ -24,14 +25,38 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 #endif
 						fprintf(f, " %lu", label);
 						break; }
-					case 'i':
-					case 'n':
+					case 'i': /* Integer constant */
+					case 'n': /* Stack index and the like */
 						fprintf(f, " %ld", section[i]);
 						break;
-					case '?':
+					case 's': { /* String */
+#ifdef PARSE_HANDLE_RELOCATIONS
+						uint32_t *s = (uint32_t*) section[i];
+						uint32_t length = s[0];
+# if (WORD_WIDTH == 64)
+						char *cs = (char*) &s[2]; /* TODO: strings need to be properly stored on 64-bit */
+# else
+						char *cs = (char*) &s[1];
+# endif
+						uint32_t i;
+						fprintf(f, " \"");
+						for (i=0; i<length; i++) {
+							fprintf(f, "%s", escape(*cs++));
+# if (WORD_WIDTH == 64)
+							if (i > 0 && i % 4 == 3) /* TODO: strings need to be properly stored on 64-bit */
+								cs += 4;
+# endif
+						}
+						fprintf(f, "\"");
+						break;
+#else
+						/* TODO */
+#endif
+						}
+					case '?': /* Unknown instruction */
 						fprintf(f, " ?");
 						break;
-					default:
+					default: /* Unimplemented argument type */
 						fprintf(f, " !!!");
 						break;
 				}
