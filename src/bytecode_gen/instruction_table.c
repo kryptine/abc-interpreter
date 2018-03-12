@@ -1,6 +1,10 @@
-#include "instruction_table.h"
+#include <string.h>
 
+#include "../settings.h"
+#include "../util.h"
+#include "instruction_code.h"
 #include "instruction_parse.h"
+#include "instruction_table.h"
 
 // Global instruction table
 inst_element** inst_table;
@@ -23,19 +27,19 @@ static void put_instruction_name(char *name, int (*parse_function)(), void (code
 
 	// Lookup in hash table
 	inst_element *head_elem;
-	head_elem = inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE];
+	head_elem = inst_table[instruction_hash(new_instruction->name) % BCGEN_INSTRUCTION_TABLE_SIZE];
 
 	if (head_elem == NULL) {
 		head_elem = (inst_element*) safe_malloc(sizeof(inst_element));
 		head_elem->next = NULL;
 		head_elem->instruction = new_instruction;
-		inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE] = head_elem;
+		inst_table[instruction_hash(new_instruction->name) % BCGEN_INSTRUCTION_TABLE_SIZE] = head_elem;
 	} else {
 		// If hask table already has entry, add new entry to the front
 		inst_element *new_head_elem = (inst_element*) safe_malloc(sizeof(inst_element));
 		new_head_elem->next = head_elem;
 		new_head_elem->instruction = new_instruction;
-		inst_table[instruction_hash(new_instruction->name) % INSTRUCTION_TABLE_SIZE] = new_head_elem;
+		inst_table[instruction_hash(new_instruction->name) % BCGEN_INSTRUCTION_TABLE_SIZE] = new_head_elem;
 	}
 }
 
@@ -279,7 +283,7 @@ void load_instruction_table(void) {
 instruction* instruction_lookup(char* inst) {
 	inst_element *elem;
 
-	elem = inst_table[instruction_hash(inst) % INSTRUCTION_TABLE_SIZE];
+	elem = inst_table[instruction_hash(inst) % BCGEN_INSTRUCTION_TABLE_SIZE];
 
 	while (elem != NULL && elem->instruction != NULL){
 		if (strcmp(elem->instruction->name, inst) == 0)
@@ -293,11 +297,11 @@ instruction* instruction_lookup(char* inst) {
 
 // Create and Load instruction table
 void init_instruction_table(void) {
-	inst_table = (inst_element**) safe_malloc(sizeof(inst_element*) * INSTRUCTION_TABLE_SIZE);
+	inst_table = (inst_element**) safe_malloc(sizeof(inst_element*) * BCGEN_INSTRUCTION_TABLE_SIZE);
 	inst_element **inst_pointer = inst_table;
 
 	unsigned int i;
-	for (i = 0; i < INSTRUCTION_TABLE_SIZE; ++i){
+	for (i = 0; i < BCGEN_INSTRUCTION_TABLE_SIZE; ++i){
 		*inst_pointer = NULL;
 		inst_pointer++;
 	}

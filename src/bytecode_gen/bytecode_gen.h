@@ -1,15 +1,8 @@
 #pragma once
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
+#include <inttypes.h>
 
-#include "instruction_table.h"
-#include "instruction_parse.h"
-#include "instruction_code.h"
 #include "../bytecode.h"
-#include "../util.h"
 
 typedef struct program {
 	uint32_t code_size;

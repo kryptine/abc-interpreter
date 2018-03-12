@@ -5,6 +5,8 @@
 #include <string.h>
 
 #include "../abc_instructions.h"
+#include "../util.h"
+#include "bytecode_gen.h"
 
 #define max_implemented_instruction_n Cstack_check
 

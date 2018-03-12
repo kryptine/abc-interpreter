@@ -1,4 +1,11 @@
+#include <ctype.h>
+#include <string.h>
+
+#include "../util.h"
 #include "bytecode_gen.h"
+#include "instruction_code.h"
+#include "instruction_parse.h"
+#include "instruction_table.h"
 
 unsigned int nr_abc_files;
 FILE **abc_files;
@@ -56,8 +63,6 @@ void parse_files() {
 
 void initialize_program() {
 	pgrm = (struct program) {0,
-	                         0,
-	                         0,
 	                         0,
 	                         0,
 	                         0,

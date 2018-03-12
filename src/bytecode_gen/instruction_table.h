@@ -1,11 +1,5 @@
 #pragma once
 
-#include<string.h>
-
-#include "instruction_code.h"
-#include "../util.h"
-#include "../settings.h"
-
 // Holds information on instructions
 // Their name, and what functions to call for them
 typedef struct instruction {
