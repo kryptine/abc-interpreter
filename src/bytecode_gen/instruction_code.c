@@ -1895,7 +1895,6 @@ void code_incI(void) {
 	add_instruction(CincI);
 }
 
-extern int last_d,last_jsr_with_d;
 int last_da,last_db;
 
 void code_jmp(char label_name[]) {

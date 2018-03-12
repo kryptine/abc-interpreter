@@ -27,7 +27,7 @@ void parse_line(char* line, size_t size) {
 
 	end = skip_whitespace(end);
 
-	if ((token = strsep(&end, " \n\t")) != NULL) {
+	if ((token = strsep(&end, " \r\n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
 		if (i != NULL) {
 			printf("%s\t%s %s", i->name, line, end);
