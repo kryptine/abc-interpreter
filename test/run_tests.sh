@@ -38,7 +38,6 @@ do
 
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
 	mv program $MODULE.bc
-	rm program.js
 
 	/usr/bin/time $IP $MODULE.bc > $MODULE.result
 
