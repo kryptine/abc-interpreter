@@ -856,7 +856,7 @@ void print_string_directive(char *string,int string_length) {
 	printf("\"\n");
 }
 
-void store_string(unsigned char *string,int string_length) {
+void store_string(char *string,int string_length) {
 	int i;
 
 	i=0;
@@ -1665,7 +1665,7 @@ void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		 n_bits += bits[i]-'0';
 	
 	if (n_bits==3 && bits[0]=='1' && arity>2) {
-		int bit_n1,bit_n2,bit_n3;
+		int bit_n1,bit_n2;
 
 		for(bit_n1=1; bit_n1<arity; ++bit_n1)
 			if (bits[bit_n1]!='0')
@@ -3673,7 +3673,6 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 				 int descriptor_name_length) {
 	/* node_entry_label_name not used */
 	struct label *label;
-	int n;
 
 	if (list_code) {
 		printf("\t.data\n");
@@ -3710,7 +3709,6 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 void code_descs(char label_name[],char node_entry_label_name[],char *result_descriptor_name,
 				int offset1,int offset2,char descriptor_name[],int descriptor_name_length) {
 	struct label *label;
-	int n;
 
 	if (list_code) {
 		printf("\t.data\n");

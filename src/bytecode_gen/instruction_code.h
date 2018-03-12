@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../abci_types.h"
+#include "../bytecode.h"
 
 typedef struct relocation {
 	int relocation_offset;
@@ -11,7 +12,7 @@ extern int list_code;
 
 void initialize_code(void);
 void code_next_module(void);
-UI *relocate_code_and_data(int add_code_or_data_offset);
+BC_WORD *relocate_code_and_data(int add_code_or_data_offset);
 void write_program(void);
 void add_code_and_data_offsets(void);
 
