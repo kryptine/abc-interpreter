@@ -66,4 +66,6 @@ done < tests.txt
 
 if [ $FAILED -eq 0 ]; then
 	echo -e "${GREEN}All tests passed$RESET"
+else
+	exit 1
 fi
