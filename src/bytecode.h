@@ -12,6 +12,9 @@
 #define BC_WORD uint64_t
 #define BC_WORD_S int64_t
 #define BC_BOOL uint8_t
+#ifndef BC_GEN
+#define SS short /* TODO check what to do with this */
+#endif
 
 #ifndef BC_GEN
 struct program {
