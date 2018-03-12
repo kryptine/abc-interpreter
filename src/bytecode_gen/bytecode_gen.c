@@ -7,12 +7,8 @@
 #include "instruction_parse.h"
 #include "instruction_table.h"
 
-int last_d, last_jsr_with_d;
-
 unsigned int nr_abc_files;
 FILE **abc_files;
-
-program pgrm;
 
 char* skip_whitespace(char* string) {
 	while(isspace(*string)) {
@@ -46,8 +42,7 @@ void parse_file(FILE *file) {
 	char* line = NULL;
 	size_t size = 0;
 
-	last_d = 0;
-	last_jsr_with_d = 0;
+	code_next_module();
 
 	while(getline(&line, &size, file) > 0) {
 		line_number++;
@@ -65,18 +60,6 @@ void parse_files() {
 	for(i = 0; i < nr_abc_files; i++) {
 		parse_file(abc_files[i]);
 	}
-}
-
-void initialize_program() {
-	pgrm = (struct program) {0,
-	                         0,
-	                         0,
-	                         0,
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (BC_WORD *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (struct relocation *) safe_malloc(512 * sizeof(BC_WORD)),
-	                         (struct relocation *) safe_malloc(512 * sizeof(BC_WORD)),
-	                        };
 }
 
 int main (int argc, char *argv[]) {
@@ -99,7 +82,7 @@ int main (int argc, char *argv[]) {
 	nr_abc_files = argc - 1;
 
 	// List of lines per file
-	initialize_program();
+	initialize_code();
 
 	parse_files();
 

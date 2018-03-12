@@ -14,6 +14,3 @@ typedef struct program {
 	struct relocation *code_relocations;
 	struct relocation *data_relocations;
 } program;
-
-extern program pgrm;
-extern int last_d, last_jsr_with_d;

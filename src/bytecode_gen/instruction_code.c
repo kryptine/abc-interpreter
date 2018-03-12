@@ -13,6 +13,9 @@
 #define N_ADD_ARG_LABELS 32
 #define MAX_Cadd_arg_INSTRUCTION_N 16
 
+program pgrm;
+int last_d, last_jsr_with_d;
+
 struct label {
 	char *label_name;
 	int label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
@@ -46,6 +49,17 @@ void initialize_code(void) {
 	labels = NULL;
 	module_n = 0;
 
+	pgrm = (struct program) {
+		0,
+		0,
+		0,
+		0,
+		(BC_WORD*) safe_malloc(512 * sizeof(BC_WORD)),
+		(BC_WORD*) safe_malloc(512 * sizeof(BC_WORD)),
+		(relocation*) safe_malloc(512 * sizeof(relocation)),
+		(relocation*) safe_malloc(512 * sizeof(relocation)),
+		};
+
 	allocated_code_size = 512;
 	allocated_data_size = 512;
 	allocated_code_relocations_size = 512;
@@ -54,6 +68,9 @@ void initialize_code(void) {
 
 void code_next_module(void) {
 	module_n++;
+
+	last_d = 0;
+	last_jsr_with_d = 0;
 }
 
 static void realloc_code(void) {
