@@ -7,6 +7,8 @@
 #include "instruction_parse.h"
 #include "instruction_table.h"
 
+int last_d, last_jsr_with_d;
+
 unsigned int nr_abc_files;
 FILE **abc_files;
 
@@ -43,6 +45,10 @@ void parse_line(char* line, size_t size) {
 void parse_file(FILE *file) {
 	char* line = NULL;
 	size_t size = 0;
+
+	last_d = 0;
+	last_jsr_with_d = 0;
+
 	while(getline(&line, &size, file) > 0) {
 		line_number++;
 		parse_line(line, size);

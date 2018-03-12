@@ -8,13 +8,25 @@ all: optimise interpret bytecode
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) -nr -nt ABC.Optimise -o $@
 
-SRC_INTERPRET:=interpret.c parse.c bytecode.c util.c traps.c abc_instructions.c
+SRC_INTERPRET:=\
+	abc_instructions.c\
+	bytecode.c\
+	interpret.c\
+	parse.c\
+	traps.c\
+	util.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
 
-SRC_BYTECODE:=bytecode_gen/bytecode_gen.c util.c bytecode_gen/instruction_table.c bytecode_gen/instruction_code.c bytecode_gen/instruction_parse.c
+SRC_BYTECODE:=\
+	abc_instructions.c\
+	util.c\
+	bytecode_gen/bytecode_gen.c\
+	bytecode_gen/instruction_code.c\
+	bytecode_gen/instruction_parse.c\
+	bytecode_gen/instruction_table.c
 DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
 
 bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)

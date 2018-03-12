@@ -16,3 +16,4 @@ typedef struct program {
 } program;
 
 extern program pgrm;
+extern int last_d, last_jsr_with_d;
