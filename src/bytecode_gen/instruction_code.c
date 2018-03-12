@@ -86,7 +86,7 @@ void store_code_w(BC_WORD w) {
 struct label *new_internal_label(void) {
 	struct label *new_label_p;
 
-	new_label_p = (label*) safe_malloc(sizeof(struct label));
+	new_label_p = (struct label*) safe_malloc(sizeof(struct label));
 	new_label_p->label_name="internal label";
 	new_label_p->label_module_n=module_n;
 	new_label_p->label_offset=-1;
@@ -113,7 +113,7 @@ struct label *enter_label(char *label_name) {
 				} else {
 					struct label *new_label_p;
 					
-					new_label_p = (label*) safe_malloc(sizeof(struct label));
+					new_label_p = (struct label*) safe_malloc(sizeof(struct label));
 					new_label_p->label_name=label_node_p->label_node_label_p->label_name;
 					new_label_p->label_module_n=module_n;
 					new_label_p->label_offset=-1;
@@ -134,8 +134,8 @@ struct label *enter_label(char *label_name) {
 	struct label_node *new_label_node_p;
 	struct label *new_label_p;
 
-	new_label_node_p = (label_node*) safe_malloc(sizeof(struct label_node));
-	new_label_p = (label*) safe_malloc(sizeof(struct label));
+	new_label_node_p = (struct label_node*) safe_malloc(sizeof(struct label_node));
+	new_label_p = (struct label*) safe_malloc(sizeof(struct label));
 	new_label_node_p->label_node_left = NULL;
 	new_label_node_p->label_node_right = NULL;
 	new_label_node_p->label_node_label_p = new_label_p;

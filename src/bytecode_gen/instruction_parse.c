@@ -6,6 +6,7 @@
 
 #include "../abci_types.h"
 #include "../util.h"
+#include "instruction_code.h"
 #include "instruction_table.h"
 
 void warning_i (char *error_string,int integer) {
