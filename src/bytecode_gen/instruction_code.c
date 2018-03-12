@@ -68,12 +68,12 @@ static void realloc_data(void) {
 
 static void realloc_code_relocations(void) {
 	allocated_code_relocations_size *= 2;
-	pgrm.code_relocations = (relocation*) safe_realloc(pgrm.code_relocations, allocated_code_relocations * sizeof(relocation));
+	pgrm.code_relocations = (relocation*) safe_realloc(pgrm.code_relocations, allocated_code_relocations_size * sizeof(relocation));
 }
 
 static void realloc_data_relocations(void) {
 	allocated_data_relocations_size *= 2;
-	pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations * sizeof(relocation));
+	pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations_size * sizeof(relocation));
 }
 
 void store_code_w(BC_WORD w) {
@@ -167,7 +167,7 @@ void store_code_internal_label_value(struct label *label,int offset) {
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&code_relocations[pgrm.code_reloc_size++];
+		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
 	}
@@ -186,7 +186,7 @@ void store_code_label_value(char *label_name,int offset) {
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&code_relocations[pgrm.code_reloc_size++];
+		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
 	}
@@ -201,7 +201,7 @@ static void store_data_label_value_of_label(struct label *label,int offset) {
 	{
 		struct relocation *relocation_p;
 		
-		relocation_p=&data_relocations[pgrm.data_reloc_size++];
+		relocation_p=&pgrm.data_relocations[pgrm.data_reloc_size++];
 		relocation_p->relocation_offset=pgrm.data_size;
 		relocation_p->relocation_label=label;
 	}
@@ -272,7 +272,7 @@ static struct label Fadd_arg_labels[N_ADD_ARG_LABELS]
 
 BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 	int i,undefined_label;
-	int code_offset,data_offset;
+	size_t code_offset,data_offset;
 	
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
@@ -296,8 +296,8 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 	undefined_label=0;
 
 	if (add_code_or_data_offset) {
-		code_offset =(int)code;
-		data_offset =(int)data;
+		code_offset = (size_t) pgrm.code;
+		data_offset = (size_t) pgrm.data;
 	} else {
 		code_offset = 0;
 		data_offset = 0;	
@@ -307,7 +307,7 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		struct relocation *relocation_p;
 		int offset;
 
-		relocation_p=&code_relocations[i];
+		relocation_p=&pgrm.code_relocations[i];
 
 		offset = relocation_p->relocation_label->label_offset;
 		if (offset<0) {
@@ -326,7 +326,7 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		struct relocation *relocation_p;
 		int offset;
 
-		relocation_p=&data_relocations[i];
+		relocation_p=&pgrm.data_relocations[i];
 
 		offset = relocation_p->relocation_label->label_offset;
 		if (offset<0) {
@@ -336,9 +336,9 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		}
 
 		if ((offset & 1)==0)
-			*(SI*)&data[relocation_p->relocation_offset] += offset + code_offset;
+			*(SI*)&pgrm.data[relocation_p->relocation_offset] += offset + code_offset;
 		else
-			*(SI*)&data[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
+			*(SI*)&pgrm.data[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
 	}
 
 	if (undefined_label) {
@@ -346,20 +346,20 @@ BC_WORD *relocate_code_and_data(int add_code_or_data_offset) {
 		exit(1);
 	}
 	
-	return code;
+	return pgrm.code;
 }
 
 void add_code_and_data_offsets(void) {
 	int i;
-	int code_offset,data_offset;
+	size_t code_offset,data_offset;
 	
-	code_offset =(int)code;
-	data_offset =(int)data;
+	code_offset = (size_t) pgrm.code;
+	data_offset = (size_t) pgrm.data;
 
 	for(i=0; i<pgrm.code_reloc_size; ++i) {
 		struct relocation *relocation_p;
 
-		relocation_p=&code_relocations[i];
+		relocation_p=&pgrm.code_relocations[i];
 		if ((relocation_p->relocation_label->label_offset & 1)==0)
 			*(SI*)&pgrm.code[relocation_p->relocation_offset] += code_offset;
 		else
@@ -369,11 +369,11 @@ void add_code_and_data_offsets(void) {
 	for(i=0; i<pgrm.data_reloc_size; ++i) {
 		struct relocation *relocation_p;
 
-		relocation_p=&data_relocations[i];
+		relocation_p=&pgrm.data_relocations[i];
 		if ((relocation_p->relocation_label->label_offset & 1)==0)
-			*(SI*)&data[relocation_p->relocation_offset] += code_offset;
+			*(SI*)&pgrm.data[relocation_p->relocation_offset] += code_offset;
 		else
-			*(SI*)&data[relocation_p->relocation_offset] += data_offset;
+			*(SI*)&pgrm.data[relocation_p->relocation_offset] += data_offset;
 	}
 }
 
