@@ -4017,17 +4017,7 @@ void code_string(char label_name[],char string[],int string_length) {
 void code_dummy(void) {
 }
 
-static void print_code_or_data(int segment_size,BC_WORD *segment,int comma_separator,FILE *program_file) {
-	char *f1,*f2;
-
-	if (comma_separator) {
-		f1="%d,";
-		f2="%d,\n";
-	} else {
-		f1="%d ";
-		f2="%d\n";
-	}
-
+static void print_code_or_data(int segment_size,BC_WORD *segment,FILE *program_file) {
 	if (segment_size>0) {
 		int i;
 		
@@ -4041,25 +4031,16 @@ static void print_code_or_data(int segment_size,BC_WORD *segment,int comma_separ
 				break;
 			} else
 				if ((i & 15)!=15)
-					fprintf(program_file,f1,v);
+					fprintf(program_file,"%d ",v);
 				else
-					fprintf(program_file,f2,v);
+					fprintf(program_file,"%d\n",v);
 			++i;
 		}
 	}
 }
 
-static void print_code_or_data_code_relocations(int reloc_size, int n_relocations,struct relocation *relocations, int comma_separator, FILE *program_file) {
+static void print_relocations(int reloc_size, int n_relocations,struct relocation *relocations, FILE *program_file) {
 	int i;
-	char *f1,*f2;
-
-	if (comma_separator) {
-		f1="%d,";
-		f2="%d,\n";
-	} else {
-		f1="%d ";
-		f2="%d\n";
-	}
 	
 	if (reloc_size>0) {
 		int n;
@@ -4075,9 +4056,9 @@ static void print_code_or_data_code_relocations(int reloc_size, int n_relocation
 					break;
 				} else
 					if ((n & 15)!=15)
-						fprintf(program_file,f1,v);
+						fprintf(program_file,"%d ",v);
 					else
-						fprintf(program_file,f2,v);
+						fprintf(program_file,"%d\n",v);
 				++n;
 			}
 	}
@@ -4107,13 +4088,13 @@ void write_program(void) {
 	fprintf(program_file,"%d %d %d\n",pgrm.code_size,n_code_code_relocations,n_code_data_relocations);
 	fprintf(program_file,"%d %d %d\n",pgrm.data_size,n_data_code_relocations,n_data_data_relocations);
 
-	print_code_or_data(pgrm.code_size,pgrm.code,0,program_file);
-	print_code_or_data_code_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,0,program_file);
+	print_code_or_data(pgrm.code_size,pgrm.code,program_file);
+	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file);
+	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file);
 
-	print_code_or_data(pgrm.data_size,pgrm.data,0,program_file);
-	print_code_or_data_code_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,0,program_file);
-	print_code_or_data_data_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,0,program_file);
+	print_code_or_data(pgrm.data_size,pgrm.data,program_file);
+	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file);
+	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file);
 	
 	if (fclose(program_file)) {
 		printf("Error writing program file\n");
