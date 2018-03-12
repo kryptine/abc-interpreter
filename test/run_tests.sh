@@ -49,6 +49,7 @@ do
 	done
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
+	rm $MODULE.bc
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
 	mv program $MODULE.bc
 	rm program.js
