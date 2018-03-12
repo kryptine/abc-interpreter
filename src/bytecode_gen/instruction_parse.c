@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "../abci_types.h"
 #include "../util.h"
@@ -66,14 +67,42 @@ static int skip_spaces_and_tabs (void)
 		return 0;
 }
 
-void parse_instruction_line(instruction *instr, char *line, int line_nr) {
+static void parse_label (char *label_string);
+void parse_line(char* line, unsigned int line_nr) {
+	char *end, *token;
+
 	line_number = line_nr;
-	current_line = line;
-	last_char = next_character();
 
-	skip_spaces_and_tabs();
+	end = line;
+	while (isspace(*end))
+		end++;
 
-	instr->parse_function(instr);
+	if (end == line && line[0] != '.' && line[0] != '|') {
+		char s[MAX_STRING_LENGTH];
+		strsep(&end, " \r\n\t");
+		current_line = line;
+		last_char = next_character();
+		parse_label(s);
+		code_label(s);
+		printf("%s\n", s);
+	} else if ((token = strsep(&end, " \r\n\t")) != NULL) {
+		instruction* i = instruction_lookup(token);
+		if (i != NULL) {
+			if (i->name[0] == '.') {
+				printf("%s\t%s", i->name, end);
+			} else {
+				printf("\t%s\t%s", i->name, end);
+			}
+			current_line = end;
+			last_char = next_character();
+			skip_spaces_and_tabs();
+			i->parse_function(i);
+		} else if (end) {
+			printf("\t???\t%s %s\n", line, end);
+		} else {
+			printf("\t???\t%s\n", line);
+		}
+	}
 }
 
 static int try_parse_label (char *label_string)

@@ -3,7 +3,7 @@
 #include "instruction_table.h"
 
 void init_parser(void);
-void parse_instruction_line(struct instruction*, char*, int);
+void parse_line(char*, unsigned int);
 
 int parse_instruction(struct instruction*);
 int parse_instruction_a(struct instruction*);

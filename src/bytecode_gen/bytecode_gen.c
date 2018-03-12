@@ -10,42 +10,7 @@
 unsigned int nr_abc_files;
 FILE **abc_files;
 
-char* skip_whitespace(char* string) {
-	while(isspace(*string)) {
-		string++;
-	}
-	return string;
-}
-
 static int line_number = 0;
-
-// Parse the current line
-// size argument might not be needed
-void parse_line(char* line, size_t size) {
-	char *end, *token;
-
-	end = skip_whitespace(line);
-
-	if (end == line && line[0] != '.' && line[0] != '|') {
-		strsep(&end, " \r\n\t");
-		code_label(line);
-		printf("%s\n", line);
-	} else if ((token = strsep(&end, " \r\n\t")) != NULL) {
-		instruction* i = instruction_lookup(token);
-		if (i != NULL) {
-			if (i->name[0] == '.') {
-				printf("%s\t%s", i->name, end);
-			} else {
-				printf("\t%s\t%s", i->name, end);
-			}
-			parse_instruction_line(i, end, line_number);
-		} else if (end) {
-			printf("\t???\t%s %s\n", line, end);
-		} else {
-			printf("\t???\t%s\n", line);
-		}
-	}
-}
 
 void parse_file(FILE *file) {
 	char* line = NULL;
@@ -55,7 +20,7 @@ void parse_file(FILE *file) {
 
 	while(getline(&line, &size, file) > 0) {
 		line_number++;
-		parse_line(line, size);
+		parse_line(line, line_number);
 	}
 }
 
