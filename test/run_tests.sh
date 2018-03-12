@@ -5,7 +5,7 @@ make -C ../src || exit 1
 rm -r Clean\ System\ Files
 
 CLM=clm
-CG=../../interpret_abc_git/abc_bytecode_generator/bcgen
+CG=../src/bytecode
 OPT=../src/optimise
 IP=../src/interpret
 
