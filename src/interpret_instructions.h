@@ -6571,13 +6571,13 @@ case Cjsr_stack_check:
 	continue;
 case Cstack_check:
 	if (csp[0]!=(BC_WORD)asp){
-		printf("Cstack_check asp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		printf("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	if (csp[1]!=(BC_WORD)bsp){
-		printf("Cstack_check bsp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		printf("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;
