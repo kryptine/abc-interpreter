@@ -23,17 +23,26 @@ static int line_number = 0;
 // size argument might not be needed
 void parse_line(char* line, size_t size) {
 	char *end, *token;
-	end = line;
 
-	end = skip_whitespace(end);
+	end = skip_whitespace(line);
 
-	if ((token = strsep(&end, " \r\n\t")) != NULL) {
+	if (end == line && line[0] != '.' && line[0] != '|') {
+		strsep(&end, " \r\n\t");
+		code_label(line);
+		printf("%s\n", line);
+	} else if ((token = strsep(&end, " \r\n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
 		if (i != NULL) {
-			printf("%s\t%s %s", i->name, line, end);
+			if (i->name[0] == '.') {
+				printf("%s\t%s", i->name, end);
+			} else {
+				printf("\t%s\t%s", i->name, end);
+			}
 			parse_instruction_line(i, end, line_number);
+		} else if (end) {
+			printf("\t???\t%s %s\n", line, end);
 		} else {
-			printf("???\t%s %s\n", line, end);
+			printf("\t???\t%s\n", line);
 		}
 	}
 }
@@ -85,6 +94,9 @@ int main (int argc, char *argv[]) {
 	initialize_code();
 
 	parse_files();
+
+	relocate_code_and_data(0);
+	write_program();
 
 	return 0;
 }
