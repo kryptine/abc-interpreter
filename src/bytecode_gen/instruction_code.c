@@ -25,11 +25,6 @@ struct label_node {
 
 struct label_node *labels;
 
-typedef struct relocation {
-	int relocation_offset;
-	struct label *relocation_label;
-} relocation;
-
 int module_n;
 
 int list_code = 0;
