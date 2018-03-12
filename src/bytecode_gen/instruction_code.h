@@ -3,6 +3,12 @@
 #include "../abci_types.h"
 #include "../bytecode.h"
 
+struct label {
+	char *label_name;
+	int label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
+	int label_module_n;
+};
+
 typedef struct relocation {
 	int relocation_offset;
 	struct label *relocation_label;

@@ -16,12 +16,6 @@
 program pgrm;
 int last_d, last_jsr_with_d;
 
-struct label {
-	char *label_name;
-	int label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
-	int label_module_n;
-};
-
 struct label_node {
 	struct label_node *label_node_left;
 	struct label_node *label_node_right;
@@ -4055,7 +4049,7 @@ static void print_code_or_data(int segment_size,BC_WORD *segment,FILE *program_f
 	}
 }
 
-static void print_relocations(int reloc_size, int n_relocations,struct relocation *relocations, FILE *program_file) {
+static void print_relocations(int reloc_size, int n_relocations,struct relocation *relocations, FILE *program_file, int do_data) {
 	int i;
 	
 	if (reloc_size>0) {
@@ -4063,7 +4057,7 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 
 		n=0;
 		for(i=0; i<n_relocations; ++i)
-			if ((relocations[i].relocation_label->label_offset & 1)==0) {
+			if ((relocations[i].relocation_label->label_offset & 1) == do_data) {
 				int v;
 				
 				v=relocations[i].relocation_offset;
@@ -4105,12 +4099,12 @@ void write_program(void) {
 	fprintf(program_file,"%d %d %d\n",pgrm.data_size,n_data_code_relocations,n_data_data_relocations);
 
 	print_code_or_data(pgrm.code_size,pgrm.code,program_file);
-	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file);
-	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file);
+	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);
+	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
 
 	print_code_or_data(pgrm.data_size,pgrm.data,program_file);
-	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file);
-	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file);
+	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
+	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
 	
 	if (fclose(program_file)) {
 		printf("Error writing program file\n");
