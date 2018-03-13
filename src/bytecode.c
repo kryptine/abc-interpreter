@@ -9,7 +9,7 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 	for (i = 0; i < length; i++) {
 		if (human && is_code) {
 			char *fmt = instruction_type(section[i]);
-			fprintf(f, "%d\t%s", i, instruction_name(section[i], 0));
+			fprintf(f, "%d\t%s", i, instruction_name(section[i]));
 			for (; *fmt; fmt++) {
 				i++;
 				switch (*fmt) {

@@ -17,8 +17,11 @@
 # define BC_WORD_S int32_t
 #endif
 #define BC_BOOL uint8_t
+#ifndef BC_GEN
 #define SS short /* TODO check what to do with this */
+#endif
 
+#ifndef BC_GEN
 struct program {
 	uint32_t code_size;
 	uint32_t code_code_size;
@@ -37,9 +40,12 @@ struct program {
 	BC_WORD *data_data;
 #endif
 };
+#endif
 
+#ifndef BC_GEN
 void print_program(FILE*, struct program*, int human_readable);
 
 void handle_relocations(struct program *pgm);
+#endif
 
 #endif

@@ -14,11 +14,11 @@
 \maketitle
 
 \section*{Topic}
-Dynamics are data types that store both a value and the type of that value.
+Dynamics are data types that store both a value and the type of that value~\cites{Abadi1991,Leroy1993,Abadi1995,Pil1998}.
 Such types are useful in strongly typed languages to store values of different types in homogeneous data structures.
-Clean is a pure, lazy, strongly-typed functional programming language with builtin support for dynamics.
+Clean is a pure, lazy, strongly-typed functional programming language with builtin support for dynamics~\citep{CleanLang}.
 On 32-bit Windows, it is possible to store a dynamic on disk, together with all the corresponding object code,
-	which allows for sharing of dynamics between different applications.
+	which allows for sharing of dynamics between different applications~\citep{Vervoort2002}.
 This is also possible with expressions that are not completely evaluated.
 
 Clean also supports serialization of any value, but these values can only be deserialized by the same executable.
@@ -34,12 +34,10 @@ This bytecode can then be interpreted by any client application, allowing for ty
 If time permits, we can extend the system with a Just-in-Time compiler for better performance.
 
 \section*{Related Work}
-Dynamics have a long history~\cites[e.g.]{Plotkin1987,Abadi1992,Lero1993,Pil1998,VanNoort2012}.
 The \emph{iTasks} system uses the intermediate functional language SAPL rather than ABC for client-side code execution~\cites{Jansen2006,Plasmeijer2008}.
 We choose to use ABC because it is more efficient and provides for a shorter pipeline.
-John van Groningen has already worked on an ABC optimiser, a code generator for 32-bit bytecode and a proof-of-concept interpreter.
-This system needs to be extended with a garbage collector.
-The bytecode needs to become platform-independent and the interpreter needs to be finished.
+John van Groningen has already worked on an ABC optimiser, a code generator for 32-bit bytecode and a proof-of-concept 32-bit interpreter.
+This system needs to be extended with a garbage collector, the bytecode needs to become platform-independent and the interpreter needs to be finished.
 The system needs to be integrated with the dynamics system using new platform-independent serialization functionality.
 
 \footnotesize

@@ -463,7 +463,7 @@ enum {
 	Cfill3
 };
 
-char *instruction_name(BC_WORD i, int with_nr);
+char *instruction_name(BC_WORD i);
 char *instruction_type(BC_WORD i);
 
 #endif
