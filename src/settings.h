@@ -10,6 +10,7 @@
 
 #ifndef WORD_WIDTH
 #define WORD_WIDTH 64
+#endif
 
 // Rule dependencies
 #ifdef BC_GEN
