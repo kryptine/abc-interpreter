@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CLM=clm
-CG=../../interpret_abc_git/abc_bytecode_generator/bcgen
+CG=../src/bytecode
 OPT=../src/optimise
 IP=../src/interpret
 
@@ -52,7 +52,6 @@ do
 	rm $MODULE.bc
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
 	mv program $MODULE.bc
-	rm program.js
 
 	/usr/bin/time $IP $MODULE.bc > $MODULE.result
 
