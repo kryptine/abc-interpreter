@@ -1,11 +1,7 @@
 #!/bin/bash
 
-make -C ../src || exit 1
-
-rm -r Clean\ System\ Files
-
 CLM=clm
-CG=../../interpret_abc_git/abc_bytecode_generator/bcgen
+CG=../src/bytecode
 OPT=../src/optimise
 IP=../src/interpret
 
@@ -16,9 +12,24 @@ RESET="\033[0m"
 
 FAILED=0
 
-if [[ "$1" == "--no-opt" ]]; then
-	OPT="cat -"
-fi
+CFLAGS=""
+
+for opt in $@
+do
+	case $opt in
+		"--32-bit")
+			CFLAGS+=" -m32 -DWORD_WIDTH=32";;
+		"--no-opt")
+		    OPT="cat -";;
+		*)
+			echo "Unrecognised option '$opt'"
+			exit -1;;
+	esac
+done
+
+CFLAGS="$CFLAGS" make -BC ../src || exit 1
+
+rm -r Clean\ System\ Files
 
 while IFS=$'\t' read -r -a line
 do
@@ -40,9 +51,9 @@ do
 	done
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
+	rm $MODULE.bc
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
 	mv program $MODULE.bc
-	rm program.js
 
 	/usr/bin/time $IP $MODULE.bc > $MODULE.result
 
@@ -57,4 +68,6 @@ done < tests.txt
 
 if [ $FAILED -eq 0 ]; then
 	echo -e "${GREEN}All tests passed$RESET"
+else
+	exit 1
 fi
