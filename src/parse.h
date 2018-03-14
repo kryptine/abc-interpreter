@@ -30,6 +30,6 @@ struct parser {
 
 void init_parser(struct parser*);
 int parse_elem(struct parser*, int);
-int parse_line(struct parser*, char*);
+int parse_file(struct parser*, FILE*);
 
 #endif

@@ -57,136 +57,157 @@ void next_state(struct parser *state) {
 	}
 }
 
-int parse_elem(struct parser *state, int elem) {
-	switch (state->state) {
-		case PS_init_code:
-			state->program->code_size = elem;
-			if ((state->program->code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-			next_state(state);
-			return 0;
-		case PS_init_code_code:
-			state->program->code_code_size = elem;
-#ifndef PARSE_HANDLE_RELOCATIONS
-			if ((state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-#endif
-			next_state(state);
-			return 0;
-		case PS_init_code_data:
-			state->program->code_data_size = elem;
-#ifndef PARSE_HANDLE_RELOCATIONS
-			if ((state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-#endif
-			next_state(state);
-			return 0;
-		case PS_init_data:
-			state->program->data_size = elem;
-			if ((state->program->data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-			next_state(state);
-			return 0;
-		case PS_init_data_code:
-			state->program->data_code_size = elem;
-#ifndef PARSE_HANDLE_RELOCATIONS
-			if ((state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-#endif
-			next_state(state);
-			return 0;
-		case PS_init_data_data:
-			state->program->data_data_size = elem;
-#ifndef PARSE_HANDLE_RELOCATIONS
-			if ((state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
-				return 2;
-			}
-#endif
-			next_state(state);
-			return 0;
-		case PS_code:
-			state->program->code[state->ptr++] = elem;
-			if (state->ptr >= state->program->code_size) {
-				state->ptr = 0;
+int parse_file(struct parser *state, FILE *file) {
+	while (state->state != PS_end) {
+		switch (state->state) {
+			case PS_init_code:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->code_size = elem;
+				if ((state->program->code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
 				next_state(state);
-			}
-			return 0;
-		case PS_code_code_rel:
+				return 0;
+			case PS_init_code_code:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->code_code_size = elem;
+#ifndef PARSE_HANDLE_RELOCATIONS
+				if ((state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
+#endif
+				next_state(state);
+				return 0;
+			case PS_init_code_data:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->code_data_size = elem;
+#ifndef PARSE_HANDLE_RELOCATIONS
+				if ((state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
+#endif
+				next_state(state);
+				return 0;
+			case PS_init_data:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->data_size = elem;
+				if ((state->program->data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
+				next_state(state);
+				return 0;
+			case PS_init_data_code:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->data_code_size = elem;
+#ifndef PARSE_HANDLE_RELOCATIONS
+				if ((state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
+#endif
+				next_state(state);
+				return 0;
+			case PS_init_data_data:
+				uint32_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->data_data_size = elem;
+#ifndef PARSE_HANDLE_RELOCATIONS
+				if ((state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem)) == NULL) {
+					return 2;
+				}
+#endif
+				next_state(state);
+				return 0;
+			case PS_code:
+				uint64_t elem;
+				fread(&elem, sizeof(elem), 1, file);
+				state->program->code[state->ptr++] = elem;
+				if (state->ptr >= state->program->code_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_code_code_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
 # if (WORD_WIDTH == 64)
-			state->program->code[elem] *= 2;
+				//TODO: Read elem
+				state->program->code[elem] *= 2;
 # endif
-			state->program->code[elem] += (BC_WORD) state->program->code;
+				state->program->code[elem] += (BC_WORD) state->program->code;
 #else
-			state->program->code_code[state->ptr] = elem;
+				state->program->code_code[state->ptr] = elem;
 #endif
-			if (++state->ptr >= state->program->code_code_size) {
-				state->ptr = 0;
-				next_state(state);
-			}
-			return 0;
-		case PS_code_data_rel:
+				if (++state->ptr >= state->program->code_code_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_code_data_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
 # if (WORD_WIDTH == 64)
-			state->program->code[elem] *= 2; // TODO: why should this not be done here? What about data_data?
+				//TODO: Read elem
+				state->program->code[elem] *= 2; // TODO: why should this not be done here? What about data_data?
 # endif
-			state->program->code[elem] += (BC_WORD) state->program->data;
+				state->program->code[elem] += (BC_WORD) state->program->data;
 #else
-			state->program->code_data[state->ptr] = elem;
+				state->program->code_data[state->ptr] = elem;
 #endif
-			if (++state->ptr >= state->program->code_data_size) {
-				state->ptr = 0;
-				next_state(state);
-			}
-			return 0;
-		case PS_data:
-			state->program->data[state->ptr++] = elem;
-			if (state->ptr >= state->program->data_size) {
-				state->ptr = 0;
-				next_state(state);
-			}
-			return 0;
-		case PS_data_code_rel:
+				if (++state->ptr >= state->program->code_data_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_data:
+				//TODO: Read elem
+				state->program->data[state->ptr++] = elem;
+				if (state->ptr >= state->program->data_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_data_code_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
 # if (WORD_WIDTH == 64)
-			state->program->data[elem] *= 2;
+				//TODO: Read elem
+				state->program->data[elem] *= 2;
 # endif
-			state->program->data[elem] += (BC_WORD) state->program->code;
+				state->program->data[elem] += (BC_WORD) state->program->code;
 #else
-			state->program->data_code[state->ptr] = elem;
+				state->program->data_code[state->ptr] = elem;
 #endif
-			if (++state->ptr >= state->program->data_code_size) {
-				state->ptr = 0;
-				next_state(state);
-			}
-			return 0;
-		case PS_data_data_rel:
+				if (++state->ptr >= state->program->data_code_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_data_data_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
 # if (WORD_WIDTH == 64)
-			state->program->data[elem] *= 2; // Is this right? See above, code_data.
+				//TODO: Read elem
+				state->program->data[elem] *= 2; // Is this right? See above, code_data.
 # endif
-			state->program->data[elem] += (BC_WORD) state->program->data;
+				state->program->data[elem] += (BC_WORD) state->program->data;
 #else
-			state->program->data_data[state->ptr] = elem;
+				state->program->data_data[state->ptr] = elem;
 #endif
-			if (++state->ptr >= state->program->data_data_size) {
-				state->ptr = 0;
-				next_state(state);
-			}
-			return 0;
-		case PS_end:
-			return 1;
-		default:
-			return 3;
+				if (++state->ptr >= state->program->data_data_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				return 0;
+			case PS_end:
+				return 1;
+			default:
+				return 3;
+		}
 	}
 }
 
-int parse_line(struct parser *state, char *line) {
+int parse_file(struct parser *state, FILE *line) {
 	char *end = line;
 	int cont = 1;
 	int res;

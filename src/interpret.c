@@ -151,19 +151,17 @@ int main(int argc, char **argv) {
 	if (!strcmp(argv[optind], "-")) {
 		input = stdin;
 	} else {
-		input = fopen(argv[optind], "r");
+		input = fopen(argv[optind], "rb");
 		if (!input) {
 			fprintf(stderr, "Could not open '%s'\n", argv[optind]);
 			exit(-1);
 		}
 	}
 
-	while (getline(&line, &n, input) > 0) {
-		int res = parse_line(&state, line);
-		if (res) {
-			fprintf(stderr, "Parsing failed (%d)\n", res);
-			exit(res);
-		}
+	int res = parse_file(&state, input);
+	if (res) {
+		fprintf(stderr, "Parsing failed (%d)\n", res);
+		exit(res);
 	}
 
 	if (list_program) {
