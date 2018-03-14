@@ -2061,11 +2061,11 @@ void code_or(void) {
 }
 
 void code_pop_a(int n) {
-	add_instruction_w(Cpop_a,-(n<<2));
+	add_instruction_w(Cpop_a,-n);
 }
 
 void code_pop_b(int n) {
-	add_instruction_w(Cpop_b,n<<2);
+	add_instruction_w(Cpop_b,n);
 }
 
 void code_print(char *string,int length) {
@@ -3190,7 +3190,7 @@ void code_swap_b1(void) {
 void code_pop_a_jmp(int n,char label_name[]) {
 	last_d=0;
 
-	add_instruction_w_label(Cpop_a_jmp,-(n<<2),label_name);
+	add_instruction_w_label(Cpop_a_jmp,n,label_name);
 }
 
 void code_pop_a_jsr(int n,char label_name[]) {
@@ -3220,25 +3220,25 @@ void code_pop_a_jsr(int n,char label_name[]) {
 		return;
 	}
 
-	add_instruction_w_label(Cpop_a_jsr,-(n<<2),label_name);
+	add_instruction_w_label(Cpop_a_jsr,n,label_name);
 }
 
 void code_pop_a_rtn(int n) {
 	last_d=0;
 
-	add_instruction_w(Cpop_a_rtn,-(n<<2));
+	add_instruction_w(Cpop_a_rtn,n);
 }
 
 void code_pop_ab_rtn(int na,int nb) {
 	last_d=0;
 
-	add_instruction_w_w(Cpop_ab_rtn,-(na<<2),nb<<2);
+	add_instruction_w_w(Cpop_ab_rtn,na,nb);
 }
 
 void code_pop_b_jmp(int n,char label_name[]) {
 	last_d=0;
 
-	add_instruction_w_label(Cpop_b_jmp,n<<2,label_name);
+	add_instruction_w_label(Cpop_b_jmp,n,label_name);
 }
 
 void code_pop_b_jsr(int n,char label_name[]) {
@@ -3268,20 +3268,20 @@ void code_pop_b_jsr(int n,char label_name[]) {
 		return;
 	}
 
-	add_instruction_w_label(Cpop_b_jsr,n<<2,label_name);
+	add_instruction_w_label(Cpop_b_jsr,n,label_name);
 }
 
 void code_pop_b_pushB(int n,int b) {
 	if (b==0)
-		add_instruction_w(Cpop_b_pushBFALSE,(n-1)<<2);
+		add_instruction_w(Cpop_b_pushBFALSE,n);
 	else
-		add_instruction_w(Cpop_b_pushBTRUE,(n-1)<<2);
+		add_instruction_w(Cpop_b_pushBTRUE,n);
 }
 
 void code_pop_b_rtn(int n) {
 	last_d=0;
 
-	add_instruction_w(Cpop_b_rtn,n<<2);
+	add_instruction_w(Cpop_b_rtn,n);
 }
 
 void code_push_a_jsr(int a_offset,char label_name[]) {
@@ -3464,7 +3464,7 @@ void code_updates2_a(int a_offset_1,int a_offset_2,int a_offset_3) {
 }
 
 void code_updates2_a_pop_a(int a_offset_1,int a_offset_2,int a_offset_3,int n) {
-	add_instruction_w_w_w_w(Cupdates2_a_pop_a,-a_offset_1,-a_offset_2,-a_offset_3,-(n<<2));
+	add_instruction_w_w_w_w(Cupdates2_a_pop_a,-a_offset_1,-a_offset_2,-a_offset_3,n);
 }
 
 void code_updates2_b(int b_offset_1,int b_offset_2,int b_offset_3) {
