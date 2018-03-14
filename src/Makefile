@@ -6,7 +6,7 @@ override CFLAGS+=-Wall -pedantic -Wno-misleading-indentation
 all: optimise interpret bytecode
 
 optimise: .FORCE
-	$(CLM) $(CLMFLAGS) -nr -nt ABC.Optimise -o $@
+	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\

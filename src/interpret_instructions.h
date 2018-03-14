@@ -3117,7 +3117,12 @@ case CorI:
 	pc+=1;
 	continue;
 case Cpop_a:
-	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1] * 2); // TODO the *2 is 64-bit specific (#4)
+	/* TODO should be possible without ifdef (#4) */
+#if (WORD_WIDTH == 64)
+	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1] * 2);
+#else
+	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1]);
+#endif
 	pc+=2;
 	continue;
 case Cpop_b:
@@ -5774,7 +5779,7 @@ case Cjmp_neI_b:
 	BC_WORD_S bo;
 	
 	bo=((BC_WORD_S*)pc)[1];
-	if (bsp[bo]!=(BC_WORD_S)pc[2]){
+	if (bsp[bo]==(BC_WORD_S)pc[2]){
 		pc+=4;
 		continue;
 	}
@@ -5862,7 +5867,11 @@ case Cpop_b_pushBTRUE:
 	pc+=2;
 	continue;
 case Cpop_b_rtn:
+#if (WORD_WIDTH == 64)
 	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (see #4)
+#else
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(pc[1]));
+#endif
 	pc=(BC_WORD*)*csp++;
 	continue;
 case CpushD_a_jmp_eqD_b2:
@@ -5959,11 +5968,11 @@ case Cpush2_a:
 }
 case Cpush2_b:
 {
-	BC_WORD_S bo_s;
+	BC_WORD bo_s;
 
-	bo_s=((BC_WORD_S*)pc)[1];
-	bsp[-1]=asp[bo_s];
-	bsp[-2]=asp[bo_s-1];
+	bo_s=((BC_WORD*)pc)[1];
+	bsp[-1]=bsp[bo_s];
+	bsp[-2]=bsp[bo_s-1];
 	bsp-=2;
 	pc+=2;
 	continue;
@@ -5982,12 +5991,12 @@ case Cpush3_a:
 }
 case Cpush3_b:
 {
-	BC_WORD_S bo_s;
+	BC_WORD bo_s;
 
-	bo_s=((BC_WORD_S*)pc)[1];
-	bsp[-1]=asp[bo_s];
-	bsp[-2]=asp[bo_s-1];
-	bsp[-3]=asp[bo_s-2];
+	bo_s=((BC_WORD*)pc)[1];
+	bsp[-1]=bsp[bo_s];
+	bsp[-2]=bsp[bo_s-1];
+	bsp[-3]=bsp[bo_s-2];
 	bsp-=3;
 	pc+=2;
 	continue;
