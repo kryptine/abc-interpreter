@@ -3117,7 +3117,12 @@ case CorI:
 	pc+=1;
 	continue;
 case Cpop_a:
-	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1] * 2); // TODO the *2 is 64-bit specific (#4)
+	/* TODO should be possible without ifdef (#4) */
+#if (WORD_WIDTH == 64)
+	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1] * 2);
+#else
+	asp=(BC_WORD*)(((BC_BOOL*)asp)+((BC_WORD*)pc)[1]);
+#endif
 	pc+=2;
 	continue;
 case Cpop_b:
@@ -5856,7 +5861,11 @@ case Cpop_b_pushBTRUE:
 	pc+=2;
 	continue;
 case Cpop_b_rtn:
+#if (WORD_WIDTH == 64)
 	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (see #4)
+#else
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(pc[1]));
+#endif
 	pc=(BC_WORD*)*csp++;
 	continue;
 case CpushD_a_jmp_eqD_b2:
