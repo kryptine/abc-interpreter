@@ -1,9 +1,5 @@
 #!/bin/bash
 
-make -C ../src || exit 1
-
-rm -r Clean\ System\ Files
-
 CLM=clm
 CG=../src/bytecode
 OPT=../src/optimise
@@ -15,6 +11,23 @@ YELLOW="\033[0;33m"
 RESET="\033[0m"
 
 FAILED=0
+
+CFLAGS=""
+
+for opt in $@
+do
+	case $opt in
+		"--32-bit")
+			CFLAGS+=" -m32 -DWORD_WIDTH=32";;
+		*)
+			echo "Unrecognised option '$opt'"
+			exit -1;;
+	esac
+done
+
+CFLAGS="$CFLAGS" make -BC ../src || exit 1
+
+rm -r Clean\ System\ Files
 
 while IFS=$'\t' read -r -a line
 do
@@ -36,6 +49,7 @@ do
 	done
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
+	rm $MODULE.bc
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
 	mv program $MODULE.bc
 
@@ -52,4 +66,6 @@ done < tests.txt
 
 if [ $FAILED -eq 0 ]; then
 	echo -e "${GREEN}All tests passed$RESET"
+else
+	exit 1
 fi

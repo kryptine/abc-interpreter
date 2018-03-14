@@ -3121,7 +3121,12 @@ case Cpop_a:
 	pc+=2;
 	continue;
 case Cpop_b:
-	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1])); // TODO the 2* is 64-bit specific (#4)
+	/* TODO should be possible without ifdef (#4) */
+#if (WORD_WIDTH == 64)
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(2*pc[1]));
+#else
+	bsp=(BC_WORD*)(((BC_BOOL*)bsp)+(pc[1]));
+#endif
 	pc+=2;
 	continue;
 case Cprint:
@@ -6572,13 +6577,13 @@ case Cjsr_stack_check:
 	continue;
 case Cstack_check:
 	if (csp[0]!=(BC_WORD)asp){
-		printf("Cstack_check asp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		printf("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	if (csp[1]!=(BC_WORD)bsp){
-		printf("Cstack_check bsp incorrect %lu %p %lu %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf("%lu %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		printf("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;

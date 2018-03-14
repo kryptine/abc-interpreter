@@ -11,24 +11,38 @@
 #include "traps.h"
 #include "util.h"
 
-#define _2chars2int(a,b)             (a+(b<<8))
-#define _3chars2int(a,b,c)           (a+(b<<8)+(c<<16))
-#define _4chars2int(a,b,c,d)         (a+(b<<8)+(c<<16)+(d<<24))
-#define _5chars2int(a,b,c,d,e)       (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32))
-#define _6chars2int(a,b,c,d,e,f)     (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40))
-#define _7chars2int(a,b,c,d,e,f,g)   (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48))
-#define _8chars2int(a,b,c,d,e,f,g,h) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48)+((BC_WORD)h<<56))
+#define _2chars2int(a,b)             ((void*) (a+(b<<8)))
+#define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
+#define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
 
-static BC_WORD m____system[] = {7, _7chars2int('_','s','y','s','t','e','m')};
+#if (WORD_WIDTH == 64)
+# define _5chars2int(a,b,c,d,e)       ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)))
+# define _6chars2int(a,b,c,d,e,f)     ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)))
+# define _7chars2int(a,b,c,d,e,f,g)   ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48)))
+# define _8chars2int(a,b,c,d,e,f,g,h) ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)+((BC_WORD)g<<48)+((BC_WORD)h<<56)))
 
-static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, (void*) _7chars2int('_','A','R','R','A','Y','_')};
-void* __STRING__[] = {0, 0, &m____system, (void*) 8, (void*) _8chars2int('_','S','T','R','I','N','G','_')};
-static void* INT[]        = {0, 0, &m____system, (void*) 3, (void*) _3chars2int('I','N','T')};
-static void* BOOL[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('B','O','O','L')};
-static void* CHAR[]       = {0, 0, &m____system, (void*) 4, (void*) _4chars2int('C','H','A','R')};
-static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, (void*) _4chars2int('_','N','i','l')};
+static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e','m')};
+
+static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
+void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
+static void* INT[]        = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
+static void* BOOL[]       = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
+static void* CHAR[]       = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
+static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
+static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
+#else /* assuming WORD_WIDTH == 32 */
+static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
+
+static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
+void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
+static void* INT[]        = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
+static void* BOOL[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
+static void* CHAR[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
+static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
+static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
+#endif /* Word-width dependency */
+
 #define __Nil (d___Nil[1])
-static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), (void*) _2chars2int('i','i'), (void*) 4, (void*) _4chars2int('F','I','L','E')};
 #define dFILE (d_FILE[2])
 
 static BC_WORD __cycle__in__spine = Chalt;
