@@ -10,4 +10,6 @@ void *safe_realloc(void *, size_t);
 int starts_with(const char* prefix, char* str);
 size_t string_to_size(char*);
 
+char *escape(char);
+
 #endif

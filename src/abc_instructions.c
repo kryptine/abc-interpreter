@@ -6,930 +6,1377 @@
 #include "abci_types.h"
 #include "abc_instructions.h"
 
-char *instruction_name (BC_WORD i)
-{
-	char *s;
-	static char instruction_and_number[64];
-	
-	switch (i){
+char *instruction_name(BC_WORD i) {
+	switch (i) {
 		case CaddI:
-			s="addI"; break;
+			return "addI";
 		case Cadd_empty_node2:
-			s="add_empty_node2"; break;
+			return "add_empty_node2";
 		case Cadd_empty_node3:
-			s="add_empty_node3"; break;
+			return "add_empty_node3";
 		case CandI:
-			s="andI"; break;
+			return "andI";
 		case Cbuild:
-			s="build"; break;
+			return "build";
 		case Cbuild0:
-			s="build0"; break;
+			return "build0";
 		case Cbuild1:
-			s="build1"; break;
+			return "build1";
 		case Cbuild2:
-			s="build2"; break;
+			return "build2";
 		case Cbuild3:
-			s="build3"; break;
+			return "build3";
 		case Cbuild4:
-			s="build4"; break;
+			return "build4";
 		case CbuildAC:
-			s="buildAC"; break;
+			return "buildAC";
 		case CbuildBFALSE:
-			s="buildBFALSE"; break;
+			return "buildBFALSE";
 		case CbuildBTRUE:
-			s="buildBTRUE"; break;
+			return "buildBTRUE";
 		case CbuildB_b:
-			s="buildB_b"; break;
+			return "buildB_b";
 		case CbuildC:
-			s="buildC"; break;
+			return "buildC";
 		case CbuildC_b:
-			s="buildC_b"; break;
+			return "buildC_b";
 		case CbuildI:
-			s="buildI"; break;
+			return "buildI";
 		case CbuildF_b:
-			s="buildF_b"; break;
+			return "buildF_b";
 		case CbuildI_b:
-			s="buildI_b"; break;
+			return "buildI_b";
 		case Cbuildh:
-			s="buildh"; break;
+			return "buildh";
 		case Cbuildh0:
-			s="buildh0"; break;
+			return "buildh0";
 		case Cbuildh1:
-			s="buildh1"; break;
+			return "buildh1";
 		case Cbuildh2:
-			s="buildh2"; break;
+			return "buildh2";
 		case Cbuildh3:
-			s="buildh3"; break;
+			return "buildh3";
 		case Cbuildh4:
-			s="buildh4"; break;
+			return "buildh4";
 		case Cbuildhr:
-			s="buildhr"; break;
+			return "buildhr";
 		case Cbuildhra0:
-			s="buildhra0"; break;
+			return "buildhra0";
 		case Cbuildhra1:
-			s="buildhra1"; break;
+			return "buildhra1";
 		case Cbuildhr0b:
-			s="buildhr0b"; break;
+			return "buildhr0b";
 		case Cbuildhr1b:
-			s="buildhr1b"; break;
+			return "buildhr1b";
 		case Cbuildhr01:
-			s="buildhr01"; break;
+			return "buildhr01";
 		case Cbuildhr02:
-			s="buildhr02"; break;
+			return "buildhr02";
 		case Cbuildhr03:
-			s="buildhr03"; break;
+			return "buildhr03";
 		case Cbuildhr10:
-			s="buildhr10"; break;
+			return "buildhr10";
 		case Cbuildhr11:
-			s="buildhr11"; break;
+			return "buildhr11";
 		case Cbuildhr12:
-			s="buildhr12"; break;
+			return "buildhr12";
 		case Cbuildhr13:
-			s="buildhr13"; break;
+			return "buildhr13";
 		case Cbuildhr20:
-			s="buildhr20"; break;
+			return "buildhr20";
 		case Cbuildhr21:
-			s="buildhr21"; break;
+			return "buildhr21";
 		case Cbuildhr22:
-			s="buildhr22"; break;
+			return "buildhr22";
 		case Cbuildhr30:
-			s="buildhr30"; break;
+			return "buildhr30";
 		case Cbuildhr31:
-			s="buildhr31"; break;
+			return "buildhr31";
 		case Cbuildhr40:
-			s="buildhr40"; break;
+			return "buildhr40";
 		case Cbuild_r:
-			s="build_r"; break;
+			return "build_r";
 		case Cbuild_ra0:
-			s="build_ra0"; break;
+			return "build_ra0";
 		case Cbuild_ra1:
-			s="build_ra1"; break;
+			return "build_ra1";
 		case Cbuild_r0b:
-			s="build_r0b"; break;
+			return "build_r0b";
 		case Cbuild_r1b:
-			s="build_r1b"; break;
+			return "build_r1b";
 		case Cbuild_r01:
-			s="build_r01"; break;
+			return "build_r01";
 		case Cbuild_r02:
-			s="build_r02"; break;
+			return "build_r02";
 		case Cbuild_r03:
-			s="build_r03"; break;
+			return "build_r03";
 		case Cbuild_r04:
-			s="build_r04"; break;
+			return "build_r04";
 		case Cbuild_r10:
-			s="build_r10"; break;
+			return "build_r10";
 		case Cbuild_r11:
-			s="build_r11"; break;
+			return "build_r11";
 		case Cbuild_r12:
-			s="build_r12"; break;
+			return "build_r12";
 		case Cbuild_r13:
-			s="build_r13"; break;
+			return "build_r13";
 		case Cbuild_r20:
-			s="build_r20"; break;
+			return "build_r20";
 		case Cbuild_r21:
-			s="build_r21"; break;
+			return "build_r21";
 		case Cbuild_r30:
-			s="build_r30"; break;
+			return "build_r30";
 		case Cbuild_r31:
-			s="build_r31"; break;
+			return "build_r31";
 		case Cbuild_r40:
-			s="build_r40"; break;
+			return "build_r40";
 		case Cbuild_u:
-			s="build_u"; break;
+			return "build_u";
 		case Cbuild_u01:
-			s="build_u01"; break;
+			return "build_u01";
 		case Cbuild_u02:
-			s="build_u02"; break;
+			return "build_u02";
 		case Cbuild_u11:
-			s="build_u11"; break;
+			return "build_u11";
 		case Cbuild_u12:
-			s="build_u12"; break;
+			return "build_u12";
 		case Cbuild_u13:
-			s="build_u13"; break;
+			return "build_u13";
 		case Cbuild_u21:
-			s="build_u21"; break;
+			return "build_u21";
 		case Cbuild_u22:
-			s="build_u22"; break;
+			return "build_u22";
 		case Cbuild_u31:
-			s="build_u31"; break;
+			return "build_u31";
 		case Cbuild_ua1:
-			s="build_ua1"; break;
+			return "build_ua1";
 		case Ccreate:
-			s="create"; break;
+			return "create";
 		case Ccreates:
-			s="creates"; break;
+			return "creates";
 		case Ccreate_array:
-			s="create_array"; break;
+			return "create_array";
 		case Ccreate_arrayBOOL:
-			s="create_arrayBOOL"; break;
+			return "create_arrayBOOL";
 		case Ccreate_arrayCHAR:
-			s="create_arrayCHAR"; break;
+			return "create_arrayCHAR";
 		case Ccreate_arrayINT:
-			s="create_arrayINT"; break;
+			return "create_arrayINT";
 		case Ccreate_array_r:
-			s="create_array_r"; break;
+			return "create_array_r";
 		case Ccreate_array_:
-			s="create_array_"; break;
+			return "create_array_";
 		case Ccreate_array_BOOL:
-			s="create_array_BOOL"; break;
+			return "create_array_BOOL";
 		case Ccreate_array_CHAR:
-			s="create_array_CHAR"; break;
+			return "create_array_CHAR";
 		case Ccreate_array_INT:
-			s="create_array_INT"; break;
+			return "create_array_INT";
 		case Ccreate_array_r_:
-			s="create_array_r_"; break;
+			return "create_array_r_";
 		case Ccreate_array_r_a:
-			s="create_array_r_a"; break;
+			return "create_array_r_a";
 		case Ccreate_array_r_b:
-			s="create_array_r_b"; break;
+			return "create_array_r_b";
 		case CdecI:
-			s="decI"; break;
+			return "decI";
 		case CdivI:
-			s="divI"; break;
+			return "divI";
 		case CeqAC:
-			s="eqAC"; break;
+			return "eqAC";
 		case CeqAC_a:
-			s="eqAC_a"; break;
+			return "eqAC_a";
 		case CeqB:
-			s="eqB"; break;
+			return "eqB";
 		case CeqB_aFALSE:
-			s="eqB_aFALSE"; break;
+			return "eqB_aFALSE";
 		case CeqB_aTRUE:
-			s="eqB_aTRUE"; break;
+			return "eqB_aTRUE";
 		case CeqB_bFALSE:
-			s="eqB_bFALSE"; break;
+			return "eqB_bFALSE";
 		case CeqB_bTRUE:
-			s="eqB_bTRUE"; break;
+			return "eqB_bTRUE";
 		case CeqC:
-			s="eqC"; break;
+			return "eqC";
 		case CeqC_a:
-			s="eqC_a"; break;
+			return "eqC_a";
 		case CeqC_b:
-			s="eqC_b"; break;
+			return "eqC_b";
 		case CeqD_b:
-			s="eqD_b"; break;
+			return "eqD_b";
 		case CeqI:
-			s="eqI"; break;
+			return "eqI";
 		case CeqI_a:
-			s="eqI_a"; break;
+			return "eqI_a";
 		case CeqI_b:
-			s="eqI_b"; break;
+			return "eqI_b";
 		case Ceq_desc:
-			s="eq_desc"; break;
+			return "eq_desc";
 		case Cfill:
-			s="fill"; break;
+			return "fill";
 		case Cfill1:
-			s="fill1"; break;
+			return "fill1";
 		case Cfill2:
-			s="fill2"; break;
+			return "fill2";
 		case Cfill3:
-			s="fill3"; break;
+			return "fill3";
 		case Cfill4:
-			s="fill4"; break;
+			return "fill4";
 		case Cfillh0:
-			s="fillh0"; break;
+			return "fillh0";
 		case Cfillh:
-			s="fillh"; break;
+			return "fillh";
 		case Cfillh1:
-			s="fillh1"; break;
+			return "fillh1";
 		case Cfillh2:
-			s="fillh2"; break;
+			return "fillh2";
 		case Cfill1001:
-			s="fill1001"; break;
+			return "fill1001";
 		case Cfill1010:
-			s="fill1010"; break;
+			return "fill1010";
 		case Cfill1011:
-			s="fill1011"; break;
+			return "fill1011";
 		case Cfill2a001:
-			s="fill2a001"; break;
+			return "fill2a001";
 		case Cfill2a011:
-			s="fill2a011"; break;
+			return "fill2a011";
 		case Cfill2a012:
-			s="fill2a012"; break;
+			return "fill2a012";
 		case Cfill2ab002:
-			s="fill2ab002"; break;
+			return "fill2ab002";
 		case Cfill2ab003:
-			s="fill2ab003"; break;
+			return "fill2ab003";
 		case Cfill2ab013:
-			s="fill2ab013"; break;
+			return "fill2ab013";
 		case Cfill2ab011:
-			s="fill2ab011"; break;
+			return "fill2ab011";
 		case Cfill2b001:
-			s="fill2b001"; break;
+			return "fill2b001";
 		case Cfill2b002:
-			s="fill2b002"; break;
+			return "fill2b002";
 		case Cfill2b011:
-			s="fill2b011"; break;
+			return "fill2b011";
 		case Cfill2b012:
-			s="fill2b012"; break;
+			return "fill2b012";
 		case Cfill3a10:
-			s="fill3a10"; break;
+			return "fill3a10";
 		case Cfill3a11:
-			s="fill3a11"; break;
+			return "fill3a11";
 		case Cfill3a12:
-			s="fill3a12"; break;
+			return "fill3a12";
 		case Cfill3aaab13:
-			s="fill3aaab13"; break;
+			return "fill3aaab13";
 		case Cfillh3:
-			s="fillh3"; break;
+			return "fillh3";
 		case Cfillh4:
-			s="fillh4"; break;
+			return "fillh4";
 		case CfillB_b:
-			s="fillB_b"; break;
+			return "fillB_b";
 		case CfillC_b:
-			s="fillC_b"; break;
+			return "fillC_b";
 		case CfillF_b:
-			s="CfillF_b"; break;
+			return "CfillF_b";
 		case CfillI_b:
-			s="fillI_b"; break;
+			return "fillI_b";
 		case Cfillcaf:
-			s="fillcaf"; break;
+			return "fillcaf";
 		case Cfill_a:
-			s="fill_a"; break;
+			return "fill_a";
 		case Cfill_r:
-			s="fill_r"; break;
+			return "fill_r";
 		case Cfill_ra0:
-			s="fill_ra0"; break;
+			return "fill_ra0";
 		case Cfill_ra1:
-			s="fill_ra1"; break;
+			return "fill_ra1";
 		case Cfill_r1b:
-			s="fill_r1b"; break;
+			return "fill_r1b";
 		case Cfill_r01:
-			s="fill_r01"; break;
+			return "fill_r01";
 		case Cfill_r02:
-			s="fill_r02"; break;
+			return "fill_r02";
 		case Cfill_r03:
-			s="fill_r03"; break;
+			return "fill_r03";
 		case Cfill_r10:
-			s="fill_r10"; break;
+			return "fill_r10";
 		case Cfill_r11:
-			s="fill_r11"; break;
+			return "fill_r11";
 		case Cfill_r12:
-			s="fill_r12"; break;
+			return "fill_r12";
 		case Cfill_r13:
-			s="fill_r13"; break;
+			return "fill_r13";
 		case Cfill_r20:
-			s="fill_r20"; break;
+			return "fill_r20";
 		case Cfill_r21:
-			s="fill_r21"; break;
+			return "fill_r21";
 		case Cfill_r22:
-			s="fill_r22"; break;
+			return "fill_r22";
 		case Cfill_r30:
-			s="fill_r30"; break;
+			return "fill_r30";
 		case Cfill_r31:
-			s="fill_r31"; break;
+			return "fill_r31";
 		case Cfill_r40:
-			s="fill_r40"; break;
+			return "fill_r40";
 		case Cget_node_arity:
-			s="get_node_arity"; break;
+			return "get_node_arity";
 		case CgtI:
-			s="gtI"; break;
+			return "gtI";
 		case Chalt:
-			s="halt"; break;
+			return "halt";
 		case CincI:
-			s="incI"; break;
+			return "incI";
 		case Cjmp:
-			s="jmp"; break;
+			return "jmp";
 		case Cjmp_eval:
-			s="jmp_eval"; break;
+			return "jmp_eval";
 		case Cjmp_eval_upd:
-			s="jmp_eval_upd"; break;
+			return "jmp_eval_upd";
 		case Cjmp_false:
-			s="jmp_false"; break;
+			return "jmp_false";
 		case Cjmp_true:
-			s="jmp_true"; break;
+			return "jmp_true";
 		case Cjsr:
-			s="jsr"; break;
+			return "jsr";
 		case Cjsr_eval:
-			s="jsr_eval"; break;
+			return "jsr_eval";
 		case Cjsr_eval0:
-			s="jsr_eval0"; break;
+			return "jsr_eval0";
 		case Cjsr_eval1:
-			s="jsr_eval1"; break;
+			return "jsr_eval1";
 		case Cjsr_eval2:
-			s="jsr_eval2"; break;
+			return "jsr_eval2";
 		case Cjsr_eval3:
-			s="jsr_eval3"; break;
+			return "jsr_eval3";
 		case Cjesr:
-			s="jesr"; break;
+			return "jesr";
 		case CltC:
-			s="ltC"; break;
+			return "ltC";
 		case CltI:
-			s="ltI"; break;
+			return "ltI";
 		case CmulI:
-			s="mulI"; break;
+			return "mulI";
 		case CnegI:
-			s="negI"; break;
+			return "negI";
 		case CnotB:
-			s="notB"; break;
+			return "notB";
 		case CnotI:
-			s="notI"; break;
+			return "notI";
 		case CorI:
-			s="orI"; break;
+			return "orI";
 		case Cpop_a:
-			s="pop_a"; break;
+			return "pop_a";
 		case Cpop_b:
-			s="pop_b"; break;
+			return "pop_b";
 		case Cprint:
-			s="print"; break;
+			return "print";
 		case Cprint_symbol_sc:
-			s="print_symbol_sc"; break;
+			return "print_symbol_sc";
 		case CpushBFALSE:
-			s="pushBFALSE"; break;
+			return "pushBFALSE";
 		case CpushBTRUE:
-			s="pushBTRUE"; break;
+			return "pushBTRUE";
 		case CpushB_a:
-			s="pushB_a"; break;
+			return "pushB_a";
 		case CpushC:
-			s="pushC"; break;
+			return "pushC";
 		case CpushC_a:
-			s="pushC_a"; break;
+			return "pushC_a";
 		case CpushD:
-			s="pushD"; break;
+			return "pushD";
 		case CpushD_a:
-			s="pushD_a"; break;
+			return "pushD_a";
 		case CpushF_a:
-			s="pushF_a"; break;
+			return "pushF_a";
 		case CpushI:
-			s="pushI"; break;
+			return "pushI";
 		case CpushI_a:
-			s="pushI_a"; break;
+			return "pushI_a";
 		case Cpushcaf10:
-			s="pushcaf10"; break;
+			return "pushcaf10";
 		case Cpushcaf11:
-			s="pushcaf11"; break;
+			return "pushcaf11";
 		case Cpushcaf20:
-			s="pushcaf20"; break;
+			return "pushcaf20";
 		case Cpushcaf31:
-			s="pushcaf31"; break;
+			return "pushcaf31";
 		case Cpush_a:
-			s="push_a"; break;
+			return "push_a";
 		case Cpush_arg:
-			s="push_arg"; break;
+			return "push_arg";
 		case Cpush_arg1:
-			s="push_arg1"; break;
+			return "push_arg1";
 		case Cpush_arg2:
-			s="push_arg2"; break;
+			return "push_arg2";
 		case Cpush_arg2l:
-			s="push_arg2l"; break;
+			return "push_arg2l";
 		case Cpush_arg3:
-			s="push_arg3"; break;
+			return "push_arg3";
 		case Cpush_arg4:
-			s="push_arg4"; break;
+			return "push_arg4";
 		case Cpush_args:
-			s="push_args"; break;
+			return "push_args";
 		case Cpush_args1:
-			s="push_args1"; break;
+			return "push_args1";
 		case Cpush_args2:
-			s="push_args2"; break;
+			return "push_args2";
 		case Cpush_args3:
-			s="push_args3"; break;
+			return "push_args3";
 		case Cpush_args4:
-			s="push_args4"; break;
+			return "push_args4";
 		case Cpush_arg_b:
-			s="Cpush_arg_b"; break;
+			return "Cpush_arg_b";
 		case Cpush_array:
-			s="push_array"; break;
+			return "push_array";
 		case Cpush_arraysize:
-			s="push_arraysize"; break;
+			return "push_arraysize";
 		case Cpush_a_b:
-			s="push_a_b"; break;
+			return "push_a_b";
 		case Cpush_b:
-			s="push_b"; break;
+			return "push_b";
 		case Cpush_node:
-			s="push_node"; break;
+			return "push_node";
 		case Cpush_node0:
-			s="push_node0"; break;
+			return "push_node0";
 		case Cpush_node1:
-			s="push_node1"; break;
+			return "push_node1";
 		case Cpush_node2:
-			s="push_node2"; break;
+			return "push_node2";
 		case Cpush_node3:
-			s="push_node3"; break;
+			return "push_node3";
 		case Cpush_node4:
-			s="push_node4"; break;
+			return "push_node4";
 		case Cpush_node_u:
-			s="push_node_u"; break;
+			return "push_node_u";
 		case Cpush_node_ua1:
-			s="push_node_ua1"; break;
+			return "push_node_ua1";
 		case Cpush_node_u01:
-			s="push_node_u01"; break;
+			return "push_node_u01";
 		case Cpush_node_u02:
-			s="push_node_u02"; break;
+			return "push_node_u02";
 		case Cpush_node_u11:
-			s="push_node_u11"; break;
+			return "push_node_u11";
 		case Cpush_node_u12:
-			s="push_node_u12"; break;
+			return "push_node_u12";
 		case Cpush_node_u13:
-			s="push_node_u13"; break;
+			return "push_node_u13";
 		case Cpush_node_u21:
-			s="push_node_u21"; break;
+			return "push_node_u21";
 		case Cpush_node_u22:
-			s="push_node_u22"; break;
+			return "push_node_u22";
 		case Cpush_node_u31:
-			s="push_node_u31"; break;
+			return "push_node_u31";
 		case Cpush_r_args:
-			s="push_r_args"; break;
+			return "push_r_args";
 		case Cpush_r_argsa0:
-			s="push_r_argsa0"; break;
+			return "push_r_argsa0";
 		case Cpush_r_argsa1:
-			s="push_r_argsa1"; break;
+			return "push_r_argsa1";
 		case Cpush_r_args0b:
-			s="push_r_args0b"; break;
+			return "push_r_args0b";
 		case Cpush_r_args1b:
-			s="push_r_args1b"; break;
+			return "push_r_args1b";
 		case Cpush_r_args01:
-			s="push_r_args01"; break;
+			return "push_r_args01";
 		case Cpush_r_args02:
-			s="push_r_args02"; break;
+			return "push_r_args02";
 		case Cpush_r_args03:
-			s="push_r_args03"; break;
+			return "push_r_args03";
 		case Cpush_r_args10:
-			s="push_r_args10"; break;
+			return "push_r_args10";
 		case Cpush_r_args11:
-			s="push_r_args11"; break;
+			return "push_r_args11";
 		case Cpush_r_args12:
-			s="push_r_args12"; break;
+			return "push_r_args12";
 		case Cpush_r_args13:
-			s="push_r_args13"; break;
+			return "push_r_args13";
 		case Cpush_r_args20:
-			s="push_r_args20"; break;
+			return "push_r_args20";
 		case Cpush_r_args21:
-			s="push_r_args21"; break;
+			return "push_r_args21";
 		case Cpush_r_args22:
-			s="push_r_args22"; break;
+			return "push_r_args22";
 		case Cpush_r_args30:
-			s="push_r_args30"; break;
+			return "push_r_args30";
 		case Cpush_r_args31:
-			s="push_r_args31"; break;
+			return "push_r_args31";
 		case Cpush_r_args40:
-			s="push_r_args40"; break;
+			return "push_r_args40";
 		case Cpush_r_args_aa1:
-			s="push_r_args_aa1"; break;
+			return "push_r_args_aa1";
 		case Cpush_r_args_a1:
-			s="push_r_args_a1"; break;
+			return "push_r_args_a1";
 		case Cpush_r_args_a2l:
-			s="push_r_args_a2l"; break;
+			return "push_r_args_a2l";
 		case Cpush_r_args_a3:
-			s="push_r_args_a3"; break;
+			return "push_r_args_a3";
 		case Cpush_r_args_a4:
-			s="push_r_args_a4"; break;
+			return "push_r_args_a4";
 		case Cpush_r_args_b0b11:
-			s="push_r_args_b0b11"; break;
+			return "push_r_args_b0b11";
 		case Cpush_r_args_b0221:
-			s="push_r_args_b0221"; break;
+			return "push_r_args_b0221";
 		case Cpush_r_args_b1111:
-			s="push_r_args_b1111"; break;
+			return "push_r_args_b1111";
 		case Cpush_r_args_b1:
-			s="push_r_args_b1"; break;
+			return "push_r_args_b1";
 		case Cpush_r_args_b2l1:
-			s="push_r_args_b2l1"; break;
+			return "push_r_args_b2l1";
 		case Cpush_r_args_b31:
-			s="push_r_args_b31"; break;
+			return "push_r_args_b31";
 		case Cpush_r_args_b41:
-			s="push_r_args_b41"; break;
+			return "push_r_args_b41";
 		case Cpush_r_args_b2:
-			s="push_r_args_b2"; break;
+			return "push_r_args_b2";
 		case Cpush_r_args_b1l2:
-			s="push_r_args_b1l2"; break;
+			return "push_r_args_b1l2";
 		case Cpush_r_args_b22:
-			s="push_r_args_b22"; break;
+			return "push_r_args_b22";
 		case CremI:
-			s="remI"; break;
+			return "remI";
 		case Creplace:
-			s="replace"; break;
+			return "replace";
 		case CreplaceBOOL:
-			s="replaceBOOL"; break;
+			return "replaceBOOL";
 		case CreplaceCHAR:
-			s="replaceCHAR"; break;
+			return "replaceCHAR";
 		case CreplaceINT:
-			s="replaceINT"; break;
+			return "replaceINT";
 		case Creplace_ra:
-			s="replace_ra"; break;
+			return "replace_ra";
 		case Crepl_args:
-			s="repl_args"; break;
+			return "repl_args";
 		case Crepl_args1:
-			s="repl_args1"; break;
+			return "repl_args1";
 		case Crepl_args2:
-			s="repl_args2"; break;
+			return "repl_args2";
 		case Crepl_args3:
-			s="repl_args3"; break;
+			return "repl_args3";
 		case Crepl_args4:
-			s="repl_args4"; break;
+			return "repl_args4";
 		case Crepl_r_args:
-			s="repl_r_args"; break;
+			return "repl_r_args";
 		case Crepl_r_args01:
-			s="repl_r_args01"; break;
+			return "repl_r_args01";
 		case Crepl_r_args02:
-			s="repl_r_args02"; break;
+			return "repl_r_args02";
 		case Crepl_r_args03:
-			s="repl_r_args03"; break;
+			return "repl_r_args03";
 		case Crepl_r_args04:
-			s="repl_r_args04"; break;
+			return "repl_r_args04";
 		case Crepl_r_args10:
-			s="repl_r_args10"; break;
+			return "repl_r_args10";
 		case Crepl_r_args11:
-			s="repl_r_args11"; break;
+			return "repl_r_args11";
 		case Crepl_r_args12:
-			s="repl_r_args12"; break;
+			return "repl_r_args12";
 		case Crepl_r_args13:
-			s="repl_r_args13"; break;
+			return "repl_r_args13";
 		case Crepl_r_args1b:
-			s="repl_r_args1b"; break;
+			return "repl_r_args1b";
 		case Crepl_r_args20:
-			s="repl_r_args20"; break;
+			return "repl_r_args20";
 		case Crepl_r_args21:
-			s="repl_r_args21"; break;
+			return "repl_r_args21";
 		case Crepl_r_args22:
-			s="repl_r_args22"; break;
+			return "repl_r_args22";
 		case Crepl_r_args30:
-			s="repl_r_args30"; break;
+			return "repl_r_args30";
 		case Crepl_r_args31:
-			s="repl_r_args31"; break;
+			return "repl_r_args31";
 		case Crepl_r_args40:
-			s="repl_r_args40"; break;
+			return "repl_r_args40";
 		case Crepl_r_argsa0:
-			s="repl_r_argsa0"; break;
+			return "repl_r_argsa0";
 		case Crepl_r_argsa1:
-			s="repl_r_argsa1"; break;
+			return "repl_r_argsa1";
 		case Crepl_r_args_aab11:
-			s="repl_r_args_aab11"; break;
+			return "repl_r_args_aab11";
 		case Crepl_r_args_a2021:
-			s="repl_r_args_a2021"; break;
+			return "repl_r_args_a2021";
 		case Crepl_r_args_a21:
-			s="repl_r_args_a21"; break;
+			return "repl_r_args_a21";
 		case Crepl_r_args_a31:
-			s="repl_r_args_a31"; break;
+			return "repl_r_args_a31";
 		case Crepl_r_args_a41:
-			s="repl_r_args_a41"; break;
+			return "repl_r_args_a41";
 		case Crepl_r_args_aa1:
-			s="repl_r_args_aa1"; break;
+			return "repl_r_args_aa1";
 		case Cselect:
-			s="select"; break;
+			return "select";
 		case CselectBOOL:
-			s="selectBOOL"; break;
+			return "selectBOOL";
 		case CselectCHAR:
-			s="selectCHAR"; break;
+			return "selectCHAR";
 		case CselectINT:
-			s="selectINT"; break;
+			return "selectINT";
 		case Cselect_r:
-			s="select_r"; break;
+			return "select_r";
 		case Cselect_ra:
-			s="select_ra"; break;
+			return "select_ra";
 		case Cselect_ra1:
-			s="select_ra1"; break;
+			return "select_ra1";
 		case Cselect_r02:
-			s="select_r02"; break;
+			return "select_r02";
 		case Cselect_r12:
-			s="select_r12"; break;
+			return "select_r12";
 		case Cselect_r20:
-			s="select_r20"; break;
+			return "select_r20";
 		case Cselect_r21:
-			s="select_r21"; break;
+			return "select_r21";
 		case CshiftlI:
-			s="shiftlI"; break;
+			return "shiftlI";
 		case CshiftrI:
-			s="shiftrI"; break;
+			return "shiftrI";
 		case CsubI:
-			s="subI"; break;
+			return "subI";
 		case Crtn:
-			s="rtn"; break;
+			return "rtn";
 		case Ctestcaf:
-			s="testcaf"; break;
+			return "testcaf";
 		case Cupdate:
-			s="update"; break;
+			return "update";
 		case CupdateBOOL:
-			s="updateBOOL"; break;
+			return "updateBOOL";
 		case CupdateCHAR:
-			s="updateCHAR"; break;
+			return "updateCHAR";
 		case CupdateINT:
-			s="updateINT"; break;
+			return "updateINT";
 		case Cupdatepop_a:
-			s="updatepop_a"; break;
+			return "updatepop_a";
 		case Cupdatepop_b:
-			s="updatepop_b"; break;
+			return "updatepop_b";
 		case Cupdate_a:
-			s="update_a"; break;
+			return "update_a";
 		case Cupdate_r:
-			s="update_r"; break;
+			return "update_r";
 		case Cupdate_ra:
-			s="update_ra"; break;
+			return "update_ra";
 		case Cupdate_ra1:
-			s="update_ra1"; break;
+			return "update_ra1";
 		case Cupdate_r02:
-			s="update_r02"; break;
+			return "update_r02";
 		case Cupdate_r12:
-			s="update_r12"; break;
+			return "update_r12";
 		case Cupdate_r20:
-			s="update_r20"; break;
+			return "update_r20";
 		case Cupdate_r21:
-			s="update_r21"; break;
+			return "update_r21";
 		case Cupdate_r30:
-			s="update_r30"; break;
+			return "update_r30";
 		case Cupdate_r40:
-			s="update_r40"; break;
+			return "update_r40";
 		case Cupdate_b:
-			s="update_b"; break;
+			return "update_b";
 		case CxorI:
-			s="xorI"; break;
+			return "xorI";
 		case CCtoAC:
-			s="CtoAC"; break;
+			return "CtoAC";
 		case CItoC:
-			s="ItoC"; break;
+			return "ItoC";
 		case Cswap_a1:
-			s="swap_a1"; break;
+			return "swap_a1";
 		case Cswap_a2:
-			s="swap_a2"; break;
+			return "swap_a2";
 		case Cswap_a3:
-			s="swap_a3"; break;
+			return "swap_a3";
 		case Cswap_a:
-			s="swap_a"; break;
+			return "swap_a";
 		case Cjsr_ap1:
-			s="jsr_ap1"; break;
+			return "jsr_ap1";
 		case Cjsr_ap2:
-			s="jsr_ap2"; break;
+			return "jsr_ap2";
 		case Cjsr_ap3:
-			s="jsr_ap3"; break;
+			return "jsr_ap3";
 		case Cjsr_ap4:
-			s="jsr_ap4"; break;
+			return "jsr_ap4";
 		case Cjmp_ap1:
-			s="jmp_ap1"; break;
+			return "jmp_ap1";
 		case Cjmp_ap2:
-			s="jmp_ap2"; break;
+			return "jmp_ap2";
 		case Cjmp_ap3:
-			s="jmp_ap3"; break;
+			return "jmp_ap3";
 		case Cadd_arg0:
-			s="add_arg0"; break;
+			return "add_arg0";
 		case Cadd_arg1:
-			s="add_arg1"; break;
+			return "add_arg1";
 		case Cadd_arg2:
-			s="add_arg2"; break;
+			return "add_arg2";
 		case Cadd_arg3:
-			s="add_arg3"; break;
+			return "add_arg3";
 		case Cadd_arg4:
-			s="add_arg4"; break;
+			return "add_arg4";
 		case Cadd_arg5:
-			s="add_arg5"; break;
+			return "add_arg5";
 		case Cadd_arg6:
-			s="add_arg6"; break;
+			return "add_arg6";
 		case Cadd_arg7:
-			s="add_arg7"; break;
+			return "add_arg7";
 		case Cadd_arg8:
-			s="add_arg8"; break;
+			return "add_arg8";
 		case Cadd_arg9:
-			s="add_arg9"; break;
+			return "add_arg9";
 		case Cadd_arg10:
-			s="add_arg10"; break;
+			return "add_arg10";
 		case Cadd_arg11:
-			s="add_arg11"; break;
+			return "add_arg11";
 		case Cadd_arg12:
-			s="add_arg12"; break;
+			return "add_arg12";
 		case Cadd_arg13:
-			s="add_arg13"; break;
+			return "add_arg13";
 		case Cadd_arg14:
-			s="add_arg14"; break;
+			return "add_arg14";
 		case Cadd_arg15:
-			s="add_arg15"; break;
+			return "add_arg15";
 		case Cadd_arg16:
-			s="add_arg16"; break;
+			return "add_arg16";
 		case Ceval_upd0:
-			s="eval_upd0"; break;
+			return "eval_upd0";
 		case Ceval_upd1:
-			s="eval_upd1"; break;
+			return "eval_upd1";
 		case Ceval_upd2:
-			s="eval_upd2"; break;
+			return "eval_upd2";
 		case Ceval_upd3:
-			s="eval_upd3"; break;
+			return "eval_upd3";
 		case Ceval_upd4:
-			s="eval_upd4"; break;
+			return "eval_upd4";
 		case Cfill_a01_pop_rtn:
-			s="fill_a01_pop_rtn"; break;
+			return "fill_a01_pop_rtn";
 
 		case CaddIi:
-			s="addIi"; break;
+			return "addIi";
 		case CandIi:
-			s="andIi"; break;
+			return "andIi";
 		case CandIio:
-			s="andIio"; break;
+			return "andIio";
 		case Cbuildh0_dup_a:
-			s="buildh0_dup_a"; break;
+			return "buildh0_dup_a";
 		case Cbuildh0_dup2_a:
-			s="buildh0_dup2_a"; break;
+			return "buildh0_dup2_a";
 		case Cbuildh0_dup3_a:
-			s="buildh0_dup3_a"; break;
+			return "buildh0_dup3_a";
 		case Cbuildh0_put_a:
-			s="buildh0_put_a"; break;
+			return "buildh0_put_a";
 		case Cbuildh0_put_a_jsr:
-			s="buildh0_put_a_jsr"; break;
+			return "buildh0_put_a_jsr";
 		case Cbuildho2:
-			s="buildho2"; break;
+			return "buildho2";
 		case Cbuildo1:
-			s="buildo1"; break;
+			return "buildo1";
 		case Cbuildo2:
-			s="buildo2"; break;
+			return "buildo2";
 		case Cdup_a:
-			s="dup_a"; break;
+			return "dup_a";
 		case Cdup2_a:
-			s="dup2_a"; break;
+			return "dup2_a";
 		case Cdup3_a:
-			s="dup3_a"; break;
+			return "dup3_a";
 		case CneI:
-			s="neI"; break;
+			return "neI";
 		case Cexchange_a:
-			s="exchange_a"; break;
+			return "exchange_a";
 		case CgeC:
-			s="geC"; break;
+			return "geC";
 		case Cjmp_b_false:
-			s="jmp_b_false"; break;
+			return "jmp_b_false";
 		case Cjmp_eqACio:
-			s="jmp_eqACio"; break;
+			return "jmp_eqACio";
 		case Cjmp_eqC_b:
-			s="jmp_eqC_b"; break;
+			return "jmp_eqC_b";
 		case Cjmp_eqC_b2:
-			s="jmp_eqC_b2"; break;
+			return "jmp_eqC_b2";
 		case Cjmp_eqD_b:
-			s="jmp_eqD_b"; break;
+			return "jmp_eqD_b";
 		case Cjmp_eqD_b2:
-			s="jmp_eqD_b2"; break;
+			return "jmp_eqD_b2";
 		case Cjmp_eqI:
-			s="jmp_eqI"; break;
+			return "jmp_eqI";
 		case Cjmp_eqI_b:
-			s="jmp_eqI_b"; break;
+			return "jmp_eqI_b";
 		case Cjmp_eqI_b2:
-			s="jmp_eqI_b2"; break;
+			return "jmp_eqI_b2";
 		case Cjmp_eq_desc:
-			s="jmp_eq_desc"; break;
+			return "jmp_eq_desc";
 		case Cjmp_geI:
-			s="jmp_geI"; break;
+			return "jmp_geI";
 		case Cjmp_ltI:
-			s="jmp_ltI"; break;
+			return "jmp_ltI";
 		case Cjmp_neC_b:
-			s="jmp_neC_b"; break;
+			return "jmp_neC_b";
 		case Cjmp_neI:
-			s="jmp_neI"; break;
+			return "jmp_neI";
 		case Cjmp_neI_b:
-			s="jmp_neI_b"; break;
+			return "jmp_neI_b";
 		case Cjmp_ne_desc:
-			s="jmp_ne_desc"; break;
+			return "jmp_ne_desc";
 		case Cjmp_o_geI:
-			s="jmp_o_geI"; break;
+			return "jmp_o_geI";
 		case Cjmp_o_geI_arraysize_a:
-			s="jmp_o_geI_arraysize_a"; break;
+			return "jmp_o_geI_arraysize_a";
 		case CltIi:
-			s="ltIi"; break;
+			return "ltIi";
 		case Cswap_b1:
-			s="swap_b1"; break;
+			return "swap_b1";
 		case Cpop_a_rtn:
-			s="pop_a_rtn"; break;
+			return "pop_a_rtn";
 		case Cpop_ab_rtn:
-			s="pop_ab_rtn"; break;
+			return "pop_ab_rtn";
 		case Cpop_a_jmp:
-			s="pop_a_jmp"; break;
+			return "pop_a_jmp";
 		case Cpop_a_jsr:
-			s="pop_a_jsr"; break;
+			return "pop_a_jsr";
 		case Cpop_b_jmp:
-			s="pop_b_jmp"; break;
+			return "pop_b_jmp";
 		case Cpop_b_jsr:
-			s="pop_b_jsr"; break;
+			return "pop_b_jsr";
 		case Cpop_b_pushBFALSE:
-			s="pop_b_pushBFALSE"; break;
+			return "pop_b_pushBFALSE";
 		case Cpop_b_pushBTRUE:
-			s="pop_b_pushBTRUE"; break;
+			return "pop_b_pushBTRUE";
 		case Cpop_b_rtn:
-			s="pop_b_rtn"; break;
+			return "pop_b_rtn";
 		case CpushD_a_jmp_eqD_b2:
-			s="pushD_a_jmp_eqD_b2"; break;
+			return "pushD_a_jmp_eqD_b2";
 		case Cpush_a_jsr:
-			s="push_a_jsr"; break;
+			return "push_a_jsr";
 		case Cpush_b_incI:
-			s="push_b_incI"; break;
+			return "push_b_incI";
 		case Cpush_b_jsr:
-			s="push_b_jsr"; break;
+			return "push_b_jsr";
 		case Cpush_arraysize_a:
-			s="push_arraysize_a"; break;
+			return "push_arraysize_a";
 		case Cpush_jsr_eval:
-			s="push_jsr_eval"; break;
+			return "push_jsr_eval";
 		case Cpush_a2:
-			s="push_a2"; break;
+			return "push_a2";
 		case Cpush_ab:
-			s="push_ab"; break;
+			return "push_ab";
 		case Cpush_b2:
-			s="push_b2"; break;
+			return "push_b2";
 		case Cpush2_a:
-			s="push2_a"; break;
+			return "push2_a";
 		case Cpush2_b:
-			s="push2_b"; break;
+			return "push2_b";
 		case Cpush3_a:
-			s="push3_a"; break;
+			return "push3_a";
 		case Cpush3_b:
-			s="push3_b"; break;
+			return "push3_b";
 		case Cpush_update_a:
-			s="push_update_a"; break;
+			return "push_update_a";
 		case Cput_a:
-			s="put_a"; break;
+			return "put_a";
 		case Cput_b:
-			s="put_b"; break;
+			return "put_b";
 		case CselectCHARoo:
-			s="selectCHARoo"; break;
+			return "selectCHARoo";
 		case Cselectoo:
-			s="selectoo"; break;
+			return "selectoo";
 		case Cupdate2_a:
-			s="update2_a"; break;
+			return "update2_a";
 		case Cupdate2_b:
-			s="update2_b"; break;
+			return "update2_b";
 		case Cupdate2pop_a:
-			s="update2pop_a"; break;
+			return "update2pop_a";
 		case Cupdate2pop_b:
-			s="update2pop_b"; break;
+			return "update2pop_b";
 		case Cupdate3_a:
-			s="update3_a"; break;
+			return "update3_a";
 		case Cupdate3_b:
-			s="update3_b"; break;
+			return "update3_b";
 		case Cupdate3pop_a:
-			s="update3pop_a"; break;
+			return "update3pop_a";
 		case Cupdate3pop_b:
-			s="update3pop_b"; break;
+			return "update3pop_b";
 		case Cupdate4_a:
-			s="update4_a"; break;
+			return "update4_a";
 		case Cupdates2_a:
-			s="updates2_a"; break;
+			return "updates2_a";
 		case Cupdates2_a_pop_a:
-			s="updates2_a_pop_a"; break;
+			return "updates2_a_pop_a";
 		case Cupdates2_b:
-			s="updates2_b"; break;
+			return "updates2_b";
 		case Cupdates2pop_a:
-			s="updates2pop_a"; break;
+			return "updates2pop_a";
 		case Cupdates2pop_b:
-			s="updates2pop_b"; break;
+			return "updates2pop_b";
 		case Cupdates3_a:
-			s="updates3_a"; break;
+			return "updates3_a";
 		case Cupdates3_b:
-			s="updates3_b"; break;
+			return "updates3_b";
 		case Cupdates3pop_a:
-			s="updates3pop_a"; break;
+			return "updates3pop_a";
 		case Cupdates3pop_b:
-			s="updates3pop_b"; break;
+			return "updates3pop_b";
 		case Cupdates4_a:
-			s="updates4_a"; break;
+			return "updates4_a";
 
 		case Cjsr_stack_check:
-			s="Cjsr_check_stack"; break;
+			return "Cjsr_check_stack";
 		case Cstack_check:
-			s="Ccheck_stack"; break;
+			return "Ccheck_stack";
 
 		default:
-			printf ("Unknown instruction %d\n",(int)i);
-#if 1
+			fprintf(stderr,"Unknown instruction %d\n",(int)i);
 			return "";
-#else
-			exit (1);
-#endif
 	}
-	
-#if 1
-	sprintf (instruction_and_number,"%s(%d)",s,(int)i);
-	return instruction_and_number;
-#else
-	return s;
-#endif
+}
+
+char *instruction_type (BC_WORD i) {
+	switch (i){
+		case CaddI:                  return ""; break;
+		case Cadd_empty_node2:       return ""; break;
+		case Cadd_empty_node3:       return ""; break;
+		case CandI:                  return ""; break;
+		case Cbuild:                 return "lnl"; break;
+		case Cbuild0:                return "l"; break;
+		case Cbuild1:                return "?"; break;
+		case Cbuild2:                return "?"; break;
+		case Cbuild3:                return "?"; break;
+		case Cbuild4:                return "?"; break;
+		case CbuildAC:               return "s"; break;
+		case CbuildBFALSE:           return ""; break;
+		case CbuildBTRUE:            return ""; break;
+		case CbuildB_b:              return "n"; break;
+		case CbuildC:                return "c"; break;
+		case CbuildC_b:              return "?"; break;
+		case CbuildI:                return "i"; break;
+		case CbuildF_b:              return "?"; break;
+		case CbuildI_b:              return "i"; break;
+		case Cbuildh:                return "?"; break;
+		case Cbuildh0:               return "?"; break;
+		case Cbuildh1:               return "?"; break;
+		case Cbuildh2:               return "?"; break;
+		case Cbuildh3:               return "?"; break;
+		case Cbuildh4:               return "?"; break;
+		case Cbuildhr:               return "?"; break;
+		case Cbuildhra0:             return "?"; break;
+		case Cbuildhra1:             return "?"; break;
+		case Cbuildhr0b:             return "?"; break;
+		case Cbuildhr1b:             return "?"; break;
+		case Cbuildhr01:             return "?"; break;
+		case Cbuildhr02:             return "?"; break;
+		case Cbuildhr03:             return "?"; break;
+		case Cbuildhr10:             return "?"; break;
+		case Cbuildhr11:             return "?"; break;
+		case Cbuildhr12:             return "?"; break;
+		case Cbuildhr13:             return "?"; break;
+		case Cbuildhr20:             return "?"; break;
+		case Cbuildhr21:             return "?"; break;
+		case Cbuildhr22:             return "?"; break;
+		case Cbuildhr30:             return "?"; break;
+		case Cbuildhr31:             return "?"; break;
+		case Cbuildhr40:             return "?"; break;
+		case Cbuild_r:               return "?"; break;
+		case Cbuild_ra0:             return "?"; break;
+		case Cbuild_ra1:             return "?"; break;
+		case Cbuild_r0b:             return "?"; break;
+		case Cbuild_r1b:             return "?"; break;
+		case Cbuild_r01:             return "?"; break;
+		case Cbuild_r02:             return "?"; break;
+		case Cbuild_r03:             return "?"; break;
+		case Cbuild_r04:             return "?"; break;
+		case Cbuild_r10:             return "?"; break;
+		case Cbuild_r11:             return "?"; break;
+		case Cbuild_r12:             return "?"; break;
+		case Cbuild_r13:             return "?"; break;
+		case Cbuild_r20:             return "?"; break;
+		case Cbuild_r21:             return "?"; break;
+		case Cbuild_r30:             return "?"; break;
+		case Cbuild_r31:             return "?"; break;
+		case Cbuild_r40:             return "?"; break;
+		case Cbuild_u:               return "?"; break;
+		case Cbuild_u01:             return "?"; break;
+		case Cbuild_u02:             return "?"; break;
+		case Cbuild_u11:             return "?"; break;
+		case Cbuild_u12:             return "?"; break;
+		case Cbuild_u13:             return "?"; break;
+		case Cbuild_u21:             return "?"; break;
+		case Cbuild_u22:             return "?"; break;
+		case Cbuild_u31:             return "?"; break;
+		case Cbuild_ua1:             return "?"; break;
+		case Ccreate:                return ""; break;
+		case Ccreates:               return "?"; break;
+		case Ccreate_array:          return "?"; break;
+		case Ccreate_arrayBOOL:      return "?"; break;
+		case Ccreate_arrayCHAR:      return "?"; break;
+		case Ccreate_arrayINT:       return "?"; break;
+		case Ccreate_array_r:        return "?"; break;
+		case Ccreate_array_:         return "?"; break;
+		case Ccreate_array_BOOL:     return "?"; break;
+		case Ccreate_array_CHAR:     return "?"; break;
+		case Ccreate_array_INT:      return "?"; break;
+		case Ccreate_array_r_:       return "?"; break;
+		case Ccreate_array_r_a:      return "?"; break;
+		case Ccreate_array_r_b:      return "?"; break;
+		case CdecI:                  return ""; break;
+		case CdivI:                  return ""; break;
+		case CeqAC:                  return "?"; break;
+		case CeqAC_a:                return "?"; break;
+		case CeqB:                   return ""; break;
+		case CeqB_aFALSE:            return "?"; break;
+		case CeqB_aTRUE:             return "?"; break;
+		case CeqB_bFALSE:            return "?"; break;
+		case CeqB_bTRUE:             return "?"; break;
+		case CeqC:                   return ""; break;
+		case CeqC_a:                 return "?"; break;
+		case CeqC_b:                 return "?"; break;
+		case CeqD_b:                 return "?"; break;
+		case CeqI:                   return ""; break;
+		case CeqI_a:                 return "?"; break;
+		case CeqI_b:                 return "in"; break;
+		case Ceq_desc:               return "nd"; break;
+		case Cfill:                  return "?"; break;
+		case Cfill1:                 return "nd"; break;
+		case Cfill2:                 return "nd"; break;
+		case Cfill3:                 return "nd"; break;
+		case Cfill4:                 return "nd"; break;
+		case Cfillh0:                return "nd"; break;
+		case Cfillh:                 return "?"; break;
+		case Cfillh1:                return "nd"; break;
+		case Cfillh2:                return "nd"; break;
+		case Cfill1001:              return "?"; break;
+		case Cfill1010:              return "?"; break;
+		case Cfill1011:              return "?"; break;
+		case Cfill2a001:             return "?"; break;
+		case Cfill2a011:             return "?"; break;
+		case Cfill2a012:             return "?"; break;
+		case Cfill2ab002:            return "?"; break;
+		case Cfill2ab003:            return "?"; break;
+		case Cfill2ab013:            return "?"; break;
+		case Cfill2ab011:            return "?"; break;
+		case Cfill2b001:             return "?"; break;
+		case Cfill2b002:             return "?"; break;
+		case Cfill2b011:             return "?"; break;
+		case Cfill2b012:             return "?"; break;
+		case Cfill3a10:              return "?"; break;
+		case Cfill3a11:              return "?"; break;
+		case Cfill3a12:              return "?"; break;
+		case Cfill3aaab13:           return "?"; break;
+		case Cfillh3:                return "nd"; break;
+		case Cfillh4:                return "nd"; break;
+		case CfillB_b:               return "nn"; break;
+		case CfillC_b:               return "?"; break;
+		case CfillF_b:               return "?"; break;
+		case CfillI_b:               return "in"; break;
+		case Cfillcaf:               return "?"; break;
+		case Cfill_a:                return "nn"; break;
+		case Cfill_r:                return "?"; break;
+		case Cfill_ra0:              return "?"; break;
+		case Cfill_ra1:              return "?"; break;
+		case Cfill_r1b:              return "?"; break;
+		case Cfill_r01:              return "?"; break;
+		case Cfill_r02:              return "?"; break;
+		case Cfill_r03:              return "?"; break;
+		case Cfill_r10:              return "?"; break;
+		case Cfill_r11:              return "?"; break;
+		case Cfill_r12:              return "?"; break;
+		case Cfill_r13:              return "?"; break;
+		case Cfill_r20:              return "?"; break;
+		case Cfill_r21:              return "?"; break;
+		case Cfill_r22:              return "?"; break;
+		case Cfill_r30:              return "?"; break;
+		case Cfill_r31:              return "?"; break;
+		case Cfill_r40:              return "?"; break;
+		case Cget_node_arity:        return "n"; break;
+		case CgtI:                   return ""; break;
+		case Chalt:                  return ""; break;
+		case CincI:                  return ""; break;
+		case Cjmp:                   return "l"; break;
+		case Cjmp_eval:              return "n"; break;
+		case Cjmp_eval_upd:          return ""; break;
+		case Cjmp_false:             return "l"; break;
+		case Cjmp_true:              return "l"; break;
+		case Cjsr:                   return "l"; break;
+		case Cjsr_eval:              return "n"; break;
+		case Cjsr_eval0:             return ""; break;
+		case Cjsr_eval1:             return ""; break;
+		case Cjsr_eval2:             return ""; break;
+		case Cjsr_eval3:             return ""; break;
+		case Cjesr:                  return "?"; break;
+		case CltC:                   return "?"; break;
+		case CltI:                   return ""; break;
+		case CmulI:                  return "?"; break;
+		case CnegI:                  return "?"; break;
+		case CnotB:                  return ""; break;
+		case CnotI:                  return "?"; break;
+		case CorI:                   return "?"; break;
+		case Cpop_a:                 return "n"; break;
+		case Cpop_b:                 return "n"; break;
+		case Cprint:                 return "s"; break;
+		case Cprint_symbol_sc:       return "n"; break;
+		case CpushBFALSE:            return "?"; break;
+		case CpushBTRUE:             return "?"; break;
+		case CpushB_a:               return "?"; break;
+		case CpushC:                 return "?"; break;
+		case CpushC_a:               return "?"; break;
+		case CpushD:                 return "?"; break;
+		case CpushD_a:               return "?"; break;
+		case CpushF_a:               return "?"; break;
+		case CpushI:                 return "i"; break;
+		case CpushI_a:               return "n"; break;
+		case Cpushcaf10:             return "?"; break;
+		case Cpushcaf11:             return "?"; break;
+		case Cpushcaf20:             return "?"; break;
+		case Cpushcaf31:             return "?"; break;
+		case Cpush_a:                return "n"; break;
+		case Cpush_arg:              return "nn"; break;
+		case Cpush_arg1:             return "n"; break;
+		case Cpush_arg2:             return "n"; break;
+		case Cpush_arg2l:            return "?"; break;
+		case Cpush_arg3:             return "?"; break;
+		case Cpush_arg4:             return "?"; break;
+		case Cpush_args:             return "?"; break;
+		case Cpush_args1:            return "n"; break;
+		case Cpush_args2:            return "n"; break;
+		case Cpush_args3:            return "n"; break;
+		case Cpush_args4:            return "n"; break;
+		case Cpush_arg_b:            return "?"; break;
+		case Cpush_array:            return "?"; break;
+		case Cpush_arraysize:        return "?"; break;
+		case Cpush_a_b:              return "nn"; break;
+		case Cpush_b:                return "n"; break;
+		case Cpush_node:             return "?"; break;
+		case Cpush_node0:            return "l"; break;
+		case Cpush_node1:            return "l"; break;
+		case Cpush_node2:            return "l"; break;
+		case Cpush_node3:            return "l"; break;
+		case Cpush_node4:            return "l"; break;
+		case Cpush_node_u:           return "?"; break;
+		case Cpush_node_ua1:         return "?"; break;
+		case Cpush_node_u01:         return "?"; break;
+		case Cpush_node_u02:         return "?"; break;
+		case Cpush_node_u11:         return "?"; break;
+		case Cpush_node_u12:         return "?"; break;
+		case Cpush_node_u13:         return "?"; break;
+		case Cpush_node_u21:         return "?"; break;
+		case Cpush_node_u22:         return "?"; break;
+		case Cpush_node_u31:         return "?"; break;
+		case Cpush_r_args:           return "?"; break;
+		case Cpush_r_argsa0:         return "?"; break;
+		case Cpush_r_argsa1:         return "?"; break;
+		case Cpush_r_args0b:         return "?"; break;
+		case Cpush_r_args1b:         return "?"; break;
+		case Cpush_r_args01:         return "?"; break;
+		case Cpush_r_args02:         return "?"; break;
+		case Cpush_r_args03:         return "?"; break;
+		case Cpush_r_args10:         return "?"; break;
+		case Cpush_r_args11:         return "?"; break;
+		case Cpush_r_args12:         return "?"; break;
+		case Cpush_r_args13:         return "?"; break;
+		case Cpush_r_args20:         return "?"; break;
+		case Cpush_r_args21:         return "?"; break;
+		case Cpush_r_args22:         return "?"; break;
+		case Cpush_r_args30:         return "?"; break;
+		case Cpush_r_args31:         return "?"; break;
+		case Cpush_r_args40:         return "?"; break;
+		case Cpush_r_args_aa1:       return "?"; break;
+		case Cpush_r_args_a1:        return "?"; break;
+		case Cpush_r_args_a2l:       return "?"; break;
+		case Cpush_r_args_a3:        return "?"; break;
+		case Cpush_r_args_a4:        return "?"; break;
+		case Cpush_r_args_b0b11:     return "?"; break;
+		case Cpush_r_args_b0221:     return "?"; break;
+		case Cpush_r_args_b1111:     return "?"; break;
+		case Cpush_r_args_b1:        return "?"; break;
+		case Cpush_r_args_b2l1:      return "?"; break;
+		case Cpush_r_args_b31:       return "?"; break;
+		case Cpush_r_args_b41:       return "?"; break;
+		case Cpush_r_args_b2:        return "?"; break;
+		case Cpush_r_args_b1l2:      return "?"; break;
+		case Cpush_r_args_b22:       return "?"; break;
+		case CremI:                  return "?"; break;
+		case Creplace:               return "?"; break;
+		case CreplaceBOOL:           return "?"; break;
+		case CreplaceCHAR:           return "?"; break;
+		case CreplaceINT:            return "?"; break;
+		case Creplace_ra:            return "?"; break;
+		case Crepl_args:             return "n"; break;
+		case Crepl_args1:            return ""; break;
+		case Crepl_args2:            return ""; break;
+		case Crepl_args3:            return ""; break;
+		case Crepl_args4:            return ""; break;
+		case Crepl_r_args:           return "?"; break;
+		case Crepl_r_args01:         return "?"; break;
+		case Crepl_r_args02:         return "?"; break;
+		case Crepl_r_args03:         return "?"; break;
+		case Crepl_r_args04:         return "?"; break;
+		case Crepl_r_args10:         return "?"; break;
+		case Crepl_r_args11:         return "?"; break;
+		case Crepl_r_args12:         return "?"; break;
+		case Crepl_r_args13:         return "?"; break;
+		case Crepl_r_args1b:         return "?"; break;
+		case Crepl_r_args20:         return "?"; break;
+		case Crepl_r_args21:         return "?"; break;
+		case Crepl_r_args22:         return "?"; break;
+		case Crepl_r_args30:         return "?"; break;
+		case Crepl_r_args31:         return "?"; break;
+		case Crepl_r_args40:         return "?"; break;
+		case Crepl_r_argsa0:         return "?"; break;
+		case Crepl_r_argsa1:         return "?"; break;
+		case Crepl_r_args_aab11:     return ""; break;
+		case Crepl_r_args_a2021:     return ""; break;
+		case Crepl_r_args_a21:       return ""; break;
+		case Crepl_r_args_a31:       return ""; break;
+		case Crepl_r_args_a41:       return ""; break;
+		case Crepl_r_args_aa1:       return "n"; break;
+		case Cselect:                return "?"; break;
+		case CselectBOOL:            return "?"; break;
+		case CselectCHAR:            return "?"; break;
+		case CselectINT:             return "?"; break;
+		case Cselect_r:              return "?"; break;
+		case Cselect_ra:             return "?"; break;
+		case Cselect_ra1:            return "?"; break;
+		case Cselect_r02:            return "?"; break;
+		case Cselect_r12:            return "?"; break;
+		case Cselect_r20:            return "?"; break;
+		case Cselect_r21:            return "?"; break;
+		case CshiftlI:               return "?"; break;
+		case CshiftrI:               return "?"; break;
+		case CsubI:                  return ""; break;
+		case Crtn:                   return ""; break;
+		case Ctestcaf:               return "?"; break;
+		case Cupdate:                return "?"; break;
+		case CupdateBOOL:            return "?"; break;
+		case CupdateCHAR:            return "?"; break;
+		case CupdateINT:             return "?"; break;
+		case Cupdatepop_a:           return "nn"; break;
+		case Cupdatepop_b:           return "nn"; break;
+		case Cupdate_a:              return "nn"; break;
+		case Cupdate_r:              return "?"; break;
+		case Cupdate_ra:             return "?"; break;
+		case Cupdate_ra1:            return "?"; break;
+		case Cupdate_r02:            return "?"; break;
+		case Cupdate_r12:            return "?"; break;
+		case Cupdate_r20:            return "?"; break;
+		case Cupdate_r21:            return "?"; break;
+		case Cupdate_r30:            return "?"; break;
+		case Cupdate_r40:            return "?"; break;
+		case Cupdate_b:              return "nn"; break;
+		case CxorI:                  return ""; break;
+		case CCtoAC:                 return "?"; break;
+		case CItoC:                  return ""; break;
+		case Cswap_a1:               return ""; break;
+		case Cswap_a2:               return ""; break;
+		case Cswap_a3:               return ""; break;
+		case Cswap_a:                return "?"; break;
+		case Cjsr_ap1:               return ""; break;
+		case Cjsr_ap2:               return "?"; break;
+		case Cjsr_ap3:               return "?"; break;
+		case Cjsr_ap4:               return "?"; break;
+		case Cjmp_ap1:               return "?"; break;
+		case Cjmp_ap2:               return "?"; break;
+		case Cjmp_ap3:               return "?"; break;
+		case Cadd_arg0:              return ""; break;
+		case Cadd_arg1:              return ""; break;
+		case Cadd_arg2:              return ""; break;
+		case Cadd_arg3:              return ""; break;
+		case Cadd_arg4:              return ""; break;
+		case Cadd_arg5:              return ""; break;
+		case Cadd_arg6:              return ""; break;
+		case Cadd_arg7:              return ""; break;
+		case Cadd_arg8:              return ""; break;
+		case Cadd_arg9:              return ""; break;
+		case Cadd_arg10:             return ""; break;
+		case Cadd_arg11:             return ""; break;
+		case Cadd_arg12:             return ""; break;
+		case Cadd_arg13:             return ""; break;
+		case Cadd_arg14:             return ""; break;
+		case Cadd_arg15:             return ""; break;
+		case Cadd_arg16:             return ""; break;
+		case Ceval_upd0:             return ""; break;
+		case Ceval_upd1:             return ""; break;
+		case Ceval_upd2:             return ""; break;
+		case Ceval_upd3:             return ""; break;
+		case Ceval_upd4:             return ""; break;
+		case Cfill_a01_pop_rtn:      return ""; break;
+
+		case CaddIi:                 return "?"; break;
+		case CandIi:                 return "?"; break;
+		case CandIio:                return "?"; break;
+		case Cbuildh0_dup_a:         return "?"; break;
+		case Cbuildh0_dup2_a:        return "?"; break;
+		case Cbuildh0_dup3_a:        return "?"; break;
+		case Cbuildh0_put_a:         return "?"; break;
+		case Cbuildh0_put_a_jsr:     return "?"; break;
+		case Cbuildho2:              return "?"; break;
+		case Cbuildo1:               return "?"; break;
+		case Cbuildo2:               return "?"; break;
+		case Cdup_a:                 return "?"; break;
+		case Cdup2_a:                return "?"; break;
+		case Cdup3_a:                return "?"; break;
+		case CneI:                   return "?"; break;
+		case Cexchange_a:            return "?"; break;
+		case CgeC:                   return "?"; break;
+		case Cjmp_b_false:           return "?"; break;
+		case Cjmp_eqACio:            return "?"; break;
+		case Cjmp_eqC_b:             return "?"; break;
+		case Cjmp_eqC_b2:            return "?"; break;
+		case Cjmp_eqD_b:             return "?"; break;
+		case Cjmp_eqD_b2:            return "?"; break;
+		case Cjmp_eqI:               return "?"; break;
+		case Cjmp_eqI_b:             return "?"; break;
+		case Cjmp_eqI_b2:            return "?"; break;
+		case Cjmp_eq_desc:           return "?"; break;
+		case Cjmp_geI:               return "?"; break;
+		case Cjmp_ltI:               return "?"; break;
+		case Cjmp_neC_b:             return "?"; break;
+		case Cjmp_neI:               return "?"; break;
+		case Cjmp_neI_b:             return "nil"; break;
+		case Cjmp_ne_desc:           return "?"; break;
+		case Cjmp_o_geI:             return "?"; break;
+		case Cjmp_o_geI_arraysize_a: return "?"; break;
+		case CltIi:                  return "?"; break;
+		case Cswap_b1:               return "?"; break;
+		case Cpop_a_rtn:             return "n"; break;
+		case Cpop_ab_rtn:            return "?"; break;
+		case Cpop_a_jmp:             return "?"; break;
+		case Cpop_a_jsr:             return "?"; break;
+		case Cpop_b_jmp:             return "?"; break;
+		case Cpop_b_jsr:             return "?"; break;
+		case Cpop_b_pushBFALSE:      return "?"; break;
+		case Cpop_b_pushBTRUE:       return "?"; break;
+		case Cpop_b_rtn:             return "n"; break;
+		case CpushD_a_jmp_eqD_b2:    return "?"; break;
+		case Cpush_a_jsr:            return "?"; break;
+		case Cpush_b_incI:           return "?"; break;
+		case Cpush_b_jsr:            return "?"; break;
+		case Cpush_arraysize_a:      return "?"; break;
+		case Cpush_jsr_eval:         return "?"; break;
+		case Cpush_a2:               return "?"; break;
+		case Cpush_ab:               return "?"; break;
+		case Cpush_b2:               return "?"; break;
+		case Cpush2_a:               return "?"; break;
+		case Cpush2_b:               return "?"; break;
+		case Cpush3_a:               return "?"; break;
+		case Cpush3_b:               return "?"; break;
+		case Cpush_update_a:         return "?"; break;
+		case Cput_a:                 return "?"; break;
+		case Cput_b:                 return "?"; break;
+		case CselectCHARoo:          return "?"; break;
+		case Cselectoo:              return "?"; break;
+		case Cupdate2_a:             return "?"; break;
+		case Cupdate2_b:             return "?"; break;
+		case Cupdate2pop_a:          return "?"; break;
+		case Cupdate2pop_b:          return "?"; break;
+		case Cupdate3_a:             return "?"; break;
+		case Cupdate3_b:             return "?"; break;
+		case Cupdate3pop_a:          return "?"; break;
+		case Cupdate3pop_b:          return "?"; break;
+		case Cupdate4_a:             return "?"; break;
+		case Cupdates2_a:            return "?"; break;
+		case Cupdates2_a_pop_a:      return "?"; break;
+		case Cupdates2_b:            return "?"; break;
+		case Cupdates2pop_a:         return "?"; break;
+		case Cupdates2pop_b:         return "?"; break;
+		case Cupdates3_a:            return "?"; break;
+		case Cupdates3_b:            return "?"; break;
+		case Cupdates3pop_a:         return "?"; break;
+		case Cupdates3pop_b:         return "?"; break;
+		case Cupdates4_a:            return "?"; break;
+
+		case Cjsr_stack_check:       return "?"; break;
+		case Cstack_check:           return "?"; break;
+
+		default:
+			fprintf(stderr,"Unknown instruction %d\n",(int)i);
+			return "?";
+	}
 }

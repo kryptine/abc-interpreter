@@ -74,3 +74,18 @@ size_t string_to_size(char *size) {
 		return -1;
 	}
 }
+
+char *escape(char c) {
+	static char s[2];
+	switch (c) {
+		case '\n': return "\\n";
+		case '\r': return "\\r";
+		case '\t': return "\\t";
+		case '\\': return "\\\\";
+		case '"':  return "\\\"";
+		default:
+		   s[0] = c;
+		   s[1] = 0;
+		   return s;
+	}
+}
