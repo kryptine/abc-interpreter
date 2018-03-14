@@ -4028,59 +4028,33 @@ void code_dummy(void) {
 }
 
 static void print_code_or_data(int segment_size,BC_WORD *segment,FILE *program_file) {
-	if (segment_size>0) {
-		int i;
-		
-		i=0;
-		for(;;) {
-			int v;
-			
-			v=segment[i];
-			if (i==segment_size-1) {
-				fprintf(program_file,"%d\n",v);
-				break;
-			} else
-				if ((i & 15)!=15)
-					fprintf(program_file,"%d ",v);
-				else
-					fprintf(program_file,"%d\n",v);
-			++i;
-		}
-	}
+	if (segment_size <= 0)
+		return;
+
+	unsigned int i;
+	for (i = 0; i < segment_size; i++)
+		fwrite(&segment[i], sizeof(BC_WORD), 1, program_file);
 }
 
 static void print_relocations(int reloc_size, int n_relocations,struct relocation *relocations, FILE *program_file, int do_data) {
-	int i;
-	
-	if (reloc_size>0) {
-		int n;
+	if (reloc_size <= 0)
+		return;
 
-		n=0;
-		for(i=0; i<n_relocations; ++i)
-			if ((relocations[i].relocation_label->label_offset & 1) == do_data) {
-				int v;
-				
-				v=relocations[i].relocation_offset;
-				if (n==reloc_size-1) {
-					fprintf(program_file,"%d\n",v);
-					break;
-				} else
-					if ((n & 15)!=15)
-						fprintf(program_file,"%d ",v);
-					else
-						fprintf(program_file,"%d\n",v);
-				++n;
-			}
+	unsigned int i;
+	for (i = 0; i < n_relocations; i++) {
+		if ((relocations[i].relocation_label->label_offset & 1) == do_data)
+			fwrite(&relocations[i].relocation_offset, sizeof(relocations[i].relocation_offset), 1, program_file);
 	}
 }
 
 void write_program(void) {
-	int i,n_code_code_relocations,n_code_data_relocations,n_data_code_relocations,n_data_data_relocations;
+	// uint32_t should be enough
+	uint32_t i,n_code_code_relocations,n_code_data_relocations,n_data_code_relocations,n_data_data_relocations;
 	FILE *program_file;
 
 	printf("Program\n");
 
-	program_file = fopen("program","w");
+	program_file = fopen("program","wb");
 	if (program_file == NULL) {
 		printf("Could not create program file\n");
 		exit(1);
@@ -4095,8 +4069,13 @@ void write_program(void) {
 		n_data_data_relocations += pgrm.data_relocations[i].relocation_label->label_offset & 1;
 	n_data_code_relocations=pgrm.data_reloc_size-n_data_data_relocations;
 
-	fprintf(program_file,"%d %d %d\n",pgrm.code_size,n_code_code_relocations,n_code_data_relocations);
-	fprintf(program_file,"%d %d %d\n",pgrm.data_size,n_data_code_relocations,n_data_data_relocations);
+	fwrite(&pgrm.code_size, sizeof(pgrm.code_size), 1, program_file);
+	fwrite(&n_code_code_relocations, sizeof(uint32_t), 1, program_file);
+	fwrite(&n_code_data_relocations, sizeof(uint32_t), 1, program_file);
+
+	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
+	fwrite(&n_data_code_relocations, sizeof(uint32_t), 1, program_file);
+	fwrite(&n_data_data_relocations, sizeof(uint32_t), 1, program_file);
 
 	print_code_or_data(pgrm.code_size,pgrm.code,program_file);
 	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);

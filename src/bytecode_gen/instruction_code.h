@@ -10,7 +10,7 @@ struct label {
 };
 
 typedef struct relocation {
-	int relocation_offset;
+	uint32_t relocation_offset;
 	struct label *relocation_label;
 } relocation;
 
