@@ -80,7 +80,10 @@ int interpret(BC_WORD *code, BC_WORD *data,
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
-		fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+		if (pc > data)
+			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
+		else
+			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 #endif
 		switch (*pc) {
 #include "interpret_instructions.h"

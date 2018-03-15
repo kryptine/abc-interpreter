@@ -23,11 +23,11 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 						label /= 4;
 # endif
 #endif
-						fprintf(f, " %lu", label);
+						fprintf(f, " " BC_WORD_FMT, label);
 						break; }
 					case 'i': /* Integer constant */
 					case 'n': /* Stack index and the like */
-						fprintf(f, " %ld", section[i]);
+						fprintf(f, " " BC_WORD_S_FMT, section[i]);
 						break;
 					case 's': { /* String */
 #ifdef PARSE_HANDLE_RELOCATIONS
