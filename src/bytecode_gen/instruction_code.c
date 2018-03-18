@@ -4032,8 +4032,9 @@ static void print_code_or_data(int segment_size,BC_WORD *segment,FILE *program_f
 		return;
 
 	unsigned int i;
-	for (i = 0; i < segment_size; i++)
+	for (i = 0; i < segment_size; i++) {
 		fwrite(&segment[i], sizeof(BC_WORD), 1, program_file);
+	}
 }
 
 static void print_relocations(int reloc_size, int n_relocations,struct relocation *relocations, FILE *program_file, int do_data) {
@@ -4042,8 +4043,9 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 
 	unsigned int i;
 	for (i = 0; i < n_relocations; i++) {
-		if ((relocations[i].relocation_label->label_offset & 1) == do_data)
+		if ((relocations[i].relocation_label->label_offset & 1) == do_data) {
 			fwrite(&relocations[i].relocation_offset, sizeof(relocations[i].relocation_offset), 1, program_file);
+		}
 	}
 }
 

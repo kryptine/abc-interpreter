@@ -42,6 +42,15 @@ void *safe_realloc(void *ptr, size_t size) {
 	return ptr;
 }
 
+int safe_read(void* ptr, size_t size, size_t nmemb, FILE *stream) {
+	int ret = fread(ptr, size, nmemb, stream);
+	if (ret < nmemb) {
+		fprintf(stderr, "Read %d out of %ld items", ret, nmemb);
+		exit(-1);
+	}
+	return ret;
+}
+
 int starts_with(const char* prefix, char* str) {
 	return strncmp(prefix, str, strlen(prefix)) == 0;
 }

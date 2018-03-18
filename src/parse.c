@@ -58,15 +58,6 @@ void next_state(struct parser *state) {
 	}
 }
 
-int print_read(void* ptr, size_t size, size_t nmemb, FILE *stream) {
-	int ret = fread(ptr, size, nmemb, stream);
-	if (size == sizeof(uint32_t))
-		printf("%d\n", * (uint32_t*) ptr);
-	else
-		printf("%ld\n", * (uint64_t *) ptr);
-	return ret;
-}
-
 int parse_file(struct parser *state, FILE *file) {
 	uint32_t elem32;
 	uint64_t elem64;
@@ -74,7 +65,7 @@ int parse_file(struct parser *state, FILE *file) {
 	while (state->state != PS_end) {
 		switch (state->state) {
 			case PS_init_code:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_size = elem32;
 				if ((state->program->code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
 					return 2;
@@ -82,7 +73,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_init_code_code:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_code_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
 				if ((state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
@@ -92,7 +83,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_init_code_data:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_data_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
 				if ((state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
@@ -102,7 +93,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_init_data:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_size = elem32;
 				if ((state->program->data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
 					return 2;
@@ -110,7 +101,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_init_data_code:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_code_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
 				if ((state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
@@ -120,7 +111,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_init_data_data:
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_data_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
 				if ((state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
@@ -130,7 +121,7 @@ int parse_file(struct parser *state, FILE *file) {
 				next_state(state);
 				break;
 			case PS_code:
-				print_read(&elem64, sizeof(elem64), 1, file);
+				safe_read(&elem64, sizeof(elem64), 1, file);
 				state->program->code[state->ptr++] = elem64;
 				if (state->ptr >= state->program->code_size) {
 					state->ptr = 0;
@@ -139,7 +130,7 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_code_code_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 # if (WORD_WIDTH == 64)
 				state->program->code[elem32] *= 2;
 # endif
@@ -154,7 +145,7 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_code_data_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 # if (WORD_WIDTH == 64)
 				state->program->code[elem32] *= 2; // TODO: why should this not be done here? What about data_data?
 # endif
@@ -168,7 +159,7 @@ int parse_file(struct parser *state, FILE *file) {
 				}
 				break;
 			case PS_data:
-				print_read(&elem64, sizeof(elem64), 1, file);
+				safe_read(&elem64, sizeof(elem64), 1, file);
 				state->program->data[state->ptr++] = elem64;
 				if (state->ptr >= state->program->data_size) {
 					state->ptr = 0;
@@ -177,7 +168,7 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_data_code_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 # if (WORD_WIDTH == 64)
 				state->program->data[elem32] *= 2;
 # endif
@@ -192,7 +183,7 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_data_data_rel:
 #ifdef PARSE_HANDLE_RELOCATIONS
-				print_read(&elem32, sizeof(elem32), 1, file);
+				safe_read(&elem32, sizeof(elem32), 1, file);
 # if (WORD_WIDTH == 64)
 				state->program->data[elem32] *= 2; // Is this right? See above, code_data.
 # endif
@@ -209,5 +200,5 @@ int parse_file(struct parser *state, FILE *file) {
 				return 3;
 		}
 	}
-	return 1;
+	return 0;
 }
