@@ -169,8 +169,6 @@ int main(int argc, char **argv) {
 	if (!run)
 		return 0;
 
-	handle_relocations(state.program);
-
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 

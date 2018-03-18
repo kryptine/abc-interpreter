@@ -1,8 +1,6 @@
 #ifndef _H_ABCINT_PARSE
 #define _H_ABCINT_PARSE
 
-#define PARSE_STRICT
-
 #include "bytecode.h"
 #include "settings.h"
 

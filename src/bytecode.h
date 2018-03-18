@@ -34,22 +34,12 @@ struct program {
 	uint32_t data_code_size;
 	uint32_t data_data_size;
 	BC_WORD *code;
-#ifndef PARSE_HANDLE_RELOCATIONS
-	BC_WORD *code_code;
-	BC_WORD *code_data;
-#endif
 	BC_WORD *data;
-#ifndef PARSE_HANDLE_RELOCATIONS
-	BC_WORD *data_code;
-	BC_WORD *data_data;
-#endif
 };
 #endif
 
 #ifndef BC_GEN
 void print_program(FILE*, struct program*, int human_readable);
-
-void handle_relocations(struct program *pgm);
 #endif
 
 #endif
