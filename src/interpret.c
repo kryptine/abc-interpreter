@@ -105,8 +105,6 @@ int main(int argc, char **argv) {
 	BC_WORD *stack;
 	BC_WORD *heap;
 
-	char *line = safe_malloc(1024);
-	size_t n;
 	struct parser state;
 	init_parser(&state);
 
