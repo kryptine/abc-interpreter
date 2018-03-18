@@ -67,18 +67,14 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_init_code:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_size = elem32;
-				if ((state->program->code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->code = safe_malloc(sizeof(BC_WORD) * elem32);
 				next_state(state);
 				break;
 			case PS_init_code_code:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_code_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
-				if ((state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->code_code = safe_malloc(sizeof(BC_WORD) * elem32);
 #endif
 				next_state(state);
 				break;
@@ -86,27 +82,21 @@ int parse_file(struct parser *state, FILE *file) {
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_data_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
-				if ((state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->code_data = safe_malloc(sizeof(BC_WORD) * elem32);
 #endif
 				next_state(state);
 				break;
 			case PS_init_data:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_size = elem32;
-				if ((state->program->data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->data = safe_malloc(sizeof(BC_WORD) * elem32);
 				next_state(state);
 				break;
 			case PS_init_data_code:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_code_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
-				if ((state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->data_code = safe_malloc(sizeof(BC_WORD) * elem32);
 #endif
 				next_state(state);
 				break;
@@ -114,9 +104,7 @@ int parse_file(struct parser *state, FILE *file) {
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->data_data_size = elem32;
 #ifndef PARSE_HANDLE_RELOCATIONS
-				if ((state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem32)) == NULL) {
-					return 2;
-				}
+				state->program->data_data = safe_malloc(sizeof(BC_WORD) * elem32);
 #endif
 				next_state(state);
 				break;
