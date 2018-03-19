@@ -460,7 +460,10 @@ enum {
 /* to do: */
 	Cbuild_r0b,
 	Cfill2a012,
-	Cfill3
+	Cfill3,
+
+/* Annotations */
+	CA_n
 };
 
 char *instruction_name(BC_WORD i);

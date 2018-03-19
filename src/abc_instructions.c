@@ -913,6 +913,9 @@ char *instruction_name(BC_WORD i) {
 		case Cstack_check:
 			return "Ccheck_stack";
 
+		case CA_n:
+			return "CA_n"; break;
+
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
 			return "";
@@ -922,8 +925,8 @@ char *instruction_name(BC_WORD i) {
 char *instruction_type (BC_WORD i) {
 	switch (i){
 		case CaddI:                  return ""; break;
-		case Cadd_empty_node2:       return ""; break;
-		case Cadd_empty_node3:       return ""; break;
+		case Cadd_empty_node2:       return "l"; break;
+		case Cadd_empty_node3:       return "l"; break;
 		case CandI:                  return ""; break;
 		case Cbuild:                 return "lnl"; break;
 		case Cbuild0:                return "l"; break;
@@ -1337,7 +1340,7 @@ char *instruction_type (BC_WORD i) {
 		case CpushD_a_jmp_eqD_b2:    return "?"; break;
 		case Cpush_a_jsr:            return "?"; break;
 		case Cpush_b_incI:           return "?"; break;
-		case Cpush_b_jsr:            return "?"; break;
+		case Cpush_b_jsr:            return "nl"; break;
 		case Cpush_arraysize_a:      return "?"; break;
 		case Cpush_jsr_eval:         return "n"; break;
 		case Cpush_a2:               return "?"; break;
@@ -1355,7 +1358,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate2_a:             return "?"; break;
 		case Cupdate2_b:             return "?"; break;
 		case Cupdate2pop_a:          return "nn"; break;
-		case Cupdate2pop_b:          return "?"; break;
+		case Cupdate2pop_b:          return "nn"; break;
 		case Cupdate3_a:             return "?"; break;
 		case Cupdate3_b:             return "?"; break;
 		case Cupdate3pop_a:          return "?"; break;
@@ -1374,6 +1377,8 @@ char *instruction_type (BC_WORD i) {
 
 		case Cjsr_stack_check:       return "?"; break;
 		case Cstack_check:           return "?"; break;
+
+		case CA_n:                   return "n"; break;
 
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
