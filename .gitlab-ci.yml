@@ -1,13 +1,8 @@
-test64:
-  image: "camilstaps/clean:nightly"
-  before_script:
-    - install_clean.sh bundle-complete && apt-get update -qq && apt-get install -y -qq build-essential time
-  script:
-    - cd test; ./run_tests.sh
-
-test32:
+test:
   image: "camilstaps/clean:nightly"
   before_script:
     - install_clean.sh bundle-complete && apt-get update -qq && apt-get install -y -qq build-essential gcc-multilib time
   script:
-    - cd test; ./run_tests.sh --32-bit
+    - cd test
+    - ./run_tests.sh
+    - ./run_tests.sh --32-bit
