@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "util.h"
+#include "settings.h"
 
 void *safe_malloc(size_t size) {
 	void *mem = malloc(size);
@@ -45,7 +46,11 @@ void *safe_realloc(void *ptr, size_t size) {
 int safe_read(void* ptr, size_t size, size_t nmemb, FILE *stream) {
 	int ret = fread(ptr, size, nmemb, stream);
 	if (ret < nmemb) {
+#if (WORD_WIDTH == 64)
 		fprintf(stderr, "Read %d out of %ld items", ret, nmemb);
+#else
+		fprintf(stderr, "Read %d out of %d items", ret, nmemb);
+#endif
 		exit(-1);
 	}
 	return ret;
