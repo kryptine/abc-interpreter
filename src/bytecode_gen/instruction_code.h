@@ -5,20 +5,20 @@
 
 struct label {
 	char *label_name;
-	int label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
-	int label_module_n;
+	int32_t label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
+	int32_t label_module_n;
 };
 
 typedef struct relocation {
-	int relocation_offset;
+	uint32_t relocation_offset;
 	struct label *relocation_label;
 } relocation;
 
-extern int list_code;
+extern uint32_t list_code;
 
 void initialize_code(void);
 void code_next_module(void);
-BC_WORD *relocate_code_and_data(int add_code_or_data_offset);
+uint64_t *relocate_code_and_data(uint32_t add_code_or_data_offset);
 void write_program(void);
 void add_code_and_data_offsets(void);
 
@@ -241,16 +241,16 @@ void code_desc0(char label_name[], int desc0_number, char descriptor_name[], int
 void code_descn(char label_name[], char node_entry_label_name[], int arity, int lazy_record_flag, char descriptor_name[], 
 		int descriptor_name_length);
 void code_descs(char label_name[], char node_entry_label_name[], char *result_descriptor_name, 
-		int offset1, int offset2, char descriptor_name[], int descriptor_name_length);
-void code_descexp(char label_name[], char node_entry_label_name[], char *code_label_name, 
-		int arity, int lazy_record_flag, char descriptor_name[], int descriptor_name_length);
+		uint32_t offset1, uint32_t offset2, char descriptor_name[], uint32_t descriptor_name_length);
+void code_descexp(char label_name[],char node_entry_label_name[],char *code_label_name,
+				   int32_t arity, int32_t lazy_record_flag, char descriptor_name[],uint32_t descriptor_name_length);
 void code_export(char *label_name);
 void code_impdesc(char *label_name);
 void code_impmod(char *module_name);
 void code_implab(char *label_name);
 void code_implab_node_entry(char *label_name, char *ea_label_name);
 void code_label(char *label_name);
-void code_module(char label_name[], char string[], int string_length);
+void code_module(char label_name[], char string[], uint32_t string_length);
 void code_n(int number_of_arguments, char *descriptor_name, char *ea_label_name);
 void code_nu(int a_size, int b_size, char *descriptor_name, char *ea_label_name);
 void code_o(int oa, int ob, unsigned long vector[]);
