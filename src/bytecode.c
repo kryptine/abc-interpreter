@@ -18,19 +18,14 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 						label -= (BC_WORD) section;
 #if (WORD_WIDTH == 64)
 						label /= 8;
-						fprintf(f, " %lu", label);
 #else
 						label /= 4;
-						fprintf(f, " %u", label);
 #endif
+						fprintf(f, " " BC_WORD_FMT, label);
 						break; }
 					case 'i': /* Integer constant */
 					case 'n': /* Stack index and the like */
-#if (WORD_WIDTH == 64)
-						fprintf(f, " %ld", section[i]);
-#else
-						fprintf(f, " %d", section[i]);
-#endif
+						fprintf(f, " " BC_WORD_S_FMT, section[i]);
 						break;
 					case 's': { /* String */
 						uint32_t *s = (uint32_t*) section[i];
