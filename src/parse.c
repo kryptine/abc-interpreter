@@ -60,9 +60,9 @@ void next_state(struct parser *state) {
 }
 
 int parse_file(struct parser *state, FILE *file) {
-	uint16_t elem16;
-	uint32_t elem32;
-	uint64_t elem64;
+	int16_t elem16;
+	int32_t elem32;
+	int64_t elem64;
 
 	while (state->state != PS_end) {
 		switch (state->state) {
@@ -107,6 +107,14 @@ int parse_file(struct parser *state, FILE *file) {
 						case 'I':
 							safe_read(&elem16, sizeof(elem16), 1, file);
 							state->program->code[state->ptr++] = elem16;
+							break;
+						case 'n': /* Stack index */
+							safe_read(&elem64, sizeof(elem64), 1, file);
+							state->program->code[state->ptr++] = elem64;
+							break;
+						case 'N': /* Stack index, optimised to byte width */
+							safe_read(&elem16, sizeof(elem16), 1, file);
+							state->program->code[state->ptr++] = ((BC_WORD_S) elem16) * IF_INT_64_OR_32(8, 4);
 							break;
 						default:
 							safe_read(&elem64, sizeof(elem64), 1, file);

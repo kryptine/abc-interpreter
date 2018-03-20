@@ -432,12 +432,10 @@ Evaluate `a[3]` to HNF. See `jsr_eval`.
 `b[0] := b[0] | b[1]` (bitwise or)
 
 ### pop_a *n*
-Pop *n* / 4 elements from the A-stack.
-See issue #4.
+Pop *n* elements from the A-stack.
 
 ### pop_b *n*
-Pop *n* / 4 elements from the B-stack.
-See issue #4.
+Pop *n* elements from the B-stack.
 
 ### print
 
@@ -965,10 +963,10 @@ Pop *n* elements from the B-stack and jump to *l*.
 Pop *n* elements from the B-stack and jump to *l* as a subroutine.
 
 ### pop_b_pushBFALSE *n*
-Pop *n+1* elements from the B-stack and push False.
+Pop *n* elements from the B-stack and push False.
 
 ### pop_b_pushBTRUE *n*
-Pop *n+1* elements from the B-stack and push True.
+Pop *n* elements from the B-stack and push True.
 
 ### pop_b_rtn *n*
 Pop *n* elements from the B-stack and return to `c[0]`.

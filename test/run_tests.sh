@@ -19,6 +19,8 @@ do
 	case $opt in
 		"--32-bit")
 			CFLAGS+=" -m32 -DWORD_WIDTH=32";;
+		"--debug-all-instructions")
+			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS";;
 		"--no-opt")
 		    OPT="cat -";;
 		*)
