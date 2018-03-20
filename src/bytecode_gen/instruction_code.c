@@ -4058,18 +4058,11 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 	}
 }
 
-void write_program(void) {
+void write_program(FILE* program_file) {
 	// uint32_t should be enough
 	uint32_t i,n_code_code_relocations,n_code_data_relocations,n_data_code_relocations,n_data_data_relocations;
-	FILE *program_file;
 
 	printf("Program\n");
-
-	program_file = fopen("program","wb");
-	if (program_file == NULL) {
-		printf("Could not create program file\n");
-		exit(1);
-	}
 
 	n_code_data_relocations=0;
 	for(i=0; i<pgrm.code_reloc_size; ++i)
