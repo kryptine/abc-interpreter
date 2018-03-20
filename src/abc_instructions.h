@@ -463,7 +463,11 @@ enum {
 	Cfill3,
 
 /* Annotations */
-	CA_n
+	/* A number of code elems that should not be parsed intelligently (see e.g. on IIIln) */
+	CA_data_IIIln, /* Three instruction-width elems, a label-width elem, and an integer-width elem */
+	CA_data_IlIln,
+	CA_data_ln,
+	CA_data_n,
 };
 
 char *instruction_name(BC_WORD i);

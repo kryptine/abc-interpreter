@@ -100,12 +100,18 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_code: {
 				safe_read(&elem16, sizeof(elem16), 1, file);
-				fprintf(stderr, "\t-> %d\t%s\t%s\n", elem16, instruction_name(elem16), instruction_type(elem16));
 				state->program->code[state->ptr++] = elem16;
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
-					safe_read(&elem64, sizeof(elem64), 1, file);
-					state->program->code[state->ptr++] = elem64;
+					switch (*type) {
+						case 'I':
+							safe_read(&elem16, sizeof(elem16), 1, file);
+							state->program->code[state->ptr++] = elem16;
+							break;
+						default:
+							safe_read(&elem64, sizeof(elem64), 1, file);
+							state->program->code[state->ptr++] = elem64;
+					}
 				}
 				if (state->ptr >= state->program->code_size) {
 					state->ptr = 0;

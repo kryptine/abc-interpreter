@@ -1,4 +1,4 @@
-#acker	StdInt
+acker	StdInt
 #invperm	StdInt
 nfib	StdInt
-#tak	StdInt
+tak	StdInt

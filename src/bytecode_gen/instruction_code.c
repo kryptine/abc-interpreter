@@ -222,12 +222,12 @@ void add_data2_to_code(int i) {
 	if (list_code)
 		printf("%d\t.data2 %d\n",pgrm.code_size,i);
 	
-	store_code_elem(8, i);
+	store_code_elem(2, i);
 }
 
-void add_data4_to_code(int i) {
+void add_data8_to_code(int i) {
 	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.code_size,i);
+		printf("%d\t.data8 %d\n",pgrm.code_size,i);
 	
 	store_code_elem(8, i);
 }
@@ -777,7 +777,6 @@ void add_label(char *label_name) {
 }
 
 void code_addI(void) {
-	fprintf(stderr, "addI!\n");
 	add_instruction(CaddI);
 }
 
@@ -3834,10 +3833,13 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 	if (ea_label_name!=NULL) {
 		if (ea_label_name[0]=='_' && ea_label_name[1]=='_' && ea_label_name[2]=='\0') {
 			/* eval_fill */
+			add_instruction(CA_data_IIIln);
 			add_instruction(Cjsr_eval0);
 			add_instruction(Cfill_a01_pop_rtn);
 			add_instruction(Chalt);
 		} else {
+			add_instruction(CA_data_IlIln);
+
 			if (number_of_arguments<-2)
 				number_of_arguments=1;
 
@@ -3872,14 +3874,17 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		}
 
 		if (descriptor_name==NULL)
-			add_data4_to_code(0);
+			add_data8_to_code(0);
+		else
+			add_label(descriptor_name);	
+	} else if (descriptor_name != NULL) {
+		add_instruction(CA_data_ln);
+		add_label(descriptor_name);
+	} else {
+		add_instruction(CA_data_n);
 	}
 
-	if (descriptor_name!=NULL)
-		add_label(descriptor_name);	
-
-	add_instruction(CA_n);
-	add_data4_to_code(number_of_arguments);
+	add_data8_to_code(number_of_arguments);
 }
 
 void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
@@ -3898,13 +3903,13 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 		add_instruction(Chalt);
 
 		if (descriptor_name==NULL)
-			add_data4_to_code(0);
+			add_data8_to_code(0);
 	}
 	
 	if (descriptor_name!=NULL)
 		add_label(descriptor_name);	
 
-	add_data4_to_code(a_size+b_size+(b_size<<8));
+	add_data8_to_code(a_size+b_size+(b_size<<8));
 }
 
 void code_o(int oa,int ob,ULONG vector[]) {

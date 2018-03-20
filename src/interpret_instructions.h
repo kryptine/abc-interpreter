@@ -6708,5 +6708,5 @@ case Cjesr:
 			continue;
 	}
 default:
-	fprintf(stderr, "Unimplemented instruction at %d\n", (int) (pc-code));
+	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " at %d\n", *pc, (int) (pc-code));
 	return 1;
