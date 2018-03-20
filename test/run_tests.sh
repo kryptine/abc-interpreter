@@ -52,8 +52,7 @@ do
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
 	rm $MODULE.bc
-	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} >/dev/null
-	mv program $MODULE.bc
+	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc >/dev/null
 
 	/usr/bin/time $IP $MODULE.bc > $MODULE.result
 

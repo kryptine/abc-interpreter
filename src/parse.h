@@ -1,8 +1,6 @@
 #ifndef _H_ABCINT_PARSE
 #define _H_ABCINT_PARSE
 
-#define PARSE_STRICT
-
 #include "bytecode.h"
 #include "settings.h"
 
@@ -29,7 +27,6 @@ struct parser {
 };
 
 void init_parser(struct parser*);
-int parse_elem(struct parser*, int);
-int parse_line(struct parser*, char*);
+int parse_file(struct parser*, FILE*);
 
 #endif

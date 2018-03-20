@@ -80,7 +80,10 @@ int interpret(BC_WORD *code, BC_WORD *data,
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
-		fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+		if (pc > data)
+			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
+		else
+			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 #endif
 		switch (*pc) {
 #include "interpret_instructions.h"
@@ -105,8 +108,6 @@ int main(int argc, char **argv) {
 	BC_WORD *stack;
 	BC_WORD *heap;
 
-	char *line = safe_malloc(1024);
-	size_t n;
 	struct parser state;
 	init_parser(&state);
 
@@ -151,19 +152,17 @@ int main(int argc, char **argv) {
 	if (!strcmp(argv[optind], "-")) {
 		input = stdin;
 	} else {
-		input = fopen(argv[optind], "r");
+		input = fopen(argv[optind], "rb");
 		if (!input) {
 			fprintf(stderr, "Could not open '%s'\n", argv[optind]);
 			exit(-1);
 		}
 	}
 
-	while (getline(&line, &n, input) > 0) {
-		int res = parse_line(&state, line);
-		if (res) {
-			fprintf(stderr, "Parsing failed (%d)\n", res);
-			exit(res);
-		}
+	int res = parse_file(&state, input);
+	if (res) {
+		fprintf(stderr, "Parsing failed (%d)\n", res);
+		exit(res);
 	}
 
 	if (list_program) {
@@ -172,8 +171,6 @@ int main(int argc, char **argv) {
 
 	if (!run)
 		return 0;
-
-	handle_relocations(state.program);
 
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
