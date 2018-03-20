@@ -963,10 +963,10 @@ Pop *n* elements from the B-stack and jump to *l*.
 Pop *n* elements from the B-stack and jump to *l* as a subroutine.
 
 ### pop_b_pushBFALSE *n*
-Pop *n* elements from the B-stack and push False.
+Pop *n+1* elements from the B-stack and push False.
 
 ### pop_b_pushBTRUE *n*
-Pop *n* elements from the B-stack and push True.
+Pop *n+1* elements from the B-stack and push True.
 
 ### pop_b_rtn *n*
 Pop *n* elements from the B-stack and return to `c[0]`.
