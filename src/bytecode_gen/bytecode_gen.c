@@ -7,15 +7,10 @@
 #include "instruction_parse.h"
 #include "instruction_table.h"
 
-unsigned int nr_abc_files = 0;
-FILE **abc_files;
-FILE *output_file;
-
-static int line_number = 0;
-
 void parse_file(FILE *file) {
 	char* line = NULL;
 	size_t size = 0;
+	int line_number = 0;
 
 	code_next_module();
 
@@ -25,7 +20,7 @@ void parse_file(FILE *file) {
 	}
 }
 
-void parse_files() {
+void parse_files(FILE **abc_files, unsigned int nr_abc_files) {
 	init_parser();
 	init_instruction_table();
 	load_instruction_table();
@@ -44,6 +39,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	FILE *input_files[argc - 1];
+	unsigned int nr_abc_files = 0;
+	FILE *output_file = NULL;
 
 	int i;
 	for(i = 1; i < argc; i++) {
@@ -62,12 +59,15 @@ int main (int argc, char *argv[]) {
 		}
 	}
 
-	abc_files = input_files;
+	if (!output_file) {
+		fprintf(stderr, "Usage: %s ABC [ABC ...] -o OUTPUT\n", argv[0]);
+		return -1;
+	}
 
 	// List of lines per file
 	initialize_code();
 
-	parse_files();
+	parse_files(input_files, nr_abc_files);
 
 	relocate_code_and_data(0);
 	write_program(output_file);
