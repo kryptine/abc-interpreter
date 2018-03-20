@@ -180,7 +180,7 @@ void store_code_internal_label_value(struct label *label,uint32_t offset) {
 	store_code_elem(8, offset);
 }
 
-void store_code_label_value(char *label_name,uint32_t offset) {
+void store_code_label_value(char *label_name,int32_t offset) {
 	struct label *label;
 	
 	label=enter_label(label_name);
