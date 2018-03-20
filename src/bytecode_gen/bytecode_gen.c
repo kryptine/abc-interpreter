@@ -7,8 +7,9 @@
 #include "instruction_parse.h"
 #include "instruction_table.h"
 
-unsigned int nr_abc_files;
+unsigned int nr_abc_files = 0;
 FILE **abc_files;
+FILE *output_file;
 
 static int line_number = 0;
 
@@ -46,14 +47,22 @@ int main (int argc, char *argv[]) {
 
 	int i;
 	for(i = 1; i < argc; i++) {
-		if((input_files[i - 1] = fopen(argv[i], "r")) == NULL) {
-			fprintf(stderr, "Error: Could not open abc file: %s\n", argv[i]);
-			return -1;
+		if(strcmp("-o", argv[i]) == 0 && i <= argc - 1) {
+			if((output_file = fopen(argv[i + 1], "wb")) == NULL) {
+				fprintf(stderr, "Error: Could not open output file: %s\n", argv[i + 1]);
+				return -1;
+			}
+			i++;
+		} else {
+			if((input_files[i - 1] = fopen(argv[i], "r")) == NULL) {
+				fprintf(stderr, "Error: Could not open abc file: %s\n", argv[i]);
+				return -1;
+			}
+			nr_abc_files++;
 		}
 	}
 
 	abc_files = input_files;
-	nr_abc_files = argc - 1;
 
 	// List of lines per file
 	initialize_code();
@@ -61,7 +70,7 @@ int main (int argc, char *argv[]) {
 	parse_files();
 
 	relocate_code_and_data(0);
-	write_program();
+	write_program(output_file);
 
 	return 0;
 }
