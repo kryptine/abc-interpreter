@@ -7,7 +7,7 @@
 #include "settings.h"
 
 /* Size of an instruction in binary bytecode, in bytes */
-#define BITWIDTH_INSTRUCTION 2
+#define BYTEWIDTH_INSTRUCTION 2
 
 // The type of byte code words, relocations, etc. for cross-platform output
 #define COMMON_BC_WORD int32_t
