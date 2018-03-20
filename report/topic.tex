@@ -4,7 +4,6 @@
 
 \usepackage[backend=biber,natbib]{biblatex}
 \bibliography{library}
-\renewcommand*{\bibfont}{\small}
 
 \title{Cross-Platform Dynamics in Clean}
 \author{Camil Staps\footnote{Radboud University Nijmegen} \and Erin van der Veen\footnotemark[1]}
@@ -21,8 +20,9 @@ On 32-bit Windows, it is possible to store a dynamic on disk, together with all 
 	which allows for sharing of dynamics between different applications~\citep{Vervoort2002}.
 This is also possible with expressions that are not completely evaluated.
 
-Clean also supports serialization of any value, but these values can only be deserialized by the same executable.
-Serialization can also be done using generic JSON functions, but these are not able to serialize unevaluated expressions.
+Clean also supports serialization of any (possibly not completely evaluated) expression,
+	but these expressions can only be deserialized by the same executable.
+Serialization can also be done using generic JSON functions, but these are not able to serialize unevaluated expressions or functions.
 Thus, there is currently no way to communicate values of arbitrary type between different executables on different platforms in a type-safe manner.
 
 \section*{Research Approach}
@@ -40,7 +40,6 @@ John van Groningen has already worked on an ABC optimiser, a code generator for 
 This system needs to be extended with a garbage collector, the bytecode needs to become platform-independent and the interpreter needs to be finished.
 The system needs to be integrated with the dynamics system using new platform-independent serialization functionality.
 
-\footnotesize
 \printbibliography
 
 \end{document}
