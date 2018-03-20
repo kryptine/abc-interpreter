@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "abc_instructions.h"
 #include "parse.h"
 #include "util.h"
 
@@ -59,6 +60,7 @@ void next_state(struct parser *state) {
 }
 
 int parse_file(struct parser *state, FILE *file) {
+	uint16_t elem16;
 	uint32_t elem32;
 	uint64_t elem64;
 
@@ -96,14 +98,26 @@ int parse_file(struct parser *state, FILE *file) {
 				state->program->data_data_size = elem32;
 				next_state(state);
 				break;
-			case PS_code:
-				safe_read(&elem64, sizeof(elem64), 1, file);
-				state->program->code[state->ptr++] = elem64;
+			case PS_code: {
+				safe_read(&elem16, sizeof(elem16), 1, file);
+				state->program->code[state->ptr++] = elem16;
+				char *type = instruction_type(elem16);
+				for (; *type; type++) {
+					switch (*type) {
+						case 'I':
+							safe_read(&elem16, sizeof(elem16), 1, file);
+							state->program->code[state->ptr++] = elem16;
+							break;
+						default:
+							safe_read(&elem64, sizeof(elem64), 1, file);
+							state->program->code[state->ptr++] = elem64;
+					}
+				}
 				if (state->ptr >= state->program->code_size) {
 					state->ptr = 0;
 					next_state(state);
 				}
-				break;
+				break; }
 			case PS_code_code_rel:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 #if (WORD_WIDTH == 64)
