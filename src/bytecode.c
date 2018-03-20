@@ -16,25 +16,20 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 					case 'l': { /* Code label */
 						BC_WORD label = section[i];
 						label -= (BC_WORD) section;
-#if (WORD_WIDTH == 64)
-						label /= 8;
-#else
-						label /= 4;
-#endif
+						label /= IF_INT_64_OR_32(8,4);
 						fprintf(f, " " BC_WORD_FMT, label);
 						break; }
 					case 'i': /* Integer constant */
-					case 'n': /* Stack index and the like */
+					case 'n': /* Stack index */
 						fprintf(f, " " BC_WORD_S_FMT, section[i]);
+						break;
+					case 'N': /* Stack index times WORD_WIDTH/8 */
+						fprintf(f, " " BC_WORD_S_FMT, section[i] / IF_INT_64_OR_32(8,4));
 						break;
 					case 's': { /* String */
 						uint32_t *s = (uint32_t*) section[i];
 						uint32_t length = s[0];
-#if (WORD_WIDTH == 64)
-						char *cs = (char*) &s[2]; /* TODO: strings need to be properly stored on 64-bit */
-#else
-						char *cs = (char*) &s[1];
-#endif
+						char *cs = (char*) &s[IF_INT_64_OR_32(2,1)]; /* TODO: strings need to be properly stored on 64-bit */
 						uint32_t i;
 						fprintf(f, " \"");
 						for (i=0; i<length; i++) {

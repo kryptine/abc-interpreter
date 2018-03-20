@@ -3117,15 +3117,11 @@ case CorI:
 	pc+=1;
 	continue;
 case Cpop_a:
-	/* TODO when the parser is clever enough, this should be multiplied by
-	 * 4 / 8 depending on 32/64-bit to avoid a shl instruction */
-	asp += pc[1];
+	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
 	pc+=2;
 	continue;
 case Cpop_b:
-	/* TODO when the parser is clever enough, this should be multiplied by
-	 * 4 / 8 depending on 32/64-bit to avoid a shl instruction */
-	bsp += pc[1];
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	pc+=2;
 	continue;
 case Cprint:
@@ -5824,53 +5820,44 @@ case CneI:
 	pc+=1;
 	continue;
 case Cpop_a_jmp:
-	/* TODO: optimise (see issue #4) */
-	asp-=pc[1];
+	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
 	pc=*(BC_WORD**)&pc[2];
 	continue;
 case Cpop_a_jsr:
-	/* TODO: optimise (see issue #4) */
-	asp-=pc[1];
+	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
 	*--csp=(BC_WORD)&pc[3];
 	pc=*(BC_WORD**)&pc[2];
 	continue;
 case Cpop_a_rtn:
-	/* TODO: optimise (see issue #4) */
-	asp-=pc[1];
+	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
 	pc=(BC_WORD*)*csp++;
 	continue;
 case Cpop_ab_rtn:
-	/* TODO: optimise (see issue #4) */
-	asp-=pc[1];
-	bsp+=pc[2];
+	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[2]);
 	pc=(BC_WORD*)*csp++;
 	continue;
 case Cpop_b_jmp:
-	/* TODO: optimise (see issue #4) */
-	bsp+=pc[1];
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	pc=*(BC_WORD**)&pc[2];
 	continue;
 case Cpop_b_jsr:
-	/* TODO: optimise (see issue #4) */
-	bsp+=pc[1];
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	*--csp=(BC_WORD)&pc[3];
 	pc=*(BC_WORD**)&pc[2];
 	continue;
 case Cpop_b_pushBFALSE:
-	/* TODO: optimise (see issue #4) */
-	bsp+=pc[1]-1;
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	*bsp=0;
 	pc+=2;
 	continue;				
 case Cpop_b_pushBTRUE:
-	/* TODO: optimise (see issue #4) */
-	bsp+=pc[1]-1;
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	*bsp=1;
 	pc+=2;
 	continue;
 case Cpop_b_rtn:
-	/* TODO: optimise (see issue #4) */
-	bsp += pc[1];
+	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	pc=(BC_WORD*)*csp++;
 	continue;
 case CpushD_a_jmp_eqD_b2:
