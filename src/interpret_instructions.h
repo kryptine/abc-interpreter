@@ -2986,7 +2986,7 @@ case Cjmp_eval_upd:
 #if 0
 	printf ("jmp_eval_upd %d %d\n",(int)d-(int)program,((int)d-(int)program)>>2);
 #endif
-	pc=(BC_WORD*)(d-20);
+	pc=(BC_WORD*)(d-IF_INT_64_OR_32(40,20));
 	continue;
 }
 case Cjmp_false:
