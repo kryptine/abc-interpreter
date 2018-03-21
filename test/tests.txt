@@ -3,5 +3,6 @@ acker	StdInt
 e	StdInt,StdList
 hamming	StdInt,StdList
 invperm	StdInt
+lqueen	StdInt,StdList
 nfib	StdInt
 tak	StdInt

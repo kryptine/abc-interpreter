@@ -1,5 +1,9 @@
 definition module StdList
 
+from StdOverloaded import class length
+
+instance length []
+
 hd   :: ![.a] -> .a
 tl   :: !u:[.a] -> u:[.a]
 take :: !Int [.a] -> [.a]
