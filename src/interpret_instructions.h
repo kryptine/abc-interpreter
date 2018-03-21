@@ -2986,7 +2986,7 @@ case Cjmp_eval_upd:
 #if 0
 	printf ("jmp_eval_upd %d %d\n",(int)d-(int)program,((int)d-(int)program)>>2);
 #endif
-	pc=(BC_WORD*)(d-20);
+	pc=(BC_WORD*)(d-IF_INT_64_OR_32(40,20));
 	continue;
 }
 case Cjmp_false:
@@ -3159,18 +3159,25 @@ case Cprint_symbol_sc:
 	} else if (d==(BC_WORD)&CHAR+2){
 		printf ("'%c'",(int)n[1]);
 	} else {
-		BC_WORD *s;
+		uint32_t *s;
 		int l,i;
 		char *cs;
 
-		s=(BC_WORD*)((BC_WORD)d+10+*(uint16_t*)d);
-		l=s[0];
-#if 0
-		printf ("? %d %d ",(int)d-(int)data,l);
+#if (WORD_WIDTH == 64)
+		s=(uint32_t*)((BC_WORD)d+22+2*(*(uint16_t*)d));
+#else
+		s=(uint32_t*)((BC_WORD)d+10+*(uint16_t*)d);
 #endif
-		cs=(char*)&s[1];
-		for (i=0; i<l; ++i)
+		l=s[0];
+		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
+		for (i=0; i<l; ++i) {
 			putchar (cs[i]);
+#if (WORD_WIDTH == 64)
+			/* TODO: strings need to be stored properly on 64-bit */
+			if (i > 0 && i % 4 == 3)
+				cs += 4;
+#endif
+		}
 	}
 	pc+=2;
 	continue;
