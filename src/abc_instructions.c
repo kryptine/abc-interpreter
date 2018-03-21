@@ -1308,13 +1308,13 @@ char *instruction_type (BC_WORD i) {
 		case Cbuildho2:              return "nnl";
 		case Cbuildo1:               return "nl";
 		case Cbuildo2:               return "?";
-		case Cdup_a:                 return "?";
+		case Cdup_a:                 return "n";
 		case Cdup2_a:                return "n";
 		case Cdup3_a:                return "?";
 		case CneI:                   return "?";
 		case Cexchange_a:            return "nn";
 		case CgeC:                   return "?";
-		case Cjmp_b_false:           return "?";
+		case Cjmp_b_false:           return "nl";
 		case Cjmp_eqACio:            return "?";
 		case Cjmp_eqC_b:             return "?";
 		case Cjmp_eqC_b2:            return "?";

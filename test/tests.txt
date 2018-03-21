@@ -3,6 +3,7 @@
 #e	StdInt,StdList
 #hamming	StdInt,StdList
 #invperm	StdInt
+#lqueen	StdInt,StdList
 #nfib	StdInt
 reverse	StdChar,StdEnum,StdInt,StdList,_SystemEnum
 #tak	StdInt

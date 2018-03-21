@@ -310,7 +310,7 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 	for(i=0; i<pgrm.code_reloc_size; ++i) {
 		struct relocation *relocation_p;
-		uint32_t offset;
+		int32_t offset;
 
 		relocation_p=&pgrm.code_relocations[i];
 
@@ -329,7 +329,7 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 	for(i=0; i<pgrm.data_reloc_size; ++i) {
 		struct relocation *relocation_p;
-		uint32_t offset;
+		int32_t offset;
 
 		relocation_p=&pgrm.data_relocations[i];
 

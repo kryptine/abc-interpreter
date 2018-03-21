@@ -1,6 +1,15 @@
 implementation module StdList
 
+import StdClass
 import StdInt
+
+instance length []
+where
+	length :: ![a] -> Int
+	length xs = acclen 0 xs
+	where
+		acclen n [x:xs] = acclen (inc n) xs
+		acclen n []     = n
 
 hd :: ![.a] -> .a
 hd [x:_] = x
