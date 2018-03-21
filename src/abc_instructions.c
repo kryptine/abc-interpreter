@@ -1323,7 +1323,7 @@ char *instruction_type (BC_WORD i) {
 		case Cjmp_eqI:               return "?";
 		case Cjmp_eqI_b:             return "?";
 		case Cjmp_eqI_b2:            return "?";
-		case Cjmp_eq_desc:           return "?";
+		case Cjmp_eq_desc:           return "nll";
 		case Cjmp_geI:               return "?";
 		case Cjmp_ltI:               return "?";
 		case Cjmp_neC_b:             return "?";
@@ -1356,7 +1356,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush2_b:               return "n";
 		case Cpush3_a:               return "n";
 		case Cpush3_b:               return "n";
-		case Cpush_update_a:         return "?";
+		case Cpush_update_a:         return "nn";
 		case Cput_a:                 return "n";
 		case Cput_b:                 return "?";
 		case CselectCHARoo:          return "?";

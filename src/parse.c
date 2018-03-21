@@ -104,6 +104,9 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_code: {
 				safe_read(&elem16, sizeof(elem16), 1, file);
+#if 0
+				fprintf(stderr, "-> %d\t%s %s\n", elem16, instruction_name(elem16), instruction_type(elem16));
+#endif
 				state->program->code[state->ptr++] = elem16;
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {

@@ -3151,6 +3151,9 @@ case Cprint_symbol_sc:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t" BC_WORD_FMT "\n", d-(BC_WORD)data);
+#endif
 	if (d==(BC_WORD)&INT+2){
 		printf ("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
@@ -6429,7 +6432,7 @@ case Cjsr_ap1:
 #if 0
 	printf ("Cjsr_ap1 %d %d %d %d\n",(int)(pc-program),n,d,(int)d-(int)data);
 #endif
-	pc = *(BC_WORD**)(d+2);
+	pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 	continue;
 }
 case Cjmp_ap1:
