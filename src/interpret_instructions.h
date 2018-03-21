@@ -3151,9 +3151,6 @@ case Cprint_symbol_sc:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
-#ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t" BC_WORD_FMT "\n", d-(BC_WORD)data);
-#endif
 	if (d==(BC_WORD)&INT+2){
 		printf ("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
@@ -6394,11 +6391,22 @@ case Cjmp_ap2:
 
 	n=(BC_WORD*)asp[0];
 	d=n[0];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
+			d-(BC_WORD)data,
+			((uint16_t*)d)[0],
+			((uint16_t*)d)[-1],
+			(*(BC_WORD*)(d+16+6) - (BC_WORD) code) / 8);
+#endif
 	if (((uint16_t*)d)[0]==16){
 		BC_WORD arity;
 		
 		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+6)) - 24);
+#else
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16-6)) - 12);
+#endif
 		if (arity<=1){
 			if (arity<1){
 				--asp;
