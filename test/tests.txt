@@ -5,5 +5,5 @@
 #invperm	StdInt
 #lqueen	StdInt,StdList
 #nfib	StdInt
-reverse	StdChar,StdEnum,StdInt,StdList,_SystemEnum
+reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 #tak	StdInt
