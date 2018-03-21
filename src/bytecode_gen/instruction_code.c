@@ -3924,16 +3924,21 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 	if (ea_label_name!=NULL) {
 		/* eval_upd not yet implemented */
 		/* eval_fill */
+		add_instruction(CA_data_IIIln);
 		add_instruction(Cjsr_eval0);
 		add_instruction(Cfill_a01_pop_rtn);
 		add_instruction(Chalt);
 
 		if (descriptor_name==NULL)
 			add_data8_to_code(0);
+		else
+			add_label(descriptor_name);
+	} else if (descriptor_name!=NULL) {
+		add_instruction(CA_data_ln);
+		add_label(descriptor_name);
+	} else {
+		add_instruction(CA_data_n);
 	}
-	
-	if (descriptor_name!=NULL)
-		add_label(descriptor_name);	
 
 	add_data8_to_code(a_size+b_size+(b_size<<8));
 }

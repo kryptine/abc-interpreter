@@ -1,4 +1,6 @@
+# vim: ts=12:
 acker	StdInt
+e	StdInt,StdList
 invperm	StdInt
 nfib	StdInt
 tak	StdInt
