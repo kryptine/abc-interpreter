@@ -34,7 +34,7 @@ done
 
 CFLAGS="$CFLAGS" make -BC ../src || exit 1
 
-rm -r Clean\ System\ Files
+rm -r Clean\ System\ Files 2>/dev/null
 
 while IFS=$'\t' read -r -a line
 do
@@ -61,7 +61,7 @@ do
 	done
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
-	rm $MODULE.bc
+	rm $MODULE.bc 2>/dev/null
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc >/dev/null
 
 	/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
