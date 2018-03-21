@@ -8,6 +8,10 @@ hd [x:_] = x
 tl :: !u:[.a] -> u:[.a]
 tl [_:xs] = xs
 
+last :: ![.a] -> .a
+last [x] = x
+last [_:xs] = last xs
+
 take :: !Int [.a] -> [.a]
 take 0 _      = []
 take n [x:xs] = [x:take (n-1) xs]
