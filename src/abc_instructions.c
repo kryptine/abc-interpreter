@@ -1022,8 +1022,8 @@ char *instruction_type (BC_WORD i) {
 		case CeqB:                   return "";
 		case CeqB_aFALSE:            return "?";
 		case CeqB_aTRUE:             return "?";
-		case CeqB_bFALSE:            return "?";
-		case CeqB_bTRUE:             return "?";
+		case CeqB_bFALSE:            return "n";
+		case CeqB_bTRUE:             return "n";
 		case CeqC:                   return "";
 		case CeqC_a:                 return "?";
 		case CeqC_b:                 return "?";

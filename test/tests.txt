@@ -9,3 +9,4 @@ reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 sieve	StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 squeen	StdInt,StdList
 tak	StdInt
+war_seq	StdInt
