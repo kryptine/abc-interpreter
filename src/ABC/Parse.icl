@@ -90,7 +90,7 @@ where
 	| isSpace line.[start] = (toString (reverse cs), start)
 	| otherwise            = id [line.[start]:cs] (start + 1) line
 parseLine`{|StringLiteral|} = \i s -> case s.[i] of
-	'"' -> let (sl,i) = stringlit [] (i+1) s in case s.[i] of
+	'"' -> let (sl,j) = stringlit [] (i+1) s in case s.[j] of
 		'"' -> Just (sl,i+1)
 		_   -> Nothing
 	_   -> Nothing
