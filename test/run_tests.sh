@@ -13,6 +13,7 @@ RESET="\033[0m"
 FAILED=0
 
 CFLAGS=""
+RUNFLAGS=""
 
 for opt in $@
 do
@@ -21,6 +22,8 @@ do
 			CFLAGS+=" -m32 -DWORD_WIDTH=32";;
 		"--debug-all-instructions")
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS";;
+		"--list-code")
+			RUNFLAGS+=" -l -H";;
 		"--no-opt")
 		    OPT="cat -";;
 		*)
@@ -44,7 +47,12 @@ do
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
-	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE || continue
+	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
+	if [ $? -ne 0 ]; then
+		echo -e "${RED}FAILED: $MODULE$RESET"
+		FAILED=1
+		continue
+	fi
 
 	ABCDEPS=()
 	for dep in ${DEPS[@]}; do
@@ -56,7 +64,7 @@ do
 	rm $MODULE.bc
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc >/dev/null
 
-	/usr/bin/time $IP $MODULE.bc > $MODULE.result
+	/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
 
 	diff $MODULE.expected $MODULE.result
 	if [ $? -ne 0 ]; then
