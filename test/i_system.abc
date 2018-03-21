@@ -8,7 +8,7 @@
 .export _driver
 
 |.desc _Tuple	_hnf	_hnf	32 0	"_Tuple"
-.desc _Tuple	_hnf	_hnf	4 0	"_Tuple"
+.desc _Tuple	_hnf	_hnf	12 0	"_Tuple"
 .desc _Nil	_hnf	_hnf	0	0 "Nil"
 .desc _Cons	_hnf	l_Cons	2	0 "Cons"
 

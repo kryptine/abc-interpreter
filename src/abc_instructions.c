@@ -1038,7 +1038,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill3:                 return "nd";
 		case Cfill4:                 return "nd";
 		case Cfillh0:                return "nd";
-		case Cfillh:                 return "?";
+		case Cfillh:                 return "nnl";
 		case Cfillh1:                return "nd";
 		case Cfillh2:                return "nd";
 		case Cfill1001:              return "?";
