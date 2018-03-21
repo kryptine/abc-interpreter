@@ -1372,7 +1372,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate4_a:             return "?";
 		case Cupdates2_a:            return "nnn";
 		case Cupdates2_a_pop_a:      return "?";
-		case Cupdates2_b:            return "?";
+		case Cupdates2_b:            return "nnn";
 		case Cupdates2pop_a:         return "nnn";
 		case Cupdates2pop_b:         return "?";
 		case Cupdates3_a:            return "?";
