@@ -59,6 +59,10 @@ void next_state(struct parser *state) {
 	}
 }
 
+void shift_address(BC_WORD *addr) {
+	*addr = ((*addr << 1) & -7) | (*addr & 3);
+}
+
 int parse_file(struct parser *state, FILE *file) {
 	int16_t elem16;
 	int32_t elem32;
@@ -100,6 +104,9 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_code: {
 				safe_read(&elem16, sizeof(elem16), 1, file);
+#if 0
+				fprintf(stderr, "-> %d\t%s %s\n", elem16, instruction_name(elem16), instruction_type(elem16));
+#endif
 				state->program->code[state->ptr++] = elem16;
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
@@ -129,7 +136,7 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_code_code_rel:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 #if (WORD_WIDTH == 64)
-				state->program->code[elem32] *= 2;
+				shift_address(&state->program->code[elem32]);
 #endif
 				state->program->code[elem32] += (BC_WORD) state->program->code;
 				if (++state->ptr >= state->program->code_code_size) {
@@ -140,7 +147,7 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_code_data_rel:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 #if (WORD_WIDTH == 64)
-				state->program->code[elem32] *= 2; // TODO: why should this not be done here? What about data_data?
+				shift_address(&state->program->code[elem32]);
 #endif
 				state->program->code[elem32] += (BC_WORD) state->program->data;
 				if (++state->ptr >= state->program->code_data_size) {
@@ -159,7 +166,7 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_data_code_rel:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 #if (WORD_WIDTH == 64)
-				state->program->data[elem32] *= 2;
+				shift_address(&state->program->data[elem32]);
 #endif
 				state->program->data[elem32] += (BC_WORD) state->program->code;
 				if (++state->ptr >= state->program->data_code_size) {
@@ -170,7 +177,7 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_data_data_rel:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 #if (WORD_WIDTH == 64)
-				state->program->data[elem32] *= 2; // Is this right? See above, code_data.
+				shift_address(&state->program->data[elem32]);
 #endif
 				state->program->data[elem32] += (BC_WORD) state->program->data;
 				if (++state->ptr >= state->program->data_data_size) {

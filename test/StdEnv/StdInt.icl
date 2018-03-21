@@ -1,6 +1,6 @@
 implementation module StdInt
 
-import	StdOverloaded
+import StdOverloaded
 
 instance + Int
 where
@@ -14,6 +14,25 @@ where
 		subI
 	}
 
+instance * Int
+where
+	(*) a b = code inline {
+		mulI
+	}
+
+instance / Int
+where
+	(/) a b = code inline {
+		divI
+	}
+
+instance == Int
+where
+	(==) :: !Int !Int -> Bool
+	(==) a b = code inline {
+		eqI
+	}
+
 instance < Int
 where
 	(<) :: !Int !Int -> Bool
@@ -21,4 +40,20 @@ where
 		ltI
 	}
 
-instance one Int where one = 1
+instance zero Int
+where
+	zero = code inline {
+		pushI 0
+	}
+
+instance one  Int
+where
+	one = code inline {
+		pushI 1
+	}
+
+instance rem Int
+where
+	(rem) a b = code inline {
+		remI
+	}

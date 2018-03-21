@@ -21,10 +21,10 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 						break; }
 					case 'i': /* Integer constant */
 					case 'n': /* Stack index */
-						fprintf(f, " " BC_WORD_S_FMT, section[i]);
+						fprintf(f, " " BC_WORD_S_FMT, (BC_WORD_S) section[i]);
 						break;
 					case 'N': /* Stack index times WORD_WIDTH/8 */
-						fprintf(f, " " BC_WORD_S_FMT, section[i] / IF_INT_64_OR_32(8,4));
+						fprintf(f, " " BC_WORD_S_FMT, (BC_WORD_S) section[i] / IF_INT_64_OR_32(8,4));
 						break;
 					case 's': { /* String */
 						uint32_t *s = (uint32_t*) section[i];
