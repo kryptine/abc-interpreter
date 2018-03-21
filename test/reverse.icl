@@ -6,7 +6,7 @@ import StdEnum
 import StdInt
 import StdList
 
-NrOfTimes :== 1000
+NrOfTimes :== 832
 	
 //	Reversing a list of n integers n times.
 

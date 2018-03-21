@@ -1,9 +1,9 @@
 # vim: ts=12:
-#acker	StdInt
-#e	StdInt,StdList
-#hamming	StdInt,StdList
-#invperm	StdInt
-#lqueen	StdInt,StdList
-#nfib	StdInt
+acker	StdInt
+e	StdInt,StdList
+hamming	StdInt,StdList
+invperm	StdInt
+lqueen	StdInt,StdList
+nfib	StdInt
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-#tak	StdInt
+tak	StdInt
