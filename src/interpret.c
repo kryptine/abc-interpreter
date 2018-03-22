@@ -5,6 +5,7 @@
 
 #include "abc_instructions.h"
 #include "bytecode.h"
+#include "gc.h"
 #include "interpret.h"
 #include "parse.h"
 #include "settings.h"
@@ -25,9 +26,9 @@ static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e'
 
 static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
 void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
-static void* INT[]        = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
-static void* BOOL[]       = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
-static void* CHAR[]       = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
+void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
+void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
+void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
 static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 #else /* assuming WORD_WIDTH == 32 */
@@ -88,8 +89,13 @@ int interpret(BC_WORD *code, BC_WORD *data,
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		fprintf(stderr,"Need a garbage collector\n");
-		exit(1);
+		BC_WORD *new_hp = garbage_collect(stack, asp, heap, code, data);
+		if (new_hp == hp) {
+			fprintf(stderr, "Heap full.\n");
+			exit(1);
+		} else {
+			fprintf(stderr, "Freed %d objects.\n", (int) (hp-new_hp));
+		}
 	}
 }
 

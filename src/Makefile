@@ -11,6 +11,7 @@ optimise: .FORCE
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
+	gc.c\
 	interpret.c\
 	parse.c\
 	traps.c\

@@ -84,6 +84,9 @@ case Cbuild:
 case Cbuild0:
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	hp[0]=pc[1];
 	*++asp=(BC_WORD)hp;
 	hp+=3;
@@ -101,13 +104,10 @@ case Cbuild1:
 case Cbuild2:
 case Cbuildh2:
 case Cbuildhr20:
-#if 0
-	printf ("%d %d %d\n",hp-heap,heap_free,(hp-heap)+heap_free);
-#endif
 	if ((heap_free-=3)<0)
 		break;
-#if 0
-	printf ("Cbuild(h)2 %d %d %d %d\n",(int)hp,(int)pc[1],(int)asp[0],(int)asp[-1]);
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
@@ -143,6 +143,9 @@ case Cbuild4:
 	continue;
 case Cbuildh0:
 case CbuildAC:
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	*++asp=pc[1];
 	pc+=2;
 	continue;
@@ -406,6 +409,9 @@ case CbuildF_b:
 case CbuildI:
 	if ((heap_free-=2)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- INT (%lx)\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
+#endif
 	hp[0]=(BC_WORD)&INT+2;
 	hp[1]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -3501,6 +3507,10 @@ case Cpush_node:
 case Cpush_node0:
 {
 	BC_WORD *n;
+
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- push_node0 (%lx)\n", (void*)asp, pc[1]);
+#endif
 	
 	n=(BC_WORD*)*asp;
 	n[0]=pc[1];
