@@ -52,7 +52,7 @@ static BC_WORD Fjmp_ap2 = Cjmp_ap2;
 static BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
-size_t g_heap_free;
+BC_WORD_S g_heap_free;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
@@ -76,7 +76,7 @@ int interpret(BC_WORD *code, BC_WORD *data,
 	BC_WORD *bsp = &stack[stack_size];
 	BC_WORD *csp = &stack[stack_size >> 1]; // TODO why?
 	BC_WORD *hp = heap;
-	size_t heap_free = heap_size;
+	BC_WORD_S heap_free = heap_size;
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS

@@ -6,7 +6,7 @@
 extern void* __STRING__[];
 
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
-extern size_t g_heap_free;
+extern BC_WORD_S g_heap_free;
 
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
