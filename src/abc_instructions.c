@@ -1268,11 +1268,11 @@ char *instruction_type (BC_WORD i) {
 		case Cswap_a:                return "n";
 		case Cjsr_ap1:               return "";
 		case Cjsr_ap2:               return "";
-		case Cjsr_ap3:               return "?";
-		case Cjsr_ap4:               return "?";
-		case Cjmp_ap1:               return "?";
-		case Cjmp_ap2:               return "?";
-		case Cjmp_ap3:               return "?";
+		case Cjsr_ap3:               return "";
+		case Cjsr_ap4:               return "";
+		case Cjmp_ap1:               return "";
+		case Cjmp_ap2:               return "";
+		case Cjmp_ap3:               return "";
 		case Cadd_arg0:              return "";
 		case Cadd_arg1:              return "";
 		case Cadd_arg2:              return "";

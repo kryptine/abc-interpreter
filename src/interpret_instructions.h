@@ -6456,7 +6456,7 @@ case Cjmp_ap1:
 
 	n=(BC_WORD*)asp[0];
 	d=n[0];
-	pc = *(BC_WORD**)(d+2);
+	pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 	continue;
 }
 case Cadd_arg0:
