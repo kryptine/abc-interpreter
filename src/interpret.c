@@ -36,9 +36,9 @@ static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC
 
 static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
 void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
-static void* INT[]        = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
-static void* BOOL[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
-static void* CHAR[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
+void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
+void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
+void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
 static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 #endif /* Word-width dependency */
@@ -94,7 +94,9 @@ int interpret(BC_WORD *code, BC_WORD *data,
 			fprintf(stderr, "Heap full.\n");
 			exit(1);
 		} else {
-			fprintf(stderr, "Freed %d objects.\n", (int) (hp-new_hp));
+			heap_free = heap_size - (new_hp - heap);
+			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (hp-new_hp), (int) heap_free);
+			hp = new_hp;
 		}
 	}
 }

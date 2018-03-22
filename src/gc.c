@@ -1,8 +1,11 @@
 #include <stdlib.h>
 
+#include "abc_instructions.h"
 #include "gc.h"
 #include "interpret.h"
 #include "util.h"
+
+#define DEBUG_GARBAGE_COLLECTOR 3
 
 struct grey_nodes_set {
 	BC_WORD **nodes;
@@ -24,7 +27,9 @@ void init_grey_nodes_set(struct grey_nodes_set *set) {
 }
 
 void realloc_grey_nodes_set(struct grey_nodes_set *set) {
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "\tReallocating grey nodes set\n");
+#endif
 	set->write_ptr = set->size;
 	set->read_ptr = 0;
 	set->size *= GREY_NODES_ENLARGE;
@@ -36,7 +41,9 @@ void add_grey_node(struct grey_nodes_set *set, BC_WORD *node) {
 		realloc_grey_nodes_set(set);
 	}
 
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
 	fprintf(stderr, "\t%p -> grey\n", (void*) node);
+#endif
 	set->nodes[set->write_ptr++] = node;
 	if (set->write_ptr == set->size)
 		set->write_ptr = 0;
@@ -59,32 +66,84 @@ BC_WORD *get_grey_node(struct grey_nodes_set *set) {
 	}
 }
 
+BC_WORD *next_black_node(BC_WORD *node) {
+	while (!(*node & 1)) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\tSkipping over %p\n", (void*) node);
+#endif
+		int16_t arity = ((int16_t*)(node[0]))[-1];
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t\t%p -> %p -> %p (%d)\n", (void*) node, (void*) *node, (void*) *(BC_WORD*)node[0], arity);
+#endif
+		if (node[0] & 2) { /* HNF, skip over <arity> elements */
+			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(INT)\n");
+#endif
+				node += 2;
+			} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
+#endif
+				node += arity;
+			}
+		} else if (arity < 0) {
+			fprintf(stderr, "Arity < 0 not implemented\n");
+			exit(1);
+		} else if (arity < 3) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
+#endif
+			node += 3;
+		} else {
+			fprintf(stderr, "Arity > 2 not implemented\n");
+			exit(1);
+		}
+	}
+	return node;
+}
+
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *code, BC_WORD *data) {
-	fprintf(stderr, "Collecting trash...\n");
+	BC_WORD *asp_temp;
+
+#if (DEBUG_GARBAGE_COLLECTOR > 0)
+	fprintf(stderr, "Collecting trash... stack @ %p; heap @ %p; code @ %p; data @ %p\n",
+			(void*) stack, (void*) heap, (void*) code, (void*) data);
+#endif
 
 	struct grey_nodes_set grey;
 	init_grey_nodes_set(&grey);
 
 	/* Add full A-stack to the grey set */
-	for (; asp > stack; asp--) {
-		add_grey_node(&grey, (BC_WORD*) *asp);
+	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
+		add_grey_node(&grey, (BC_WORD*) *asp_temp);
 	}
 
 	/* Evaluate full grey set */
 	BC_WORD *node;
 	uint32_t black_nodes = 0;
 	while ((node = get_grey_node(&grey)) != NULL) {
-		if (node < heap)
-			/* FIXME: this ignores pointers to code/data.
-			 * This assumes that the heap is higher in memory.
+		if (node < heap) {
+			/* FIXME: this ignores pointers to code/data (which is correct).
+			 * However, it currently assumes that the heap is higher in memory.
 			 */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t%p is not on the heap...\n", (void*) node);
+#endif
 			continue;
+		}
 
-		if (node[0] & 1) /* Already black */
+		if (node[0] & 1) { /* Already black */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t%p is already black...\n", (void*) node);
+#endif
 			continue;
+		}
 
 		int16_t arity = ((int16_t*)(node[0]))[-1];
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\t%p -> black: %lx = " BC_WORD_FMT "; arity %d\n", (void*) node, node[0], node[0] - (BC_WORD) data, arity);
+#endif
 
 		if (arity < 0) {
 			fprintf(stderr, "Arity < 0 not implemented\n");
@@ -102,63 +161,186 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 		black_nodes++;
 	}
 
-	/* Defragment black nodes */
-	node = heap;
-	while (black_nodes) {
-		fprintf(stderr, "\t%d black nodes to go...\n", black_nodes);
+	/* Pass 0: reverse pointers on the A-stack */
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "Pass 0: reverse pointers on the A-stack\n");
+#endif
+	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t%p\n", (void*) asp_temp);
+		fprintf(stderr, "\t\t%p -> %p\n", (void*) *asp_temp, (void*) *((BC_WORD*)*asp_temp));
+#endif
+		BC_WORD *temp = (BC_WORD*) *asp_temp;
+		*asp_temp = *temp;
+		*temp = (BC_WORD) asp_temp | 1;
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t\t%p -> %p -> %p\n", (void*) *asp_temp, (void*) *temp, (void*) *(BC_WORD*)(*temp ^ 1));
+#endif
+	}
 
-		while (!(*node & 1)) {
-			fprintf(stderr, "\t\tSkipping over %p\n", (void*) node);
-			int16_t arity = ((int16_t*)(node[0]))[-1];
-			if ((BC_WORD) node & 2) { /* HNF, skip over <arity> elements */
-				if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
-					node += 2;
-				} else {
-					node += arity;
-				}
-			} else if (arity < 0) {
-				fprintf(stderr, "Arity < 0 not implemented\n");
-				exit(1);
-			} else if (arity < 3) {
-				node += 3;
+	/* Pass 1: reverse pointers; update forward pointers to new addresses */
+	uint32_t i;
+	node = heap;
+	BC_WORD *new_heap = heap;
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "Pass 1: reverse pointers; update forward pointers\n");
+#endif
+	for (i = 0; i < black_nodes; i++) {
+		node = next_black_node(node);
+
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\tDealing with %p -> %p -> %p\n", (void*) node, (void*) node[0], (void*) *(BC_WORD*)(node[0] ^ 1));
+#endif
+		while (*(BC_WORD*)(node[0] ^ 1) & 1) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\tUnreversing %p, updating to %p\n", (void*) node[0], (void*) new_heap);
+#endif
+			BC_WORD *temp = (BC_WORD*) (node[0] ^ 1);
+			node[0] = *temp;
+			*temp = (BC_WORD) new_heap;
+		}
+
+		int16_t arity = ((int16_t*)(node[0] ^ 1))[-1];
+
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\tDealing with %p -> %p\n", (void*) node, (void*) node[0]);
+#endif
+		if (node[0] & 2) { /* HNF */
+			if (node[0] == (BC_WORD) &INT + (2 | 1)) { /* TODO more basic types */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(INT)\n");
+#endif
+				node += 2;
+				new_heap += 2;
 			} else {
-				fprintf(stderr, "Arity > 2 not implemented\n");
-				exit(1);
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
+#endif
+
+				for (; arity; arity--) {
+					node++;
+					new_heap++;
+
+					if (*node >= (BC_WORD) heap) { /* Pointer */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+						fprintf(stderr, "\t\tReversing pointer\n");
+#endif
+						BC_WORD *temp = (BC_WORD*) *node;
+						*node = *temp;
+						*temp = (BC_WORD) node | 1;
+					} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+						fprintf(stderr, "\t\tNot reversing\n");
+#endif
+					}
+				}
+
+				node++;
+				new_heap++;
 			}
+		} else if (arity < 0) { /* TODO ??? */
+			fprintf(stderr, "Arity < 0 not implemented\n");
+			exit(1);
+		} else if (arity < 3) { /* Thunk, three places */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
+#endif
+
+			if (node[1] >= (BC_WORD) heap) { /* Pointer */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\tReversing pointer\n");
+#endif
+				BC_WORD *temp = (BC_WORD*) node[1];
+				node[1] = *temp;
+				*temp = (BC_WORD) &node[1] | 1;
+			} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\tNot reversing\n");
+#endif
+			}
+
+			if (node[2] >= (BC_WORD) heap) { /* Pointer */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\tReversing pointer\n");
+#endif
+				BC_WORD *temp = (BC_WORD*) node[2];
+				node[2] = *temp;
+				*temp = (BC_WORD) &node[2] | 1;
+			} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\tNot reversing\n");
+#endif
+			}
+
+			node += 3;
+			new_heap += 3;
+		} else { /* Thunk, two places and pointer to rest */
+			fprintf(stderr, "Arity > 2 not implemented\n");
+			exit(1);
+		}
+	}
+
+	/* Pass 2: squeeze; update backward pointers */
+	node = new_heap = heap;
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "Pass 2: squeeze; update backward pointers\n");
+#endif
+	for (i = 0; i < black_nodes; i++) {
+		node = next_black_node(node);
+
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\tDealing with %p -> %p\n", (void*) node, (void*) node[0]);
+#endif
+		while (node[0] >= (BC_WORD) stack || node[0] >= (BC_WORD) heap) { /* Reversed pointer */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\tUnreversing %p, updating to %p\n", (void*) node[0], (void*) new_heap);
+#endif
+			BC_WORD *temp = (BC_WORD*) (node[0] ^ 1);
+			node[0] = *temp;
+			*temp = (BC_WORD) new_heap;
 		}
 
 		node[0] ^= 1;
-
 		int16_t arity = ((int16_t*)(node[0]))[-1];
-		fprintf(stderr, "\t\tFound %p (%d)\n", (void*) node, arity);
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\tDealing with %p -> %p\n", (void*) node, (void*) node[0]);
+#endif
+		/* There should not be any reverse pointers here */
 		if (node[0] & 2) { /* HNF */
 			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
-				*heap++ = *node++;
-				*heap++ = *node++;
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(INT)\n");
+#endif
+				*new_heap++ = *node++;
+				*new_heap++ = *node++;
 			} else {
-				arity++;
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
+#endif
+				*new_heap++ = *node++;
 				for (; arity; arity--) {
-					*heap++ = *node++;
+					*new_heap++ = *node++;
 				}
 			}
-		} else { /* Thunk */
-			if (arity < 0) {
-				fprintf(stderr, "Arity < 0 not implemented\n");
-				exit(1);
-			} else if (arity < 3) {
-				*heap++ = *node++;
-				*heap++ = *node++;
-				*heap++ = *node++;
-			} else {
-				fprintf(stderr, "Arity > 2 not implemented\n");
-				exit(1);
-			}
+		} else if (arity < 0) { /* TODO ??? */
+			fprintf(stderr, "Arity < 0 not implemented\n");
+			exit(1);
+		} else if (arity < 3) { /* Thunk, three places */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
+#endif
+			*new_heap++ = *node++;
+			*new_heap++ = *node++;
+			*new_heap++ = *node++;
+		} else { /* Thunk, two places and pointer to rest */
+			fprintf(stderr, "Arity > 2 not implemented\n");
+			exit(1);
 		}
-
-		black_nodes--;
 	}
-	
-	fprintf(stderr, "Done!\n");
 
-	return heap;
+#if (DEBUG_GARBAGE_COLLECTOR > 0)
+	fprintf(stderr, "Done!\n");
+#endif
+
+	return new_heap;
 }
