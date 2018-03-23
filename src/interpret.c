@@ -95,7 +95,9 @@ int interpret(BC_WORD *code, BC_WORD *data,
 			exit(1);
 		} else {
 			heap_free = heap_size - (new_hp - heap);
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (hp-new_hp), (int) heap_free);
+#endif
 			hp = new_hp;
 		}
 	}

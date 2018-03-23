@@ -3,9 +3,8 @@
 #include "abc_instructions.h"
 #include "gc.h"
 #include "interpret.h"
+#include "settings.h"
 #include "util.h"
-
-#define DEBUG_GARBAGE_COLLECTOR 0
 
 struct grey_nodes_set {
 	BC_WORD **nodes;
@@ -71,15 +70,15 @@ BC_WORD *get_grey_node(struct grey_nodes_set *set) {
 }
 
 struct black_nodes_set {
-	uint8_t *bitmap;
+	BC_WORD *bitmap;
 	size_t size;
 	size_t ptr_i;
-	uint8_t ptr_j;
+	BC_WORD ptr_j;
 };
 
 void init_black_nodes_set(struct black_nodes_set *set, size_t heap_size) {
-	set->bitmap = safe_calloc(1, heap_size / 8 + 1);
-	set->size = heap_size / 8 + 1;
+	set->bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
+	set->size = heap_size / 8 / sizeof(BC_WORD) + 1;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
 	fprintf(stderr, "\tBitmap size = %d\n", set->size);
 #endif
@@ -99,8 +98,8 @@ void free_black_nodes_set(struct black_nodes_set *set) {
 /* Returns 1 if the node is new; 0 if it was already black */
 int add_black_node(struct black_nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 	BC_WORD val = ((BC_WORD) node - (BC_WORD) heap) / sizeof(BC_WORD);
-	BC_WORD i = val / 8;
-	uint8_t m = 1 << (val % 8);
+	BC_WORD i = val / 8 / sizeof(BC_WORD);
+	BC_WORD m = (BC_WORD) 1 << (val % (8 * sizeof(BC_WORD)));
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
 	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", i, m);
 #endif
@@ -113,28 +112,30 @@ int add_black_node(struct black_nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 }
 
 BC_WORD next_black_node(struct black_nodes_set *set) {
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
+#if (DEBUG_GARBAGE_COLLECTOR > 4)
 	fprintf(stderr, "\tSearching with %d/%d\n", set->ptr_i, set->ptr_j);
 #endif
 	if (set->ptr_i > set->size)
 		return -1;
-	while (!(set->bitmap[set->ptr_i] & (1 << set->ptr_j))) {
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
+	while (!(set->bitmap[set->ptr_i] & ((BC_WORD) 1 << set->ptr_j))) {
+		set->ptr_j++;
+		set->ptr_j %= 8 * sizeof(BC_WORD);
+		if (set->ptr_j == 0) {
+			do {
+				set->ptr_i++;
+				if (set->ptr_i > set->size)
+					return -1;
+			} while (!set->bitmap[set->ptr_i]);
+		}
+#if (DEBUG_GARBAGE_COLLECTOR > 4)
 		fprintf(stderr, "\tSearching with %d/%d\n", set->ptr_i, set->ptr_j);
 #endif
-		set->ptr_j++;
-		set->ptr_j %= 8;
-		if (set->ptr_j == 0) {
-			set->ptr_i++;
-			if (set->ptr_i > set->size)
-				return -1;
-		}
 	}
 
-	BC_WORD ret = 8 * set->ptr_i + set->ptr_j;
+	BC_WORD ret = 8 * sizeof(BC_WORD) * set->ptr_i + set->ptr_j;
 
 	set->ptr_j++;
-	set->ptr_j %= 8;
+	set->ptr_j %= 8 * sizeof(BC_WORD);
 	if (set->ptr_j == 0) {
 		set->ptr_i++;
 	}
@@ -142,7 +143,9 @@ BC_WORD next_black_node(struct black_nodes_set *set) {
 	return ret;
 }
 
+#if (DEBUG_GARBAGE_COLLECTOR > 0)
 static uint32_t gc_count = 0;
+#endif
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, BC_WORD *code, BC_WORD *data) {
 	BC_WORD *asp_temp;
 
@@ -277,7 +280,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 					node++;
 					new_heap++;
 
-					if (*node >= (BC_WORD) heap && *node < heap + heap_size) { /* Pointer */
+					if (*node >= (BC_WORD) heap && *node < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 						fprintf(stderr, "\t\tReversing pointer %p\n", *node);
 #endif
@@ -306,7 +309,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
 #endif
 
-			if (node[1] >= (BC_WORD) heap && node[1] < heap + heap_size) { /* Pointer */
+			if (node[1] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tReversing pointer\n");
 #endif
@@ -319,7 +322,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 #endif
 			}
 
-			if (node[2] >= (BC_WORD) heap && node[1] < heap + heap_size) { /* Pointer */
+			if (node[2] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tReversing pointer\n");
 #endif

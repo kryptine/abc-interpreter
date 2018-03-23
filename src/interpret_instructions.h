@@ -6422,16 +6422,16 @@ case Cjmp_ap2:
 	n=(BC_WORD*)asp[0];
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
+	fprintf(stderr, "\t" BC_WORD_FMT ": %u/%d -> " BC_WORD_FMT "\n",
 			d-(BC_WORD)data,
 			((uint16_t*)d)[0],
-			((uint16_t*)d)[-1],
+			((int16_t*)d)[-1],
 			(*(BC_WORD*)(d+16+6) - (BC_WORD) code) / 8);
 #endif
 	if (((uint16_t*)d)[0]==16){
-		uint16_t arity;
+		int16_t arity;
 		
-		arity=((uint16_t*)d)[-1];
+		arity=((int16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+6)) - 24);
 #else
