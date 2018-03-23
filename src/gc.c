@@ -85,7 +85,7 @@ BC_WORD *next_black_node(BC_WORD *node) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
 #endif
-				node += arity;
+				node += 1 + arity;
 			}
 		} else if (arity < 0) {
 			fprintf(stderr, "Arity < 0 not implemented\n");
@@ -142,17 +142,28 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 
 		int16_t arity = ((int16_t*)(node[0]))[-1];
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p -> black: %lx = " BC_WORD_FMT "; arity %d\n", (void*) node, node[0], node[0] - (BC_WORD) data, arity);
+		fprintf(stderr, "\t%p -> black: %lx = " BC_WORD_FMT "; arity %d\n", (void*) node, node[0], node[0] - (BC_WORD) code, arity);
 #endif
 
-		if (arity < 0) {
+		if (node[0] & 2) { /* HNF */
+			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
+				/* No pointer elements */
+			} else {
+				for (; arity; arity--) {
+					add_grey_node(&grey, (BC_WORD*) node[arity]);
+				}
+			}
+		} else if (node[0] == &__cycle__in__spine) {
+			/* No pointer arguments */
+		} else if (arity < 0) { /* TODO ??? */
 			fprintf(stderr, "Arity < 0 not implemented\n");
 			exit(1);
-		} else if (arity < 3) {
-			for (; arity; arity--) {
-				add_grey_node(&grey, (BC_WORD*) node[arity]);
-			}
-		} else {
+		} else if (arity == 0) {
+		} else if (arity < 3) { /* Thunk, three places */
+			add_grey_node(&grey, (BC_WORD*) node[1]);
+			if (arity == 2)
+				add_grey_node(&grey, (BC_WORD*) node[2]);
+		} else { /* Thunk, pointer to rest of arguments */
 			fprintf(stderr, "Arity > 2 not implemented\n");
 			exit(1);
 		}
@@ -170,6 +181,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 		fprintf(stderr, "\t%p\n", (void*) asp_temp);
 		fprintf(stderr, "\t\t%p -> %p\n", (void*) *asp_temp, (void*) *((BC_WORD*)*asp_temp));
 #endif
+		if (*asp_temp < (BC_WORD) heap)
+			continue;
 		BC_WORD *temp = (BC_WORD*) *asp_temp;
 		*asp_temp = *temp;
 		*temp = (BC_WORD) asp_temp | 1;
@@ -191,7 +204,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\tDealing with %p -> %p -> %p\n", (void*) node, (void*) node[0], (void*) *(BC_WORD*)(node[0] ^ 1));
 #endif
-		while (*(BC_WORD*)(node[0] ^ 1) & 1) {
+		while (node[0] >= heap && *(BC_WORD*)(node[0] ^ 1) & 1) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 			fprintf(stderr, "\t\tUnreversing %p, updating to %p\n", (void*) node[0], (void*) new_heap);
 #endif
@@ -238,6 +251,10 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 				node++;
 				new_heap++;
 			}
+		} else if (node[0] == (BC_WORD) &__cycle__in__spine | 1) {
+			/* No pointer arguments */
+			node += 3;
+			new_heap += 3;
 		} else if (arity < 0) { /* TODO ??? */
 			fprintf(stderr, "Arity < 0 not implemented\n");
 			exit(1);
@@ -275,7 +292,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 			node += 3;
 			new_heap += 3;
 		} else { /* Thunk, two places and pointer to rest */
-			fprintf(stderr, "Arity > 2 not implemented\n");
+			fprintf(stderr, "Arity > 2 (%d) not implemented\n", arity);
 			exit(1);
 		}
 	}
@@ -322,6 +339,10 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 					*new_heap++ = *node++;
 				}
 			}
+		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
+			*new_heap++ = *node++;
+			*new_heap++ = *node++;
+			*new_heap++ = *node++;
 		} else if (arity < 0) { /* TODO ??? */
 			fprintf(stderr, "Arity < 0 not implemented\n");
 			exit(1);

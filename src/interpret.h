@@ -8,6 +8,8 @@ extern void* INT[];
 extern void* BOOL[];
 extern void* CHAR[];
 
+extern BC_WORD __cycle__in__spine;
+
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
 extern BC_WORD_S g_heap_free;
 

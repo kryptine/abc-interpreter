@@ -46,7 +46,7 @@ static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2cha
 #define __Nil (d___Nil[1])
 #define dFILE (d_FILE[2])
 
-static BC_WORD __cycle__in__spine = Chalt;
+BC_WORD __cycle__in__spine = Chalt;
 
 static BC_WORD Fjmp_ap1 = Cjmp_ap1;
 static BC_WORD Fjmp_ap2 = Cjmp_ap2;

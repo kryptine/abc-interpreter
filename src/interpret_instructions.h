@@ -2036,6 +2036,9 @@ case Cfillh0:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+#endif
 	n[0]=pc[2];
 	pc+=3;
 	continue;
@@ -3520,11 +3523,10 @@ case Cpush_node0:
 {
 	BC_WORD *n;
 
-#ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- push_node0 (%lx)\n", (void*)asp, pc[1]);
-#endif
-	
 	n=(BC_WORD*)*asp;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- push_node0 (%lx)\n", (void*)n, pc[1]);
+#endif
 	n[0]=pc[1];
 	pc+=2;
 	continue;
