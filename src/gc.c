@@ -5,7 +5,7 @@
 #include "interpret.h"
 #include "util.h"
 
-#define DEBUG_GARBAGE_COLLECTOR 3
+#define DEBUG_GARBAGE_COLLECTOR 1
 
 struct grey_nodes_set {
 	BC_WORD **nodes;
@@ -17,6 +17,9 @@ struct grey_nodes_set {
 
 #define GREY_NODES_INITIAL 3 /* TODO make larger; this is just for testing */
 #define GREY_NODES_ENLARGE 2
+
+#define BLACK_NODES_INITIAL 3 /* TODO make larger; this is just for testing */
+#define BLACK_NODES_ENLARGE 2
 
 void init_grey_nodes_set(struct grey_nodes_set *set) {
 	set->size = GREY_NODES_INITIAL;
@@ -66,41 +69,40 @@ BC_WORD *get_grey_node(struct grey_nodes_set *set) {
 	}
 }
 
-BC_WORD *next_black_node(BC_WORD *node) {
-	while (!(*node & 1)) {
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\tSkipping over %p\n", (void*) node);
-#endif
-		int16_t arity = ((int16_t*)(node[0]))[-1];
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t\t%p -> %p -> %p (%d)\n", (void*) node, (void*) *node, (void*) *(BC_WORD*)node[0], arity);
-#endif
-		if (node[0] & 2) { /* HNF, skip over <arity> elements */
-			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\t(INT)\n");
-#endif
-				node += 2;
-			} else {
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
-#endif
-				node += 1 + arity;
-			}
-		} else if (arity < 0) {
-			fprintf(stderr, "Arity < 0 not implemented\n");
-			exit(1);
-		} else if (arity < 3) {
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
-#endif
-			node += 3;
-		} else {
-			fprintf(stderr, "Arity > 2 not implemented\n");
-			exit(1);
-		}
+struct black_nodes_set {
+	BC_WORD **nodes;
+	size_t ptr;
+	size_t size;
+};
+
+void init_black_nodes_set(struct black_nodes_set *set) {
+	set->size = BLACK_NODES_INITIAL;
+	set->nodes = safe_malloc(sizeof(BC_WORD*) * BLACK_NODES_INITIAL);
+	set->ptr = 0;
+}
+
+void add_black_node(struct black_nodes_set *set, BC_WORD *node) {
+	if (set->ptr == set->size) {
+		set->size *= BLACK_NODES_ENLARGE;
+		set->nodes = safe_realloc(set->nodes, sizeof(BC_WORD*) * set->size);
 	}
-	return node;
+
+	set->nodes[set->ptr++] = node;
+}
+
+void sort(BC_WORD *array, size_t nr) {
+	int done;
+	do {
+		done = 1;
+		for (uint32_t i = 0; i < nr - 1; i++) {
+			if (array[i] > array[i+1]) {
+				BC_WORD temp = array[i];
+				array[i] = array[i+1];
+				array[i+1] = temp;
+				done = 0;
+			}
+		}
+	} while (!done);
 }
 
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *code, BC_WORD *data) {
@@ -119,9 +121,11 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 		add_grey_node(&grey, (BC_WORD*) *asp_temp);
 	}
 
+	struct black_nodes_set black;
+	init_black_nodes_set(&black);
+
 	/* Evaluate full grey set */
 	BC_WORD *node;
-	uint32_t black_nodes = 0;
 	while ((node = get_grey_node(&grey)) != NULL) {
 		if (node < heap) {
 			/* FIXME: this ignores pointers to code/data (which is correct).
@@ -153,7 +157,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 					add_grey_node(&grey, (BC_WORD*) node[arity]);
 				}
 			}
-		} else if (node[0] == &__cycle__in__spine) {
+		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
 			/* No pointer arguments */
 		} else if (arity < 0) { /* TODO ??? */
 			fprintf(stderr, "Arity < 0 not implemented\n");
@@ -169,8 +173,10 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 		}
 
 		node[0] |= 1;
-		black_nodes++;
+		add_black_node(&black, node);
 	}
+
+	sort((BC_WORD*) black.nodes, black.ptr);
 
 	/* Pass 0: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
@@ -198,13 +204,13 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1: reverse pointers; update forward pointers\n");
 #endif
-	for (i = 0; i < black_nodes; i++) {
-		node = next_black_node(node);
+	for (i = 0; i < black.ptr; i++) {
+		node = black.nodes[i];
 
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\tDealing with %p -> %p -> %p\n", (void*) node, (void*) node[0], (void*) *(BC_WORD*)(node[0] ^ 1));
 #endif
-		while (node[0] >= heap && *(BC_WORD*)(node[0] ^ 1) & 1) {
+		while (node[0] >= (BC_WORD) heap && *(BC_WORD*)(node[0] ^ 1) & 1) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 			fprintf(stderr, "\t\tUnreversing %p, updating to %p\n", (void*) node[0], (void*) new_heap);
 #endif
@@ -251,7 +257,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 				node++;
 				new_heap++;
 			}
-		} else if (node[0] == (BC_WORD) &__cycle__in__spine | 1) {
+		} else if (node[0] == ((BC_WORD) &__cycle__in__spine | 1)) {
 			/* No pointer arguments */
 			node += 3;
 			new_heap += 3;
@@ -302,8 +308,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 2: squeeze; update backward pointers\n");
 #endif
-	for (i = 0; i < black_nodes; i++) {
-		node = next_black_node(node);
+	for (i = 0; i < black.ptr; i++) {
+		node = black.nodes[i];
 
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\tDealing with %p -> %p\n", (void*) node, (void*) node[0]);
