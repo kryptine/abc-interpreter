@@ -160,6 +160,7 @@ int main(int argc, char **argv) {
 	}
 
 	int res = parse_file(&state, input);
+	fclose(input);
 	if (res) {
 		fprintf(stderr, "Parsing failed (%d)\n", res);
 		exit(res);
@@ -178,6 +179,12 @@ int main(int argc, char **argv) {
 	interpret(state.program->code, state.program->data,
 			stack, stack_size,
 			heap, heap_size);
+
+	free(state.program->code);
+	free(state.program->data);
+	free(state.program);
+	free(stack);
+	free(heap);
 
 	return 0;
 }
