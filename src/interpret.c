@@ -89,7 +89,7 @@ int interpret(BC_WORD *code, BC_WORD *data,
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		BC_WORD *new_hp = garbage_collect(stack, asp, heap, code, data);
+		BC_WORD *new_hp = garbage_collect(stack, asp, heap, heap_size, code, data);
 		if (new_hp == hp) {
 			fprintf(stderr, "Heap full.\n");
 			exit(1);
