@@ -16,6 +16,7 @@ CFLAGS=""
 RUNFLAGS=""
 
 RUN_ONLY=""
+PROFILE=0
 
 print_help () {
 	echo "$0: run tests"
@@ -33,6 +34,7 @@ print_help () {
 	echo "                   Print all instructions as they are executed"
 	echo "  -l/--list-code   List bytecode before execution"
 	echo "  -O/--no-opt      Skip the ABC optimisation step"
+	echo "  -p/--profile     Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
 	exit 0
 }
 
@@ -41,7 +43,7 @@ print_usage () {
 	exit 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,heap:,stack:,32-bit,debug-all-instructions,list-code,no-opt "o:h:s:3dlO" "$@"` || print_usage
+OPTS=`getopt -n "$0" -l help,only:,heap:,stack:,32-bit,debug-all-instructions,list-code,no-opt,profile "o:h:s:3dlOp" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -71,6 +73,13 @@ while true; do
 			shift;;
 		-O | --no-opt)
 		    OPT="cat -"
+			shift;;
+
+		-p | --profile)
+			CFLAGS+=" -g -lprofiler"
+			export CPUPROFILE=/tmp/prof.out
+			export CPUPROFILE_FREQUENCY=10000
+			PROFILE=1
 			shift;;
 
 		--)
@@ -116,6 +125,10 @@ do
 	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc >/dev/null
 
 	/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
+
+	if [ $PROFILE -ne 0 ]; then
+		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
+	fi
 
 	diff $MODULE.expected $MODULE.result
 	if [ $? -ne 0 ]; then
