@@ -29,6 +29,10 @@ void init_grey_nodes_set(struct grey_nodes_set *set) {
 	set->last_was_read = 1;
 }
 
+void free_grey_nodes_set(struct grey_nodes_set *set) {
+	free(set->nodes);
+}
+
 void realloc_grey_nodes_set(struct grey_nodes_set *set) {
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "\tReallocating grey nodes set\n");
@@ -79,6 +83,10 @@ void init_black_nodes_set(struct black_nodes_set *set) {
 	set->size = BLACK_NODES_INITIAL;
 	set->nodes = safe_malloc(sizeof(BC_WORD*) * BLACK_NODES_INITIAL);
 	set->ptr = 0;
+}
+
+void free_black_nodes_set(struct black_nodes_set *set) {
+	free(set->nodes);
 }
 
 void add_black_node(struct black_nodes_set *set, BC_WORD *node) {
@@ -176,6 +184,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 		add_black_node(&black, node);
 	}
 
+	free_grey_nodes_set(&grey);
 	sort((BC_WORD*) black.nodes, black.ptr);
 
 	/* Pass 0: reverse pointers on the A-stack */
@@ -368,6 +377,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, BC_WORD *c
 #if (DEBUG_GARBAGE_COLLECTOR > 0)
 	fprintf(stderr, "Done!\n");
 #endif
+
+	free_black_nodes_set(&black);
 
 	return new_heap;
 }
