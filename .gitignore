@@ -8,3 +8,4 @@ Clean System Files/
 *.log
 *.pdf
 *.run.xml
+_minted-*/
