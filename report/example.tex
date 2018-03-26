@@ -1,0 +1,51 @@
+\documentclass[a4paper]{article}
+
+\usepackage{geometry}
+
+\usepackage[backend=biber,natbib]{biblatex}
+\bibliography{library}
+
+\title{Cross-Platform Dynamics in Clean}
+\author{Camil Staps\footnote{Radboud University Nijmegen} \and Erin van der Veen\footnotemark[1]}
+
+\begin{document}
+
+\maketitle
+
+\section{Clean}
+\subsection{Graph Rewriting}
+In conventional (imperative) programs the state of the program is defined by: the registers, the stack and the heap.
+This is not the case in most modern functional programming languages.
+In Clean, for example, the state is defined by: the registers, the A-Stack, the B-Stack, the C-Stack and the graph.
+Graph rewriting (a more efficient version of term rewriting where the terms are represented as nodes in a graph) is used to reduce the program to it's normal form.
+The way the graph must be rewritten is defined in the term rewriting rules.
+
+When writing a Clean program one is, in essence, providing instructions on how the graph must be rewritten.
+
+\subsection{ABC-code}
+When Clean is compiled, the source code is first translated to ABC-code.
+ABC-code has similarities to assembly instructions, with the difference that the ABC-machine is an abstract machine.
+The fact that the ABC-Machine is an imperative machine ensures that the translation of a functional program to imperative machine code is a relatively small step.
+This, in turn, makes it possible for Clean to target many different architectures.
+
+\subsection{Soccer-Fun}
+Soccer-Fun is an educational project written in Clean in which participants can write the AI for a simple football team.
+Currently, there are three options if you want to play against an opponent:
+\begin{enumerate}
+	\item Send your source files to the other person
+	\item Compile your Team of ABC-code and send that the other person
+	\item Write dynamics to disk, and send those files.
+\end{enumerate}
+The first options is not ideal in an educational setting because it creates a setting where it is too easy for other students to copy (parts of) code from fellow students.
+The second option is not ideal because it requires understanding of the compiler pipeline in Clean.
+The third options is, unfortunately, impossible.
+Dynamics cannot be shared between different binaries or architectures.
+
+\subsection{Our Approach}
+The idea of our research is to remove the requirement that dynamics can only be shared between instances of the same binary.
+In order to do this, we need to not only serialize the current graph, but also the rewriting rules in form of ABC-code.
+The ABC-code must then be interpreted by the other binary.
+
+\printbibliography
+
+\end{document}
