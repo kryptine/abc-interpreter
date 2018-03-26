@@ -915,6 +915,10 @@ char *instruction_name(BC_WORD i) {
 
 		case CA_data_IIIln:
 			return "CA_data_IIIln";
+		case CA_data_IIl:
+			return "CA_data_IIl";
+		case CA_data_IlI:
+			return "CA_data_IlI";
 		case CA_data_IlIln:
 			return "CA_data_IlIln";
 		case CA_data_ln:
@@ -1385,6 +1389,8 @@ char *instruction_type (BC_WORD i) {
 		case Cstack_check:           return "?";
 
 		case CA_data_IIIln:          return "IIIln";
+		case CA_data_IIl:            return "IIl";
+		case CA_data_IlI:            return "IlI";
 		case CA_data_IlIln:          return "IlIln";
 		case CA_data_ln:             return "ln";
 		case CA_data_n:              return "n";

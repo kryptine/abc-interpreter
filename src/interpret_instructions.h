@@ -6352,7 +6352,11 @@ case Cjmp_ap3:
 		BC_WORD arity;
 		
 		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+24+6)) - 24);
+#else
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+24-6)) - 12);
+#endif
 		if (arity<=1){
 			if (arity<1){
 				--asp;
@@ -6379,7 +6383,7 @@ case Cjmp_ap3:
 		continue;
 	} else {
 		*--csp=(BC_WORD)&Fjmp_ap2;
-		pc = *(BC_WORD**)(d+2);
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		continue;
 	}
 }
@@ -6433,7 +6437,7 @@ case Cjmp_ap2:
 		continue;
 	} else {
 		*--csp=(BC_WORD)&Fjmp_ap1;
-		pc = *(BC_WORD**)(d+2);
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		continue;
 	}
 }
@@ -6471,7 +6475,7 @@ case Cadd_arg0:
 	pc=(BC_WORD*)*csp++;
 	hp[1]=asp[-1];
 	asp[-1]=(BC_WORD)hp;
-	hp[0]=n[0]+8;
+	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
 	--asp;
 	hp+=2;
 	continue;
@@ -6487,7 +6491,7 @@ case Cadd_arg1:
 	pc=(BC_WORD*)*csp++;
 	hp[1]=n[1];
 	asp[-1]=(BC_WORD)hp;
-	hp[0]=n[0]+8;
+	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
 	--asp;
 	hp+=3;
 	continue;
@@ -6505,7 +6509,7 @@ case Cadd_arg2:
 	hp[2]=(BC_WORD)&hp[3];
 	hp[3]=n[2];
 	asp[-1]=(BC_WORD)hp;
-	hp[0]=n[0]+8;
+	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
 	--asp;
 	hp+=5;
 	continue;
@@ -6522,7 +6526,7 @@ case Cadd_arg3:
 	a=(BC_WORD*)n[2];
 	hp[1]=n[1];
 	hp[2]=(BC_WORD)&hp[3];
-	hp[0]=n[0]+8;
+	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
 	hp[3]=a[0];
 	hp[4]=a[1];
 	asp[-1]=(BC_WORD)hp;
