@@ -915,6 +915,10 @@ char *instruction_name(BC_WORD i) {
 
 		case CA_data_IIIln:
 			return "CA_data_IIIln";
+		case CA_data_IIl:
+			return "CA_data_IIl";
+		case CA_data_IlI:
+			return "CA_data_IlI";
 		case CA_data_IlIln:
 			return "CA_data_IlIln";
 		case CA_data_ln:
@@ -1268,11 +1272,11 @@ char *instruction_type (BC_WORD i) {
 		case Cswap_a:                return "n";
 		case Cjsr_ap1:               return "";
 		case Cjsr_ap2:               return "";
-		case Cjsr_ap3:               return "?";
-		case Cjsr_ap4:               return "?";
-		case Cjmp_ap1:               return "?";
-		case Cjmp_ap2:               return "?";
-		case Cjmp_ap3:               return "?";
+		case Cjsr_ap3:               return "";
+		case Cjsr_ap4:               return "";
+		case Cjmp_ap1:               return "";
+		case Cjmp_ap2:               return "";
+		case Cjmp_ap3:               return "";
 		case Cadd_arg0:              return "";
 		case Cadd_arg1:              return "";
 		case Cadd_arg2:              return "";
@@ -1371,7 +1375,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate3pop_b:          return "nn";
 		case Cupdate4_a:             return "?";
 		case Cupdates2_a:            return "nnn";
-		case Cupdates2_a_pop_a:      return "?";
+		case Cupdates2_a_pop_a:      return "nnnn";
 		case Cupdates2_b:            return "nnn";
 		case Cupdates2pop_a:         return "nnn";
 		case Cupdates2pop_b:         return "?";
@@ -1385,6 +1389,8 @@ char *instruction_type (BC_WORD i) {
 		case Cstack_check:           return "?";
 
 		case CA_data_IIIln:          return "IIIln";
+		case CA_data_IIl:            return "IIl";
+		case CA_data_IlI:            return "IlI";
 		case CA_data_IlIln:          return "IlIln";
 		case CA_data_ln:             return "ln";
 		case CA_data_n:              return "n";
