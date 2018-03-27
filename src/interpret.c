@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 	int human_readable = 0;
 	int run = 1;
 	FILE *input = NULL;
-	size_t stack_size = 512 << 10;
+	size_t stack_size = (512 << 10) * 2;
 	size_t heap_size = 2 << 20;
 
 	BC_WORD *stack;
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 				run = 0;
 				break;
 			case 's':
-				stack_size = string_to_size(optarg);
+				stack_size = string_to_size(optarg) * 2;
 				if (stack_size == -1) {
 					fprintf(stderr, "Illegal stack size: '%s'\n", optarg);
 					fprintf(stderr, usage, argv[0]);
