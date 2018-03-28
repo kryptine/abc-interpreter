@@ -309,7 +309,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places)\n", arity);
 #endif
 
-			if (node[1] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
+			if (arity >= 1 && node[1] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tReversing pointer %p\n", (void*) node[1]);
 #endif
@@ -322,7 +322,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 #endif
 			}
 
-			if (node[2] >= (BC_WORD) heap && node[2] < (BC_WORD) (heap + heap_size)) { /* Pointer */
+			if (arity >= 2 && node[2] >= (BC_WORD) heap && node[2] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tReversing pointer %p\n", (void*) node[2]);
 #endif

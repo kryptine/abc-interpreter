@@ -26,6 +26,9 @@ void print_section(FILE *f, BC_WORD *section, uint32_t length, int human, int is
 					case 'N': /* Stack index times WORD_WIDTH/8 */
 						fprintf(f, " " BC_WORD_S_FMT, (BC_WORD_S) section[i] / IF_INT_64_OR_32(8,4));
 						break;
+					case 'a': /* Arity */
+						fprintf(f, " %d", (int16_t) ((BC_WORD_S) section[i] >> IF_INT_64_OR_32(48,16)));
+						break;
 					case 's': { /* String */
 						uint32_t *s = (uint32_t*) section[i];
 						uint32_t length = s[0];

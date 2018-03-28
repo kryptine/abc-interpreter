@@ -125,7 +125,8 @@ int parse_file(struct parser *state, FILE *file) {
 							break;
 						case 'a': /* Arity */
 							safe_read(&elem16, sizeof(elem16), 1, file);
-							state->program->code[state->ptr++] = elem16 << IF_INT_64_OR_32(48, 16);
+							/* Shift so that offset -1 contains the arity; this is used in the garbage collector */
+							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
 							break;
 						case '?':
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
