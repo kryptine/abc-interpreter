@@ -1,0 +1,68 @@
+\RequirePackage{tikz}
+\pgfkeys{/tikz/node args/.store in=\clean@args}
+\pgfkeys{/tikz/clean/.style={%
+		every node/.style={
+			clean node,
+			node args=0,
+			draw,
+			minimum height=1.5em
+		},
+		->,
+		node distance=1em
+}}
+
+\newdimen\clean@ya
+\newdimen\clean@yb
+\newdimen\clean@x
+\pgfdeclareshape{clean node}{
+	\inheritsavedanchors[from=rectangle]
+	\inheritanchor[from=rectangle]{west}
+	\inheritanchor[from=rectangle]{north}
+	\inheritanchor[from=rectangle]{east}
+	\inheritanchor[from=rectangle]{south}
+	\inheritanchor[from=rectangle]{north west}
+	\inheritanchor[from=rectangle]{north east}
+	\inheritanchor[from=rectangle]{south west}
+	\inheritanchor[from=rectangle]{south east}
+	\anchor{arg1}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 3pt}
+	\anchor{arg2}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 9pt}
+	\anchor{arg3}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 15pt}
+	\anchor{arg1.west}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 0pt}
+	\anchor{arg2.west}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 6pt}
+	\anchor{arg3.west}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 12pt}
+	\anchor{arg1.north}{\pgf@process{\northeast}\advance\pgf@x by 3pt}
+	\anchor{arg2.north}{\pgf@process{\northeast}\advance\pgf@x by 9pt}
+	\anchor{arg3.north}{\pgf@process{\northeast}\advance\pgf@x by 15pt}
+	\anchor{arg1.east}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 6pt}
+	\anchor{arg2.east}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 12pt}
+	\anchor{arg3.east}{\pgf@process{\northeast}\pgf@xa=\pgf@x\pgf@process{\pgf@anchor@rectangle@center}\pgf@x=\pgf@xa\advance\pgf@x by 18pt}
+	\anchor{arg1.south}{\pgf@process{\southwest}\pgf@ya=\pgf@y\pgf@process{\northeast}\pgf@y=\pgf@ya\advance\pgf@x by 3pt}
+	\anchor{arg2.south}{\pgf@process{\southwest}\pgf@ya=\pgf@y\pgf@process{\northeast}\pgf@y=\pgf@ya\advance\pgf@x by 9pt}
+	\anchor{arg3.south}{\pgf@process{\southwest}\pgf@ya=\pgf@y\pgf@process{\northeast}\pgf@y=\pgf@ya\advance\pgf@x by 15pt}
+	\anchor{center}{\pgfpointorigin}
+	\backgroundpath{%
+    \pgfpathrectanglecorners
+  	  {\pgfpointadd
+				{\southwest}
+				{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}{\pgfkeysvalueof{/pgf/outer ysep}}}}
+  	  {\pgfpointadd
+				{\pgfpoint{\clean@args *6pt}{0}}
+				{\pgfpointadd
+					{\northeast}
+					{\pgfpointscale{-1}{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}{\pgfkeysvalueof{/pgf/outer ysep}}}}}}
+		\pgfusepathqstroke
+		\ifnum\clean@args>0
+			\southwest\clean@ya=\pgf@y
+			\northeast\clean@yb=\pgf@y
+			\clean@x=\pgf@x
+			\foreach\arg in {1,...,\clean@args}{%
+				\pgfpathmoveto{\pgfpoint{\clean@x}{\clean@yb}}
+				\pgfpathlineto{\pgfpoint{\clean@x}{\clean@ya}}
+				\pgfusepathqstroke
+				\pgfpathcircle{\pgfpointadd{\pgfpoint{3pt}{.5\clean@yb}}{\pgfpoint{\clean@x}{.5\clean@ya}}}{1pt}
+				\pgfusepathqfillstroke
+				\global\advance\clean@x by 6pt
+			}
+		\fi
+	}
+}

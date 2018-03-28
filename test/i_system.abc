@@ -412,6 +412,6 @@ _print_last_list
 	pop_a	1
 	jmp	_print_brackets
 
+.n 0 _
 _cycle_in_spine
 	halt
-

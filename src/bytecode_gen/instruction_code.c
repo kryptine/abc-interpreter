@@ -3521,12 +3521,15 @@ void code_updates4_a(int a_offset_1,int a_offset_2,int a_offset_3,int a_offset_4
 
 void code_a(int n_apply_args,char *ea_label_name) {
 	if (n_apply_args==0) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cjmp,ea_label_name);
 		add_instruction(Chalt);	
 	} else if (n_apply_args==2) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cadd_empty_node2,ea_label_name);
 		add_instruction(Chalt);
 	} else if (n_apply_args==3) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cadd_empty_node3,ea_label_name);
 		add_instruction(Chalt);
 	} else {
@@ -3535,6 +3538,7 @@ void code_a(int n_apply_args,char *ea_label_name) {
 		else
 			printf("Error .a %d\n",n_apply_args);
 		/* to do add_empty_node_n */
+		add_instruction(CA_data_IIl);
 		add_instruction(Chalt);
 		add_instruction_label(Cjmp,ea_label_name);
 	}
@@ -3859,12 +3863,12 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 	if (ea_label_name!=NULL) {
 		if (ea_label_name[0]=='_' && ea_label_name[1]=='_' && ea_label_name[2]=='\0') {
 			/* eval_fill */
-			add_instruction(CA_data_IIIln);
+			add_instruction(CA_data_IIIla);
 			add_instruction(Cjsr_eval0);
 			add_instruction(Cfill_a01_pop_rtn);
 			add_instruction(Chalt);
 		} else {
-			add_instruction(CA_data_IlIln);
+			add_instruction(CA_data_IlIla);
 
 			if (number_of_arguments<-2)
 				number_of_arguments=1;
@@ -3904,13 +3908,13 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		else
 			add_label(descriptor_name);	
 	} else if (descriptor_name != NULL) {
-		add_instruction(CA_data_ln);
+		add_instruction(CA_data_la);
 		add_label(descriptor_name);
 	} else {
-		add_instruction(CA_data_n);
+		add_instruction(CA_data_a);
 	}
 
-	add_data8_to_code(number_of_arguments);
+	add_data2_to_code(number_of_arguments);
 }
 
 void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
@@ -3924,7 +3928,7 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 	if (ea_label_name!=NULL) {
 		/* eval_upd not yet implemented */
 		/* eval_fill */
-		add_instruction(CA_data_IIIln);
+		add_instruction(CA_data_IIIla);
 		add_instruction(Cjsr_eval0);
 		add_instruction(Cfill_a01_pop_rtn);
 		add_instruction(Chalt);
@@ -3934,13 +3938,13 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name!=NULL) {
-		add_instruction(CA_data_ln);
+		add_instruction(CA_data_la);
 		add_label(descriptor_name);
 	} else {
-		add_instruction(CA_data_n);
+		add_instruction(CA_data_a);
 	}
 
-	add_data8_to_code(a_size+b_size+(b_size<<8));
+	add_data2_to_code(a_size+b_size+(b_size<<8));
 }
 
 void code_o(int oa,int ob,ULONG vector[]) {

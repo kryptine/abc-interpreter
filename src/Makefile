@@ -1,7 +1,7 @@
 SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -nr -nt
-override CFLAGS+=-Wall -pedantic -Wno-misleading-indentation
+override CFLAGS+=-Wall -pedantic -Wno-misleading-indentation -DPOSIX
 
 all: optimise interpret bytecode
 
@@ -11,6 +11,7 @@ optimise: .FORCE
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
+	gc.c\
 	interpret.c\
 	parse.c\
 	traps.c\

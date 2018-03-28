@@ -13,11 +13,13 @@ import Data.Maybe
 from Text import <+
 
 import ABC.Instructions
+import ABC.Optimise.Branches
 import ABC.Optimise.Reorder
 import ABC.Parse
 
 optimise :: ([ABCInstruction] -> [ABCInstruction])
 optimise =
+	opt_branches o
 	opt_abc_new2 o
 	opt_abc_new o
 	opt_abc4 o

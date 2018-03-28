@@ -5,6 +5,7 @@
 
 #include "abc_instructions.h"
 #include "bytecode.h"
+#include "gc.h"
 #include "interpret.h"
 #include "parse.h"
 #include "settings.h"
@@ -25,9 +26,9 @@ static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e'
 
 static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
 void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
-static void* INT[]        = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
-static void* BOOL[]       = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
-static void* CHAR[]       = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
+void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
+void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
+void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
 static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 #else /* assuming WORD_WIDTH == 32 */
@@ -35,9 +36,9 @@ static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC
 
 static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
 void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
-static void* INT[]        = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
-static void* BOOL[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
-static void* CHAR[]       = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
+void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
+void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
+void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
 static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 #endif /* Word-width dependency */
@@ -45,14 +46,14 @@ static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2cha
 #define __Nil (d___Nil[1])
 #define dFILE (d_FILE[2])
 
-static BC_WORD __cycle__in__spine = Chalt;
+BC_WORD __cycle__in__spine = Chalt;
 
 static BC_WORD Fjmp_ap1 = Cjmp_ap1;
 static BC_WORD Fjmp_ap2 = Cjmp_ap2;
 static BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
-size_t g_heap_free;
+BC_WORD_S g_heap_free;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
@@ -68,15 +69,44 @@ static void* __indirection[9] = { // TODO what does this do?
 	(void*) Cfill_a01_pop_rtn
 };
 
+static BC_WORD *asp, *bsp, *csp;
+
+#ifdef POSIX
+#include <signal.h>
+void handle_segv(int sig) {
+	if (asp >= csp) {
+		fprintf(stderr, "A/C-stack overflow\n");
+		exit(1);
+	} else {
+		fprintf(stderr, "Untracable segmentation fault\n");
+		exit(1);
+	}
+}
+#endif
+
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size) {
 	BC_WORD *pc = code;
-	BC_WORD *asp = stack;
-	BC_WORD *bsp = &stack[stack_size];
-	BC_WORD *csp = &stack[stack_size >> 1]; // TODO why?
+	asp = stack;
+	bsp = &stack[stack_size];
+	csp = &stack[stack_size >> 1];
 	BC_WORD *hp = heap;
-	size_t heap_free = heap_size;
+	BC_WORD_S heap_free = heap_size;
+
+#ifdef POSIX
+	struct sigaction s;
+	sigset_t sst;
+
+	sigemptyset(&sst);
+	s.sa_handler = handle_segv;
+	s.sa_mask = sst;
+	s.sa_flags = 0;
+	if (sigaction(SIGSEGV, &s, NULL)) {
+		perror("sigaction");
+		return 1;
+	}
+#endif
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
@@ -88,8 +118,17 @@ int interpret(BC_WORD *code, BC_WORD *data,
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		fprintf(stderr,"Need a garbage collector\n");
-		exit(1);
+		BC_WORD *new_hp = garbage_collect(stack, asp, heap, heap_size, code, data);
+		if (new_hp == hp) {
+			fprintf(stderr, "Heap full.\n");
+			exit(1);
+		} else {
+			heap_free = heap_size - (new_hp - heap);
+#ifdef DEBUG_GARBAGE_COLLECTOR
+			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (hp-new_hp), (int) heap_free);
+#endif
+			hp = new_hp;
+		}
 	}
 }
 
@@ -102,7 +141,7 @@ int main(int argc, char **argv) {
 	int human_readable = 0;
 	int run = 1;
 	FILE *input = NULL;
-	size_t stack_size = 512 << 10;
+	size_t stack_size = (512 << 10) * 2;
 	size_t heap_size = 2 << 20;
 
 	BC_WORD *stack;
@@ -123,7 +162,7 @@ int main(int argc, char **argv) {
 				run = 0;
 				break;
 			case 's':
-				stack_size = string_to_size(optarg);
+				stack_size = string_to_size(optarg) * 2;
 				if (stack_size == -1) {
 					fprintf(stderr, "Illegal stack size: '%s'\n", optarg);
 					fprintf(stderr, usage, argv[0]);
@@ -160,6 +199,7 @@ int main(int argc, char **argv) {
 	}
 
 	int res = parse_file(&state, input);
+	fclose(input);
 	if (res) {
 		fprintf(stderr, "Parsing failed (%d)\n", res);
 		exit(res);
@@ -178,6 +218,12 @@ int main(int argc, char **argv) {
 	interpret(state.program->code, state.program->data,
 			stack, stack_size,
 			heap, heap_size);
+
+	free(state.program->code);
+	free(state.program->data);
+	free(state.program);
+	free(stack);
+	free(heap);
 
 	return 0;
 }
