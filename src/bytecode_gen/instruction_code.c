@@ -3521,12 +3521,15 @@ void code_updates4_a(int a_offset_1,int a_offset_2,int a_offset_3,int a_offset_4
 
 void code_a(int n_apply_args,char *ea_label_name) {
 	if (n_apply_args==0) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cjmp,ea_label_name);
 		add_instruction(Chalt);	
 	} else if (n_apply_args==2) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cadd_empty_node2,ea_label_name);
 		add_instruction(Chalt);
 	} else if (n_apply_args==3) {
+		add_instruction(CA_data_IlI);
 		add_instruction_label(Cadd_empty_node3,ea_label_name);
 		add_instruction(Chalt);
 	} else {
@@ -3535,6 +3538,7 @@ void code_a(int n_apply_args,char *ea_label_name) {
 		else
 			printf("Error .a %d\n",n_apply_args);
 		/* to do add_empty_node_n */
+		add_instruction(CA_data_IIl);
 		add_instruction(Chalt);
 		add_instruction_label(Cjmp,ea_label_name);
 	}
