@@ -6,141 +6,152 @@
 #include "settings.h"
 #include "util.h"
 
-struct grey_nodes_set {
-	BC_WORD **nodes;
-	size_t size;
-	size_t write_ptr;
-	size_t read_ptr;
-	int last_was_read;
+struct nodes_set {
+	struct {
+		BC_WORD **nodes;
+		size_t size;
+		size_t write_ptr;
+		size_t read_ptr;
+		int last_was_read;
+	} grey;
+
+	struct {
+		BC_WORD *bitmap;
+		size_t size;
+		size_t ptr_i;
+		BC_WORD ptr_j;
+	} black;
 };
 
-#define GREY_NODES_INITIAL 3 /* TODO make larger; this is just for testing */
+#define GREY_NODES_INITIAL 100
 #define GREY_NODES_ENLARGE 2
 
-void init_grey_nodes_set(struct grey_nodes_set *set) {
-	set->size = GREY_NODES_INITIAL;
-	set->nodes = safe_malloc(sizeof(BC_WORD*) * GREY_NODES_INITIAL);
-	set->write_ptr = 0;
-	set->read_ptr = 0;
-	set->last_was_read = 1;
-}
+void init_nodes_set(struct nodes_set *set, size_t heap_size) {
+	set->grey.size = GREY_NODES_INITIAL;
+	set->grey.nodes = safe_malloc(sizeof(BC_WORD*) * GREY_NODES_INITIAL);
+	set->grey.write_ptr = 0;
+	set->grey.read_ptr = 0;
+	set->grey.last_was_read = 1;
 
-void free_grey_nodes_set(struct grey_nodes_set *set) {
-	free(set->nodes);
-}
-
-void realloc_grey_nodes_set(struct grey_nodes_set *set) {
-#if (DEBUG_GARBAGE_COLLECTOR > 1)
-	fprintf(stderr, "\tReallocating grey nodes set\n");
-#endif
-	set->write_ptr = set->size;
-	set->read_ptr = 0;
-	set->size *= GREY_NODES_ENLARGE;
-	set->nodes = safe_realloc(set->nodes, sizeof(BC_WORD*) * set->size);
-}
-
-void add_grey_node(struct grey_nodes_set *set, BC_WORD *node) {
-	if (set->read_ptr == set->write_ptr && !set->last_was_read) {
-		realloc_grey_nodes_set(set);
-	}
-
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-	fprintf(stderr, "\t%p -> grey\n", (void*) node);
-#endif
-	set->nodes[set->write_ptr++] = node;
-	if (set->write_ptr == set->size)
-		set->write_ptr = 0;
-
-	set->last_was_read = 0;
-}
-
-BC_WORD *get_grey_node(struct grey_nodes_set *set) {
-	if (set->write_ptr == set->read_ptr && set->last_was_read) {
-		return NULL;
-	} else {
-		BC_WORD *node = set->nodes[set->read_ptr++];
-
-		if (set->read_ptr == set->size)
-			set->read_ptr = 0;
-
-		set->last_was_read = 1;
-
-		return node;
-	}
-}
-
-struct black_nodes_set {
-	BC_WORD *bitmap;
-	size_t size;
-	size_t ptr_i;
-	BC_WORD ptr_j;
-};
-
-void init_black_nodes_set(struct black_nodes_set *set, size_t heap_size) {
-	set->bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
-	set->size = heap_size / 8 / sizeof(BC_WORD) + 1;
+	set->black.bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
+	set->black.size = heap_size / 8 / sizeof(BC_WORD) + 1;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-	fprintf(stderr, "\tBitmap size = %d\n", set->size);
+	fprintf(stderr, "\tBitmap size = %d\n", set->black.size);
 #endif
-	set->ptr_i = 0;
-	set->ptr_j = 0;
+	set->black.ptr_i = 0;
+	set->black.ptr_j = 0;
 }
 
-void reset_black_nodes_set(struct black_nodes_set *set) {
-	set->ptr_i = 0;
-	set->ptr_j = 0;
+void free_nodes_set(struct nodes_set *set) {
+	free(set->grey.nodes);
+	free(set->black.bitmap);
 }
 
-void free_black_nodes_set(struct black_nodes_set *set) {
-	free(set->bitmap);
+void reset_black_nodes_set(struct nodes_set *set) {
+	set->black.ptr_i = 0;
+	set->black.ptr_j = 0;
 }
 
 /* Returns 1 if the node is new; 0 if it was already black */
-int add_black_node(struct black_nodes_set *set, BC_WORD *node, BC_WORD *heap) {
+int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 	BC_WORD val = ((BC_WORD) node - (BC_WORD) heap) / sizeof(BC_WORD);
 	BC_WORD i = val / 8 / sizeof(BC_WORD);
 	BC_WORD m = (BC_WORD) 1 << (val % (8 * sizeof(BC_WORD)));
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
 	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", i, m);
 #endif
-	if (set->bitmap[i] & m) {
+	if (set->black.bitmap[i] & m) {
 		return 0;
 	} else {
-		set->bitmap[i] |= m;
+		set->black.bitmap[i] |= m;
 		return 1;
 	}
 }
 
-BC_WORD next_black_node(struct black_nodes_set *set) {
+BC_WORD next_black_node(struct nodes_set *set) {
 #if (DEBUG_GARBAGE_COLLECTOR > 4)
-	fprintf(stderr, "\tSearching with %d/%d\n", set->ptr_i, set->ptr_j);
+	fprintf(stderr, "\tSearching with %d/%d\n", set->black.ptr_i, set->black.ptr_j);
 #endif
-	if (set->ptr_i > set->size)
+	if (set->black.ptr_i > set->black.size)
 		return -1;
-	while (!(set->bitmap[set->ptr_i] & ((BC_WORD) 1 << set->ptr_j))) {
-		set->ptr_j++;
-		set->ptr_j %= 8 * sizeof(BC_WORD);
-		if (set->ptr_j == 0) {
+	while (!(set->black.bitmap[set->black.ptr_i] & ((BC_WORD) 1 << set->black.ptr_j))) {
+		set->black.ptr_j++;
+		set->black.ptr_j %= 8 * sizeof(BC_WORD);
+		if (set->black.ptr_j == 0) {
 			do {
-				set->ptr_i++;
-				if (set->ptr_i > set->size)
+				set->black.ptr_i++;
+				if (set->black.ptr_i > set->black.size)
 					return -1;
-			} while (!set->bitmap[set->ptr_i]);
+			} while (!set->black.bitmap[set->black.ptr_i]);
 		}
 #if (DEBUG_GARBAGE_COLLECTOR > 4)
-		fprintf(stderr, "\tSearching with %d/%d\n", set->ptr_i, set->ptr_j);
+		fprintf(stderr, "\tSearching with %d/%d\n", set->black.ptr_i, set->black.ptr_j);
 #endif
 	}
 
-	BC_WORD ret = 8 * sizeof(BC_WORD) * set->ptr_i + set->ptr_j;
+	BC_WORD ret = 8 * sizeof(BC_WORD) * set->black.ptr_i + set->black.ptr_j;
 
-	set->ptr_j++;
-	set->ptr_j %= 8 * sizeof(BC_WORD);
-	if (set->ptr_j == 0) {
-		set->ptr_i++;
+	set->black.ptr_j++;
+	set->black.ptr_j %= 8 * sizeof(BC_WORD);
+	if (set->black.ptr_j == 0) {
+		set->black.ptr_i++;
 	}
 
 	return ret;
+}
+
+void realloc_grey_nodes_set(struct nodes_set *set) {
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "\tReallocating grey nodes set\n");
+#endif
+	set->grey.write_ptr = set->grey.size;
+	set->grey.read_ptr = 0;
+	set->grey.size *= GREY_NODES_ENLARGE;
+	set->grey.nodes = safe_realloc(set->grey.nodes, sizeof(BC_WORD*) * set->grey.size);
+}
+
+void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t heap_size) {
+	if (node < heap || node >= heap + heap_size) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t%p is not on the heap...\n", (void*) node);
+#endif
+		return;
+	}
+
+	if (!add_black_node(set, node, heap)) { /* Already black */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t%p is already black...\n", (void*) node);
+#endif
+		return;
+	}
+
+	if (set->grey.read_ptr == set->grey.write_ptr && !set->grey.last_was_read) {
+		realloc_grey_nodes_set(set);
+	}
+
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+	fprintf(stderr, "\t%p -> grey\n", (void*) node);
+#endif
+	set->grey.nodes[set->grey.write_ptr++] = node;
+	if (set->grey.write_ptr == set->grey.size)
+		set->grey.write_ptr = 0;
+
+	set->grey.last_was_read = 0;
+}
+
+BC_WORD *get_grey_node(struct nodes_set *set) {
+	if (set->grey.write_ptr == set->grey.read_ptr && set->grey.last_was_read) {
+		return NULL;
+	} else {
+		BC_WORD *node = set->grey.nodes[set->grey.read_ptr++];
+
+		if (set->grey.read_ptr == set->grey.size)
+			set->grey.read_ptr = 0;
+
+		set->grey.last_was_read = 1;
+
+		return node;
+	}
 }
 
 #if (DEBUG_GARBAGE_COLLECTOR > 0)
@@ -155,34 +166,17 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
 
-	struct grey_nodes_set grey;
-	init_grey_nodes_set(&grey);
+	struct nodes_set nodes_set;
+	init_nodes_set(&nodes_set, heap_size);
 
 	/* Add full A-stack to the grey set */
 	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
-		add_grey_node(&grey, (BC_WORD*) *asp_temp);
+		add_grey_node(&nodes_set, (BC_WORD*) *asp_temp, heap, heap_size);
 	}
-
-	struct black_nodes_set black;
-	init_black_nodes_set(&black, heap_size);
 
 	/* Evaluate full grey set */
 	BC_WORD *node;
-	while ((node = get_grey_node(&grey)) != NULL) {
-		if (node < heap || node >= heap + heap_size) {
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-			fprintf(stderr, "\t%p is not on the heap...\n", (void*) node);
-#endif
-			continue;
-		}
-
-		if (!add_black_node(&black, node, heap)) { /* Already black */
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-			fprintf(stderr, "\t%p is already black...\n", (void*) node);
-#endif
-			continue;
-		}
-
+	while ((node = get_grey_node(&nodes_set)) != NULL) {
 		int16_t arity = ((int16_t*)(node[0]))[-1];
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\t%p -> black: %lx = " BC_WORD_FMT "; arity %d\n", (void*) node, node[0], node[0] - (BC_WORD) code, arity);
@@ -193,7 +187,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 				/* No pointer elements */
 			} else {
 				for (; arity; arity--) {
-					add_grey_node(&grey, (BC_WORD*) node[arity]);
+					add_grey_node(&nodes_set, (BC_WORD*) node[arity], heap, heap_size);
 				}
 			}
 		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
@@ -203,16 +197,14 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 			exit(1);
 		} else if (arity == 0) {
 		} else if (arity < 3) { /* Thunk, three places */
-			add_grey_node(&grey, (BC_WORD*) node[1]);
+			add_grey_node(&nodes_set, (BC_WORD*) node[1], heap, heap_size);
 			if (arity == 2)
-				add_grey_node(&grey, (BC_WORD*) node[2]);
+				add_grey_node(&nodes_set, (BC_WORD*) node[2], heap, heap_size);
 		} else { /* Thunk, pointer to rest of arguments */
 			fprintf(stderr, "Arity > 2 not implemented\n");
 			exit(1);
 		}
 	}
-
-	free_grey_nodes_set(&grey);
 
 	/* Pass 0: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
@@ -239,7 +231,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 	fprintf(stderr, "Pass 1: reverse pointers; update forward pointers\n");
 #endif
 	for (;;) {
-		BC_WORD offset = next_black_node(&black);
+		BC_WORD offset = next_black_node(&nodes_set);
 		if (offset == -1)
 			break;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
@@ -345,12 +337,12 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 
 	/* Pass 2: squeeze; update backward pointers */
 	node = new_heap = heap;
-	reset_black_nodes_set(&black);
+	reset_black_nodes_set(&nodes_set);
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 2: squeeze; update backward pointers\n");
 #endif
 	for (;;) {
-		BC_WORD offset = next_black_node(&black);
+		BC_WORD offset = next_black_node(&nodes_set);
 		if (offset == -1)
 			break;
 		node = heap + offset;
@@ -408,7 +400,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 		}
 	}
 
-	free_black_nodes_set(&black);
+	free_nodes_set(&nodes_set);
 
 	return new_heap;
 }
