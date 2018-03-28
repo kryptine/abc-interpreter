@@ -311,27 +311,27 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 
 			if (node[1] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\tReversing pointer\n");
+				fprintf(stderr, "\t\tReversing pointer %p\n", (void*) node[1]);
 #endif
 				BC_WORD *temp = (BC_WORD*) node[1];
 				node[1] = *temp;
 				*temp = (BC_WORD) &node[1] | 1;
 			} else {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\tNot reversing\n");
+				fprintf(stderr, "\t\tNot reversing %p\n", (void*) node[1]);
 #endif
 			}
 
-			if (node[2] >= (BC_WORD) heap && node[1] < (BC_WORD) (heap + heap_size)) { /* Pointer */
+			if (node[2] >= (BC_WORD) heap && node[2] < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\tReversing pointer\n");
+				fprintf(stderr, "\t\tReversing pointer %p\n", (void*) node[2]);
 #endif
 				BC_WORD *temp = (BC_WORD*) node[2];
 				node[2] = *temp;
 				*temp = (BC_WORD) &node[2] | 1;
 			} else {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\tNot reversing\n");
+				fprintf(stderr, "\t\tNot reversing %p\n", (void*) node[2]);
 #endif
 			}
 
