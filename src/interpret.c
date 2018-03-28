@@ -69,15 +69,44 @@ static void* __indirection[9] = { // TODO what does this do?
 	(void*) Cfill_a01_pop_rtn
 };
 
+static BC_WORD *asp, *bsp, *csp;
+
+#ifdef POSIX
+#include <signal.h>
+void handle_segv(int sig) {
+	if (asp >= csp) {
+		fprintf(stderr, "A/C-stack overflow\n");
+		exit(1);
+	} else {
+		fprintf(stderr, "Untracable segmentation fault\n");
+		exit(1);
+	}
+}
+#endif
+
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size) {
 	BC_WORD *pc = code;
-	BC_WORD *asp = stack;
-	BC_WORD *bsp = &stack[stack_size];
-	BC_WORD *csp = &stack[stack_size >> 1]; // TODO why?
+	asp = stack;
+	bsp = &stack[stack_size];
+	csp = &stack[stack_size >> 1];
 	BC_WORD *hp = heap;
 	BC_WORD_S heap_free = heap_size;
+
+#ifdef POSIX
+	struct sigaction s;
+	sigset_t sst;
+
+	sigemptyset(&sst);
+	s.sa_handler = handle_segv;
+	s.sa_mask = sst;
+	s.sa_flags = 0;
+	if (sigaction(SIGSEGV, &s, NULL)) {
+		perror("sigaction");
+		return 1;
+	}
+#endif
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
@@ -112,7 +141,7 @@ int main(int argc, char **argv) {
 	int human_readable = 0;
 	int run = 1;
 	FILE *input = NULL;
-	size_t stack_size = 512 << 10;
+	size_t stack_size = (512 << 10) * 2;
 	size_t heap_size = 2 << 20;
 
 	BC_WORD *stack;
@@ -133,7 +162,7 @@ int main(int argc, char **argv) {
 				run = 0;
 				break;
 			case 's':
-				stack_size = string_to_size(optarg);
+				stack_size = string_to_size(optarg) * 2;
 				if (stack_size == -1) {
 					fprintf(stderr, "Illegal stack size: '%s'\n", optarg);
 					fprintf(stderr, usage, argv[0]);
