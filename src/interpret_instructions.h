@@ -84,6 +84,9 @@ case Cbuild:
 case Cbuild0:
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	hp[0]=pc[1];
 	*++asp=(BC_WORD)hp;
 	hp+=3;
@@ -101,13 +104,10 @@ case Cbuild1:
 case Cbuild2:
 case Cbuildh2:
 case Cbuildhr20:
-#if 0
-	printf ("%d %d %d\n",hp-heap,heap_free,(hp-heap)+heap_free);
-#endif
 	if ((heap_free-=3)<0)
 		break;
-#if 0
-	printf ("Cbuild(h)2 %d %d %d %d\n",(int)hp,(int)pc[1],(int)asp[0],(int)asp[-1]);
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
@@ -143,6 +143,9 @@ case Cbuild4:
 	continue;
 case Cbuildh0:
 case CbuildAC:
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	*++asp=pc[1];
 	pc+=2;
 	continue;
@@ -406,6 +409,9 @@ case CbuildF_b:
 case CbuildI:
 	if ((heap_free-=2)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- INT (%lx)\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
+#endif
 	hp[0]=(BC_WORD)&INT+2;
 	hp[1]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -418,6 +424,9 @@ case CbuildI_b:
 	
 	if ((heap_free-=2)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- INT (%lx)\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
+#endif
 	bo = pc[1];
 	hp[0]=(BC_WORD)&INT+2;
 	hp[1]=bsp[bo];
@@ -1176,6 +1185,9 @@ case Cbuild_r40:
 
 	if ((heap_free-=6)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
+#endif
 	ao=((BC_WORD_S*)pc)[1];
 	hp[0]=*(BC_WORD*)&pc[2];
 	hp[1]=asp[ao];
@@ -1282,6 +1294,9 @@ case Cbuild_u01:
 case Cbuild_u02:
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
 	hp[2]=bsp[1];
@@ -1417,6 +1432,9 @@ case Cbuild_ua1:
 case Ccreate:
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- __cycle (%lx)\n", (void*) hp, (BC_WORD)&__cycle__in__spine);
+#endif
 	hp[0]=(BC_WORD)&__cycle__in__spine;
 	*++asp=(BC_WORD)hp;
 	hp+=3;
@@ -2018,6 +2036,9 @@ case Cfillh0:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+#endif
 	n[0]=pc[2];
 	pc+=3;
 	continue;
@@ -2040,8 +2061,8 @@ case Cfillh2:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-#if 0
-	printf ("Cfill(h)2 %d %d\n",(int)n,(int)pc[2]);
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
 #endif
 	n[0]=pc[2];
 	n[1]=asp[0];
@@ -3501,8 +3522,11 @@ case Cpush_node:
 case Cpush_node0:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- push_node0 (%lx)\n", (void*)n, pc[1]);
+#endif
 	n[0]=pc[1];
 	pc+=2;
 	continue;
@@ -3699,6 +3723,9 @@ case Cpush_node_u02:
 	BC_WORD *n;
 	
 	n=(BC_WORD*)*asp;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)asp, (void*) *asp, pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	n[0]=pc[1];
 	bsp[-2]=n[1];
 	bsp[-1]=n[2];
@@ -5564,6 +5591,9 @@ case Cbuildo2:
 
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) data, pc[3]);
+#endif
 	ao1=((BC_WORD_S*)pc)[1];
 	ao2=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -6403,16 +6433,16 @@ case Cjmp_ap2:
 	n=(BC_WORD*)asp[0];
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
+	fprintf(stderr, "\t" BC_WORD_FMT ": %u/%d -> " BC_WORD_FMT "\n",
 			d-(BC_WORD)data,
 			((uint16_t*)d)[0],
-			((uint16_t*)d)[-1],
+			((int16_t*)d)[-1],
 			(*(BC_WORD*)(d+16+6) - (BC_WORD) code) / 8);
 #endif
 	if (((uint16_t*)d)[0]==16){
-		BC_WORD arity;
+		int16_t arity;
 		
-		arity=((uint16_t*)d)[-1];
+		arity=((int16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+6)) - 24);
 #else

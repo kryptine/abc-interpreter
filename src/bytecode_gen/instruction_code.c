@@ -3863,12 +3863,12 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 	if (ea_label_name!=NULL) {
 		if (ea_label_name[0]=='_' && ea_label_name[1]=='_' && ea_label_name[2]=='\0') {
 			/* eval_fill */
-			add_instruction(CA_data_IIIln);
+			add_instruction(CA_data_IIIla);
 			add_instruction(Cjsr_eval0);
 			add_instruction(Cfill_a01_pop_rtn);
 			add_instruction(Chalt);
 		} else {
-			add_instruction(CA_data_IlIln);
+			add_instruction(CA_data_IlIla);
 
 			if (number_of_arguments<-2)
 				number_of_arguments=1;
@@ -3908,13 +3908,13 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		else
 			add_label(descriptor_name);	
 	} else if (descriptor_name != NULL) {
-		add_instruction(CA_data_ln);
+		add_instruction(CA_data_la);
 		add_label(descriptor_name);
 	} else {
-		add_instruction(CA_data_n);
+		add_instruction(CA_data_a);
 	}
 
-	add_data8_to_code(number_of_arguments);
+	add_data2_to_code(number_of_arguments);
 }
 
 void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
@@ -3928,7 +3928,7 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 	if (ea_label_name!=NULL) {
 		/* eval_upd not yet implemented */
 		/* eval_fill */
-		add_instruction(CA_data_IIIln);
+		add_instruction(CA_data_IIIla);
 		add_instruction(Cjsr_eval0);
 		add_instruction(Cfill_a01_pop_rtn);
 		add_instruction(Chalt);
@@ -3938,13 +3938,13 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name!=NULL) {
-		add_instruction(CA_data_ln);
+		add_instruction(CA_data_la);
 		add_label(descriptor_name);
 	} else {
-		add_instruction(CA_data_n);
+		add_instruction(CA_data_a);
 	}
 
-	add_data8_to_code(a_size+b_size+(b_size<<8));
+	add_data2_to_code(a_size+b_size+(b_size<<8));
 }
 
 void code_o(int oa,int ob,ULONG vector[]) {
