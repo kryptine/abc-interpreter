@@ -12,7 +12,6 @@ RESET="\033[0m"
 
 FAILED=0
 
-CFLAGS=""
 RUNFLAGS=""
 
 RUN_ONLY=""
