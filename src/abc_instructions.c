@@ -913,18 +913,18 @@ char *instruction_name(BC_WORD i) {
 		case Cstack_check:
 			return "Ccheck_stack";
 
-		case CA_data_IIIln:
-			return "CA_data_IIIln";
+		case CA_data_IIIla:
+			return "CA_data_IIIla";
 		case CA_data_IIl:
 			return "CA_data_IIl";
 		case CA_data_IlI:
 			return "CA_data_IlI";
-		case CA_data_IlIln:
-			return "CA_data_IlIln";
-		case CA_data_ln:
-			return "CA_data_ln";
-		case CA_data_n:
-			return "CA_data_n";
+		case CA_data_IlIla:
+			return "CA_data_IlIla";
+		case CA_data_la:
+			return "CA_data_la";
+		case CA_data_a:
+			return "CA_data_a";
 
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
@@ -1388,12 +1388,12 @@ char *instruction_type (BC_WORD i) {
 		case Cjsr_stack_check:       return "?";
 		case Cstack_check:           return "?";
 
-		case CA_data_IIIln:          return "IIIln";
+		case CA_data_IIIla:          return "IIIla";
 		case CA_data_IIl:            return "IIl";
 		case CA_data_IlI:            return "IlI";
-		case CA_data_IlIln:          return "IlIln";
-		case CA_data_ln:             return "ln";
-		case CA_data_n:              return "n";
+		case CA_data_IlIla:          return "IlIla";
+		case CA_data_la:             return "la";
+		case CA_data_a:              return "a";
 
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
