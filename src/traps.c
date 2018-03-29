@@ -13,7 +13,7 @@ void clean_catAC (void)
 
 	asp=g_asp;
 	hp=g_hp;
-	
+
 	s1=(BC_WORD*)asp[0];
 	s2=(BC_WORD*)asp[-1];
 	l1=s1[1];
@@ -26,13 +26,13 @@ void clean_catAC (void)
 
 	l=l1+l2;
 	lw=(l+3)>>2;
-	
+
 	if ( (g_heap_free -= (int)(lw+2)) < 0){
 		printf("clean_catAC %d %d\n", l1, l2);
 		printf("clean_catAC gc %d %d\n", (int) g_heap_free, lw+2);
 		exit(1);
 	}
-	
+
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=l;
 
@@ -43,7 +43,7 @@ void clean_catAC (void)
 	s_p=(unsigned char *)&hp[2];
 	hp+=2+lw;
 	g_hp=hp;
-	
+
 	for (i=0; i<l1; ++i)
 		s_p[i]=s1_p[i];
 
@@ -65,7 +65,7 @@ void clean_readLineF (void)
 */
 	bsp=g_bsp;
 	hp=g_hp;
-	
+
 	if ( (g_heap_free -= 2) < 0){
 		printf ("clean_readLineF gc\n");
 		exit (1);
@@ -75,23 +75,23 @@ void clean_readLineF (void)
 
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=0;
-	*++g_asp = (BC_WORD)hp;	
+	*++g_asp = (BC_WORD)hp;
 	hp+=2;
-	
+
 	s=(unsigned char *)hp;
 	max_l = g_heap_free<<2;
 	l=0;
-	
+
 	while (l<max_l){
 		int c;
-	
+
 		c=getc (file);
 		if (c==EOF){
 			unsigned int lw;
 
 			hp[-1]=l;
 			bsp[0]+=l;
-			
+
 			lw=(l+3)>>2;
 			g_heap_free -= lw;
 			g_hp = hp+lw;
@@ -99,22 +99,22 @@ void clean_readLineF (void)
 		}
 /*
 		putchar (c);
-*/		
+*/
 		if (c=='\n'){
 			unsigned int lw;
 
 			s[l++]=c;
 			hp[-1]=l;
 			bsp[0]+=l;
-			
+
 			lw=(l+3)>>2;
 			g_heap_free -= lw;
 			g_hp = hp+lw;
-			return;		
+			return;
 		}
 		s[l++]=c;
 	}
-		
+
 	printf ("clean_readLineF gc\n");
 	exit (1);
 }
@@ -147,13 +147,13 @@ void clean_sliceAC (void)
 	first_i=bsp[0];
 	end_i=bsp[1]+1;
 	g_bsp = bsp+2;
-	
+
 	if (first_i<0)
 		first_i=0;
 	if (end_i>l)
 		end_i=l;
 	l=end_i-first_i;
-	
+
 	hp[-1]=l;
 	n_words=(l+3)>>2;
 	if ( (g_heap_free -= n_words) < 0){
@@ -162,10 +162,10 @@ void clean_sliceAC (void)
 	}
 
 	g_hp=hp+n_words;
-	
+
 	new_s_p=(unsigned char*)hp;
 	s_p=&s_p[first_i];
-	
+
 	for (i=0; i<l; ++i)
 		new_s_p[i]=s_p[i];
 }
@@ -191,7 +191,7 @@ void clean_ItoAC (void)
 	} else {
 		ui = i;
 	}
-	
+
 	t=ui;
 	while (t>=1000){
 		t=t/1000;
@@ -238,10 +238,10 @@ void clean_openF (void)
 	int *file_name_string,file_name_length,mode;
 	int i;
 	FILE *file;
-	
+
 	asp=g_asp;
 	bsp=g_bsp;
-	
+
 	mode=bsp[0];
 	file_name_string=(int*)asp[0];
 	file_name_length=file_name_string[1];
@@ -290,7 +290,7 @@ void clean_openF (void)
 	bsp[0]=1;
 	bsp[1]=0;
 	bsp[2]=(BC_WORD)file;
-	
+
 	g_asp=asp;
 	g_bsp=bsp;
 }
@@ -300,7 +300,7 @@ void clean_endF (void)
 	BC_WORD *bsp;
 	FILE *file;
 	int c;
-	
+
 	bsp=g_bsp;
 
 	file=(FILE*)bsp[1];
@@ -309,7 +309,7 @@ void clean_endF (void)
 		*--bsp = 1;
 	} else {
 		ungetc (c,file);
-		*--bsp = 1;	
+		*--bsp = 1;
 	}
 	g_bsp=bsp;
 	return;
@@ -327,7 +327,7 @@ void clean_cmpAC (void)
 
 	a=(BC_WORD*)asp[0];
 	b=(BC_WORD*)asp[-1];
-	
+
 	g_asp=asp-2;
 
 	--bsp;
@@ -368,7 +368,7 @@ void clean_cmpAC (void)
 			return;
 		}
 	}
-	
+
 	*bsp = 1;
 }
 
@@ -377,7 +377,7 @@ void clean_writeFI (void)
 	BC_WORD *bsp;
 	FILE *file;
 	int i;
-	
+
 	bsp=g_bsp;
 	i=bsp[0];
 	file=(FILE*)bsp[2];
@@ -392,15 +392,15 @@ void clean_writeFS (void)
 	FILE *file;
 	int n;
 	unsigned char *p;
-	
+
 	asp=g_asp;
 	bsp=g_bsp;
-	
+
 	s=(BC_WORD*)asp[0];
 	g_asp=asp-1;
 
 	file=(FILE*)bsp[1];
-	
+
 	n=s[1];
 	p=(unsigned char*)&s[2];
 
@@ -412,12 +412,12 @@ void clean_writeFC (void)
 	BC_WORD *bsp;
 	FILE *file;
 	int c;
-	
+
 	bsp=g_bsp;
-	
+
 	c=bsp[0];
 	file=(FILE*)bsp[2];
-	
+
 	putc (c,file);
 
 	g_bsp=bsp+1;
@@ -427,11 +427,11 @@ void clean_closeF (void)
 {
 	BC_WORD *bsp;
 	FILE *file;
-	
+
 	bsp=g_bsp;
-	
+
 	file=(FILE*)bsp[1];
-	
+
 	bsp[1] = fclose (file)==0;
 /*
 	printf ("clean_closeF\n");
@@ -444,17 +444,17 @@ void clean_print_string_ (void)
 	BC_WORD *asp;
 	char *s;
 	int l;
-	
+
 	asp=g_asp;
 	s=(char*)asp[0];
 	g_asp=asp-1;
-	
+
 	l=*(int*)(s+4);
 	s+=8;
-	
+
 	while (l!=0){
 		putchar (*s);
 		++s;
 		--l;
-	}		
+	}
 }

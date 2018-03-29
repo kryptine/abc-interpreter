@@ -15,7 +15,7 @@ case Cadd_empty_node2:
 	asp[-1]=(BC_WORD)hp;
 	asp+=1;
 	hp+=3;
-	continue;			
+	continue;
 case Cadd_empty_node3:
 	if ((heap_free-=3)<0)
 		break;
@@ -27,7 +27,7 @@ case Cadd_empty_node3:
 	asp[-2]=(BC_WORD)hp;
 	asp+=1;
 	hp+=3;
-	continue;			
+	continue;
 case CandI:
 	bsp[1]=bsp[0] & bsp[1];
 	++bsp;
@@ -36,7 +36,7 @@ case CandI:
 case Cbuild:
 {
 	BC_WORD s;
-	
+
 	s=pc[1];
 	if ((heap_free-=s+1)<0)
 		break;
@@ -357,7 +357,7 @@ case CbuildBTRUE:
 case CbuildB_b:
 {
 	BC_WORD_S bo;
-	
+
 	if ((heap_free-=2)<0)
 		break;
 	bo = pc[1];
@@ -380,7 +380,7 @@ case CbuildC:
 case CbuildC_b:
 {
 	BC_WORD_S bo;
-	
+
 	if ((heap_free-=2)<0)
 		break;
 	bo = pc[1];
@@ -394,7 +394,7 @@ case CbuildC_b:
 case CbuildF_b:
 {
 	BC_WORD_S bo;
-	
+
 	if ((heap_free-=3)<0)
 		break;
 	bo = pc[1];
@@ -421,7 +421,7 @@ case CbuildI:
 case CbuildI_b:
 {
 	BC_WORD_S bo;
-	
+
 	if ((heap_free-=2)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
@@ -770,7 +770,7 @@ case Cbuild_r:
 		if (n_b<28) break; hp[27]=bo_p[27];
 		if (n_b<29) break; hp[28]=bo_p[28];
 		if (n_b<30) break; hp[29]=bo_p[29];
-	} while (0);				
+	} while (0);
 	hp+=n_b;
 	continue;
 }
@@ -1106,7 +1106,7 @@ case Cbuild_r1b:
 		if (n_b<29) break; hp[31]=bo_p[28];
 		if (n_b<30) break; hp[32]=bo_p[29];
 		if (n_b<31) break; hp[33]=bo_p[30];
-	} while (0);				
+	} while (0);
 	hp+=n_b+3;
 	continue;
 }
@@ -1455,7 +1455,7 @@ case Ccreate:
 case Ccreates:
 {
 	BC_WORD n_a_p_1,i;
-	
+
 	n_a_p_1=pc[1];
 	if ((heap_free-=n_a_p_1)<0)
 		break;
@@ -1472,7 +1472,7 @@ case Ccreates:
 case Ccreate_array:
 {
 	BC_WORD s,n;
-	
+
 	s=bsp[0];
 	if ((heap_free-=s+3)<0)
 		break;
@@ -1494,7 +1494,7 @@ case Ccreate_array:
 case Ccreate_arrayBOOL:
 {
 	BC_WORD s,i,n,sw;
-	
+
 	s=bsp[0];
 	sw=(s+3)>>2;
 	if ((heap_free-=sw+3)<0)
@@ -1511,12 +1511,12 @@ case Ccreate_arrayBOOL:
 		hp[i]=n;
 	hp+=sw;
 	pc+=1;
-	continue;			
+	continue;
 }
 case Ccreate_arrayCHAR:
 {
 	BC_WORD s,i,n,sw;
-	
+
 	s=bsp[0];
 	sw=(s+3)>>2;
 	if ((heap_free-=sw+2)<0)
@@ -1532,12 +1532,12 @@ case Ccreate_arrayCHAR:
 		hp[i]=n;
 	hp+=sw;
 	pc+=1;
-	continue;			
+	continue;
 }
 case Ccreate_arrayINT:
 {
 	BC_WORD s,i,n;
-	
+
 	s=bsp[0];
 	if ((heap_free-=s+3)<0)
 		break;
@@ -1552,12 +1552,12 @@ case Ccreate_arrayINT:
 	for (i=0; i!=s; ++i)
 		hp[i]=n;
 	hp+=s;
-	continue;			
+	continue;
 }
 case Ccreate_array_:
 {
 	BC_WORD s,i;
-	
+
 	s=bsp[0];
 	if ((heap_free-=s+3)<0)
 		break;
@@ -1576,7 +1576,7 @@ case Ccreate_array_:
 case Ccreate_array_BOOL:
 {
 	BC_WORD s,sw;
-	
+
 	s=bsp[0];
 	sw=(s+15)>>2;
 	if ((heap_free-=sw)<0)
@@ -1588,12 +1588,12 @@ case Ccreate_array_BOOL:
 	hp+=sw;
 	bsp+=1;
 	pc+=1;
-	continue;			
+	continue;
 }
 case Ccreate_array_CHAR:
 {
 	BC_WORD s,sw;
-	
+
 	s=bsp[0];
 	sw=(s+11)>>2;
 	if ((heap_free-=sw)<0)
@@ -1604,12 +1604,12 @@ case Ccreate_array_CHAR:
 	hp+=sw;
 	bsp+=1;
 	pc+=1;
-	continue;			
+	continue;
 }
 case Ccreate_array_INT:
 {
 	BC_WORD s;
-	
+
 	s=bsp[0];
 	if ((heap_free-=s+3)<0)
 		break;
@@ -1626,7 +1626,7 @@ case Ccreate_array_r:
 {
 	BC_WORD s,i,n_ab,n_b,n_a;
 	BC_WORD *array;
-	
+
 	s=bsp[0];
 	n_ab=pc[1];
 	if ((heap_free-=s*n_ab+3)<0)
@@ -1676,7 +1676,7 @@ case Ccreate_array_r:
 case Ccreate_array_r_:
 {
 	BC_WORD s,i,n_ab,n_a;
-	
+
 	s=bsp[0];
 	n_ab=pc[1];
 	if ((heap_free-=s*n_ab+3)<0)
@@ -1700,7 +1700,7 @@ case Ccreate_array_r_:
 case Ccreate_array_r_a:
 {
 	BC_WORD s,i,n_a,a_n_a;
-	
+
 	s=bsp[0];
 	n_a=pc[1];
 	a_n_a=s*n_a;
@@ -1721,7 +1721,7 @@ case Ccreate_array_r_a:
 case Ccreate_array_r_b:
 {
 	BC_WORD s,sw;
-	
+
 	s=bsp[0];
 	sw=pc[1]*s+3;
 	if ((heap_free-=sw)<0)
@@ -1849,7 +1849,7 @@ case CeqB_aFALSE:
 {
 	BC_WORD_S ao;
 	BC_WORD *n;
-	
+
 	ao=((BC_WORD_S*)pc)[1];
 	n=(BC_WORD*)asp[ao];
 	*--bsp = n[1]==0;
@@ -1860,7 +1860,7 @@ case CeqB_aTRUE:
 {
 	BC_WORD_S ao;
 	BC_WORD *n;
-	
+
 	ao=((BC_WORD_S*)pc)[1];
 	n=(BC_WORD*)asp[ao];
 	*--bsp = n[1]!=0;
@@ -1871,7 +1871,7 @@ case CeqB_bFALSE:
 {
 	int b;
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[1];
 	b=bsp[bo]==0;
 	*--bsp=b;
@@ -1882,7 +1882,7 @@ case CeqB_bTRUE:
 {
 	int b;
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[1];
 	b=bsp[bo]!=0;
 	*--bsp=b;
@@ -1894,7 +1894,7 @@ case CeqI_a:
 {
 	BC_WORD_S ao;
 	BC_WORD *n;
-	
+
 	ao=((BC_WORD_S*)pc)[1];
 	n=(BC_WORD*)asp[ao];
 	*--bsp = n[1]==*(BC_WORD*)&pc[2];
@@ -1906,7 +1906,7 @@ case CeqI_b:
 {
 	int b;
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[1];
 	b=bsp[bo]==(BC_WORD_S)pc[2];
 	*--bsp=b;
@@ -1916,7 +1916,7 @@ case CeqI_b:
 case CeqD_b:
 {
 	int b;
-	
+
 	b=*bsp==*(BC_WORD_S*)&pc[1];
 	*--bsp=b;
 	pc+=2;
@@ -2166,7 +2166,7 @@ case Cfill2ab011:
 	a[a_o]=*bsp++;
 	--asp;
 	pc+=3;
-	continue;			
+	continue;
 }
 case Cfill2ab002:
 {
@@ -2369,10 +2369,10 @@ case Cfillcaf:
 	if (n_a!=0){
 		n[0]=n_a;
 		for (ui=0; ui!=n_a; ++ui)
-			n[1+ui]=asp[-ui];					
+			n[1+ui]=asp[-ui];
 	} else
 		n[0]=1;
-	
+
 	for (ui=0; ui!=n_b; ++ui)
 		n[b_o1+ui]=bsp[ui];
 
@@ -2583,7 +2583,7 @@ case Cfill_r:
 		if (n_b<28) break; hp[27]=bo_p[27];
 		if (n_b<29) break; hp[28]=bo_p[28];
 		if (n_b<30) break; hp[29]=bo_p[29];
-	} while (0);				
+	} while (0);
 	hp+=n_b;
 	continue;
 }
@@ -2738,7 +2738,7 @@ case Cfill_r1b:
 		if (n_b<29) break; hp[28]=bo_p[28];
 		if (n_b<30) break; hp[29]=bo_p[29];
 		if (n_b<31) break; hp[30]=bo_p[30];
-	} while (0);				
+	} while (0);
 	hp+=n_b;
 	continue;
 }
@@ -2990,7 +2990,7 @@ case Cjmp:
 case Cjmp_eval:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 	if ((n[0] & 2)!=0){
 		pc=(BC_WORD*)*csp++;
@@ -3006,7 +3006,7 @@ case Cjmp_eval_upd:
 	d=n1[0];
 #if 0
 	printf ("jmp_eval_upd %d %d\n",(int)n1,(int)d);
-#endif			
+#endif
 	if ((d & 2)!=0){
 		n2=(BC_WORD*)asp[-1];
 		pc=(BC_WORD*)*csp++;
@@ -3046,7 +3046,7 @@ case Cjsr_eval:
 	BC_WORD_S ao;
 
 	ao=pc[1];
-	n=(BC_WORD*)asp[(BC_WORD_S)ao];	
+	n=(BC_WORD*)asp[(BC_WORD_S)ao];
 	if ((n[0] & 2)!=0){
 		pc+=4;
 		continue;
@@ -3060,7 +3060,7 @@ case Cjsr_eval:
 case Cjsr_eval0:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 #if 0
 	printf ("Cjsr_eval0 %d\n",n);
@@ -3079,7 +3079,7 @@ case Cjsr_eval0:
 case Cjsr_eval1:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[-1];
 	if ((n[0] & 2)!=0){
 		pc+=2;
@@ -3094,13 +3094,13 @@ case Cjsr_eval1:
 case Cjsr_eval2:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[-2];
 	if ((n[0] & 2)!=0){
 		pc+=2;
 		continue;
 	}
-	*--csp=(BC_WORD)&pc[1];		
+	*--csp=(BC_WORD)&pc[1];
 	pc=(BC_WORD*)n[0];
 	asp[-2]=asp[0];
 	asp[0]=(BC_WORD)n;
@@ -3109,7 +3109,7 @@ case Cjsr_eval2:
 case Cjsr_eval3:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[-3];
 	if ((n[0] & 2)!=0){
 		pc+=2;
@@ -3243,7 +3243,7 @@ case Cpush_arraysize_a:
 case CpushD_a:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	*--bsp=*n;
 	pc+=2;
@@ -3253,7 +3253,7 @@ case CpushF_a:
 case Cpush_r_args02:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	bsp[-2]=n[1];
 	bsp[-1]=n[2];
@@ -3268,7 +3268,7 @@ case Cpushcaf10:
 case Cpushcaf31:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)pc[1];
 	asp[3]=n[0];
 	asp[2]=n[1];
@@ -3290,7 +3290,7 @@ case Cpush_a:
 case Cpush_arg:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	*++asp=a[((BC_WORD_S*)pc)[2]];
@@ -3304,7 +3304,7 @@ case Cpush_r_args10:
 case Cpush_r_args_a1:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	*++asp=n[1];
 	pc+=2;
@@ -3313,7 +3313,7 @@ case Cpush_r_args_a1:
 case Cpush_arg2:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	*++asp=n[2];
 	pc+=2;
@@ -3323,7 +3323,7 @@ case Cpush_arg2l:
 case Cpush_r_args_a2l:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	*++asp=a[0];
@@ -3334,7 +3334,7 @@ case Cpush_arg3:
 case Cpush_r_args_a3:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	*++asp=a[1];
@@ -3345,7 +3345,7 @@ case Cpush_arg4:
 case Cpush_r_args_a4:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	*++asp=a[2];
@@ -3356,7 +3356,7 @@ case Cpush_args:
 case Cpush_r_argsa0:
 {
 	BC_WORD *n,*a,n_a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n_a=pc[2]; /* >= 5 */
 	a=(BC_WORD*)n[2];
@@ -3402,7 +3402,7 @@ case Cpush_args2:
 case Cpush_r_args20:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #if 0
 	printf ("Cpush_args2 %d %d %d\n",(int)n,(int)n[1],(int)n[2]);
@@ -3417,7 +3417,7 @@ case Cpush_args3:
 case Cpush_r_args30:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[3]=n[1];
@@ -3431,7 +3431,7 @@ case Cpush_args4:
 case Cpush_r_args40:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[4]=n[1];
@@ -3440,13 +3440,13 @@ case Cpush_r_args40:
 	asp[1]=a[2];
 	asp+=4;
 	pc+=2;
-	continue;			
+	continue;
 }
 case Cpush_arg_b:
 {
 	BC_WORD *n,*a;
 	BC_WORD ui;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ui=bsp[0];
 	pc+=2;
@@ -3463,8 +3463,8 @@ case Cpush_arg_b:
 			*++asp=a[ui];
 			bsp+=2;
 		}
-	}				
-	continue;			
+	}
+	continue;
 }
 case Cpush_a_b:
 {
@@ -3478,7 +3478,7 @@ case Cpush_a_b:
 case Cpush_b:
 {
 	BC_WORD v;
-	
+
 	v=bsp[pc[1]];
 	*--bsp=v;
 	pc+=2;
@@ -3487,7 +3487,7 @@ case Cpush_b:
 case Cpush_node:
 {
 	BC_WORD *n,n_a;
-	
+
 	n=(BC_WORD*)*asp;
 	n_a=pc[1];
 	n[0]=pc[2];
@@ -3498,7 +3498,7 @@ case Cpush_node:
 	asp[-1]=n[2];
 	asp[-2]=n[3];
 	asp[-3]=n[4];
-	asp[-4]=n[5];				
+	asp[-4]=n[5];
 	pc+=3;
 	do {
 		if (n_a< 6) break; asp[ -5]=n[ 6];
@@ -3546,7 +3546,7 @@ case Cpush_node0:
 case Cpush_node1:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=pc[1];
 	*++asp=n[1];
@@ -3556,7 +3556,7 @@ case Cpush_node1:
 case Cpush_node2:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=pc[1];
 	asp[2]=n[1];
@@ -3568,7 +3568,7 @@ case Cpush_node2:
 case Cpush_node3:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=pc[1];
 	asp[3]=n[1];
@@ -3581,7 +3581,7 @@ case Cpush_node3:
 case Cpush_node4:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=pc[1];
 	asp[4]=n[1];
@@ -3595,7 +3595,7 @@ case Cpush_node4:
 case Cpush_node_u:
 {
 	BC_WORD *n,*b,n_a,n_b;
-	
+
 	n=(BC_WORD*)asp[0];
 	n_a=pc[1];
 	n[0]=pc[2];
@@ -3677,7 +3677,7 @@ case Cpush_node_u:
 case Cpush_node_ua1:
 {
 	BC_WORD *n,n_a;
-	
+
 	n=(BC_WORD*)asp[0];
 	n_a=pc[1];
 	n[0]=*(BC_WORD*)&pc[2];
@@ -3761,7 +3761,7 @@ case Cpush_node_u03:
 case Cpush_node_u11:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	*++asp=n[1];
@@ -3772,7 +3772,7 @@ case Cpush_node_u11:
 case Cpush_node_u12:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	*++asp=n[1];
@@ -3785,7 +3785,7 @@ case Cpush_node_u12:
 case Cpush_node_u13:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	*++asp=n[1];
@@ -3799,7 +3799,7 @@ case Cpush_node_u13:
 case Cpush_node_u22:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	asp[2]=n[1];
@@ -3814,7 +3814,7 @@ case Cpush_node_u22:
 case Cpush_node_u21:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	asp[2]=n[1];
@@ -3827,7 +3827,7 @@ case Cpush_node_u21:
 case Cpush_node_u31:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	asp[3]=n[1];
@@ -3841,7 +3841,7 @@ case Cpush_node_u31:
 case Cpush_r_args:
 {
 	BC_WORD *n,*a,*b,n_a,n_b;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n_a=pc[2];
 	a=(BC_WORD*)n[2];
@@ -3923,7 +3923,7 @@ case Cpush_r_args:
 case Cpush_r_argsa1:
 {
 	BC_WORD *n,*a,n_a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n_a=pc[2]; /* >= 4 */
 	a=(BC_WORD*)n[2];
@@ -3969,7 +3969,7 @@ case Cpush_r_argsa1:
 case Cpush_r_args0b:
 {
 	BC_WORD *n,*a,n_b;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n_b=pc[2];
 	a=(BC_WORD*)n[2];
@@ -4014,7 +4014,7 @@ case Cpush_r_args0b:
 case Cpush_r_args1b:
 {
 	BC_WORD *n,*a,n_b;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n_b=pc[2];
 	a=(BC_WORD*)n[2];
@@ -4059,7 +4059,7 @@ case Cpush_r_args1b:
 case Cpush_r_args03:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	bsp[-3]=n[1];
@@ -4067,12 +4067,12 @@ case Cpush_r_args03:
 	bsp[-1]=a[1];
 	bsp-=3;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args04:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	bsp[-4]=n[1];
@@ -4081,22 +4081,22 @@ case Cpush_r_args04:
 	bsp[-1]=a[2];
 	bsp-=4;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args11:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	*++asp=n[1];
 	*--bsp=n[2];
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args12:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	*++asp=n[1];
@@ -4104,12 +4104,12 @@ case Cpush_r_args12:
 	bsp[-1]=a[1];
 	bsp-=2;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args13:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[1]=n[1];
@@ -4119,12 +4119,12 @@ case Cpush_r_args13:
 	bsp[-1]=a[2];
 	bsp-=3;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args21:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[2]=n[1];
@@ -4133,12 +4133,12 @@ case Cpush_r_args21:
 	asp+=2;
 	bsp-=1;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args22:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[2]=n[1];
@@ -4148,12 +4148,12 @@ case Cpush_r_args22:
 	asp+=2;
 	bsp-=2;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args31:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	asp[3]=n[1];
@@ -4163,13 +4163,13 @@ case Cpush_r_args31:
 	bsp[-1]=a[2];
 	bsp-=1;
 	pc+=2;
-	continue;				
+	continue;
 }
 case Cpush_r_args_aa1:
 {
 	BC_WORD_S a_o;
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a_o=pc[2];
 	a=(BC_WORD*)n[2];
@@ -4280,7 +4280,7 @@ case Creplace_ra:
 {
 	BC_WORD *array,array_o,*a;
 	BC_WORD_S n_a;
-	
+
 	n_a=pc[1];
 	array_o = (n_a * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
@@ -4372,7 +4372,7 @@ case Crepl_r_argsa0:
 case Cswap_a1:
 {
 	BC_WORD d;
-	
+
 	d=asp[0];
 	asp[0]=asp[-1];
 	asp[-1]=d;
@@ -4382,7 +4382,7 @@ case Cswap_a1:
 case Cswap_a2:
 {
 	BC_WORD d;
-	
+
 	d=asp[0];
 	asp[0]=asp[-2];
 	asp[-2]=d;
@@ -4392,7 +4392,7 @@ case Cswap_a2:
 case Cswap_a3:
 {
 	BC_WORD d;
-	
+
 	d=asp[0];
 	asp[0]=asp[-3];
 	asp[-3]=d;
@@ -4403,7 +4403,7 @@ case Cswap_a:
 {
 	BC_WORD d;
 	BC_WORD_S ao;
-	
+
 	ao=pc[1];
 	d=asp[0];
 	asp[0]=asp[ao];
@@ -4414,7 +4414,7 @@ case Cswap_a:
 case Cswap_b1:
 {
 	BC_WORD d;
-	
+
 	d=bsp[0];
 	bsp[0]=bsp[1];
 	bsp[1]=d;
@@ -4462,7 +4462,7 @@ case Crepl_r_args10:
 case Crepl_r_args_aab11:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 	asp[0]=n[1];
 	pc+=1;
@@ -4472,7 +4472,7 @@ case Crepl_args2:
 case Crepl_r_args20:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 	asp[1]=n[1];
 	asp[0]=n[2];
@@ -4484,7 +4484,7 @@ case Crepl_args3:
 case Crepl_r_args30:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[2]=n[1];
@@ -4498,7 +4498,7 @@ case Crepl_args4:
 case Crepl_r_args40:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[3]=n[1];
@@ -4512,7 +4512,7 @@ case Crepl_r_args40:
 case Crepl_r_args:
 {
 	BC_WORD *n,*a,*b,n_a_m_1,n_b;
-	
+
 	n=(BC_WORD*)asp[0];
 	n_a_m_1=pc[1];
 	a=(BC_WORD*)n[2];
@@ -4590,7 +4590,7 @@ case Crepl_r_args:
 case Crepl_r_argsa1:
 {
 	BC_WORD *n,*a,n_a_m_1;
-	
+
 	n=(BC_WORD*)asp[0];
 	n_a_m_1=pc[1];
 	pc+=2;
@@ -4636,7 +4636,7 @@ case Crepl_r_argsa1:
 case Crepl_r_args1b:
 {
 	BC_WORD *n,*a,n_b;
-	
+
 	n=(BC_WORD*)asp[0];
 	n_b=pc[1];
 	a=(BC_WORD*)n[2];
@@ -4683,7 +4683,7 @@ case Cpush_arraysize:
 case Crepl_r_args01:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp--;
 	*--bsp=n[1];
 	pc+=1;
@@ -4692,7 +4692,7 @@ case Crepl_r_args01:
 case Crepl_r_args11:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 	asp[0]=n[1];
 	*--bsp=n[2];
@@ -4702,7 +4702,7 @@ case Crepl_r_args11:
 case Crepl_r_args02:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp--;
 	bsp[-2]=n[1];
 	bsp[-1]=n[2];
@@ -4713,7 +4713,7 @@ case Crepl_r_args02:
 case Crepl_r_args03:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)*asp--;
 	a=(BC_WORD*)n[2];
 	bsp[-3]=n[1];
@@ -4726,7 +4726,7 @@ case Crepl_r_args03:
 case Crepl_r_args04:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)*asp--;
 	a=(BC_WORD*)n[2];
 	bsp[-4]=n[1];
@@ -4740,7 +4740,7 @@ case Crepl_r_args04:
 case Crepl_r_args12:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[0]=n[1];
@@ -4753,7 +4753,7 @@ case Crepl_r_args12:
 case Crepl_r_args13:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[0]=n[1];
@@ -4767,7 +4767,7 @@ case Crepl_r_args13:
 case Crepl_r_args21:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[1]=n[1];
@@ -4780,7 +4780,7 @@ case Crepl_r_args21:
 case Crepl_r_args22:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[1]=n[1];
@@ -4795,7 +4795,7 @@ case Crepl_r_args22:
 case Crepl_r_args31:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[2]=n[1];
@@ -4809,7 +4809,7 @@ case Crepl_r_args31:
 case Crepl_r_args_a2021:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)asp[0];
 	asp[0]=n[2];
 	pc+=1;
@@ -4818,7 +4818,7 @@ case Crepl_r_args_a2021:
 case Crepl_r_args_a21:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[0]=a[0];
@@ -4828,7 +4828,7 @@ case Crepl_r_args_a21:
 case Crepl_r_args_a31:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[0]=a[1];
@@ -4838,7 +4838,7 @@ case Crepl_r_args_a31:
 case Crepl_r_args_a41:
 {
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a=(BC_WORD*)n[2];
 	asp[0]=a[2];
@@ -4849,7 +4849,7 @@ case Crepl_r_args_aa1:
 {
 	BC_WORD_S a_o;
 	BC_WORD *n,*a;
-	
+
 	n=(BC_WORD*)asp[0];
 	a_o=pc[1];
 	a=(BC_WORD*)n[2];
@@ -4905,7 +4905,7 @@ case Cselect_r:
 {
 	BC_WORD array_o,*element_p,*a,*b;
 	BC_WORD_S n_ab,n_a,n_b;
-	
+
 	n_ab=pc[1];
 	array_o = (n_ab * (BC_WORD_S)*bsp++) + 3;
 	element_p = &((BC_WORD*)(*asp--))[array_o];
@@ -4986,7 +4986,7 @@ case Cselect_ra:
 {
 	BC_WORD array_o,*a;
 	BC_WORD_S n_a;
-	
+
 	n_a=pc[1];
 	array_o = (n_a * (BC_WORD_S)*bsp++) + 3;
 	a = &((BC_WORD*)(*asp--))[array_o];
@@ -5032,7 +5032,7 @@ case Cselect_ra1:
 {
 	BC_WORD array_o,*a;
 	BC_WORD_S n_ab;
-	
+
 	n_ab=pc[1];
 	array_o = (n_ab * (BC_WORD_S)*bsp++) + 3;
 	a = &((BC_WORD*)(*asp--))[array_o];
@@ -5077,7 +5077,7 @@ case Cselect_ra1:
 case Cselect_r02:
 {
 	BC_WORD array_o,*element_p;
-	
+
 	array_o = 2 * (BC_WORD_S)*bsp++;
 	element_p = &((BC_WORD*)(*asp--))[array_o];
 	bsp[-2] = element_p[3];
@@ -5089,7 +5089,7 @@ case Cselect_r02:
 case Cselect_r12:
 {
 	BC_WORD array_o,*element_p;
-	
+
 	array_o = 3 * (BC_WORD_S)*bsp++;
 	element_p = &((BC_WORD*)(*asp))[array_o];
 	*asp = element_p[3];
@@ -5102,7 +5102,7 @@ case Cselect_r12:
 case Cselect_r20:
 {
 	BC_WORD array_o,*element_p;
-	
+
 	array_o = 2 * (BC_WORD_S)*bsp++;
 	element_p = &((BC_WORD*)(*asp))[array_o];
 	asp[1] = element_p[3];
@@ -5114,7 +5114,7 @@ case Cselect_r20:
 case Cselect_r21:
 {
 	BC_WORD array_o,*element_p;
-	
+
 	array_o = 3 * (BC_WORD_S)*bsp++;
 	element_p = &((BC_WORD*)(*asp))[array_o];
 	asp[1] = element_p[3];
@@ -5127,7 +5127,7 @@ case Cselect_r21:
 case Cselect_r40:
 {
 	BC_WORD array_o,*element_p;
-	
+
 	array_o = 4 * (BC_WORD_S)*bsp++;
 	element_p = &((BC_WORD*)(*asp))[array_o];
 	asp[3] = element_p[3];
@@ -5206,7 +5206,7 @@ case CupdateINT:
 	pc+=1;
 	continue;
 }
-case Cupdate_a:	
+case Cupdate_a:
 	asp[((BC_WORD_S*)pc)[2]] = asp[((BC_WORD_S*)pc)[1]];
 	pc+=3;
 	continue;
@@ -5218,7 +5218,7 @@ case Cupdate_r:
 {
 	BC_WORD *array,array_o,*a,*b;
 	BC_WORD_S n_ab,n_a,n_b;
-	
+
 	n_ab=pc[1];
 	array_o = (n_ab * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
@@ -5300,7 +5300,7 @@ case Cupdate_ra:
 {
 	BC_WORD *array,array_o,*a;
 	BC_WORD_S n_a;
-	
+
 	n_a=pc[1];
 	array_o = (n_a * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
@@ -5484,7 +5484,7 @@ case Cupdate_r40:
 case Cupdatepop_a:
 {
 	BC_WORD_S ao;
-	
+
 	ao=((BC_WORD_S*)pc)[2];
 	asp[ao] = asp[((BC_WORD_S*)pc)[1]];
 	asp=&asp[ao];
@@ -5494,7 +5494,7 @@ case Cupdatepop_a:
 case Cupdatepop_b:
 {
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[2];
 	bsp[bo] = bsp[pc[1]];
 	bsp=&bsp[bo];
@@ -5509,7 +5509,7 @@ case CxorI:
 case CCtoAC:
 {
 	BC_WORD c;
-	
+
 	if ((heap_free-=3)<0)
 		break;
 	c=(BC_BOOL)bsp[0];
@@ -5520,7 +5520,7 @@ case CCtoAC:
 	++bsp;
 	hp+=3;
 	pc+=1;
-	continue;			
+	continue;
 }
 case CItoC:
 	bsp[0] = (BC_BOOL)bsp[0];
@@ -5538,7 +5538,7 @@ case CandIi:
 case CandIio:
 {
 	BC_WORD v;
-	
+
 	v=bsp[((BC_WORD_S*)pc)[1]] & *(BC_WORD*)&pc[2];
 	*--bsp=v;
 	pc+=3;
@@ -5548,7 +5548,7 @@ case Cbuildh0_dup_a:
 {
 	BC_WORD v;
 	BC_WORD_S ao;
-	
+
 	v=pc[1];
 	ao=((BC_WORD_S*)pc)[2];
 	asp[1] = v;
@@ -5561,7 +5561,7 @@ case Cbuildh0_dup2_a:
 {
 	BC_WORD v;
 	BC_WORD_S ao;
-	
+
 	v=pc[1];
 	ao=((BC_WORD_S*)pc)[2];
 	asp[1] = v;
@@ -5575,7 +5575,7 @@ case Cbuildh0_dup3_a:
 {
 	BC_WORD v;
 	BC_WORD_S ao;
-	
+
 	v=pc[1];
 	ao=((BC_WORD_S*)pc)[2];
 	asp[1] = v;
@@ -5637,7 +5637,7 @@ case Cdup2_a:
 {
 	BC_WORD_S ao_s;
 	BC_WORD v;
-	
+
 	v=asp[0];
 	ao_s=((BC_WORD_S*)pc)[1];
 	asp[ao_s-1]=v;
@@ -5649,7 +5649,7 @@ case Cdup3_a:
 {
 	BC_WORD_S ao_s;
 	BC_WORD v;
-	
+
 	v=asp[0];
 	ao_s=((BC_WORD_S*)pc)[1];
 	asp[ao_s-2]=v;
@@ -5728,7 +5728,7 @@ case Cjmp_eqC_b:
 case Cjmp_eqI_b:
 {
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[1];
 	if (bsp[bo]!=(BC_WORD_S)pc[2]){
 		pc+=4;
@@ -5741,7 +5741,7 @@ case Cjmp_eqC_b2:
 case Cjmp_eqI_b2:
 {
 	BC_WORD v;
-	
+
 	v=bsp[((BC_WORD_S*)pc)[1]];
 	if (v==(BC_WORD_S)pc[2]){
 		pc=(BC_WORD*)pc[3];
@@ -5764,7 +5764,7 @@ case Cjmp_eqD_b:
 case Cjmp_eqD_b2:
 {
 	BC_WORD v;
-	
+
 	v=bsp[0];
 	if (v==*(BC_WORD_S*)&pc[1]){
 		pc=(BC_WORD*)pc[2];
@@ -5785,7 +5785,7 @@ case Cjmp_eqI:
 	}
 	bsp+=2;
 	pc+=2;
-	continue;			
+	continue;
 case Cjmp_eq_desc:
 {
 	BC_WORD *n;
@@ -5806,7 +5806,7 @@ case Cjmp_geI:
 	}
 	bsp+=2;
 	pc+=2;
-	continue;			
+	continue;
 case Cjmp_ltI:
 	if ((int)bsp[0] < (int)bsp[1]){
 		bsp+=2;
@@ -5815,7 +5815,7 @@ case Cjmp_ltI:
 	}
 	bsp+=2;
 	pc+=2;
-	continue;			
+	continue;
 case Cjmp_neI:
 	if (bsp[0] != bsp[1]){
 		bsp+=2;
@@ -5824,12 +5824,12 @@ case Cjmp_neI:
 	}
 	bsp+=2;
 	pc+=2;
-	continue;			
+	continue;
 case Cjmp_neC_b:
 case Cjmp_neI_b:
 {
 	BC_WORD_S bo;
-	
+
 	bo=((BC_WORD_S*)pc)[1];
 	if (bsp[bo]==(BC_WORD_S)pc[2]){
 		pc+=4;
@@ -5912,7 +5912,7 @@ case Cpop_b_pushBFALSE:
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	*bsp=0;
 	pc+=2;
-	continue;				
+	continue;
 case Cpop_b_pushBTRUE:
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	*bsp=1;
@@ -5925,7 +5925,7 @@ case Cpop_b_rtn:
 case CpushD_a_jmp_eqD_b2:
 {
 	BC_WORD *n,v;
-	
+
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	v=*n;
 	*--bsp=v;
@@ -6362,7 +6362,7 @@ case Cjmp_ap4:
 	d=n[0];
 	if (((uint16_t*)d)[0]==32){
 		BC_WORD arity;
-		
+
 		arity=((uint16_t*)d)[-1];
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+32-6)) - 12);
 		if (arity<=1){
@@ -6373,7 +6373,7 @@ case Cjmp_ap4:
 			}
 		} else {
 			BC_WORD *args,a1;
-			
+
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
@@ -6412,7 +6412,7 @@ case Cjmp_ap3:
 #endif
 	if (((uint16_t*)d)[0]==24){
 		BC_WORD arity;
-		
+
 		arity=((uint16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+24+6)) - 24);
@@ -6427,7 +6427,7 @@ case Cjmp_ap3:
 			}
 		} else {
 			BC_WORD *args,a1;
-			
+
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
@@ -6466,7 +6466,7 @@ case Cjmp_ap2:
 #endif
 	if (((uint16_t*)d)[0]==16){
 		int16_t arity;
-		
+
 		arity=((int16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+6)) - 24);
@@ -6481,7 +6481,7 @@ case Cjmp_ap2:
 			}
 		} else {
 			BC_WORD *args,a1;
-			
+
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
@@ -6548,7 +6548,7 @@ case Cadd_arg0:
 case Cadd_arg1:
 {
 	BC_WORD *n;
-	
+
 	if ((heap_free-=3)<0)
 		break;
 	n=(BC_WORD*)asp[0];
@@ -6564,7 +6564,7 @@ case Cadd_arg1:
 case Cadd_arg2:
 {
 	BC_WORD *n;
-	
+
 	if ((heap_free-=5)<0)
 		break;
 	n=(BC_WORD*)asp[0];
@@ -6582,7 +6582,7 @@ case Cadd_arg2:
 case Cadd_arg3:
 {
 	BC_WORD *n,*a;
-	
+
 	if ((heap_free-=6)<0)
 		break;
 	n=(BC_WORD*)asp[0];
