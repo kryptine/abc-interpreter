@@ -811,7 +811,7 @@ void code_buildh(char descriptor_name[],int arity);
 
 void code_build(char descriptor_name[],int arity,char *code_name) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		fprintf(stderr, "warning: build %s %d %s\n",descriptor_name,arity,code_name);
+		fprintf(stderr, "Warning: build %s %d %s\n",descriptor_name,arity,code_name);
 		code_buildh(descriptor_name,arity);
 		return;
 	}
@@ -1125,6 +1125,10 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 			add_instruction_label(Cbuild_u02,code_name);
 			return;
 		}
+		if (b_size==3) {
+			add_instruction_label(Cbuild_u03,code_name);
+			return;
+		}
 	} else if (a_size==1) {
 		if (b_size==1) {
 			add_instruction_label(Cbuild_u11,code_name);
@@ -1379,7 +1383,7 @@ void code_exit_false(char label_name[]) {
 
 void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		fprintf(stderr, "warning: fill %s %d %s\n",descriptor_name,arity,code_name);
+		fprintf(stderr, "Warning: fill %s %d %s\n",descriptor_name,arity,code_name);
 		code_fillh(descriptor_name,arity,a_offset);
 		return;
 	}
@@ -2310,6 +2314,10 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 		}
 		if (b_size==2) {
 			add_instruction_label(Cpush_node_u02,label_name);
+			return;
+		}
+		if (b_size==3) {
+			add_instruction_label(Cpush_node_u03,label_name);
 			return;
 		}
 	} else if (a_size==1) {
@@ -3531,9 +3539,9 @@ void code_a(int n_apply_args,char *ea_label_name) {
 		add_instruction(Chalt);
 	} else {
 		if (ea_label_name!=NULL)
-			printf("Error .a %d %s\n",n_apply_args,ea_label_name);
+			fprintf(stderr, "Warning: .a %d %s\n",n_apply_args,ea_label_name);
 		else
-			printf("Error .a %d\n",n_apply_args);
+			fprintf(stderr, "Warning: .a %d\n",n_apply_args);
 		/* to do add_empty_node_n */
 		add_instruction(CA_data_IIl);
 		add_instruction(Chalt);
@@ -3891,9 +3899,9 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			} else {
 				/* to do eval_upd_n */
 				if (ea_label_name!=NULL)
-					printf("Error .n %d %s\n",number_of_arguments,ea_label_name);
+					fprintf(stderr, "Warning: .n %d %s\n",number_of_arguments,ea_label_name);
 				else
-					printf("Error .n %d\n",number_of_arguments);
+					fprintf(stderr, "Warning: .n %d\n",number_of_arguments);
 				add_instruction(Chalt);
 				add_label(ea_label_name);
 				add_instruction(Chalt);
