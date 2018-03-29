@@ -7,7 +7,7 @@ lqueen	StdInt,StdList
 mulmat	StdInt
 nfib	StdInt
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-revtwice	StdClass,StdInt,StdList,StdOverloaded,_SystemEnum
+revtwice	StdClass,StdInt,StdOverloaded,_SystemEnum
 sieve	StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 squeen	StdInt,StdList
 stwice	StdInt
