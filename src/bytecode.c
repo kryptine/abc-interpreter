@@ -72,17 +72,9 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 		}
 
 		if (data[i] >= (BC_WORD) data && data[i] < (BC_WORD) (data + length)) {
-#if (WORD_WIDTH == 64)
-			fprintf(f, "  <data+%lu>\n", (data[i] - (BC_WORD) data) / 8);
-#else
-			fprintf(f, "  <data+%u>\n", (data[i] - (BC_WORD) data) / 4);
-#endif
+			fprintf(f, "  <data+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) data) / IF_INT_64_OR_32(8,4));
 		} else if (data[i] >= (BC_WORD) code && data[i] < (BC_WORD) (code + code_length)) {
-#if (WORD_WIDTH == 64)
-			fprintf(f, "  <code+%lu>\n", (data[i] - (BC_WORD) code) / 8);
-#else
-			fprintf(f, "  <code+%u>\n", (data[i] - (BC_WORD) code) / 4);
-#endif
+			fprintf(f, "  <code+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) code) / IF_INT_64_OR_32(8,4));
 		} else {
 			fprintf(f, IF_INT_64_OR_32("  %ld\n","  %d\n"), data[i]);
 		}
