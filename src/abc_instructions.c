@@ -1103,7 +1103,7 @@ char *instruction_type (BC_WORD i) {
 		case Cjsr_eval1:             return "";
 		case Cjsr_eval2:             return "";
 		case Cjsr_eval3:             return "";
-		case Cjesr:                  return "?";
+		case Cjesr:                  return "n";
 		case CltC:                   return "";
 		case CltI:                   return "";
 		case CmulI:                  return "";

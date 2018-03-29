@@ -6648,11 +6648,10 @@ case Cstack_check:
 	++pc;
 	continue;
 case Cjesr:
-#if 0
-	printf ("%d\n",pc[1]);
+#if DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t" BC_WORD_FMT "\n",pc[1]);
 #endif
 	switch (pc[1]){
-		
 		case 1:
 			pc+=2;
 			g_asp=asp;
