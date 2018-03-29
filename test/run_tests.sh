@@ -108,7 +108,7 @@ do
 
 	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
 	if [ $? -ne 0 ]; then
-		echo -e "${RED}FAILED: $MODULE$RESET"
+		echo -e "${RED}FAILED: $MODULE (compilation)$RESET"
 		FAILED=1
 		continue
 	fi
@@ -121,7 +121,12 @@ do
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 
 	rm $MODULE.bc 2>/dev/null
-	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc >/dev/null
+	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc
+	if [ $? -ne 0 ]; then
+		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
+		FAILED=1
+		continue
+	fi
 
 	/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
 
@@ -131,7 +136,7 @@ do
 
 	diff $MODULE.expected $MODULE.result
 	if [ $? -ne 0 ]; then
-		echo -e "${RED}FAILED: $MODULE$RESET"
+		echo -e "${RED}FAILED: $MODULE (different result)$RESET"
 		FAILED=1
 	else
 		echo -e "${GREEN}Passed: $MODULE$RESET"

@@ -77,30 +77,25 @@ void parse_line(char* line, unsigned int line_nr) {
 	while (isspace(*end))
 		end++;
 
-	if (end == line && line[0] != '.' && line[0] != '|') {
+	if (*(end-1) == '\n' || *end == '|') {
+		return;
+	} else if (end == line && line[0] != '.' && line[0] != '|') {
 		char s[MAX_STRING_LENGTH];
 		strsep(&end, " \r\n\t");
 		current_line = line;
 		last_char = next_character();
 		parse_label(s);
 		code_label(s);
-		printf("%s\n", s);
 	} else if ((token = strsep(&end, " \r\n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
 		if (i != NULL) {
-			if (i->name[0] == '.') {
-				printf("%s\t%s", i->name, end);
-			} else {
-				printf("\t%s\t%s", i->name, end);
-			}
 			current_line = end;
 			last_char = next_character();
 			skip_spaces_and_tabs();
 			i->parse_function(i);
-		} else if (end) {
-			printf("\t???\t%s %s\n", line, end);
 		} else {
-			printf("\t???\t%s\n", line);
+			fprintf(stderr, "Parse error at line %d.\n", line_nr);
+			exit(1);
 		}
 	}
 }

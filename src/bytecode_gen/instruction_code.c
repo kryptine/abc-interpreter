@@ -8,7 +8,7 @@
 #include "../util.h"
 #include "bytecode_gen.h"
 
-#define max_implemented_instruction_n Cstack_check
+#define max_implemented_instruction_n CA_data_a
 
 #define N_ADD_ARG_LABELS 32
 #define MAX_Cadd_arg_INSTRUCTION_N 16
@@ -282,21 +282,18 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
 			Fadd_arg_labels[i].label_offset = pgrm.code_size<<2;
-			printf("%s:\n",Fadd_arg_labels[i].label_name);
 			if (i>MAX_Cadd_arg_INSTRUCTION_N) {
-				printf("Cadd_arg%d not yet implemented:\n",i);
+				fprintf(stderr, "Error: Cadd_arg%d not yet implemented:\n",i);
 				++i;
 				while(i<N_ADD_ARG_LABELS) {
 					if (Fadd_arg_label_used[i])
-						printf("Cadd_arg%d not yet implemented:\n",i);
+						fprintf(stderr, "Error: Cadd_arg%d not yet implemented:\n",i);
 					++i;
 				}
 				exit(1);
 			}
 			add_instruction(Cadd_arg0+i);
 		}
-
-	printf("Relocations:\n");
 
 	undefined_label=0;
 
@@ -347,7 +344,7 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 	}
 
 	if (undefined_label) {
-		printf("Undefined label\n");
+		fprintf(stderr, "Error: undefined label\n");
 		exit(1);
 	}
 	
@@ -814,13 +811,13 @@ void code_buildh(char descriptor_name[],int arity);
 
 void code_build(char descriptor_name[],int arity,char *code_name) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		printf("warning: build %s %d %s\n",descriptor_name,arity,code_name);
+		fprintf(stderr, "Warning: build %s %d %s\n",descriptor_name,arity,code_name);
 		code_buildh(descriptor_name,arity);
 		return;
 	}
 /*
 	if (! (descriptor_name[0]=='_' && descriptor_name[1]=='_' && descriptor_name[2]=='\0')) {
-		printf("build %s %d %s\n",descriptor_name,arity,code_name);
+		fprintf(stderr, "Error: build %s %d %s\n",descriptor_name,arity,code_name);
 		exit(1);
 	}
 */
@@ -1035,7 +1032,7 @@ void code_buildhr(char descriptor_name[],int a_size,int b_size) {
 		return;
 	}
 	
-	printf("buildhr %s %d %d\n",descriptor_name,a_size,b_size);
+	fprintf(stderr, "Error: buildhr %s %d %d\n",descriptor_name,a_size,b_size);
 	exit(1);
 }
 
@@ -1114,7 +1111,7 @@ void code_build_r(char descriptor_name[],int a_size,int b_size,int a_offset,int 
 		return;
 	}
 
-	printf("build_r %s %d %d %d %d\n",descriptor_name,a_size,b_size,a_offset,b_offset);
+	fprintf(stderr, "Error: build_r %s %d %d %d %d\n",descriptor_name,a_size,b_size,a_offset,b_offset);
 	exit(1);
 }
 
@@ -1126,6 +1123,10 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 		}
 		if (b_size==2) {
 			add_instruction_label(Cbuild_u02,code_name);
+			return;
+		}
+		if (b_size==3) {
+			add_instruction_label(Cbuild_u03,code_name);
 			return;
 		}
 	} else if (a_size==1) {
@@ -1166,7 +1167,7 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 		return;
 	}
 
-	printf("build_u %s %d %d %s\n",descriptor_name,a_size,b_size,code_name);
+	fprintf(stderr, "Error: build_u %s %d %d %s\n",descriptor_name,a_size,b_size,code_name);
 	exit(1);
 }
 
@@ -1257,7 +1258,7 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 		return;
 	} while(0);
 	
-	printf("create_array %s %d %d\n",element_descriptor,a_size,b_size);
+	fprintf(stderr, "Error: create_array %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);	
 }
 
@@ -1382,7 +1383,7 @@ void code_exit_false(char label_name[]) {
 
 void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		printf("warning: fill %s %d %s\n",descriptor_name,arity,code_name);
+		fprintf(stderr, "Warning: fill %s %d %s\n",descriptor_name,arity,code_name);
 		code_fillh(descriptor_name,arity,a_offset);
 		return;
 	}
@@ -1409,7 +1410,7 @@ void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 		return;
 	}
 
-	printf("fill %s %d %s %d\n",descriptor_name,arity,code_name,a_offset);
+	fprintf(stderr, "Error: fill %s %d %s %d\n",descriptor_name,arity,code_name,a_offset);
 	exit(1);
 }
 
@@ -1444,7 +1445,7 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		}
 	}
 	
-	printf("fill1 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
+	fprintf(stderr, "Error: fill1 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
 	exit(1);
 }
 
@@ -1475,7 +1476,7 @@ void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 		}
 	}
 
-	printf("fill1_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
+	fprintf(stderr, "Error: fill1_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
 	exit(1);
 }
 
@@ -1538,7 +1539,7 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		}
 	}
 
-	printf("fill2 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
+	fprintf(stderr, "Error: fill2 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
 	exit(1);
 }
 
@@ -1684,7 +1685,7 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 		}
 	}
 
-	printf("fill2_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
+	fprintf(stderr, "Error: fill2_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
 	exit(1);
 }
 
@@ -1710,7 +1711,7 @@ void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		return;
 	}
 
-	printf("fill3 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
+	fprintf(stderr, "Error: fill3 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
 	exit(1);
 }
 
@@ -1764,7 +1765,7 @@ void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 		}
 	}
 	
-	printf("fill3_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
+	fprintf(stderr, "Error: fill3_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
 	exit(1);
 }
 
@@ -1889,7 +1890,7 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 		return;
 	}
 
-	printf("code_fill_r %s %d %d %d %d %d\n",descriptor_name,a_size,b_size,root_offset,a_offset,b_offset);
+	fprintf(stderr, "Error: code_fill_r %s %d %d %d %d %d\n",descriptor_name,a_size,b_size,root_offset,a_offset,b_offset);
 	exit(1);
 }
 
@@ -1931,7 +1932,7 @@ void code_jmp_ap(int n_apply_args) {
 		return;
 	}
 
-	printf("jmp_ap %d\n",n_apply_args);
+	fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
 	exit(1);
 }
 
@@ -1983,7 +1984,7 @@ void code_jsr(char label_name[]) {
 	int lib_function_n;
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near jsr\n");
 		exit(1);
 	}
 
@@ -2025,7 +2026,7 @@ void code_jsr_ap(int n_apply_args) {
 		return;
 	}
 
-	printf("jsr_ap %d\n",n_apply_args);
+	fprintf(stderr, "Error: jsr_ap %d\n",n_apply_args);
 	exit(1);
 }
 
@@ -2192,7 +2193,7 @@ void code_pushcaf(char *label_name,int a_size,int b_size) {
 			return;
 		}
 	}
-	printf("pushcaf %s %d %d\n",label_name,a_size,b_size);
+	fprintf(stderr, "Error: pushcaf %s %d %d\n",label_name,a_size,b_size);
 	exit(1);
 }
 
@@ -2229,7 +2230,7 @@ void code_push_arg(int a_offset,int arity,int argument_number) {
 		return;
 	}
 
-	printf("push_arg %d %d %d\n",a_offset,arity,argument_number);
+	fprintf(stderr, "Error: push_arg %d %d %d\n",a_offset,arity,argument_number);
 	exit(1);
 }
 
@@ -2253,7 +2254,7 @@ void code_push_args(int a_offset,int arity,int n_arguments) {
 				return;
 		}
 	}
-	printf("push_args %d %d %d\n",a_offset,arity,n_arguments);
+	fprintf(stderr, "Error: push_args %d %d %d\n",a_offset,arity,n_arguments);
 	exit(1);	
 }
 
@@ -2263,7 +2264,7 @@ void code_push_args_u(int a_offset,int arity,int n_arguments) {
 		return;
 	}
 
-	printf("push_args_u %d %d %d\n",a_offset,arity,n_arguments);
+	fprintf(stderr, "Error: push_args_u %d %d %d\n",a_offset,arity,n_arguments);
 	exit(1);	
 }
 
@@ -2315,6 +2316,10 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 			add_instruction_label(Cpush_node_u02,label_name);
 			return;
 		}
+		if (b_size==3) {
+			add_instruction_label(Cpush_node_u03,label_name);
+			return;
+		}
 	} else if (a_size==1) {
 		if (b_size==1) {
 			add_instruction_label(Cpush_node_u11,label_name);
@@ -2349,7 +2354,7 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 		add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
 		return; 
 	}
-	printf("push_node_u %s %d %d\n",label_name,a_size,b_size);
+	fprintf(stderr, "Error: push_node_u %s %d %d\n",label_name,a_size,b_size);
 	exit(1);
 }
 
@@ -2367,7 +2372,7 @@ void code_push_r_arg_u(int a_offset,int a_size,int b_size,int a_arg_offset,int a
 		return;
 	}
 
-	printf("push_r_arg_u %d %d %d %d %d %d %d\n",a_offset,a_size,b_size,a_arg_offset,a_arg_size,b_arg_offset,b_arg_size);
+	fprintf(stderr, "Error: push_r_arg_u %d %d %d %d %d %d %d\n",a_offset,a_size,b_size,a_arg_offset,a_arg_size,b_arg_offset,b_arg_size);
 	exit(1);
 }
 
@@ -2452,7 +2457,7 @@ void code_push_r_args(int a_offset,int a_size,int b_size) {
 		return;
 	}
 
-	printf("push_r_args %d %d %d\n",a_offset,a_size,b_size);
+	fprintf(stderr, "Error: push_r_args %d %d %d\n",a_offset,a_size,b_size);
 	exit(1);
 }
 
@@ -2484,7 +2489,7 @@ void code_push_r_args_a(int a_offset,int a_size,int b_size,int argument_number,i
 		return;
 	}
 	
-	printf("push_r_args_a %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
+	fprintf(stderr, "Error: push_r_args_a %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
 	exit(1);
 }
 
@@ -2546,7 +2551,7 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 		}
 	}
 
-	printf("push_r_args_b %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
+	fprintf(stderr, "Error: push_r_args_b %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
 	exit(1);
 }
 
@@ -2590,7 +2595,7 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 		return;
 	}
 
-	printf("replace %s %d %d\n",element_descriptor,a_size,b_size);
+	fprintf(stderr, "Error: replace %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);
 }
 
@@ -2641,7 +2646,7 @@ void code_repl_args(int arity,int n_arguments) {
 		}
 	}
 	
-	printf("repl_args %d %d\n",arity,n_arguments);
+	fprintf(stderr, "Error: repl_args %d %d\n",arity,n_arguments);
 	exit(1);	
 }
 
@@ -2721,7 +2726,7 @@ void code_repl_r_args(int a_size,int b_size) {
 		return;
 	}
 
-	printf("repl_r_args %d %d\n",a_size,b_size);
+	fprintf(stderr, "Error: repl_r_args %d %d\n",a_size,b_size);
 	exit(1);	
 }
 
@@ -2754,7 +2759,7 @@ void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_argument
 		return;	
 	}
 	
-	printf("repl_r_args_a %d %d %d %d\n",a_size,b_size,argument_number,n_arguments);
+	fprintf(stderr, "Error: repl_r_args_a %d %d %d %d\n",a_size,b_size,argument_number,n_arguments);
 	exit(1);	
 }
 
@@ -2833,7 +2838,7 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 		return;
 	}
 
-	printf("select %s %d %d\n",element_descriptor,a_size,b_size);
+	fprintf(stderr, "Error: select %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);	
 }
 
@@ -2922,7 +2927,7 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		return;
 	}
 	
-	printf("update %s %d %d\n",element_descriptor,a_size,b_size);
+	fprintf(stderr, "Error: update %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);
 }
 
@@ -2972,7 +2977,7 @@ void code_andIio(CleanInt i,int b_offset) {
 
 void code_buildh0_dup_a(char descriptor_name[],int a_offset) {
 	if (a_offset==0) {
-		printf("code_buildh0_dup_a %s %d\n",descriptor_name,a_offset);
+		fprintf(stderr, "Error: code_buildh0_dup_a %s %d\n",descriptor_name,a_offset);
 		exit(1);
 	}
 
@@ -2981,7 +2986,7 @@ void code_buildh0_dup_a(char descriptor_name[],int a_offset) {
 
 void code_buildh0_dup2_a(char descriptor_name[],int a_offset) {
 	if (a_offset==0) {
-		printf("code_buildh0_dup2_a %s %d\n",descriptor_name,a_offset);
+		fprintf(stderr, "Error: code_buildh0_dup2_a %s %d\n",descriptor_name,a_offset);
 		exit(1);
 	}
 
@@ -2990,7 +2995,7 @@ void code_buildh0_dup2_a(char descriptor_name[],int a_offset) {
 
 void code_buildh0_dup3_a(char descriptor_name[],int a_offset) {
 	if (a_offset==0) {
-		printf("code_buildh0_dup3_a %s %d\n",descriptor_name,a_offset);
+		fprintf(stderr, "Error: code_buildh0_dup3_a %s %d\n",descriptor_name,a_offset);
 		exit(1);
 	}
 
@@ -2999,7 +3004,7 @@ void code_buildh0_dup3_a(char descriptor_name[],int a_offset) {
 
 void code_buildh0_put_a(char descriptor_name[],int a_offset) {
 	if (a_offset==0) {
-		printf("code_buildh0_put_a %s %d\n",descriptor_name,a_offset);
+		fprintf(stderr, "Error: code_buildh0_put_a %s %d\n",descriptor_name,a_offset);
 		exit(1);
 	}
 
@@ -3010,12 +3015,12 @@ void code_buildh0_put_a_jsr(char descriptor_name[],int a_offset,char label_name[
 	int lib_function_n;
 
 	if (a_offset==0) {
-		printf("code_buildh0_put_a_jsr %s %d\n",descriptor_name,a_offset);
+		fprintf(stderr, "Error: code_buildh0_put_a_jsr %s %d\n",descriptor_name,a_offset);
 		exit(1);
 	}
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near buildh0_put_a_jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near buildh0_put_a_jsr\n");
 		exit(1);
 	}
 
@@ -3217,7 +3222,7 @@ void code_pop_a_jsr(int n,char label_name[]) {
 	int lib_function_n;
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near pop_a_jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near pop_a_jsr\n");
 		exit(1);
 	}
 
@@ -3265,7 +3270,7 @@ void code_pop_b_jsr(int n,char label_name[]) {
 	int lib_function_n;
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near pop_b_jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near pop_b_jsr\n");
 		exit(1);
 	}
 
@@ -3308,7 +3313,7 @@ void code_push_a_jsr(int a_offset,char label_name[]) {
 	int lib_function_n;
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near push_a_jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near push_a_jsr\n");
 		exit(1);
 	}
 
@@ -3354,7 +3359,7 @@ void code_push_b_jsr(int b_offset,char label_name[]) {
 	int lib_function_n;
 
 	if (last_jsr_with_d) {
-		printf(".d or .o directive used incorrectly near push_b_jsr\n");
+		fprintf(stderr, "Error: .d or .o directive used incorrectly near push_b_jsr\n");
 		exit(1);
 	}
 
@@ -3534,9 +3539,9 @@ void code_a(int n_apply_args,char *ea_label_name) {
 		add_instruction(Chalt);
 	} else {
 		if (ea_label_name!=NULL)
-			printf("Error .a %d %s\n",n_apply_args,ea_label_name);
+			fprintf(stderr, "Warning: .a %d %s\n",n_apply_args,ea_label_name);
 		else
-			printf("Error .a %d\n",n_apply_args);
+			fprintf(stderr, "Warning: .a %d\n",n_apply_args);
 		/* to do add_empty_node_n */
 		add_instruction(CA_data_IIl);
 		add_instruction(Chalt);
@@ -3565,7 +3570,7 @@ void code_caf(char *label_name,int a_size,int b_size) {
 	}
 
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3588,7 +3593,7 @@ void code_comp(int version,char *options) {
 
 void code_d(int da,int db,ULONG vector[]) {
 	if (last_d) {
-		printf(".d directive used incorrectly\n");
+		fprintf(stderr, "Error: .d directive used incorrectly\n");
 		exit(1);
 	}
 	last_d=1;
@@ -3614,7 +3619,7 @@ struct label *code_descriptor
 		printf("%s:\n",label_name);
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3677,7 +3682,7 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3718,7 +3723,7 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3754,7 +3759,7 @@ void code_descs(char label_name[],char node_entry_label_name[],char *result_desc
 
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3805,7 +3810,7 @@ void code_label(char *label_name) {
 
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=pgrm.code_size<<2;
@@ -3839,7 +3844,7 @@ void code_module(char label_name[],char string[],uint32_t string_length) {
 	}
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -3894,9 +3899,9 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			} else {
 				/* to do eval_upd_n */
 				if (ea_label_name!=NULL)
-					printf("Error .n %d %s\n",number_of_arguments,ea_label_name);
+					fprintf(stderr, "Warning: .n %d %s\n",number_of_arguments,ea_label_name);
 				else
-					printf("Error .n %d\n",number_of_arguments);
+					fprintf(stderr, "Warning: .n %d\n",number_of_arguments);
 				add_instruction(Chalt);
 				add_label(ea_label_name);
 				add_instruction(Chalt);
@@ -3956,7 +3961,7 @@ void code_o(int oa,int ob,ULONG vector[]) {
 			if (i!=Cpop_a_jsr && i!=Cpop_b_jsr && i!=Cpush_a_jsr && i!=Cpush_b_jsr
 				&& pgrm.code[pgrm.code_size-4].value!=Cbuildh0_put_a_jsr)
 			{
-				printf(".o directive used incorrectly near jsr\n");
+				fprintf(stderr, "Error: .o directive used incorrectly near jsr\n");
 				exit(1);
 			}
 		}
@@ -3988,7 +3993,7 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 
 	record_label=enter_label(record_label_name);
 	if (record_label->label_offset!=-1) {
-		printf("Label %s already defined\n",record_label_name);
+		fprintf(stderr, "Error: label %s already defined\n",record_label_name);
 		exit(1);
 	}
 	record_label->label_offset=(pgrm.data_size<<2)+1;
@@ -4014,7 +4019,7 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 
 	record_label=enter_label(record_label_name);
 	if (record_label->label_offset!=-1) {
-		printf("Label %s already defined\n",record_label_name);
+		fprintf(stderr, "Error: label %s already defined\n",record_label_name);
 		exit(1);
 	}
 	record_label->label_offset=(pgrm.data_size<<2)+1;
@@ -4047,7 +4052,7 @@ void code_string(char label_name[],char string[],int string_length) {
 	
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
-		printf("Label %s already defined\n",label_name);
+		fprintf(stderr, "Error: label %s already defined\n",label_name);
 		exit(1);
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
@@ -4102,8 +4107,6 @@ void write_program(FILE* program_file) {
 	// uint32_t should be enough
 	uint32_t i,n_code_code_relocations,n_code_data_relocations,n_data_code_relocations,n_data_data_relocations;
 
-	printf("Program\n");
-
 	n_code_data_relocations=0;
 	for(i=0; i<pgrm.code_reloc_size; ++i)
 		n_code_data_relocations += pgrm.code_relocations[i].relocation_label->label_offset & 1;
@@ -4130,7 +4133,7 @@ void write_program(FILE* program_file) {
 	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
 	
 	if (fclose(program_file)) {
-		printf("Error writing program file\n");
+		fprintf(stderr, "Error writing program file\n");
 		exit(1);	
 	}
 }

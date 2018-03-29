@@ -1305,6 +1305,18 @@ case Cbuild_u02:
 	hp+=3;
 	pc+=2;
 	continue;
+case Cbuild_u03:
+	if ((heap_free-=4)<0)
+		break;
+	hp[0]=pc[1];
+	hp[1]=bsp[0];
+	hp[2]=bsp[1];
+	hp[3]=bsp[2];
+	*++asp=(BC_WORD)hp;
+	bsp+=3;
+	hp+=4;
+	pc+=2;
+	continue;
 case Cbuild_u11:
 	if ((heap_free-=3)<0)
 		break;
@@ -3711,7 +3723,7 @@ case Cpush_node_ua1:
 case Cpush_node_u01:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 	n[0]=*(BC_WORD*)&pc[1];
 	*--bsp=n[1];
@@ -3721,7 +3733,7 @@ case Cpush_node_u01:
 case Cpush_node_u02:
 {
 	BC_WORD *n;
-	
+
 	n=(BC_WORD*)*asp;
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)asp, (void*) *asp, pc[1] - (BC_WORD) data, pc[1]);
@@ -3730,6 +3742,19 @@ case Cpush_node_u02:
 	bsp[-2]=n[1];
 	bsp[-1]=n[2];
 	bsp-=2;
+	pc+=2;
+	continue;
+}
+case Cpush_node_u03:
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)*asp;
+	n[0]=pc[1];
+	bsp[-3]=n[1];
+	bsp[-2]=n[2];
+	bsp[-1]=n[3];
+	bsp-=3;
 	pc+=2;
 	continue;
 }

@@ -136,6 +136,8 @@ char *instruction_name(BC_WORD i) {
 			return "build_u01";
 		case Cbuild_u02:
 			return "build_u02";
+		case Cbuild_u03:
+			return "build_u03";
 		case Cbuild_u11:
 			return "build_u11";
 		case Cbuild_u12:
@@ -452,6 +454,8 @@ char *instruction_name(BC_WORD i) {
 			return "push_node_u01";
 		case Cpush_node_u02:
 			return "push_node_u02";
+		case Cpush_node_u03:
+			return "push_node_u03";
 		case Cpush_node_u11:
 			return "push_node_u11";
 		case Cpush_node_u12:
@@ -998,6 +1002,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_u:               return "?";
 		case Cbuild_u01:             return "?";
 		case Cbuild_u02:             return "l";
+		case Cbuild_u03:             return "l";
 		case Cbuild_u11:             return "l";
 		case Cbuild_u12:             return "l";
 		case Cbuild_u13:             return "?";
@@ -1156,6 +1161,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node_ua1:         return "?";
 		case Cpush_node_u01:         return "?";
 		case Cpush_node_u02:         return "l";
+		case Cpush_node_u03:         return "l";
 		case Cpush_node_u11:         return "l";
 		case Cpush_node_u12:         return "l";
 		case Cpush_node_u13:         return "?";
