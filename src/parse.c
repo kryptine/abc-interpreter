@@ -116,8 +116,8 @@ int parse_file(struct parser *state, FILE *file) {
 							state->program->code[state->ptr++] = elem16;
 							break;
 						case 'n': /* Stack index */
-							safe_read(&elem64, sizeof(elem64), 1, file);
-							state->program->code[state->ptr++] = elem64;
+							safe_read(&elem16, sizeof(elem16), 1, file);
+							state->program->code[state->ptr++] = elem16;
 							break;
 						case 'N': /* Stack index, optimised to byte width */
 							safe_read(&elem16, sizeof(elem16), 1, file);
