@@ -162,7 +162,7 @@ struct label *enter_label(char *label_name) {
 void store_data_l(uint64_t v) {
 	if (pgrm.data_size >= allocated_data_size)
 		realloc_data();
-	*(SI*)&pgrm.data[pgrm.data_size++] = v;
+	*(uint64_t*)&pgrm.data[pgrm.data_size++] = v;
 }
 
 void store_code_internal_label_value(struct label *label,uint32_t offset) {

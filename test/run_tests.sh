@@ -54,10 +54,10 @@ while true; do
 			RUN_ONLY="$2"
 			shift 2;;
 		-h | --heap)
-			RUNFLAGS+="-h $2"
+			RUNFLAGS+=" -h $2"
 			shift 2;;
 		-s | --stack)
-			RUNFLAGS+="-s $2"
+			RUNFLAGS+=" -s $2"
 			shift 2;;
 
 		-3 | --32-bit)
