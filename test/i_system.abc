@@ -385,15 +385,11 @@ _print_args
 .d 1 0
 	jsr	_print
 .o 0 0
-|	decI		| decrease argument count
-	pushI -1
-	addI		| decrease argument count
+	decI		| decrease argument count
 	jmp	_print_args
 _print_last_arg
 	pop_b	1	| remove argument count
-|	incI		| increment bracket count
-	pushI 1
-	addI		| increment bracket count
+	incI		| increment bracket count
 	jmp	_continue_print	| optimised tail recursion!
 
 _print_last
@@ -407,9 +403,7 @@ _print_brackets
 	eqI_b	0 0	| stop printing brackets if
 	jmp_true	_exit_brackets	| bracket count is zero
 	print_sc	")"
-|	decI		| decrement bracket count
-	pushI -1
-	addI		| decrement bracket count
+	decI		| decrement bracket count
 	jmp	_print_brackets
 _exit_brackets
 	pop_b	1	| remove bracket count
