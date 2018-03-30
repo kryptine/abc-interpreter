@@ -191,7 +191,7 @@ void code_pop_b_jmp(int n, char label_name[]);
 void code_pop_b_jsr(int n, char label_name[]);
 void code_pop_b_pushB(int n, int b);
 void code_pop_b_rtn(int n);
-void code_pushD_a_jmp_eqD_b2(int a_offset, char descriptor_name1[], int arity1, char label_name1[], 
+void code_pushD_a_jmp_eqD_b2(int a_offset, char descriptor_name1[], int arity1, char label_name1[],
 		char descriptor_name2[], int arity2, char label_name2[]);
 void code_push_a_jsr(int a_offset, char label_name[]);
 void code_push_arraysize_a(char element_descriptor[], int a_size, int b_size, int a_offset);
@@ -235,12 +235,12 @@ void code_caf(char *label_name, int a_size, int b_size);
 void code_comp(int version, char *options);
 void code_d(int da, int db, unsigned long vector[]);
 void code_depend(char *module_name, int module_name_length);
-void code_desc(char label_name[], char node_entry_label_name[], char *code_label_name, 
+void code_desc(char label_name[], char node_entry_label_name[], char *code_label_name,
 		int arity, int lazy_record_flag, char descriptor_name[], int descriptor_name_length);
 void code_desc0(char label_name[], int desc0_number, char descriptor_name[], int descriptor_name_length);
-void code_descn(char label_name[], char node_entry_label_name[], int arity, int lazy_record_flag, char descriptor_name[], 
+void code_descn(char label_name[], char node_entry_label_name[], int arity, int lazy_record_flag, char descriptor_name[],
 		int descriptor_name_length);
-void code_descs(char label_name[], char node_entry_label_name[], char *result_descriptor_name, 
+void code_descs(char label_name[], char node_entry_label_name[], char *result_descriptor_name,
 		uint32_t offset1, uint32_t offset2, char descriptor_name[], uint32_t descriptor_name_length);
 void code_descexp(char label_name[],char node_entry_label_name[],char *code_label_name,
 				   int32_t arity, int32_t lazy_record_flag, char descriptor_name[],uint32_t descriptor_name_length);

@@ -309,7 +309,7 @@ ea_AP
 .d 1 0
 	pop_a_rtn 1
 
-.o 1 0			
+.o 1 0
 _hnf
 .d 1 0
 	rtn

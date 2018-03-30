@@ -101,7 +101,7 @@ struct label *new_internal_label(void) {
 	new_label_p->label_name="internal label";
 	new_label_p->label_module_n=module_n;
 	new_label_p->label_offset=-1;
-	
+
 	return new_label_p;
 }
 
@@ -112,18 +112,18 @@ struct label *enter_label(char *label_name) {
 	while (*label_node_pp!=NULL) {
 		struct label_node *label_node_p;
 		int r;
-		
+
 		label_node_p=*label_node_pp;
 		r=strcmp(label_name,label_node_p->label_node_label_p->label_name);
 		if (r==0) {
 			if (label_node_p->label_node_label_p->label_module_n>=0 && label_node_p->label_node_label_p->label_module_n!=module_n) {
 				if (label_node_p->label_node_label_p->label_offset<0) {
 					label_node_p->label_node_label_p->label_module_n = -1;
-					
+
 					return label_node_p->label_node_label_p;
 				} else {
 					struct label *new_label_p;
-					
+
 					new_label_p = (struct label*) safe_malloc(sizeof(struct label));
 					new_label_p->label_name=label_node_p->label_node_label_p->label_name;
 					new_label_p->label_module_n=module_n;
@@ -154,7 +154,7 @@ struct label *enter_label(char *label_name) {
 	strcpy(new_label_p->label_name, label_name);
 	new_label_p->label_module_n = module_n;
 	new_label_p->label_offset = -1;
-	
+
 	*label_node_pp = new_label_node_p;
 	return new_label_p;
 }
@@ -171,7 +171,7 @@ void store_code_internal_label_value(struct label *label,uint32_t offset) {
 
 	{
 		struct relocation *relocation_p;
-		
+
 		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
@@ -182,7 +182,7 @@ void store_code_internal_label_value(struct label *label,uint32_t offset) {
 
 void store_code_label_value(char *label_name,int32_t offset) {
 	struct label *label;
-	
+
 	label=enter_label(label_name);
 
 	if (pgrm.code_reloc_size>=allocated_code_relocations_size)
@@ -190,7 +190,7 @@ void store_code_label_value(char *label_name,int32_t offset) {
 
 	{
 		struct relocation *relocation_p;
-		
+
 		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
 		relocation_p->relocation_offset=pgrm.code_size;
 		relocation_p->relocation_label=label;
@@ -205,7 +205,7 @@ static void store_data_label_value_of_label(struct label *label,uint32_t offset)
 
 	{
 		struct relocation *relocation_p;
-		
+
 		relocation_p=&pgrm.data_relocations[pgrm.data_reloc_size++];
 		relocation_p->relocation_offset=pgrm.data_size;
 		relocation_p->relocation_label=label;
@@ -221,14 +221,14 @@ void store_data_label_value(char *label_name,uint32_t offset) {
 void add_data2_to_code(int i) {
 	if (list_code)
 		printf("%d\t.data2 %d\n",pgrm.code_size,i);
-	
+
 	store_code_elem(2, i);
 }
 
 void add_data8_to_code(int i) {
 	if (list_code)
 		printf("%d\t.data8 %d\n",pgrm.code_size,i);
-	
+
 	store_code_elem(8, i);
 }
 
@@ -278,7 +278,7 @@ static struct label Fadd_arg_labels[N_ADD_ARG_LABELS]
 struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 	int i,undefined_label;
 	size_t code_offset,data_offset;
-	
+
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
 			Fadd_arg_labels[i].label_offset = pgrm.code_size<<2;
@@ -302,7 +302,7 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 		data_offset = (size_t) pgrm.data;
 	} else {
 		code_offset = 0;
-		data_offset = 0;	
+		data_offset = 0;
 	}
 
 	for(i=0; i<pgrm.code_reloc_size; ++i) {
@@ -317,7 +317,7 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
 		}
-			
+
 		if ((offset & 1)==0)
 			pgrm.code[relocation_p->relocation_offset].value += offset + code_offset;
 		else
@@ -347,14 +347,14 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 		fprintf(stderr, "Error: undefined label\n");
 		exit(1);
 	}
-	
+
 	return pgrm.code;
 }
 
 void add_code_and_data_offsets(void) {
 	int i;
 	size_t code_offset,data_offset;
-	
+
 	code_offset = (size_t) pgrm.code;
 	data_offset = (size_t) pgrm.data;
 
@@ -410,7 +410,7 @@ void add_instruction_label_offset_w(US i,char *label_name,uint32_t offset,SI n1)
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 }
 
 void add_instruction_label_offset_w_label(US i,char *label_name1,uint32_t offset,SI n1,char *label_name2) {
@@ -419,7 +419,7 @@ void add_instruction_label_offset_w_label(US i,char *label_name1,uint32_t offset
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_label_value(label_name1,offset);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name2,0);
 }
 
@@ -442,19 +442,11 @@ void add_instruction_label_w_w(SS i,char *label_name,SI n1,SI n2) {
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 }
 
 void add_instruction_w(SS i,SI n) {
-	if (list_code || i>max_implemented_instruction_n)
-		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
-
-	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n);
-}
-
-void add_instruction_w2(SS i,SI n) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
 
@@ -467,20 +459,11 @@ void add_instruction_w_i(SS i,SI n1,int n2) {
 		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,n2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_elem(8, n2);
 }
 
 void add_instruction_w_label(SS i,SI n,char *label_name) {
-	if (list_code || i>max_implemented_instruction_n)
-		printf("%d\t%s %d %s\n",pgrm.code_size,instruction_name (i),(int)n,label_name);
-
-	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n);
-	store_code_label_value(label_name,0);
-}
-
-void add_instruction_w2_label(SS i,SI n,char *label_name) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %s\n",pgrm.code_size,instruction_name (i),(int)n,label_name);
 
@@ -494,7 +477,7 @@ void add_instruction_w_label_offset(SS i,SI n,char *label_name,uint32_t offset) 
 		printf("%d\t%s %d %s%+d\n",pgrm.code_size,instruction_name (i),(int)n,label_name,offset);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n);
+	store_code_elem(2, n);
 	store_code_label_value(label_name,offset);
 }
 
@@ -503,7 +486,7 @@ void add_instruction_w_label_offset_label(SS i,SI n,char *label_name1,uint32_t o
 		printf("%d\t%s %d %s%+d %s\n",pgrm.code_size,instruction_name (i),(int)n,label_name1,offset,label_name2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n);
+	store_code_elem(2, n);
 	store_code_label_value(label_name1,offset);
 	store_code_label_value(label_name2,0);
 }
@@ -513,9 +496,9 @@ void add_instruction_w_label_w(SS i,SI n1,char *label_name,SI n2) {
 		printf("%d\t%s %d %s %d\n",pgrm.code_size,instruction_name (i),(int)n1,label_name,(int)n2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n2);
+	store_code_elem(2, n2);
 }
 
 void add_instruction_w_label_offset_label_label_offset_label
@@ -525,7 +508,7 @@ void add_instruction_w_label_offset_label_label_offset_label
 																				  label_name3,offset2,label_name4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name1,offset1);
 	store_code_label_value(label_name2,0);
 	store_code_label_value(label_name3,offset2);
@@ -537,9 +520,9 @@ void add_instruction_w_label_offset_w(SS i,SI n1,char *label_name,uint32_t offse
 		printf("%d\t%s %d %s+%d %d\n",pgrm.code_size,instruction_name (i),(int)n1,label_name,offset,(int)n2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n2);
+	store_code_elem(2, n2);
 }
 
 void add_instruction_w_label_offset_w_w(SS i,SI n1,char *label_name,uint32_t offset,SI n2,SI n3) {
@@ -547,10 +530,10 @@ void add_instruction_w_label_offset_w_w(SS i,SI n1,char *label_name,uint32_t off
 		printf("%d\t%s %d %s+%d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,label_name,offset,(int)n2,(int)n3);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 }
 
 void add_instruction_w_label_offset_w_w_w(SS i,SI n1,char *label_name,uint32_t offset,SI n2,SI n3,SI n4) {
@@ -558,23 +541,14 @@ void add_instruction_w_label_offset_w_w_w(SS i,SI n1,char *label_name,uint32_t o
 		printf("%d\t%s %d %s+%d %d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,label_name,offset,(int)n2,(int)n3,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
-	store_code_elem(8, n4);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w(SS i,SI n1,SI n2) {
-	if (list_code || i>max_implemented_instruction_n)
-		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
-	
-	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-}
-
-void add_instruction_w2_w2(SS i,SI n1,SI n2) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
 
@@ -583,12 +557,31 @@ void add_instruction_w2_w2(SS i,SI n1,SI n2) {
 	store_code_elem(2, n2);
 }
 
+void add_instruction_i_w(SS i,SI n1,SI n2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(8, n1);
+	store_code_elem(2, n2);
+}
+
 void add_instruction_w_w_label(SS i,SI n1,SI n2,char *label_name) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_label_value(label_name,0);
+}
+
+void add_instruction_w_i_label(SS i,SI n1,SI n2,char *label_name) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n1);
 	store_code_elem(8, n2);
 	store_code_label_value(label_name,0);
 }
@@ -598,8 +591,8 @@ void add_instruction_w_w_label_offset(SI i,SI n1,SI n2,char *label_name,uint32_t
 		printf("%d\t%s %d %d %s%+d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,offset);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name,offset);
 }
 
@@ -608,10 +601,10 @@ void add_instruction_w_w_label_w(SS i,SI n1,SI n2,char *label_name,SI n3) {
 		printf("%d\t%s %d %d %s %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,(int)n3);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n3);
+	store_code_elem(2, n3);
 }
 
 void add_instruction_w_w_label_w_label(SS i,SI n1,SI n2,char *label_name1,SI n3,char *label_name2) {
@@ -619,10 +612,10 @@ void add_instruction_w_w_label_w_label(SS i,SI n1,SI n2,char *label_name1,SI n3,
 		printf("%d\t%s %d %d %s %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name1,(int)n3,label_name2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name1,0);
-	store_code_elem(8, n3);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name2,0);
 }
 
@@ -631,10 +624,10 @@ void add_instruction_w_w_label_offset_w(SS i,SI n1,SI n2,char *label_name,uint32
 		printf("%d\t%s %d %d %s+%d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,offset,(int)n3);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n3);
+	store_code_elem(2, n3);
 }
 
 void add_instruction_w_w_label_w_w(SS i,SI n1,SI n2,char *label_name,SI n3,SI n4) {
@@ -642,11 +635,11 @@ void add_instruction_w_w_label_w_w(SS i,SI n1,SI n2,char *label_name,SI n3,SI n4
 		printf("%d\t%s %d %d %s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,(int)n3,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n3);
-	store_code_elem(8, n4);
+	store_code_elem(2, n3);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w_label_offset_w_w(SS i,SI n1,SI n2,char *label_name,uint32_t offset,SI n3,SI n4) {
@@ -654,11 +647,11 @@ void add_instruction_w_w_label_offset_w_w(SS i,SI n1,SI n2,char *label_name,uint
 		printf("%d\t%s %d %d %s+%d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,offset,(int)n3,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n3);
-	store_code_elem(8, n4);
+	store_code_elem(2, n3);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w_w(SS i,SI n1,SI n2,SI n3) {
@@ -666,9 +659,9 @@ void add_instruction_w_w_w(SS i,SI n1,SI n2,SI n3) {
 		printf("%d\t%s %d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 }
 
 void add_instruction_w_w_w_label(SS i,SI n1,SI n2,SI n3,char *label_name) {
@@ -676,9 +669,9 @@ void add_instruction_w_w_w_label(SS i,SI n1,SI n2,SI n3,char *label_name) {
 		printf("%d\t%s %d %d %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,label_name);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,0);
 }
 
@@ -687,9 +680,9 @@ void add_instruction_w_w_w_label_offset(SS i,SI n1,SI n2,SI n3,char *label_name,
 		printf("%d\t%s %d %d %d %s+%d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,label_name,offset);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,offset);
 }
 
@@ -698,11 +691,11 @@ void add_instruction_w_w_w_label_w(SS i,SI n1,SI n2,SI n3,char *label_name,SI n4
 		printf("\t%s %d %d %d %s %d\n",instruction_name (i),(int)n1,(int)n2,(int)n3,label_name,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n4);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w_w_label_offset_w(SS i,SI n1,SI n2,SI n3,char *label_name,uint32_t offset,SI n4) {
@@ -710,11 +703,11 @@ void add_instruction_w_w_w_label_offset_w(SS i,SI n1,SI n2,SI n3,char *label_nam
 		printf("%d\t%s %d %d %d %s+%d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,label_name,offset,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n4);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w_w_label_w_w(SS i,SI n1,SI n2,SI n3,char *label_name,SI n4,SI n5) {
@@ -722,12 +715,12 @@ void add_instruction_w_w_w_label_w_w(SS i,SI n1,SI n2,SI n3,char *label_name,SI 
 		printf("%d\t%s %d %d %d %s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,label_name,(int)n4,(int)n5);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,0);
-	store_code_elem(8, n4);
-	store_code_elem(8, n5);
+	store_code_elem(2, n4);
+	store_code_elem(2, n5);
 }
 
 void add_instruction_w_w_w_label_offset_w_w(SS i,SI n1,SI n2,SI n3,char *label_name,uint32_t offset,SI n4,SI n5) {
@@ -735,12 +728,12 @@ void add_instruction_w_w_w_label_offset_w_w(SS i,SI n1,SI n2,SI n3,char *label_n
 		printf("%d\t%s %d %d %d %s+%d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,label_name,offset,(int)n4,(int)n5);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
 	store_code_label_value(label_name,offset);
-	store_code_elem(8, n4);
-	store_code_elem(8, n5);
+	store_code_elem(2, n4);
+	store_code_elem(2, n5);
 }
 
 void add_instruction_w_w_w_w(SS i,SI n1,SI n2,SI n3,SI n4) {
@@ -748,10 +741,10 @@ void add_instruction_w_w_w_w(SS i,SI n1,SI n2,SI n3,SI n4) {
 		printf("%d\t%s %d %d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,(int)n4);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
-	store_code_elem(8, n4);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
+	store_code_elem(2, n4);
 }
 
 void add_instruction_w_w_w_w_w(SS i,SI n1,SI n2,SI n3,SI n4,SI n5) {
@@ -759,11 +752,11 @@ void add_instruction_w_w_w_w_w(SS i,SI n1,SI n2,SI n3,SI n4,SI n5) {
 		printf("%d\t%s %d %d %d %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,(int)n3,(int)n4,(int)n5);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
-	store_code_elem(8, n2);
-	store_code_elem(8, n3);
-	store_code_elem(8, n4);
-	store_code_elem(8, n5);
+	store_code_elem(2, n1);
+	store_code_elem(2, n2);
+	store_code_elem(2, n3);
+	store_code_elem(2, n4);
+	store_code_elem(2, n5);
 }
 
 void add_instruction_i(SS i,int n) {
@@ -787,7 +780,7 @@ void add_instruction_w_internal_label_label(SS i,SI n1,struct label *label,char 
 		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),n1,label->label_offset,label_name);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, n1);
+	store_code_elem(2, n1);
 	store_code_internal_label_value(label,0);
 	store_code_label_value(label_name,0);
 }
@@ -1022,7 +1015,7 @@ void code_buildhr(char descriptor_name[],int a_size,int b_size) {
 		add_instruction_w_label_offset(Cbuildhr1b,b_size,descriptor_name,2);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_offset_w(Cbuildhr,a_size+b_size,descriptor_name,2,a_size);	
+		add_instruction_w_label_offset_w(Cbuildhr,a_size+b_size,descriptor_name,2,a_size);
 		return;
 	} else if (a_size>=4 && b_size==1) {
 		add_instruction_w_label_offset(Cbuildhra1,a_size,descriptor_name,2);
@@ -1031,7 +1024,7 @@ void code_buildhr(char descriptor_name[],int a_size,int b_size) {
 		add_instruction_w_label_offset(Cbuildhra0,a_size+2,descriptor_name,2);
 		return;
 	}
-	
+
 	fprintf(stderr, "Error: buildhr %s %d %d\n",descriptor_name,a_size,b_size);
 	exit(1);
 }
@@ -1091,20 +1084,20 @@ void code_build_r(char descriptor_name[],int a_size,int b_size,int a_offset,int 
 		}
 	} else if (a_size==4 && b_size==0) {
 		add_instruction_w_label_offset(Cbuild_r40,-a_offset,descriptor_name,2);
-		return;		
+		return;
 	}
-	
+
 	if (a_size==0 && b_size>=5) {
-		add_instruction_w_label_offset(Cbuild_r0b,b_size,descriptor_name,2);	
+		add_instruction_w_label_offset(Cbuild_r0b,b_size,descriptor_name,2);
 		return;
 	} else if (a_size==1 && b_size>=4) {
 		add_instruction_w_w_label_offset_w(Cbuild_r1b,b_size,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
-		add_instruction_w_w_label_offset_w_w(Cbuild_r,a_size+b_size,-a_offset,descriptor_name,2,a_size,b_offset);	
+		add_instruction_w_w_label_offset_w_w(Cbuild_r,a_size+b_size,-a_offset,descriptor_name,2,a_size,b_offset);
 		return;
 	} else if (a_size>=4 && b_size==1) {
-		add_instruction_w_w_label_offset_w(Cbuild_ra1,a_size,-a_offset,descriptor_name,2,b_offset);	
+		add_instruction_w_w_label_offset_w(Cbuild_ra1,a_size,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=5 && b_size==0) {
 		add_instruction_w_w_label_offset(Cbuild_ra0,a_size,-a_offset,descriptor_name,2);
@@ -1159,11 +1152,11 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 	}
 
 	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);	
+		add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);
 		return;
 	}
 	if (a_size>=4 && b_size==1) {
-		add_instruction_w_label(Cbuild_ua1,a_size,code_name);	
+		add_instruction_w_label(Cbuild_ua1,a_size,code_name);
 		return;
 	}
 
@@ -1217,11 +1210,11 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 		case '_':
 			if (element_descriptor[1]=='_' && element_descriptor[2]=='\0') {
 				add_instruction(Ccreate_array);
-				return;		
+				return;
 			}
 			break;
 	}
-	
+
 	do {
 		switch(element_descriptor[0]) {
 			case 'P':
@@ -1257,9 +1250,9 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 		add_instruction_w_w_label(Ccreate_array_r,a_size+b_size,b_size,element_descriptor);
 		return;
 	} while(0);
-	
+
 	fprintf(stderr, "Error: create_array %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);	
+	exit(1);
 }
 
 void code_create_array_(char element_descriptor[],int a_size,int b_size) {
@@ -1276,7 +1269,7 @@ void code_create_array_(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(Ccreate_array_CHAR);
-				return;	
+				return;
 			}
 			break;
 		case 'I':
@@ -1444,7 +1437,7 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 			}
 		}
 	}
-	
+
 	fprintf(stderr, "Error: fill1 %s %d %d %s\n",descriptor_name,arity,a_offset,bits);
 	exit(1);
 }
@@ -1482,7 +1475,7 @@ void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 
 void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 	int n_bits,i;
-	
+
 	n_bits=0;
 	for(i=0; i<=arity; ++i)
 		 n_bits += bits[i]-'0';
@@ -1504,7 +1497,7 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		if (arity>2 && bit_n>=2) {
 			add_instruction_w_w(Cfill2a001,-a_offset,bit_n-2);
 			return;
-		}		
+		}
 	}
 
 	if (n_bits==2) {
@@ -1514,7 +1507,7 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 			for(bit_n=2; bit_n<=arity; ++bit_n)
 				if (bits[bit_n]!='0')
 					break;
-			
+
 			if (arity>2) {
 				add_instruction_w_w(Cfill2a011,-a_offset,bit_n-2);
 				return;
@@ -1533,7 +1526,7 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 			for(bit_n2=bit_n1+1; bit_n2<=arity; ++bit_n2)
 				if (bits[bit_n2]!='0')
 					break;
-			
+
 			add_instruction_w_w_w(Cfill2a012,-a_offset,bit_n1-2,bit_n2-2);
 			return;
 		}
@@ -1545,9 +1538,9 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 
 void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
 	int n_bits,i,ab_size;
-	
+
 	ab_size=a_size+b_size;
-	
+
 	n_bits=0;
 	for(i=0; i<=ab_size; ++i)
 		 n_bits += bits[i]-'0';
@@ -1588,9 +1581,9 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 				for(bit_n2=bit_n1+1; bit_n2<=ab_size; ++bit_n2)
 					if (bits[bit_n2]!='0')
 						break;
-				
+
 				if (bit_n1-1>=a_size) {
-					add_instruction_w_w_w(Cfill2b002,-root_offset,bit_n1-2,bit_n2-2);					
+					add_instruction_w_w_w(Cfill2b002,-root_offset,bit_n1-2,bit_n2-2);
 					return;
 				} else if (bit_n2-1>=a_size) {
 					add_instruction_w_w_w(Cfill2ab002,-root_offset,bit_n1-2,bit_n2-2);
@@ -1695,7 +1688,7 @@ void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
 	n_bits=0;
 	for(i=0; i<arity; ++i)
 		 n_bits += bits[i]-'0';
-	
+
 	if (n_bits==3 && bits[0]=='1' && arity>2) {
 		int bit_n1,bit_n2;
 
@@ -1717,9 +1710,9 @@ void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
 
 void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
 	int n_bits,i,ab_size;
-	
+
 	ab_size=a_size+b_size;
-	
+
 	n_bits=0;
 	for(i=0; i<ab_size; ++i)
 		 n_bits += bits[i]-'0';
@@ -1743,7 +1736,7 @@ void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 			return;
 		}
 	}
-	
+
 	if (n_bits==4 && bits[0]=='1' && ab_size>2) {
 		int bit_n1,bit_n2,bit_n3;
 
@@ -1764,7 +1757,7 @@ void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 			return;
 		}
 	}
-	
+
 	fprintf(stderr, "Error: fill3_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
 	exit(1);
 }
@@ -1880,7 +1873,7 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 		add_instruction_w_w_w_label_offset_w(Cfill_r1b,b_size,-root_offset,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
-		add_instruction_w_w_w_label_offset_w_w(Cfill_r,a_size+b_size,-root_offset,-a_offset,descriptor_name,2,a_size,b_offset);	
+		add_instruction_w_w_w_label_offset_w_w(Cfill_r,a_size+b_size,-root_offset,-a_offset,descriptor_name,2,a_size,b_offset);
 		return;
 	} else if (a_size>=4 && b_size==1) {
 		add_instruction_w_w_w_label_offset_w(Cfill_ra1,a_size,-root_offset,-a_offset,descriptor_name,2,b_offset);
@@ -2082,11 +2075,11 @@ void code_or(void) {
 }
 
 void code_pop_a(int n) {
-	add_instruction_w2(Cpop_a,-n);
+	add_instruction_w(Cpop_a,-n);
 }
 
 void code_pop_b(int n) {
-	add_instruction_w2(Cpop_b,n);
+	add_instruction_w(Cpop_b,n);
 }
 
 void code_print(char *string,int length) {
@@ -2255,7 +2248,7 @@ void code_push_args(int a_offset,int arity,int n_arguments) {
 		}
 	}
 	fprintf(stderr, "Error: push_args %d %d %d\n",a_offset,arity,n_arguments);
-	exit(1);	
+	exit(1);
 }
 
 void code_push_args_u(int a_offset,int arity,int n_arguments) {
@@ -2265,7 +2258,7 @@ void code_push_args_u(int a_offset,int arity,int n_arguments) {
 	}
 
 	fprintf(stderr, "Error: push_args_u %d %d %d\n",a_offset,arity,n_arguments);
-	exit(1);	
+	exit(1);
 }
 
 void code_push_arg_b(int a_offset) {
@@ -2344,15 +2337,15 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 		}
 	} else if (a_size==3 && b_size==1) {
 		add_instruction_label(Cpush_node_u31,label_name);
-		return;	
+		return;
 	}
-	
+
 	if (a_size>=2 && b_size>=2) {
 		add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size);
-		return; 
+		return;
 	} else if (a_size>=3 && b_size==1) {
 		add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
-		return; 
+		return;
 	}
 	fprintf(stderr, "Error: push_node_u %s %d %d\n",label_name,a_size,b_size);
 	exit(1);
@@ -2488,7 +2481,7 @@ void code_push_r_args_a(int a_offset,int a_size,int b_size,int argument_number,i
 		add_instruction_w_w(Cpush_r_args_aa1,-a_offset,(argument_number-2)<<2);
 		return;
 	}
-	
+
 	fprintf(stderr, "Error: push_r_args_a %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
 	exit(1);
 }
@@ -2571,7 +2564,7 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CreplaceBOOL);
-				return;	
+				return;
 			}
 			break;
 		case 'C':
@@ -2579,7 +2572,7 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CreplaceCHAR);
-				return;	
+				return;
 			}
 			break;
 		case 'I':
@@ -2610,19 +2603,19 @@ void code_repl_arg(int arity,int argument_n) {
 			return;
 		} else if (arity>2) {
 			add_instruction(Crepl_r_args_a21);
-			return;		
+			return;
 		}
 	}
 	if (argument_n==3) {
 		add_instruction(Crepl_r_args_a31);
-		return;		
+		return;
 	}
 	if (argument_n==4) {
 		add_instruction(Crepl_r_args_a41);
-		return;		
+		return;
 	}
 	add_instruction_w(Crepl_r_args_aa1,(argument_n-2)<<2);
-	return;	
+	return;
 }
 
 void code_repl_args(int arity,int n_arguments) {
@@ -2642,12 +2635,12 @@ void code_repl_args(int arity,int n_arguments) {
 				return;
 			default:
 				add_instruction_w(Crepl_args,arity-1);
-				return;			
+				return;
 		}
 	}
-	
+
 	fprintf(stderr, "Error: repl_args %d %d\n",arity,n_arguments);
-	exit(1);	
+	exit(1);
 }
 
 void code_repl_r_args(int a_size,int b_size) {
@@ -2727,7 +2720,7 @@ void code_repl_r_args(int a_size,int b_size) {
 	}
 
 	fprintf(stderr, "Error: repl_r_args %d %d\n",a_size,b_size);
-	exit(1);	
+	exit(1);
 }
 
 void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_arguments) {
@@ -2744,28 +2737,28 @@ void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_argument
 				return;
 			} else if (a_size>2) {
 				add_instruction(Crepl_r_args_a21);
-				return;		
+				return;
 			}
 		}
 		if (argument_number==3) {
 			add_instruction(Crepl_r_args_a31);
-			return;		
+			return;
 		}
 		if (argument_number==4) {
 			add_instruction(Crepl_r_args_a41);
-			return;		
+			return;
 		}
 		add_instruction_w(Crepl_r_args_aa1,(argument_number-2)<<2);
-		return;	
+		return;
 	}
-	
+
 	fprintf(stderr, "Error: repl_r_args_a %d %d %d %d\n",a_size,b_size,argument_number,n_arguments);
-	exit(1);	
+	exit(1);
 }
 
 void code_rtn(void) {
 	last_d=0;
-	
+
 	add_instruction(Crtn);
 }
 
@@ -2776,7 +2769,7 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CselectBOOL);
-				return;	
+				return;
 			}
 			break;
 		case 'C':
@@ -2784,13 +2777,13 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CselectCHAR);
-				return;	
+				return;
 			}
 			break;
 		case 'I':
 			if (element_descriptor[1]=='N' && element_descriptor[2]=='T' && element_descriptor[3]=='\0') {
 				add_instruction(CselectINT);
-				return;	
+				return;
 			}
 			break;
 		case '_':
@@ -2839,7 +2832,7 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 	}
 
 	fprintf(stderr, "Error: select %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);	
+	exit(1);
 }
 
 void code_shiftl(void) {
@@ -2865,7 +2858,7 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CupdateBOOL);
-				return;	
+				return;
 			}
 			break;
 		case 'C':
@@ -2873,13 +2866,13 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 				element_descriptor[4]=='\0')
 			{
 				add_instruction(CupdateCHAR);
-				return;	
+				return;
 			}
 			break;
 		case 'I':
 			if (element_descriptor[1]=='N' && element_descriptor[2]=='T' && element_descriptor[3]=='\0') {
 				add_instruction(CupdateINT);
-				return;	
+				return;
 			}
 			break;
 		case '_':
@@ -2915,7 +2908,7 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		add_instruction(Cupdate_r40);
 		return;
 	}
-	
+
 	if (a_size>=2 && b_size>=2) {
 		add_instruction_w_w_w(Cupdate_r,a_size+b_size,a_size,b_size);
 		return;
@@ -2926,7 +2919,7 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		add_instruction_w(Cupdate_ra,a_size);
 		return;
 	}
-	
+
 	fprintf(stderr, "Error: update %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);
 }
@@ -3033,7 +3026,7 @@ void code_buildh0_put_a_jsr(char descriptor_name[],int a_offset,char label_name[
 
 	if (lib_function_n>=0) {
 		code_buildh0_put_a(descriptor_name,a_offset);
-		
+
 		if (lib_function_n==0)
 			add_instruction(CeqAC);
 		else
@@ -3164,7 +3157,7 @@ void code_jmp_neI(char label_name[]) {
 }
 
 void code_jmp_neI_b(int value,int b_offset,char label_name[]) {
-	add_instruction_w_w_label(Cjmp_neI_b,b_offset,value,label_name);
+	add_instruction_w_i_label(Cjmp_neI_b,b_offset,value,label_name);
 }
 
 void code_jmp_ne_desc(char descriptor_name[],int arity,int a_offset,char label_name[]) {
@@ -3215,7 +3208,7 @@ void code_swap_b1(void) {
 void code_pop_a_jmp(int n,char label_name[]) {
 	last_d=0;
 
-	add_instruction_w2_label(Cpop_a_jmp,-n,label_name);
+	add_instruction_w_label(Cpop_a_jmp,-n,label_name);
 }
 
 void code_pop_a_jsr(int n,char label_name[]) {
@@ -3235,7 +3228,7 @@ void code_pop_a_jsr(int n,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_pop_a(n);
-		
+
 		if (lib_function_n==0)
 			add_instruction(CeqAC);
 		else
@@ -3245,25 +3238,25 @@ void code_pop_a_jsr(int n,char label_name[]) {
 		return;
 	}
 
-	add_instruction_w2_label(Cpop_a_jsr,-n,label_name);
+	add_instruction_w_label(Cpop_a_jsr,-n,label_name);
 }
 
 void code_pop_a_rtn(int n) {
 	last_d=0;
 
-	add_instruction_w2(Cpop_a_rtn,-n);
+	add_instruction_w(Cpop_a_rtn,-n);
 }
 
 void code_pop_ab_rtn(int na,int nb) {
 	last_d=0;
 
-	add_instruction_w2_w2(Cpop_ab_rtn,-na,nb);
+	add_instruction_w_w(Cpop_ab_rtn,-na,nb);
 }
 
 void code_pop_b_jmp(int n,char label_name[]) {
 	last_d=0;
 
-	add_instruction_w2_label(Cpop_b_jmp,n,label_name);
+	add_instruction_w_label(Cpop_b_jmp,n,label_name);
 }
 
 void code_pop_b_jsr(int n,char label_name[]) {
@@ -3283,7 +3276,7 @@ void code_pop_b_jsr(int n,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_pop_b(n);
-		
+
 		if (lib_function_n==0)
 			add_instruction(CeqAC);
 		else
@@ -3293,20 +3286,20 @@ void code_pop_b_jsr(int n,char label_name[]) {
 		return;
 	}
 
-	add_instruction_w2_label(Cpop_b_jsr,n,label_name);
+	add_instruction_w_label(Cpop_b_jsr,n,label_name);
 }
 
 void code_pop_b_pushB(int n,int b) {
 	if (b==0)
-		add_instruction_w2(Cpop_b_pushBFALSE,n-1);
+		add_instruction_w(Cpop_b_pushBFALSE,n-1);
 	else
-		add_instruction_w2(Cpop_b_pushBTRUE,n-1);
+		add_instruction_w(Cpop_b_pushBTRUE,n-1);
 }
 
 void code_pop_b_rtn(int n) {
 	last_d=0;
 
-	add_instruction_w2(Cpop_b_rtn,n);
+	add_instruction_w(Cpop_b_rtn,n);
 }
 
 void code_push_a_jsr(int a_offset,char label_name[]) {
@@ -3326,7 +3319,7 @@ void code_push_a_jsr(int a_offset,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_push_a(a_offset);
-		
+
 		if (lib_function_n==0)
 			add_instruction(CeqAC);
 		else
@@ -3372,7 +3365,7 @@ void code_push_b_jsr(int b_offset,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_push_b(b_offset);
-		
+
 		if (lib_function_n==0)
 			add_instruction(CeqAC);
 		else
@@ -3528,7 +3521,7 @@ void code_a(int n_apply_args,char *ea_label_name) {
 	if (n_apply_args==0) {
 		add_instruction(CA_data_IlI);
 		add_instruction_label(Cjmp,ea_label_name);
-		add_instruction(Chalt);	
+		add_instruction(Chalt);
 	} else if (n_apply_args==2) {
 		add_instruction(CA_data_IlI);
 		add_instruction_label(Cadd_empty_node2,ea_label_name);
@@ -3560,7 +3553,7 @@ void code_caf(char *label_name,int a_size,int b_size) {
 		printf("\t.data\n");
 		printf("%s:\n",label_name);
 	}
-	
+
 	label=enter_label(label_name);
 
 	if (a_size>0) {
@@ -3655,7 +3648,7 @@ struct label *code_descriptor
 
 	if (list_code)
 		printf("\t.text\n");
-	
+
 	return label;
 }
 
@@ -3794,7 +3787,7 @@ void code_descs(char label_name[],char node_entry_label_name[],char *result_desc
 void code_descexp(char label_name[],char node_entry_label_name[],char *code_label_name,
 				   int32_t arity, int32_t lazy_record_flag, char descriptor_name[],uint32_t descriptor_name_length) {
 	struct label *label,*node_entry_label;
-	
+
 	label = code_descriptor(label_name,code_label_name,arity,lazy_record_flag,descriptor_name,descriptor_name_length);
 	label->label_module_n=-1;
 
@@ -3837,7 +3830,7 @@ void code_implab(char *label_name) {
 
 void code_module(char label_name[],char string[],uint32_t string_length) {
 	struct label *label;
-	
+
 	if (list_code) {
 		printf("\t.data\n");
 		printf("%s:\n",label_name);
@@ -3864,7 +3857,7 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 #endif
 	if (descriptor_name[0]=='_' && descriptor_name[1]=='_' && descriptor_name[2]=='\0')
 		descriptor_name=NULL;
-	
+
 	if (ea_label_name!=NULL) {
 		if (ea_label_name[0]=='_' && ea_label_name[1]=='_' && ea_label_name[2]=='\0') {
 			/* eval_fill */
@@ -3911,7 +3904,7 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		if (descriptor_name==NULL)
 			add_data8_to_code(0);
 		else
-			add_label(descriptor_name);	
+			add_label(descriptor_name);
 	} else if (descriptor_name != NULL) {
 		add_instruction(CA_data_la);
 		add_label(descriptor_name);
@@ -3956,7 +3949,7 @@ void code_o(int oa,int ob,ULONG vector[]) {
 	if (last_jsr_with_d) {
 		if (pgrm.code[pgrm.code_size-2].value!=Cjsr) {
 			int i;
-			
+
 			i=pgrm.code[pgrm.code_size-3].value;
 			if (i!=Cpop_a_jsr && i!=Cpop_b_jsr && i!=Cpush_a_jsr && i!=Cpush_b_jsr
 				&& pgrm.code[pgrm.code_size-4].value!=Cbuildh0_put_a_jsr)
@@ -4049,7 +4042,7 @@ void code_string(char label_name[],char string[],int string_length) {
 		printf("\t.data\n");
 		printf("%s:\n",label_name);
 	}
-	
+
 	label=enter_label(label_name);
 	if (label->label_offset!=-1) {
 		fprintf(stderr, "Error: label %s already defined\n",label_name);
@@ -4131,9 +4124,9 @@ void write_program(FILE* program_file) {
 	print_data(pgrm.data_size,pgrm.data,program_file);
 	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
 	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
-	
+
 	if (fclose(program_file)) {
 		fprintf(stderr, "Error writing program file\n");
-		exit(1);	
+		exit(1);
 	}
 }
