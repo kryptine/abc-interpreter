@@ -47,6 +47,7 @@ static void put_instruction_name(char *name, int (*parse_function)(), void (code
 // Also stores how they should be parsed, and their behavior
 void load_instruction_table(void) {
 	put_instruction_name("addI",                  parse_instruction,               code_addI );
+	put_instruction_name("addR",                  parse_instruction,               code_addR );
 	put_instruction_name("and%",                  parse_instruction,               code_and );
 	put_instruction_name("build",                 parse_instruction_a_n_a,         code_build );
 	put_instruction_name("buildB",                parse_instruction_b,             code_buildB );
@@ -58,6 +59,7 @@ void load_instruction_table(void) {
 	put_instruction_name("buildF_b",              parse_instruction_n,             code_buildF_b );
 	put_instruction_name("buildI",                parse_instruction_i,             code_buildI );
 	put_instruction_name("buildI_b",              parse_instruction_n,             code_buildI_b );
+	put_instruction_name("buildR_b",              parse_instruction_n,             code_buildR_b );
 	put_instruction_name("buildhr",               parse_instruction_a_n_n,         code_buildhr );
 	put_instruction_name("build_r",               parse_instruction_a_n_n_n_n,     code_build_r );
 	put_instruction_name("build_u",               parse_instruction_a_n_n_a,       code_build_u );
@@ -66,6 +68,7 @@ void load_instruction_table(void) {
 	put_instruction_name("create_array_",         parse_instruction_a_n_n,         code_create_array_ );
 	put_instruction_name("decI",                  parse_instruction,               code_decI );
 	put_instruction_name("divI",                  parse_instruction,               code_divI );
+	put_instruction_name("divR",                  parse_instruction,               code_divR );
 	put_instruction_name("eqAC_a",                parse_instruction_s2,            code_eqAC_a );
 	put_instruction_name("eqD_b",                 parse_instruction_a_n,           code_eqD_b );
 	put_instruction_name("eqB",                   parse_instruction,               code_eqB );
@@ -77,6 +80,7 @@ void load_instruction_table(void) {
 	put_instruction_name("eqI",                   parse_instruction,               code_eqI );
 	put_instruction_name("eqI_a",                 parse_instruction_i_n,           code_eqI_a );
 	put_instruction_name("eqI_b",                 parse_instruction_i_n,           code_eqI_b );
+	put_instruction_name("eqR",                   parse_instruction,               code_eqR );
 	put_instruction_name("eq_desc",               parse_instruction_a_n_n,         code_eq_desc );
 	put_instruction_name("exit_false",            parse_instruction_a,             code_exit_false );
 	put_instruction_name("fill",                  parse_instruction_a_n_a_n,       code_fill );
@@ -90,6 +94,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fillC_b",               parse_instruction_n_n,           code_fillC_b );
 	put_instruction_name("fillF_b",               parse_instruction_n_n,           code_fillF_b );
 	put_instruction_name("fillI_b",               parse_instruction_n_n,           code_fillI_b );
+	put_instruction_name("fillR_b",               parse_instruction_n_n,           code_fillR_b );
 	put_instruction_name("fillcaf",               parse_instruction_a_n_n,         code_fillcaf );
 	put_instruction_name("fillh",                 parse_instruction_a_n_n,         code_fillh );
 	put_instruction_name("fill_a",                parse_instruction_n_n,           code_fill_a );
@@ -109,7 +114,9 @@ void load_instruction_table(void) {
 	put_instruction_name("jsr_ap",                parse_instruction_n,             code_jsr_ap );
 	put_instruction_name("ltC",                   parse_instruction,               code_ltC );
 	put_instruction_name("ltI",                   parse_instruction,               code_ltI );
+	put_instruction_name("ltR",                   parse_instruction,               code_ltR );
 	put_instruction_name("mulI",                  parse_instruction,               code_mulI );
+	put_instruction_name("mulR",                  parse_instruction,               code_mulR );
 	put_instruction_name("negI",                  parse_instruction,               code_negI );
 	put_instruction_name("notB",                  parse_instruction,               code_notB );
 	put_instruction_name("not%",                  parse_instruction,               code_not );
@@ -128,6 +135,8 @@ void load_instruction_table(void) {
 	put_instruction_name("pushF_a",               parse_instruction_n,             code_pushF_a );
 	put_instruction_name("pushI",                 parse_instruction_i,             code_pushI );
 	put_instruction_name("pushI_a",               parse_instruction_n,             code_pushI_a );
+	put_instruction_name("pushR",                 parse_instruction_r,             code_pushR );
+	put_instruction_name("pushR_a",               parse_instruction_n,             code_pushR_a );
 	put_instruction_name("pushcaf",               parse_instruction_a_n_n,         code_pushcaf );
 	put_instruction_name("push_a",                parse_instruction_n,             code_push_a );
 	put_instruction_name("push_a_b",              parse_instruction_n,             code_push_a_b );
@@ -155,6 +164,7 @@ void load_instruction_table(void) {
 	put_instruction_name("shiftl%",               parse_instruction,               code_shiftl );
 	put_instruction_name("shiftr%",               parse_instruction,               code_shiftr );
 	put_instruction_name("subI",                  parse_instruction,               code_subI );
+	put_instruction_name("subR",                  parse_instruction,               code_subR );
 	put_instruction_name("rtn",                   parse_instruction,               code_rtn );
 	put_instruction_name("testcaf",               parse_instruction_a,             code_testcaf );
 	put_instruction_name("update",                parse_instruction_a_n_n,         code_update );

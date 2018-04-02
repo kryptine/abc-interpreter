@@ -88,15 +88,18 @@ void parse_line(char* line, unsigned int line_nr) {
 		code_label(s);
 	} else if ((token = strsep(&end, " \r\n\t")) != NULL) {
 		instruction* i = instruction_lookup(token);
-		if (i != NULL) {
+		if (i == NULL) {
+			fprintf(stderr, "Unknown instruction '%s' at line %d.\n", token, line_nr);
+			exit(1);
+		} else {
 			current_line = end;
 			last_char = next_character();
 			skip_spaces_and_tabs();
 			i->parse_function(i);
-		} else {
-			fprintf(stderr, "Parse error at line %d.\n", line_nr);
-			exit(1);
 		}
+	} else {
+		fprintf(stderr, "Parse error at line %d.\n", line_nr);
+		exit(1);
 	}
 }
 
@@ -642,6 +645,198 @@ static char *parse_string2 (char *string,int *string_length_p)
 	return string;
 }
 
+static int parse_hex_real (double *real_p)
+{
+	int s1,s2;
+	unsigned int i1,i2;
+
+	last_char=next_character();
+	if (!is_hexdigit_character (last_char))
+		abc_parser_error_i ("Hex digit expected in real at line %d\n",line_number);
+
+	while (last_char=='0')
+		last_char=next_character();
+
+	i1=0;
+	s1=0;
+	while (s1<7){
+		if (!is_hexdigit_character (last_char)){
+			*real_p=(double)i1;
+			return 1;
+		}
+		i1<<=4;
+		i1+=last_char<='9' ? last_char-'0' : (last_char | 0x20)-('a'-10);
+		++s1;
+		last_char=next_character();
+	}
+
+	i2=0;
+	s2=0;
+	while (s2<7){
+		if (!is_hexdigit_character (last_char)){
+			double r;
+
+			r=(double)i1;
+			while (s2>=0){
+				r*=16.0;
+				--s2;
+			}
+			*real_p=r+(double)i2;
+			return 1;
+		}
+		i2<<=4;
+		i2+=last_char<='9' ? last_char-'0' : (last_char | 0x20)-('a'-10);
+		++s2;
+		last_char=next_character();
+	}
+
+	{
+	int extra_non_zero_char;
+	double p,r1;
+	char char14;
+
+	p=1.0;
+
+	r1=(double)i1*(double)0x10000000;
+
+	char14=last_char;
+	if (i1<0x2000000){
+		if (!is_hexdigit_character (last_char)){
+			*real_p=r1+(double)i2;
+			return 1;
+		}
+		p*=16.0;
+		last_char=next_character();
+	}
+
+	while (last_char=='0'){
+		p*=16.0;
+		last_char=next_character();
+	}
+
+	extra_non_zero_char=0;
+	if (is_hexdigit_character (last_char)){
+		extra_non_zero_char=1;
+		do {
+			p*=16.0;
+			last_char=next_character();
+		} while (is_hexdigit_character (last_char));
+	}
+
+	/* round to 53 bits */
+	if (i1<0x2000000){
+		if (char14>'8' || (char14=='8' && !(extra_non_zero_char==0 && (i2 & 1)==0)))
+			++i2;
+	} else if (i1<0x4000000){
+		if ((i2 & 1)!=0 && !(extra_non_zero_char==0 && (i2 & 2)==0))
+			i2 += 2;
+		i2 &= -2;
+	} else if (i1<0x8000000){
+		if ((i2 & 2)>2 || ((i2 & 2)==2 && !(extra_non_zero_char==0 && (i2 & 4)==0)))
+			i2 += 4;
+		i2 &= -4;
+	} else {
+		if ((i2 & 4)>4 || ((i2 & 4)==4 && !(extra_non_zero_char==0 && (i2 & 8)==0)))
+			i2 += 8;
+		i2 &= -8;
+	}
+
+	*real_p=(r1+(double)i2)*p;
+	return 1;
+	}
+}
+
+static int parse_real (double *real_p)
+{
+	unsigned int real_string_length=0;
+	char real_string[64];
+
+	if (last_char=='+' || last_char=='-'){
+		if (last_char=='-')
+			real_string[real_string_length++]='-';
+		last_char=next_character();
+	}
+
+	if (last_char=='0'){
+		real_string[real_string_length++]='-';
+		last_char=next_character();
+
+		if (last_char=='x'){
+			int r;
+
+			r=parse_hex_real (real_p);
+
+			if (real_string[0]=='-')
+				*real_p = - *real_p;
+
+			skip_spaces_and_tabs();
+
+			return r;
+		}
+
+		while (is_digit_character (last_char)) {
+			real_string[real_string_length++]=last_char;
+			last_char=next_character();
+		}
+	} else if (!is_digit_character(last_char)) {
+		abc_parser_error_i ("Digit expected in real at line %d\n",line_number);
+		return 0;
+	} else {
+		do {
+			real_string[real_string_length++]=last_char;
+			last_char=next_character();
+		} while (is_digit_character(last_char));
+	}
+
+	if (last_char=='.'){
+		real_string[real_string_length++]=last_char;
+		last_char=next_character();
+
+		if (!is_digit_character(last_char)) {
+			abc_parser_error_i ("Digit expected in real at line %d\n",line_number);
+			return 0;
+		} else {
+			do {
+				real_string[real_string_length++]=last_char;
+				last_char=next_character();
+			} while (is_digit_character(last_char));
+		}
+	} else if (last_char!='e' && last_char!='E')
+		abc_parser_error_i ("'.' or 'E' expected in real at line %d\n",line_number);
+
+	if (last_char=='e' || last_char=='E'){
+		real_string[real_string_length++]=last_char;
+		last_char=next_character();
+
+		if (last_char=='+' || last_char=='-'){
+			if (last_char=='-')
+				real_string[real_string_length++]='-';
+			last_char=next_character();
+		}
+
+		if (!is_digit_character(last_char)) {
+			abc_parser_error_i ("Digit expected in real at line %d\n",line_number);
+			return 0;
+		} else {
+			do {
+				real_string[real_string_length++]=last_char;
+				last_char=next_character();
+			} while (is_digit_character(last_char));
+		}
+	}
+
+	if (real_string_length==MAX_STRING_LENGTH)
+		abc_parser_error_i ("Real denotation too long at line %d\n",line_number);
+
+	real_string[real_string_length]='\0';
+
+	skip_spaces_and_tabs();
+
+	*real_p=atof (real_string);
+
+	return 1;
+}
+
 int parse_instruction (instruction *instruction)
 {
 	instruction->code_function();
@@ -949,6 +1144,16 @@ int parse_instruction_i_n_a (instruction *instruction)
 		return 0;
 	parse_label (a);
 	instruction->code_function (i,(int)n,a);
+	return 1;
+}
+
+int parse_instruction_r (instruction *instruction)
+{
+	double r;
+
+	if (!parse_real (&r))
+		return 0;
+	instruction->code_function (r);
 	return 1;
 }
 
@@ -1390,13 +1595,10 @@ int parse_directive_n_n_t (instruction *instruction)
 			case 'r':	case 'R':
 				vector_p[i>>LOG_SMALL_VECTOR_SIZE] |= (1<< (i & MASK_SMALL_VECTOR_SIZE));
 				i+=1;
-#ifndef G_A64
-				vector_p[i>>LOG_SMALL_VECTOR_SIZE] |= (1<< (i & MASK_SMALL_VECTOR_SIZE));
-				i+=1;
-#endif
 				break;
 			default:
-				abc_parser_error_i ("B, C, F, I, P or R expected at line %d\n",line_number);
+				fprintf(stderr,"B, C, F, I, P or R expected instead of '%c' (0x%02x) at line %d\n",last_char,last_char,line_number);
+				exit(1);
 		}
 		last_char=next_character();
 		skip_spaces_and_tabs();
