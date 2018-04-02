@@ -652,6 +652,8 @@ char *instruction_name(BC_WORD i) {
 			return "subI";
 		case CsubR:
 			return "subR";
+		case CsqrtR:
+			return "sqrtR";
 		case Crtn:
 			return "rtn";
 		case Ctestcaf:
@@ -696,6 +698,10 @@ char *instruction_name(BC_WORD i) {
 			return "CtoAC";
 		case CItoC:
 			return "ItoC";
+		case CItoR:
+			return "ItoR";
+		case CRtoI:
+			return "RtoI";
 		case Cswap_a1:
 			return "swap_a1";
 		case Cswap_a2:
@@ -1280,6 +1286,7 @@ char *instruction_type (BC_WORD i) {
 		case CshiftrI:               return "?";
 		case CsubI:                  return "";
 		case CsubR:                  return "";
+		case CsqrtR:                 return "";
 		case Crtn:                   return "";
 		case Ctestcaf:               return "?";
 		case Cupdate:                return "?";
@@ -1302,6 +1309,8 @@ char *instruction_type (BC_WORD i) {
 		case CxorI:                  return "";
 		case CCtoAC:                 return "?";
 		case CItoC:                  return "";
+		case CItoR:                  return "";
+		case CRtoI:                  return "";
 		case Cswap_a1:               return "";
 		case Cswap_a2:               return "";
 		case Cswap_a3:               return "";

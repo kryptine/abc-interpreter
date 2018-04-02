@@ -2895,6 +2895,10 @@ void code_subR(void) {
 	add_instruction(CsubR);
 }
 
+void code_sqrtR(void) {
+	add_instruction(CsqrtR);
+}
+
 void code_testcaf(char *label_name) {
 	add_instruction_label(Ctestcaf,label_name);
 }
@@ -3001,6 +3005,14 @@ void code_CtoI(void) {
 
 void code_ItoC(void) {
 	add_instruction(CItoC);
+}
+
+void code_ItoR(void) {
+	add_instruction(CItoR);
+}
+
+void code_RtoI(void) {
+	add_instruction(CRtoI);
 }
 
 

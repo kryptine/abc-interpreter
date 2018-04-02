@@ -165,6 +165,7 @@ void load_instruction_table(void) {
 	put_instruction_name("shiftr%",               parse_instruction,               code_shiftr );
 	put_instruction_name("subI",                  parse_instruction,               code_subI );
 	put_instruction_name("subR",                  parse_instruction,               code_subR );
+	put_instruction_name("sqrtR",                 parse_instruction,               code_sqrtR );
 	put_instruction_name("rtn",                   parse_instruction,               code_rtn );
 	put_instruction_name("testcaf",               parse_instruction_a,             code_testcaf );
 	put_instruction_name("update",                parse_instruction_a_n_n,         code_update );
@@ -176,6 +177,8 @@ void load_instruction_table(void) {
 	put_instruction_name("CtoAC",                 parse_instruction,               code_CtoAC );
 	put_instruction_name("CtoI",                  parse_instruction,               code_CtoI );
 	put_instruction_name("ItoC",                  parse_instruction,               code_ItoC );
+	put_instruction_name("ItoR",                  parse_instruction,               code_ItoR );
+	put_instruction_name("RtoI",                  parse_instruction,               code_RtoI );
 
 	put_instruction_name("addIi",                 parse_instruction_i,             code_addIi );
 	put_instruction_name("andIi",                 parse_instruction_i,             code_andIi );

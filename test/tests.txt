@@ -1,6 +1,7 @@
 # vim: ts=12:
 acker	StdInt
 e	StdInt,StdList
+fsieve	StdInt,StdReal
 hamming	StdInt,StdList
 invperm	StdInt
 lqueen	StdInt,StdList

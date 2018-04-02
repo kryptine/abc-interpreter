@@ -1,7 +1,7 @@
 SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -nr -nt
-override CFLAGS+=-Wall -pedantic -Wno-misleading-indentation -DPOSIX
+override CFLAGS+=-Wall -pedantic -Wno-misleading-indentation -DPOSIX -lm
 
 all: optimise interpret bytecode
 

@@ -141,6 +141,7 @@ void code_shiftl(void);
 void code_shiftr(void);
 void code_subI(void);
 void code_subR(void);
+void code_sqrtR(void);
 void code_rtn(void);
 void code_testcaf(char *label_name);
 void code_update(char element_descriptor[], int a_size, int b_size);
@@ -152,6 +153,8 @@ void code_xor(void);
 void code_CtoAC(void);
 void code_CtoI(void);
 void code_ItoC(void);
+void code_ItoR(void);
+void code_RtoI(void);
 
 void code_addIi(CleanInt i);
 void code_andIi(CleanInt i);

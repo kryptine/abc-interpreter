@@ -1,3 +1,4 @@
+#include <math.h>
 #include "abc_instructions.h"
 
 case CaddI:
@@ -5199,6 +5200,13 @@ case CsubR:
 	pc+=1;
 	continue;
 }
+case CsqrtR:
+{
+	double d=sqrt(*(double*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case Ctestcaf:
 	*--bsp=*(BC_WORD*)pc[1];
 	pc+=2;
@@ -5569,6 +5577,20 @@ case CItoC:
 	bsp[0] = (BC_BOOL)bsp[0];
 	pc+=1;
 	continue;
+case CItoR:
+{
+	double d = (double) ((BC_WORD_S) bsp[0]);
+	bsp[0] = *(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case CRtoI:
+{
+	double d = *(double*)&bsp[0];
+	bsp[0] = (BC_WORD_S) d;
+	pc+=1;
+	continue;
+}
 
 case CaddIi:
 	bsp[0]+=*(BC_WORD*)&pc[1];

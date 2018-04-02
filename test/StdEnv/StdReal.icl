@@ -86,3 +86,16 @@ where
 	(<) a b = code inline {
 		ltR
 	}
+
+instance sqrt Real
+where
+	sqrt a = code inline {
+		sqrtR
+	}
+
+instance toReal Int
+where
+	toReal :: !Int -> Real
+	toReal a = code inline {
+		ItoR
+	}
