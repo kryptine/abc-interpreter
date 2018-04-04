@@ -1,4 +1,4 @@
-definition module StdInt
+system module StdInt
 
 import StdOverloaded
 
