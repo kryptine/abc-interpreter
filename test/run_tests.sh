@@ -112,6 +112,9 @@ do
 		FAILED=1
 		continue
 	fi
+	touch "$MODULE.icl"
+	sleep 1
+	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
 
 	ABCDEPS=()
 	for dep in ${DEPS[@]}; do
