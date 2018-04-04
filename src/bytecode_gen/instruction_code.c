@@ -3133,7 +3133,7 @@ void code_jmp_eqI(char label_name[]) {
 }
 
 void code_jmp_eqI_b(int value,int b_offset,char label_name[]) {
-	add_instruction_w_w_label(Cjmp_eqI_b,b_offset,value,label_name);
+	add_instruction_w_i_label(Cjmp_eqI_b,b_offset,value,label_name);
 }
 
 void code_jmp_eqI_b2(int value1,int value2,int b_offset,char label_name1[],char label_name2[]) {
