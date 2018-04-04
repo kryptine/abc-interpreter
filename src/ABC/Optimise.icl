@@ -262,6 +262,8 @@ opt_abc_new [i:is] = [i:opt_abc_new is]
 opt_abc_new [] = []
 
 opt_abc_new2 :: ![ABCInstruction] -> [ABCInstruction]
+opt_abc_new2 [IpushI n:Iswap_b1:is] = [IinsI1 n:opt_abc_new2 is]
+
 opt_abc_new2 [Iupdate_a s0 d0,Iupdate_a s1 d1,Iupdate_a s2 d2,Iupdate_a s3 d3:is]
 | s0==s3+3 && d0==d3+3 && s1==s3+2 && d1==d3+2 && s2==s3+1 && d2==d3+1 = [Iupdate4_a s3 d3:opt_abc_new2 is]
 | s0==d1 && s1==d2 && s2==d3 = [Iupdates4_a s3 s2 s1 s0 d0:is]

@@ -184,6 +184,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fill_a01_pop_rtn",      parse_instruction,               code_fill_a01_pop_rtn );
 	put_instruction_name("exchange_a",            parse_instruction_n_n,           code_exchange_a );
 	put_instruction_name("geC",                   parse_instruction,               code_geC );
+	put_instruction_name("insI1",                 parse_instruction_i,             code_insI1 );
 	put_instruction_name("jmp_b_false",           parse_instruction_n_a,           code_jmp_b_false );
 	put_instruction_name("jmp_eqACio",            parse_instruction_s2_n_a,        code_jmp_eqACio );
 	put_instruction_name("jmp_eqC_b",             parse_instruction_c_n_a,         code_jmp_eqC_b );

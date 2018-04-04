@@ -103,6 +103,7 @@ void code_pushD(char *descriptor);
 void code_pushD_a(int a_offset);
 void code_pushF_a(int a_offset);
 void code_pushI(CleanInt i);
+void code_insI1(CleanInt i);
 void code_pushI_a(int a_offset);
 void code_pushcaf(char *label_name, int a_size, int b_size);
 void code_push_a(int a_offset);

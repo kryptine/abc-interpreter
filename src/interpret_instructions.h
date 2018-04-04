@@ -3226,6 +3226,12 @@ case CpushI:
 	*--bsp=pc[1];
 	pc+=2;
 	continue;
+case CinsI1:
+	bsp[-1]=bsp[0];
+	bsp[0]=pc[1];
+	bsp--;
+	pc+=2;
+	continue;
 case CpushB_a:
 case CpushC_a:
 case CpushI_a:
