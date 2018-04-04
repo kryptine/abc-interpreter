@@ -2161,10 +2161,6 @@ void code_pushI(CleanInt i) {
 	add_instruction_i(CpushI,i);
 }
 
-void code_insI1(CleanInt i) {
-	add_instruction_i(CinsI1,i);
-}
-
 void code_pushI_a(int a_offset) {
 	add_instruction_w(CpushI_a,-a_offset);
 }

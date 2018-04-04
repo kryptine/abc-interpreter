@@ -27,7 +27,6 @@ from StdFile import class <<<
 	| Ifill_a !Int !Int
 	| Ifill_a01_pop_rtn
 	| Ifillh !String !Int !Int
-	| IinsI1 !Int
 	| Ijmp !String
 	| Ijmp_b_false !Int !String
 	| Ijmp_eqACio !StringLiteral !Int !String

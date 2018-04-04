@@ -196,7 +196,6 @@ enum {
 	CpushD_a,
 	CpushF_a,
 	CpushI,
-	CinsI1,
 	CpushI_a,
 	Cpush_a,
 	Cpush_arg,

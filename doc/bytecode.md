@@ -474,9 +474,6 @@ Push the float *n* to the B-stack.
 ### pushI *n*
 Push the integer *n* to the B-stack.
 
-### insI1 *n*
-Insert the integer *n* directly under the top of the B-stack.
-
 ### pushI_a *n*
 Push the integer *n* to the A-stack.
 

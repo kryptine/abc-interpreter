@@ -390,8 +390,6 @@ char *instruction_name(BC_WORD i) {
 			return "pushF_a";
 		case CpushI:
 			return "pushI";
-		case CinsI1:
-			return "insI1";
 		case CpushI_a:
 			return "pushI_a";
 		case Cpushcaf10:
@@ -1131,7 +1129,6 @@ char *instruction_type (BC_WORD i) {
 		case CpushD_a:               return "?";
 		case CpushF_a:               return "?";
 		case CpushI:                 return "i";
-		case CinsI1:                 return "i";
 		case CpushI_a:               return "n";
 		case Cpushcaf10:             return "?";
 		case Cpushcaf11:             return "?";
