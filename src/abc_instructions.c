@@ -1335,7 +1335,7 @@ char *instruction_type (BC_WORD i) {
 		case Cjmp_eqI_b2:            return "?";
 		case Cjmp_eq_desc:           return "nll";
 		case Cjmp_geI:               return "l";
-		case Cjmp_ltI:               return "?";
+		case Cjmp_ltI:               return "l";
 		case Cjmp_neC_b:             return "?";
 		case Cjmp_neI:               return "l";
 		case Cjmp_neI_b:             return "nil";
