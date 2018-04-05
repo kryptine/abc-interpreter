@@ -16,12 +16,14 @@
 # define BC_WORD   uint64_t
 # define BC_WORD_S  int64_t
 # define BC_WORD_FMT "%lu"
+# define BC_WORD_FMT_HEX "%lx"
 # define BC_WORD_S_FMT "%ld"
 # define BC_REAL double
 #else
 # define BC_WORD   uint32_t
 # define BC_WORD_S  int32_t
 # define BC_WORD_FMT "%u"
+# define BC_WORD_FMT_HEX "%x"
 # define BC_WORD_S_FMT "%d"
 # define BC_REAL float
 #endif

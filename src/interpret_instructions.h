@@ -91,7 +91,7 @@ case Cbuild0:
 	if ((heap_free-=3)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -113,7 +113,7 @@ case Cbuildhr20:
 	if ((heap_free-=3)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
@@ -150,7 +150,7 @@ case Cbuild4:
 case Cbuildh0:
 case CbuildAC:
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	*++asp=pc[1];
 	pc+=2;
@@ -416,7 +416,7 @@ case CbuildI:
 	if ((heap_free-=2)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- INT (%lx)\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
+	fprintf(stderr, "\t%p / %p <- INT (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
 #endif
 	hp[0]=(BC_WORD)&INT+2;
 	hp[1]=pc[1];
@@ -431,7 +431,7 @@ case CbuildI_b:
 	if ((heap_free-=2)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- INT (%lx)\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
+	fprintf(stderr, "\t%p / %p <- INT (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
 #endif
 	bo = pc[1];
 	hp[0]=(BC_WORD)&INT+2;
@@ -1192,7 +1192,7 @@ case Cbuild_r40:
 	if ((heap_free-=6)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
 #endif
 	ao=((BC_WORD_S*)pc)[1];
 	hp[0]=*(BC_WORD*)&pc[2];
@@ -1301,7 +1301,7 @@ case Cbuild_u02:
 	if ((heap_free-=3)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
@@ -1451,7 +1451,7 @@ case Ccreate:
 	if ((heap_free-=3)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- __cycle (%lx)\n", (void*) hp, (BC_WORD)&__cycle__in__spine);
+	fprintf(stderr, "\t%p <- __cycle (" BC_WORD_FMT_HEX ")\n", (void*) hp, (BC_WORD)&__cycle__in__spine);
 #endif
 	hp[0]=(BC_WORD)&__cycle__in__spine;
 	*++asp=(BC_WORD)hp;
@@ -2055,7 +2055,7 @@ case Cfillh0:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
 #endif
 	n[0]=pc[2];
 	pc+=3;
@@ -2080,7 +2080,7 @@ case Cfillh2:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (%lx)\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
 #endif
 	n[0]=pc[2];
 	n[1]=asp[0];
@@ -3570,7 +3570,7 @@ case Cpush_node0:
 
 	n=(BC_WORD*)*asp;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- push_node0 (%lx)\n", (void*)n, pc[1]);
+	fprintf(stderr, "\t%p <- push_node0 (" BC_WORD_FMT_HEX ")\n", (void*)n, pc[1]);
 #endif
 	n[0]=pc[1];
 	pc+=2;
@@ -3769,7 +3769,7 @@ case Cpush_node_u02:
 
 	n=(BC_WORD*)*asp;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)asp, (void*) *asp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)asp, (void*) *asp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	n[0]=pc[1];
 	bsp[-2]=n[1];
@@ -5679,7 +5679,7 @@ case Cbuildo2:
 	if ((heap_free-=3)<0)
 		break;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (%lx)\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) data, pc[3]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) data, pc[3]);
 #endif
 	ao1=((BC_WORD_S*)pc)[1];
 	ao2=((BC_WORD_S*)pc)[2];
