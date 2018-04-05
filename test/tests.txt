@@ -1,6 +1,7 @@
 # vim: ts=12:
 acker	StdInt
 e	StdInt,StdList
+fsieve	StdInt,StdReal
 hamming	StdInt,StdList
 invperm	StdInt
 lqueen	StdInt,StdList
@@ -8,6 +9,7 @@ mulmat	StdInt
 nfib	StdInt
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 revtwice	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
+rfib	StdReal
 sieve	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 squeen	StdInt,StdList
 stwice	StdInt

@@ -767,6 +767,14 @@ void add_instruction_i(SS i,int n) {
 	store_code_elem(8, n);
 }
 
+void add_instruction_r(SS i,double r) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %f\n",pgrm.code_size,instruction_name (i),r);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(8, *((uint64_t*)(&r)));
+}
+
 void add_instruction_internal_label(SS i,struct label *label) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),label->label_offset);
@@ -794,6 +802,10 @@ void add_label(char *label_name) {
 
 void code_addI(void) {
 	add_instruction(CaddI);
+}
+
+void code_addR(void) {
+	add_instruction(CaddR);
 }
 
 void code_and(void) {
@@ -946,6 +958,10 @@ void code_buildI(CleanInt value) {
 
 void code_buildI_b(int b_offset) {
 	add_instruction_w(CbuildI_b,b_offset);
+}
+
+void code_buildR_b(int b_offset) {
+	add_instruction_w(CbuildR_b,b_offset);
 }
 
 void code_buildhr(char descriptor_name[],int a_size,int b_size) {
@@ -1300,6 +1316,10 @@ void code_divI(void) {
 	add_instruction(CdivI);
 }
 
+void code_divR(void) {
+	add_instruction(CdivR);
+}
+
 void code_eqAC_a(char *string,int string_length) {
 	struct label *string_label;
 
@@ -1364,6 +1384,10 @@ void code_eqI_b(CleanInt value,int b_offset) {
 
 void code_eqI_a(CleanInt value,int a_offset) {
 	add_instruction_w_i(CeqI_a,-a_offset,value);
+}
+
+void code_eqR(void) {
+	add_instruction(CeqR);
 }
 
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
@@ -1805,6 +1829,10 @@ void code_fillI_b(int b_offset,int a_offset) {
 	add_instruction_w_w(CfillI_b,-a_offset,b_offset);
 }
 
+void code_fillR_b(int b_offset,int a_offset) {
+	add_instruction_w_w(CfillR_b,-a_offset,b_offset);
+}
+
 void code_fill_a(int from_offset,int to_offset) {
 	add_instruction_w_w(Cfill_a,-from_offset,-to_offset);
 }
@@ -2054,8 +2082,16 @@ void code_ltI(void) {
 	add_instruction(CltI);
 }
 
+void code_ltR(void) {
+	add_instruction(CltR);
+}
+
 void code_mulI(void) {
 	add_instruction(CmulI);
+}
+
+void code_mulR(void) {
+	add_instruction(CmulR);
 }
 
 void code_negI(void) {
@@ -2163,6 +2199,14 @@ void code_pushI(CleanInt i) {
 
 void code_pushI_a(int a_offset) {
 	add_instruction_w(CpushI_a,-a_offset);
+}
+
+void code_pushR(double r) {
+	add_instruction_r(CpushR,r);
+}
+
+void code_pushR_a(int a_offset) {
+	add_instruction_w(CpushR_a,-a_offset);
 }
 
 void code_pushcaf(char *label_name,int a_size,int b_size) {
@@ -2847,6 +2891,14 @@ void code_subI(void) {
 	add_instruction(CsubI);
 }
 
+void code_subR(void) {
+	add_instruction(CsubR);
+}
+
+void code_sqrtR(void) {
+	add_instruction(CsqrtR);
+}
+
 void code_testcaf(char *label_name) {
 	add_instruction_label(Ctestcaf,label_name);
 }
@@ -2953,6 +3005,14 @@ void code_CtoI(void) {
 
 void code_ItoC(void) {
 	add_instruction(CItoC);
+}
+
+void code_ItoR(void) {
+	add_instruction(CItoR);
+}
+
+void code_RtoI(void) {
+	add_instruction(CRtoI);
 }
 
 

@@ -59,7 +59,7 @@ while true; do
 			shift 2;;
 
 		-f | --fast)
-			CFLAGS+=" -O3"
+			CFLAGS+=" -Ofast"
 			shift;;
 		-h | --heap)
 			RUNFLAGS+=" -h $2"

@@ -14,3 +14,5 @@ instance zero Int
 instance one Int
 
 instance rem Int
+
+instance toInt Real

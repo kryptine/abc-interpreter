@@ -57,3 +57,10 @@ where
 	(rem) a b = code inline {
 		remI
 	}
+
+instance toInt Real
+where
+	toInt :: !Real -> Int
+	toInt a = code inline {
+		 RtoI
+	}

@@ -25,6 +25,7 @@ int parse_instruction_c_c_n_a_a(struct instruction*);
 int parse_instruction_c_n(struct instruction*);
 int parse_instruction_c_n_a(struct instruction*);
 int parse_instruction_i(struct instruction*);
+int parse_instruction_r(struct instruction*);
 int parse_instruction_i_i_n_a_a(struct instruction*);
 int parse_instruction_i_n(struct instruction*);
 int parse_instruction_i_n_a(struct instruction*);

@@ -1,10 +1,16 @@
-#include "abc_instructions.h"
-
 case CaddI:
 	bsp[1]=bsp[0] + bsp[1];
 	++bsp;
 	pc+=1;
 	continue;
+case CaddR:
+{
+	BC_REAL d=*(BC_REAL*)&bsp[0] + *(BC_REAL*)&bsp[1];
+	bsp[1]=*(BC_WORD*)&d;
+	++bsp;
+	pc+=1;
+	continue;
+}
 case Cadd_empty_node2:
 	if ((heap_free-=3)<0)
 		break;
@@ -2467,6 +2473,17 @@ case CfillI_b:
 	pc+=3;
 	continue;
 }
+case CfillR_b:
+{
+	BC_WORD *n,i;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	i=(BC_WORD_S)bsp[pc[2]];
+	n[0]=(BC_WORD)&REAL+2;
+	n[1]=i;
+	pc+=3;
+	continue;
+}
 case Cfill_a:
 {
 	BC_WORD ao_s,ao_d;
@@ -3127,11 +3144,24 @@ case CltI:
 	++bsp;
 	pc+=1;
 	continue;
+case CltR:
+	bsp[1] = *(BC_REAL*)&bsp[0] < *(BC_REAL*)&bsp[1];
+	++bsp;
+	pc+=1;
+	continue;
 case CmulI:
 	bsp[1]=bsp[0] * bsp[1];
 	++bsp;
 	pc+=1;
 	continue;
+case CmulR:
+{
+	BC_REAL d=*(BC_REAL*)&bsp[0] * *(BC_REAL*)&bsp[1];
+	bsp[1]=*(BC_WORD*)&d;
+	++bsp;
+	pc+=1;
+	continue;
+}
 case CnegI:
 	*bsp = - *bsp;
 	pc+=1;
@@ -3188,6 +3218,8 @@ case Cprint_symbol_sc:
 		printf ("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
 		printf ("'%c'",(int)n[1]);
+	} else if (d==(BC_WORD)&REAL+2){
+		printf ("%f",*(BC_REAL*)&n[1]);
 	} else {
 		uint32_t *s;
 		int l,i;
@@ -3223,6 +3255,7 @@ case CpushBTRUE:
 case CpushC:
 case CpushD:
 case CpushI:
+case CpushR:
 	*--bsp=pc[1];
 	pc+=2;
 	continue;
@@ -5156,6 +5189,21 @@ case CsubI:
 	++bsp;
 	pc+=1;
 	continue;
+case CsubR:
+{
+	BC_REAL d=*(BC_REAL*)&bsp[0] - *(BC_REAL*)&bsp[1];
+	bsp[1]=*(BC_WORD*)&d;
+	++bsp;
+	pc+=1;
+	continue;
+}
+case CsqrtR:
+{
+	BC_REAL d=sqrt(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case Ctestcaf:
 	*--bsp=*(BC_WORD*)pc[1];
 	pc+=2;
@@ -5526,6 +5574,20 @@ case CItoC:
 	bsp[0] = (BC_BOOL)bsp[0];
 	pc+=1;
 	continue;
+case CItoR:
+{
+	BC_REAL d = (BC_REAL) ((BC_WORD_S) bsp[0]);
+	bsp[0] = *(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case CRtoI:
+{
+	BC_REAL d = *(BC_REAL*)&bsp[0];
+	bsp[0] = (BC_WORD_S) d;
+	pc+=1;
+	continue;
+}
 
 case CaddIi:
 	bsp[0]+=*(BC_WORD*)&pc[1];
@@ -6781,5 +6843,5 @@ case Cjesr:
 			continue;
 	}
 default:
-	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " at %d\n", *pc, (int) (pc-code));
+	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-code));
 	return 1;

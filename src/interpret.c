@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,7 @@ void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S',
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
 void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
+void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
 static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 #else /* assuming WORD_WIDTH == 32 */
@@ -39,6 +41,7 @@ void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S
 void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
 void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
+void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
 static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 #endif /* Word-width dependency */
