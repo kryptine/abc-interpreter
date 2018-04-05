@@ -3,7 +3,7 @@ acker
 e	StdInt,StdList
 fsieve	StdReal
 hamming	StdInt,StdList
-invperm
+invperm	StdInt
 lqueen	StdList
 mulmat
 nfib
