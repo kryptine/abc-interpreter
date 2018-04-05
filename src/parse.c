@@ -129,12 +129,13 @@ int parse_file(struct parser *state, FILE *file) {
 							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
 							break;
 						case 'r': /* Real */
-#if (WORD_WIDTH != 64)
-							fprintf(stderr, "Reals are only supported on 64-bit systems.\n");
-							exit(1);
-#endif
 							safe_read(&elem64, sizeof(elem64), 1, file);
+#if (WORD_WIDTH == 64)
 							state->program->code[state->ptr++] = elem64;
+#else
+							float f = *(double*)&elem64;
+							state->program->code[state->ptr++] = *(BC_WORD*)&f;
+#endif
 							break;
 						case '?':
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");

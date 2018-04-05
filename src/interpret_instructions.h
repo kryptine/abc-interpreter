@@ -5,7 +5,7 @@ case CaddI:
 	continue;
 case CaddR:
 {
-	double d=*(double*)&bsp[0] + *(double*)&bsp[1];
+	BC_REAL d=*(BC_REAL*)&bsp[0] + *(BC_REAL*)&bsp[1];
 	bsp[1]=*(BC_WORD*)&d;
 	++bsp;
 	pc+=1;
@@ -3145,7 +3145,7 @@ case CltI:
 	pc+=1;
 	continue;
 case CltR:
-	bsp[1] = *(double*)&bsp[0] < *(double*)&bsp[1];
+	bsp[1] = *(BC_REAL*)&bsp[0] < *(BC_REAL*)&bsp[1];
 	++bsp;
 	pc+=1;
 	continue;
@@ -3156,7 +3156,7 @@ case CmulI:
 	continue;
 case CmulR:
 {
-	double d=*(double*)&bsp[0] * *(double*)&bsp[1];
+	BC_REAL d=*(BC_REAL*)&bsp[0] * *(BC_REAL*)&bsp[1];
 	bsp[1]=*(BC_WORD*)&d;
 	++bsp;
 	pc+=1;
@@ -3219,7 +3219,7 @@ case Cprint_symbol_sc:
 	} else if (d==(BC_WORD)&CHAR+2){
 		printf ("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
-		printf ("%f",*(double*)&n[1]);
+		printf ("%f",*(BC_REAL*)&n[1]);
 	} else {
 		uint32_t *s;
 		int l,i;
@@ -5191,7 +5191,7 @@ case CsubI:
 	continue;
 case CsubR:
 {
-	double d=*(double*)&bsp[0] - *(double*)&bsp[1];
+	BC_REAL d=*(BC_REAL*)&bsp[0] - *(BC_REAL*)&bsp[1];
 	bsp[1]=*(BC_WORD*)&d;
 	++bsp;
 	pc+=1;
@@ -5199,7 +5199,7 @@ case CsubR:
 }
 case CsqrtR:
 {
-	double d=sqrt(*(double*)&bsp[0]);
+	BC_REAL d=sqrt(*(BC_REAL*)&bsp[0]);
 	bsp[0]=*(BC_WORD*)&d;
 	pc+=1;
 	continue;
@@ -5576,14 +5576,14 @@ case CItoC:
 	continue;
 case CItoR:
 {
-	double d = (double) ((BC_WORD_S) bsp[0]);
+	BC_REAL d = (BC_REAL) ((BC_WORD_S) bsp[0]);
 	bsp[0] = *(BC_WORD*)&d;
 	pc+=1;
 	continue;
 }
 case CRtoI:
 {
-	double d = *(double*)&bsp[0];
+	BC_REAL d = *(BC_REAL*)&bsp[0];
 	bsp[0] = (BC_WORD_S) d;
 	pc+=1;
 	continue;
