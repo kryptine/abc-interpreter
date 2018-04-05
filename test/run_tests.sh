@@ -17,6 +17,8 @@ RUNFLAGS=""
 RUN_ONLY=""
 PROFILE=0
 
+QUIET=0
+
 print_help () {
 	echo "$0: run tests"
 	echo
@@ -24,16 +26,18 @@ print_help () {
 	echo "  --help           Print this help"
 	echo
 	echo "  -o/--only TEST   Only run test TEST"
-	echo "  -h/--heap SIZE   Set heap size to SIZE"
-	echo "  -s/--stack SIZE  Set stack size to SIZE"
 	echo
+	echo "  -f/--fast        Compile the interpreter with -O3"
+	echo "  -h/--heap SIZE   Set heap size to SIZE"
+	echo "  -O/--no-opt      Skip the ABC optimisation step"
+	echo "  -s/--stack SIZE  Set stack size to SIZE"
 	echo "  -3/--32-bit      Run tests as if on a 32-bit machine"
 	echo
 	echo "  -d/--debug-all-instructions"
 	echo "                   Print all instructions as they are executed"
 	echo "  -l/--list-code   List bytecode before execution"
-	echo "  -O/--no-opt      Skip the ABC optimisation step"
 	echo "  -p/--profile     Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
+	echo "  -q/--quiet       Don't show program results"
 	exit 0
 }
 
@@ -42,7 +46,7 @@ print_usage () {
 	exit 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,heap:,stack:,32-bit,debug-all-instructions,list-code,no-opt,profile "o:h:s:3dlOp" "$@"` || print_usage
+OPTS=`getopt -n "$0" -l help,only:,fast,heap:,no-opt,stack:,32-bit,debug-all-instructions,list-code,profile,quiet "o:fh:Os:3dlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -53,13 +57,19 @@ while true; do
 		-o | --only)
 			RUN_ONLY="$2"
 			shift 2;;
+
+		-f | --fast)
+			CFLAGS+=" -O3"
+			shift;;
 		-h | --heap)
 			RUNFLAGS+=" -h $2"
 			shift 2;;
+		-O | --no-opt)
+		    OPT="cat -"
+			shift;;
 		-s | --stack)
 			RUNFLAGS+=" -s $2"
 			shift 2;;
-
 		-3 | --32-bit)
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
 			shift;;
@@ -70,15 +80,14 @@ while true; do
 		-l | --list-code)
 			RUNFLAGS+=" -l -H"
 			shift;;
-		-O | --no-opt)
-		    OPT="cat -"
-			shift;;
-
 		-p | --profile)
 			CFLAGS+=" -g -lprofiler"
 			export CPUPROFILE=/tmp/prof.out
 			export CPUPROFILE_FREQUENCY=10000
 			PROFILE=1
+			shift;;
+		-q | --quiet)
+			QUIET=1
 			shift;;
 
 		--)
@@ -91,7 +100,7 @@ done
 
 CFLAGS="$CFLAGS" make -BC ../src || exit 1
 
-rm -r Clean\ System\ Files 2>/dev/null
+rm -r Clean\ System\ Files StdEnv/Clean\ System\ Files 2>/dev/null
 
 while IFS=$'\t' read -r -a line
 do
@@ -131,7 +140,11 @@ do
 		continue
 	fi
 
-	/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
+	if [ $QUIET -gt 0 ]; then
+		/usr/bin/time $IP $RUNFLAGS $MODULE.bc > $MODULE.result
+	else
+		/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
+	fi
 
 	if [ $PROFILE -ne 0 ]; then
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
