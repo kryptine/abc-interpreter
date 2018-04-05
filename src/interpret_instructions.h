@@ -1,6 +1,3 @@
-#include <math.h>
-#include "abc_instructions.h"
-
 case CaddI:
 	bsp[1]=bsp[0] + bsp[1];
 	++bsp;
