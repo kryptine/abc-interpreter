@@ -1,18 +1,18 @@
 # vim: ts=12:
-acker	StdInt
+acker
 e	StdInt,StdList
-fsieve	StdInt,StdReal
+fsieve	StdReal
 hamming	StdInt,StdList
-invperm	StdInt
-lqueen	StdInt,StdList
-mulmat	StdInt
-nfib	StdInt
+invperm
+lqueen	StdList
+mulmat
+nfib
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 revtwice	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
 rfib	StdReal
 sieve	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-squeen	StdInt,StdList
-stwice	StdInt
-tak	StdInt
-twice	StdInt
+squeen	StdList
+stwice
+tak
+twice
 war_seq	StdInt
