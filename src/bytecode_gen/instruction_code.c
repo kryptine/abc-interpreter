@@ -1931,6 +1931,10 @@ void code_incI(void) {
 	add_instruction(CincI);
 }
 
+void code_is_record(int a_offset) {
+	add_instruction_w(Cis_record, a_offset);
+}
+
 int last_da,last_db;
 
 void code_jmp(char label_name[]) {
@@ -4051,14 +4055,11 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 	}
 	record_label->label_offset=(pgrm.data_size<<2)+1;
 
-
-	/* to do record descriptor instead of 0 */
-
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
-	store_data_l(0);
+	store_data_l((a_size + b_size + 256) | (a_size << 16));
 
-	/* */
+	/* TODO: do we need the type string? */
 
 	if (list_code)
 		printf("\t.text\n");

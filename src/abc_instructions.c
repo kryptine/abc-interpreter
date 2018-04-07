@@ -336,6 +336,8 @@ char *instruction_name(BC_WORD i) {
 			return "halt";
 		case CincI:
 			return "incI";
+		case Cis_record:
+			return "is_record";
 		case Cjmp:
 			return "jmp";
 		case Cjmp_eval:
@@ -1128,6 +1130,7 @@ char *instruction_type (BC_WORD i) {
 		case CgtI:                   return "";
 		case Chalt:                  return "";
 		case CincI:                  return "";
+		case Cis_record:             return "n";
 		case Cjmp:                   return "l";
 		case Cjmp_eval:              return "";
 		case Cjmp_eval_upd:          return "";

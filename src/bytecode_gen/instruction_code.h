@@ -79,6 +79,7 @@ void code_get_node_arity(int a_offset);
 void code_gtI(void);
 void code_halt(void);
 void code_incI(void);
+void code_is_record(int a_offset);
 void code_jmp(char label_name[]);
 void code_jmp_ap(int n_apply_args);
 void code_jmp_eval(void);

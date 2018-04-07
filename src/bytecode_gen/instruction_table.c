@@ -103,6 +103,7 @@ void load_instruction_table(void) {
 	put_instruction_name("gtI",                   parse_instruction,               code_gtI );
 	put_instruction_name("halt",                  parse_instruction,               code_halt );
 	put_instruction_name("incI",                  parse_instruction,               code_incI );
+	put_instruction_name("is_record",             parse_instruction_n,             code_is_record );
 	put_instruction_name("jmp",                   parse_instruction_a,             code_jmp );
 	put_instruction_name("jmp_ap",                parse_instruction_n,             code_jmp_ap );
 	put_instruction_name("jmp_eval",              parse_instruction,               code_jmp_eval );

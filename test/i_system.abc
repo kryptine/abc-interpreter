@@ -335,6 +335,9 @@ _print
 _continue_print
 	jsr_eval 0
 
+	is_record	0
+	jmp_true	_print_record
+
 	get_node_arity 0
 	eqI_b 0 0
 	jmp_true _print_last
@@ -436,6 +439,13 @@ _print_nil
 _print_array
 	| TODO
 	print_sc "<unimplemented>"
+	pop_a 1
+	pop_b 1
+	jmp _print_brackets
+
+_print_record
+	| TODO
+	print_sc "<record>"
 	pop_a 1
 	pop_b 1
 	jmp _print_brackets

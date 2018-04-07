@@ -3001,6 +3001,14 @@ case CincI:
 	bsp[0]=bsp[0] + 1;
 	pc+=1;
 	continue;
+case Cis_record:
+{
+	BC_WORD *n;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	*--bsp=((SS*)(n[0]))[-1] > 127;
+	pc+=2;
+	continue;
+}
 case Cjmp:
 	pc=(BC_WORD*)pc[1];
 	continue;

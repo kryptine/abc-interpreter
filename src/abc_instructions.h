@@ -165,6 +165,7 @@ enum {
 	CgtI,
 	Chalt,
 	CincI,
+	Cis_record,
 	Cjesr,
 	Cjmp,
 	Cjmp_eval,
