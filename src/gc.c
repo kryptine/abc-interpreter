@@ -36,7 +36,7 @@ void init_nodes_set(struct nodes_set *set, size_t heap_size) {
 	set->black.bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
 	set->black.size = heap_size / 8 / sizeof(BC_WORD) + 1;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-	fprintf(stderr, "\tBitmap size = %d\n", set->black.size);
+	fprintf(stderr, "\tBitmap size = %d\n", (int) set->black.size);
 #endif
 	set->black.ptr_i = 0;
 	set->black.ptr_j = 0;
@@ -58,7 +58,7 @@ int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 	BC_WORD i = val / 8 / sizeof(BC_WORD);
 	BC_WORD m = (BC_WORD) 1 << (val % (8 * sizeof(BC_WORD)));
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", i, m);
+	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", (int) i, (int) m);
 #endif
 	if (set->black.bitmap[i] & m) {
 		return 0;
@@ -70,7 +70,7 @@ int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 
 BC_WORD next_black_node(struct nodes_set *set) {
 #if (DEBUG_GARBAGE_COLLECTOR > 4)
-	fprintf(stderr, "\tSearching with %d/%d\n", set->black.ptr_i, set->black.ptr_j);
+	fprintf(stderr, "\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
 #endif
 	if (set->black.ptr_i > set->black.size)
 		return -1;
@@ -85,7 +85,7 @@ BC_WORD next_black_node(struct nodes_set *set) {
 			} while (!set->black.bitmap[set->black.ptr_i]);
 		}
 #if (DEBUG_GARBAGE_COLLECTOR > 4)
-		fprintf(stderr, "\tSearching with %d/%d\n", set->black.ptr_i, set->black.ptr_j);
+		fprintf(stderr, "\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
 #endif
 	}
 
@@ -201,7 +201,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 			if (arity == 2)
 				add_grey_node(&nodes_set, (BC_WORD*) node[2], heap, heap_size);
 		} else { /* Thunk, pointer to rest of arguments */
-			fprintf(stderr, "Arity > 2 not implemented\n");
+			fprintf(stderr, "Arity > 2 (%d) not implemented\n", arity);
 			exit(1);
 		}
 	}
@@ -274,14 +274,14 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 
 					if (*node >= (BC_WORD) heap && *node < (BC_WORD) (heap + heap_size)) { /* Pointer */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-						fprintf(stderr, "\t\tReversing pointer %p\n", *node);
+						fprintf(stderr, "\t\tReversing pointer %p\n", (void*) *node);
 #endif
 						BC_WORD *temp = (BC_WORD*) *node;
 						*node = *temp;
 						*temp = (BC_WORD) node | 1;
 					} else {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-						fprintf(stderr, "\t\tNot reversing %p\n", *node);
+						fprintf(stderr, "\t\tNot reversing %p\n", (void*) *node);
 #endif
 					}
 				}
