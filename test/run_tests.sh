@@ -16,28 +16,29 @@ RUNFLAGS=""
 
 RUN_ONLY=""
 PROFILE=0
-
+RECOMPILE=1
 QUIET=0
 
 print_help () {
 	echo "$0: run tests"
 	echo
 	echo "Options:"
-	echo "  --help           Print this help"
+	echo "  --help             Print this help"
 	echo
-	echo "  -o/--only TEST   Only run test TEST"
+	echo "  -o/--only TEST     Only run test TEST"
 	echo
-	echo "  -f/--fast        Compile the interpreter with -O3"
-	echo "  -h/--heap SIZE   Set heap size to SIZE"
-	echo "  -O/--no-opt      Skip the ABC optimisation step"
-	echo "  -s/--stack SIZE  Set stack size to SIZE"
-	echo "  -3/--32-bit      Run tests as if on a 32-bit machine"
+	echo "  -f/--fast          Compile the interpreter with -O3"
+	echo "  -h/--heap SIZE     Set heap size to SIZE"
+	echo "  -O/--no-opt        Skip the ABC optimisation step"
+	echo "  -s/--stack SIZE    Set stack size to SIZE"
+	echo "  -3/--32-bit        Run tests as if on a 32-bit machine"
+	echo "  -R/--no-recompile  Don't recompile modules (faster, but halt addresses may be incorrect if optimisations are missed)"
 	echo
 	echo "  -d/--debug-all-instructions"
-	echo "                   Print all instructions as they are executed"
-	echo "  -l/--list-code   List bytecode before execution"
-	echo "  -p/--profile     Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
-	echo "  -q/--quiet       Don't show program results"
+	echo "                     Print all instructions as they are executed"
+	echo "  -l/--list-code     List bytecode before execution"
+	echo "  -p/--profile       Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
+	echo "  -q/--quiet         Don't show program results"
 	exit 0
 }
 
@@ -46,7 +47,7 @@ print_usage () {
 	exit 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,fast,heap:,no-opt,stack:,32-bit,debug-all-instructions,list-code,profile,quiet "o:fh:Os:3dlpq" "$@"` || print_usage
+OPTS=`getopt -n "$0" -l help,only:,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:fh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -72,6 +73,9 @@ while true; do
 			shift 2;;
 		-3 | --32-bit)
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
+			shift;;
+		-R | --no-recompile)
+			RECOMPILE=0
 			shift;;
 
 		-d | --debug-all-instructions)
@@ -100,7 +104,9 @@ done
 
 CFLAGS="$CFLAGS" make -BC ../src || exit 1
 
-rm -r Clean\ System\ Files StdEnv/Clean\ System\ Files 2>/dev/null
+if [ $RECOMPILE -gt 0 ]; then
+	rm -r Clean\ System\ Files StdEnv/Clean\ System\ Files 2>/dev/null
+fi
 
 while IFS=$'\t' read -r -a line
 do
@@ -121,9 +127,11 @@ do
 		FAILED=1
 		continue
 	fi
-	touch "$MODULE.icl"
-	sleep 1
-	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
+	if [ $RECOMPILE -gt 0 ]; then
+		touch "$MODULE.icl"
+		sleep 1
+		$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
+	fi
 
 	ABCDEPS=()
 	for dep in ${DEPS[@]}; do
