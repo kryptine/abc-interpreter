@@ -406,7 +406,6 @@ opt_abc_new2 [i:is] = [i:opt_abc_new2 is]
 opt_abc_new2 [] = []
 
 skip_b_instructions :: ![ABCInstruction] !Int -> (![ABCInstruction],!Int);
-skip_b_instructions [IpushB _:is]   n = skip_b_instructions is (n+1)
 skip_b_instructions [IIns "eqI":is] n = skip_b_instructions is (n+1)
 skip_b_instructions [IpushB _:is]   n = skip_b_instructions is (n+1)
 skip_b_instructions [IpushC _:is]   n = skip_b_instructions is (n+1)
