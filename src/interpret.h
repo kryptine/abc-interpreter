@@ -15,6 +15,6 @@ extern BC_WORD_S g_heap_free;
 
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD *heap, size_t heap_size);
+		BC_WORD **heap, size_t heap_size);
 
 #endif

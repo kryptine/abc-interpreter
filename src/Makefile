@@ -17,6 +17,9 @@ SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
 	gc.c\
+	gc/compact.c\
+	gc/copy.c\
+	gc/mark.c\
 	interpret.c\
 	parse.c\
 	traps.c\

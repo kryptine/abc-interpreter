@@ -89,12 +89,12 @@ void handle_segv(int sig) {
 
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD *heap, size_t heap_size) {
+		BC_WORD **heap, size_t heap_size) {
 	BC_WORD *pc = code;
 	asp = stack;
 	bsp = &stack[stack_size];
 	csp = &stack[stack_size >> 1];
-	BC_WORD *hp = heap;
+	BC_WORD *hp = *heap;
 	BC_WORD_S heap_free = heap_size;
 
 #ifdef POSIX
@@ -121,16 +121,20 @@ int interpret(BC_WORD *code, BC_WORD *data,
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		BC_WORD *new_hp = garbage_collect(stack, asp, heap, heap_size, code, data);
-		if (new_hp == hp) {
+		size_t old_heap_free = heap_size-(hp-*heap);
+		hp = garbage_collect(stack, asp, heap, heap_size
+#ifdef DEBUG_GARBAGE_COLLECTOR
+				, code, data
+#endif
+				);
+		heap_free = heap_size-(hp-*heap);
+		if (heap_free <= old_heap_free) {
 			fprintf(stderr, "Heap full.\n");
 			exit(1);
 		} else {
-			heap_free = heap_size - (new_hp - heap);
 #ifdef DEBUG_GARBAGE_COLLECTOR
-			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (hp-new_hp), (int) heap_free);
+			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
 #endif
-			hp = new_hp;
 		}
 	}
 }
@@ -220,7 +224,7 @@ int main(int argc, char **argv) {
 
 	interpret(state.program->code, state.program->data,
 			stack, stack_size,
-			heap, heap_size);
+			&heap, heap_size);
 
 	free(state.program->code);
 	free(state.program->data);

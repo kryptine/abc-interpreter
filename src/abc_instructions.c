@@ -991,8 +991,8 @@ char *instruction_type (BC_WORD i) {
 		case Cbuildh0:               return "l";
 		case Cbuildh1:               return "l";
 		case Cbuildh2:               return "l";
-		case Cbuildh3:               return "?";
-		case Cbuildh4:               return "?";
+		case Cbuildh3:               return "l";
+		case Cbuildh4:               return "l";
 		case Cbuildhr:               return "?";
 		case Cbuildhra0:             return "?";
 		case Cbuildhra1:             return "?";
