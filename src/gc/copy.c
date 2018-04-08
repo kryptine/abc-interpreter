@@ -110,22 +110,42 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 					}
 
 					if (arity > 1) {
-						// TODO
-						//BC_WORD **rest = (BC_WORD**) node[2];
-						//if ((BC_WORD) *rest >= (BC_WORD) old_heap && (BC_WORD) *rest < (BC_WORD) (old_heap + heap_size)) {
-						//	/* 3-node with pointer to rest */
-						//	int i;
-						//	for (i = 0; i < arity-1; i++) {
-						//		if (rest[i] <= node) { /* Indirected */
-						//			*new_heap++ = *rest[i] ^ 1;
-						//		} else { /* Reverse pointer */
-						//			BC_WORD temp = *rest[i];
-						//			*rest[i] = (BC_WORD) new_heap | 1;
-						//			*new_heap++ = temp;
-						//		}
-						//	}
-						//} else {
+						BC_WORD **rest = (BC_WORD**) node[2];
+						if ((BC_WORD) *rest >= (BC_WORD) old_heap && (BC_WORD) *rest < (BC_WORD) (old_heap + heap_size)) {
+							/* 3-node with pointer to rest */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+							fprintf(stderr, "\t\tNode is split over two memory blocks\n");
+#endif
+							*new_heap = (BC_WORD) (new_heap+1);
+							new_heap++;
+							int i;
+							for (i = 0; i < arity-1; i++) {
+								if (old_heap <= rest[i] && rest[i] < old_heap + heap_size) {
+									if (rest[i] <= node) { /* Indirected */
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+										fprintf(stderr, "\t\tArg %d is indirected; now %p\n", i+2, (void*)*rest[i]);
+#endif
+										*new_heap++ = *rest[i];
+									} else { /* Reverse pointer */
+										BC_WORD temp = *rest[i];
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+										fprintf(stderr, "\t\tReversing arg %d (%p)\n", i+2, (void*)temp);
+#endif
+										*rest[i] = (BC_WORD) new_heap | 1;
+										*new_heap++ = temp;
+									}
+								} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+									fprintf(stderr, "\t\tArg %d is not on the heap\n", i+2);
+#endif
+									*new_heap++ = (BC_WORD) rest[i];
+								}
+							}
+						} else {
 							/* full arity node */
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+							fprintf(stderr, "\t\tNode has one memory block\n");
+#endif
 							uint16_t i = 2;
 							for (; i <= arity; i++) {
 								if ((BC_WORD) old_heap <= node[i] && node[i] < (BC_WORD) (old_heap + heap_size)) {
@@ -149,7 +169,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 									*new_heap++ = node[i];
 								}
 							}
-						//}
+						}
 					}
 				}
 			}
@@ -197,6 +217,9 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 				new_heap += 2;
 			}
 		} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+			fprintf(stderr, "\t\t(thunk with arity %d, i.e. 3 places + pointer to rest)\n", arity);
+#endif
 			*new_heap = node[0];
 			node[0] = (BC_WORD) new_heap;
 			new_heap++;

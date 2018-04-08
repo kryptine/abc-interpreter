@@ -8,6 +8,7 @@ lqueen	StdList
 mulmat
 nfib
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
+reverse2	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 revtwice	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
 rfib	StdReal
 sieve	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum

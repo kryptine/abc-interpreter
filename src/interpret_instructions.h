@@ -2403,7 +2403,7 @@ case Cfillh3:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ") with %p\n", (void*) n, pc[2] - (BC_WORD) data, pc[2], (void*)hp);
 #endif
 	n[0]=*(BC_WORD_S*)&pc[2];
 	n[1]=asp[0];
