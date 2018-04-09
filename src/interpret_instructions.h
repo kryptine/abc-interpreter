@@ -3081,6 +3081,9 @@ case Cjsr_eval:
 
 	ao=pc[1];
 	n=(BC_WORD*)asp[(BC_WORD_S)ao];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p\n", (void*) n);
+#endif
 	if ((n[0] & 2)!=0){
 		pc+=4;
 		continue;
@@ -6864,4 +6867,6 @@ case Cjesr:
 	}
 default:
 	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-code));
+	if (asp + 10 > csp)
+		fprintf(stderr, "A and C stack pointers are dangerously close; perhaps try with a larger stack.\n");
 	return 1;

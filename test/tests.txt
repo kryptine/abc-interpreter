@@ -9,6 +9,7 @@ mulmat
 nfib
 reverse	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 reverse2	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
+revrec	StdFunc,StdInt,StdList
 revtwice	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
 rfib	StdReal
 sieve	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum

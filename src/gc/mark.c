@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "mark.h"
+#include "util.h"
 #include "../interpret.h"
 #include "../util.h"
 
@@ -16,7 +17,7 @@ void init_nodes_set(struct nodes_set *set, size_t heap_size) {
 
 	set->black.bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
 	set->black.size = heap_size / 8 / sizeof(BC_WORD) + 1;
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
+#if (DEBUG_GARBAGE_COLLECTOR > 4)
 	fprintf(stderr, "\tBitmap size = %d\n", (int) set->black.size);
 #endif
 	set->black.ptr_i = 0;
@@ -38,7 +39,7 @@ int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 	BC_WORD val = ((BC_WORD) node - (BC_WORD) heap) / sizeof(BC_WORD);
 	BC_WORD i = val / 8 / sizeof(BC_WORD);
 	BC_WORD m = (BC_WORD) 1 << (val % (8 * sizeof(BC_WORD)));
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
+#if (DEBUG_GARBAGE_COLLECTOR > 4)
 	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", (int) i, (int) m);
 #endif
 	if (set->black.bitmap[i] & m) {
@@ -177,6 +178,7 @@ void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_siz
 			fprintf(stderr, "Arity < 0 not implemented\n");
 			exit(1);
 		} else if (arity == 0) {
+			/* No children */
 		} else if (arity < 3) { /* Thunk, three places */
 			add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
 			if (arity == 2)
@@ -191,9 +193,15 @@ void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_siz
 			if (arity > 0) {
 				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
 				BC_WORD **rest = (BC_WORD**) node[2];
-				int i;
-				for (i = 0; i < arity-1; i++)
-					add_grey_node(set, rest[i], heap, heap_size);
+				if (on_heap((BC_WORD) *rest, heap, heap_size)) {
+					int i;
+					for (i = 0; i < arity-1; i++)
+						add_grey_node(set, rest[i], heap, heap_size);
+				} else {
+					int i;
+					for (i = 2; i <= arity; i++)
+						add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);
+				}
 			}
 		}
 	}
