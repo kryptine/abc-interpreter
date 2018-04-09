@@ -205,7 +205,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	int res = parse_file(&state, input);
+	struct char_provider cp;
+	new_file_char_provider(&cp, input);
+	int res = parse_program(&state, &cp);
 	fclose(input);
 	if (res) {
 		fprintf(stderr, "Parsing failed (%d)\n", res);

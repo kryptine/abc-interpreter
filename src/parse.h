@@ -3,6 +3,7 @@
 
 #include "bytecode.h"
 #include "settings.h"
+#include "util.h"
 
 enum parse_state {
 	PS_init_code,
@@ -27,6 +28,6 @@ struct parser {
 };
 
 void init_parser(struct parser*);
-int parse_file(struct parser*, FILE*);
+int parse_program(struct parser*, struct char_provider*);
 
 #endif

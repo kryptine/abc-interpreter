@@ -10,6 +10,9 @@ override CFLAGS+=\
 
 all: optimise interpret bytecode
 
+CodeSharing: interpret.a .FORCE
+	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns -l $< $@ -o $@
+
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
 
@@ -24,6 +27,7 @@ SRC_INTERPRET:=\
 	parse.c\
 	traps.c\
 	util.c
+OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET))
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	gc/util.h\
 	interpret_instructions.h\
@@ -31,6 +35,12 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
+
+interpret.a: $(OBJ_INTERPRET)
+	ar cr $@ $^
+
+$(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 SRC_BYTECODE:=\
 	abc_instructions.c\

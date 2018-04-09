@@ -1,4 +1,7 @@
 Clean System Files/
+*.o
+*.a
+
 *.aux
 *.bbl
 *.bcf
