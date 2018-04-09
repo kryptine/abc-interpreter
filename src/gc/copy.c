@@ -261,7 +261,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 								*new_heap++ = node[i];
 							} else if (node[i] <= (BC_WORD) node) { /* Indirected */
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-								fprintf(stderr, "\t\tArg %d is indirected; now %p\n", i, (void*)*rest[i]);
+								fprintf(stderr, "\t\tArg %d is indirected; now %p\n", i, (void*)*(BC_WORD*)node[i]);
 #endif
 								*new_heap++ = *(BC_WORD*)node[i];
 							} else { /* Reverse pointer */
@@ -277,7 +277,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 				}
 			} while (0);
 
-			/* TODO: jump to second block if node is split up */
+			/* TODO: jump to second block if node is split up? */
 			int16_t i;
 			for (i = 0; i < b_arity; i++) {
 				*new_heap++ = node[arity+i+1];

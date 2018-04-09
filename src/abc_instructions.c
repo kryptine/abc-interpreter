@@ -1115,7 +1115,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill_r1b:              return "?";
 		case Cfill_r01:              return "?";
 		case Cfill_r02:              return "?";
-		case Cfill_r03:              return "?";
+		case Cfill_r03:              return "nnl";
 		case Cfill_r10:              return "nnl";
 		case Cfill_r11:              return "?";
 		case Cfill_r12:              return "?";
@@ -1234,7 +1234,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_args_b1111:     return "?";
 		case Cpush_r_args_b1:        return "?";
 		case Cpush_r_args_b2l1:      return "?";
-		case Cpush_r_args_b31:       return "?";
+		case Cpush_r_args_b31:       return "n";
 		case Cpush_r_args_b41:       return "?";
 		case Cpush_r_args_b2:        return "?";
 		case Cpush_r_args_b1l2:      return "?";
