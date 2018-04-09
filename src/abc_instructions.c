@@ -1029,7 +1029,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_r30:             return "?";
 		case Cbuild_r31:             return "?";
 		case Cbuild_r40:             return "nl";
-		case Cbuild_u:               return "?";
+		case Cbuild_u:               return "nln";
 		case Cbuild_u01:             return "?";
 		case Cbuild_u02:             return "l";
 		case Cbuild_u03:             return "l";
@@ -1124,7 +1124,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill_r21:              return "?";
 		case Cfill_r22:              return "?";
 		case Cfill_r30:              return "nnl";
-		case Cfill_r31:              return "?";
+		case Cfill_r31:              return "nnnl";
 		case Cfill_r40:              return "nnl";
 		case Cget_node_arity:        return "n";
 		case CgtI:                   return "";
@@ -1195,7 +1195,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node2:            return "l";
 		case Cpush_node3:            return "l";
 		case Cpush_node4:            return "l";
-		case Cpush_node_u:           return "?";
+		case Cpush_node_u:           return "nln";
 		case Cpush_node_ua1:         return "?";
 		case Cpush_node_u01:         return "?";
 		case Cpush_node_u02:         return "l";
@@ -1421,7 +1421,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate3_b:             return "?";
 		case Cupdate3pop_a:          return "nn";
 		case Cupdate3pop_b:          return "nn";
-		case Cupdate4_a:             return "?";
+		case Cupdate4_a:             return "nn";
 		case Cupdates2_a:            return "nnn";
 		case Cupdates2_a_pop_a:      return "nnnn";
 		case Cupdates2_b:            return "nnn";
