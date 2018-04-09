@@ -17,11 +17,17 @@ SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
 	gc.c\
+	gc/compact.c\
+	gc/copy.c\
+	gc/mark.c\
 	interpret.c\
 	parse.c\
 	traps.c\
 	util.c
-DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET)) interpret_instructions.h settings.h
+DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
+	gc/util.h\
+	interpret_instructions.h\
+	settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@

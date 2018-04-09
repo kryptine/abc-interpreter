@@ -29,3 +29,10 @@ take _ _      = []
 map :: (.a -> .b) ![.a] -> [.b]
 map f [x:xs] = [f x:map f xs]
 map _ [] = []
+
+reverse :: ![.a] -> [.a]
+reverse list = reverse_ list []
+where
+	reverse_ :: ![.a] u:[.a] -> v:[.a], [u <= v]
+	reverse_ [hd:tl] list = reverse_ tl [hd:list]
+	reverse_ []      list = list

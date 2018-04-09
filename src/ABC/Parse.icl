@@ -28,8 +28,16 @@ parse = map parseLine
 	| CPS_Hex !Int
 
 generic parseLine` a :: Parser a
-parseLine`{|Int|} = \i s -> Just (int` 0 i s) // TODO this can fail
+parseLine`{|Int|} = \i s -> plus_min_int` i s
 where
+	plus_min_int` :: !Int !String -> Maybe (Int, Int)
+	plus_min_int` start line
+	| start >= size line   = Nothing
+	| line.[start] == '-'  = appFst (~) <$> plus_min_int` (start+1) line
+	| line.[start] == '+'  = plus_min_int` (start+1) line
+	| isDigit line.[start] = Just (int` 0 start line)
+	| otherwise            = Nothing
+
 	int` :: !Int !Int !String -> (Int, Int)
 	int` n start line
 	| start >= size line   = (n, start)

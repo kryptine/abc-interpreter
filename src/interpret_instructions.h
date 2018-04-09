@@ -46,6 +46,9 @@ case Cbuild:
 	s=pc[1];
 	if ((heap_free-=s+1)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX "; arity %d)\n", (void*) (asp-s), (void*) hp, pc[1] - (BC_WORD) data, pc[2], (int) pc[1]);
+#endif
 	hp[0]=pc[2];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -125,6 +128,9 @@ case Cbuildhr20:
 case Cbuild3:
 	if ((heap_free-=4)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+#endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -2396,6 +2402,9 @@ case Cfillh3:
 	if ((heap_free-=2)<0)
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ") with %p\n", (void*) n, pc[2] - (BC_WORD) data, pc[2], (void*)hp);
+#endif
 	n[0]=*(BC_WORD_S*)&pc[2];
 	n[1]=asp[0];
 	n[2]=(BC_WORD)hp;
@@ -2994,13 +3003,21 @@ case Chalt:
 #if 0
 	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
 #endif
-	printf("%d %d %d\n", (int) (hp-heap), (int) heap_free, (int) (hp-heap+heap_free));
+	printf("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
 	return 0;
 /*				exit (1); */
 case CincI:
 	bsp[0]=bsp[0] + 1;
 	pc+=1;
 	continue;
+case Cis_record:
+{
+	BC_WORD *n;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	*--bsp=((SS*)(n[0]))[-1] > 127;
+	pc+=2;
+	continue;
+}
 case Cjmp:
 	pc=(BC_WORD*)pc[1];
 	continue;
@@ -3064,6 +3081,9 @@ case Cjsr_eval:
 
 	ao=pc[1];
 	n=(BC_WORD*)asp[(BC_WORD_S)ao];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p\n", (void*) n);
+#endif
 	if ((n[0] & 2)!=0){
 		pc+=4;
 		continue;
@@ -3769,7 +3789,7 @@ case Cpush_node_u02:
 
 	n=(BC_WORD*)*asp;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)asp, (void*) *asp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)asp, (void*)n, pc[1] - (BC_WORD) data, pc[1]);
 #endif
 	n[0]=pc[1];
 	bsp[-2]=n[1];
@@ -5663,6 +5683,9 @@ case Cbuildo1:
 
 	if ((heap_free-=3)<0)
 		break;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
+#endif
 	ao=pc[1];
 	hp[0]=pc[2];
 	hp[1]=asp[ao];
@@ -6844,4 +6867,6 @@ case Cjesr:
 	}
 default:
 	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-code));
+	if (asp + 10 > csp)
+		fprintf(stderr, "A and C stack pointers are dangerously close; perhaps try with a larger stack.\n");
 	return 1;
