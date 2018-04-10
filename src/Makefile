@@ -40,7 +40,7 @@ interpret.a: $(OBJ_INTERPRET)
 	ar cr $@ $^
 
 $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
 
 SRC_BYTECODE:=\
 	abc_instructions.c\

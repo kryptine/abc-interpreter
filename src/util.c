@@ -59,7 +59,7 @@ void new_string_char_provider(struct char_provider *cp, char *s, size_t size, in
 	char *string = s;
 	if (copy) {
 		string = safe_malloc(size);
-		strncpy(string, s, size);
+		memcpy(string, s, size);
 	}
 
 	struct string_char_provider *scp = safe_malloc(sizeof(struct string_char_provider));
@@ -89,13 +89,13 @@ int provide_chars(void *ptr, size_t size, size_t nmemb, struct char_provider *st
 				struct string_char_provider *scp = (struct string_char_provider*) stream->arg;
 				if (scp->ptr + size * nmemb > scp->size)
 					return -1;
-				strncpy(ptr, scp->s + scp->ptr, size * nmemb);
+				memcpy(ptr, &scp->s[scp->ptr], size * nmemb);
 				scp->ptr += size * nmemb;
 				return 0;
 			}
 	}
 
-	return 0;
+	return -1;
 }
 
 int starts_with(const char* prefix, char* str) {

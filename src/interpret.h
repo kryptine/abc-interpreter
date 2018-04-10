@@ -13,8 +13,24 @@ extern BC_WORD __cycle__in__spine;
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
 extern BC_WORD_S g_heap_free;
 
+/**
+ * code: code segment
+ * data: data segment
+ * stack: stack block
+ * stack_size: size of stack in words
+ * heap: heap block
+ * heap_size: size of heap in words
+ * asp: A-stack pointer address (e.g. stack)
+ * bsp: B-stack pointer address (e.g. &stack[stack_size])
+ * csp: C-stack pointer address (e.g. &stack[stack_size >> 1])
+ * node:
+ *  - Pointer to a node to evaluate to HNF;
+ *  - NULL if we should just start running at code[0].
+ */
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD **heap, size_t heap_size);
+		BC_WORD **heap, size_t heap_size,
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp,
+		BC_WORD *node);
 
 #endif
