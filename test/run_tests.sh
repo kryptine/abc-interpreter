@@ -14,6 +14,7 @@ FAILED=0
 
 RUNFLAGS=""
 
+X86=0
 RUN_ONLY=""
 PROFILE=0
 RECOMPILE=1
@@ -72,6 +73,7 @@ while true; do
 			RUNFLAGS+=" -s $2"
 			shift 2;;
 		-3 | --32-bit)
+			X86=1
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
 			shift;;
 		-R | --no-recompile)
@@ -158,7 +160,13 @@ do
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
 	fi
 
-	diff $MODULE.expected $MODULE.result
+	if [ $X86 -gt 0 ] && [ -f "$MODULE.32.expected" ]; then
+		diff $MODULE.32.expected $MODULE.result
+	elif [ $X86 -le 0 ] && [ -f "$MODULE.64.expected" ]; then
+		diff $MODULE.64.expected $MODULE.result
+	else
+		diff $MODULE.expected $MODULE.result
+	fi
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"
 		FAILED=1
