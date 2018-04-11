@@ -486,6 +486,10 @@ enum {
 	CA_data_IlIla,
 	CA_data_la,
 	CA_data_a,
+
+/* Unused; use this for the maximum integer value of an instruction, the number
+ * of instructions, an instruction that does not exist, etc. */
+	CMAX
 };
 
 char *instruction_name(BC_WORD i);

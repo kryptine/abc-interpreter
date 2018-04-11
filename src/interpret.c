@@ -14,7 +14,7 @@
 #include "util.h"
 
 /* Used to store the return address when evaluating a node on the heap */
-#define EVAL_TO_HNF_LABEL -1
+#define EVAL_TO_HNF_LABEL CMAX
 
 #ifdef LINK_CLEAN_RUNTIME
 extern void* __STRING__[];

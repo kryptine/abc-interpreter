@@ -8,7 +8,7 @@
 #include "../util.h"
 #include "bytecode_gen.h"
 
-#define max_implemented_instruction_n CA_data_a
+#define max_implemented_instruction_n CMAX-1
 
 #define N_ADD_ARG_LABELS 32
 #define MAX_Cadd_arg_INSTRUCTION_N 16
