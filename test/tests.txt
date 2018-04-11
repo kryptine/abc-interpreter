@@ -15,6 +15,7 @@ revtwice	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
 rfib	StdReal
 sieve	StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 squeen	StdList
+str_arit	StdString
 stwice
 tak
 twice

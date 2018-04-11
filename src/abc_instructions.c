@@ -1057,8 +1057,8 @@ char *instruction_type (BC_WORD i) {
 		case CdecI:                  return "";
 		case CdivI:                  return "";
 		case CdivR:                  return "";
-		case CeqAC:                  return "?";
-		case CeqAC_a:                return "?";
+		case CeqAC:                  return "";
+		case CeqAC_a:                return "S";
 		case CeqB:                   return "";
 		case CeqB_aFALSE:            return "?";
 		case CeqB_aTRUE:             return "?";
@@ -1310,7 +1310,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate_r40:            return "?";
 		case Cupdate_b:              return "nn";
 		case CxorI:                  return "";
-		case CCtoAC:                 return "?";
+		case CCtoAC:                 return "";
 		case CItoC:                  return "";
 		case CItoR:                  return "";
 		case CRtoI:                  return "";
@@ -1427,7 +1427,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdates2_b:            return "nnn";
 		case Cupdates2pop_a:         return "nnn";
 		case Cupdates2pop_b:         return "?";
-		case Cupdates3_a:            return "?";
+		case Cupdates3_a:            return "nnnn";
 		case Cupdates3_b:            return "?";
 		case Cupdates3pop_a:         return "nnnn";
 		case Cupdates3pop_b:         return "?";
