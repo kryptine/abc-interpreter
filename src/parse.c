@@ -137,6 +137,11 @@ int parse_file(struct parser *state, FILE *file) {
 							state->program->code[state->ptr++] = *(BC_WORD*)&f;
 #endif
 							break;
+						case 'c': /* Char */
+							/* TODO should be 8 bits of course */
+							safe_read(&elem16, sizeof(elem16), 1, file);
+							state->program->code[state->ptr++] = elem16;
+							break;
 						case '?':
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
 #if 0

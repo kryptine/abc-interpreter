@@ -1,5 +1,6 @@
 # vim: ts=12:
 acker
+chars	_SystemArray
 e	StdInt,StdList
 fsieve	StdReal
 hamming	StdInt,StdList
