@@ -52,3 +52,9 @@ where
 	(<) a b = code inline {
 		ltC
 	}
+
+instance toChar Char
+where
+	toChar _ = code inline {
+		no_op
+	}

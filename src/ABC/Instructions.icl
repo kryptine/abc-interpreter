@@ -31,11 +31,11 @@ printInstruction{|Char|} c = printChar c
 where
 	printChar :: !Char -> String
 	printChar c
-	| c < ' ' || c > '~' = {#'\'','\\','x',hex (ic / 16),hex (ic rem 16),'\''}
+	| c < ' ' || c > '~' = {#'\'','\\',oct (ic / 64),oct ((ic rem 64) / 8),oct (ic rem 8),'\''}
 	| otherwise          = {#'\'',c,'\''}
 	where
 		ic = toInt c
-		hex i = "0123456789abcdef".[i]
+		oct i = "01234567".[i]
 printInstruction{|Bool|} b = printBool b
 where
 	printBool :: !Bool -> String

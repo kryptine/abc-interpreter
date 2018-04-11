@@ -1,5 +1,6 @@
 implementation module StdList
 
+import _SystemArray
 import StdClass
 import StdInt
 
@@ -10,6 +11,18 @@ where
 	where
 		acclen n [x:xs] = acclen (inc n) xs
 		acclen n []     = n
+
+instance toString [a] | toChar a
+where
+	toString :: ![a] -> {#Char} | toChar a
+	toString xs = ltosacc 0 xs (createArray (length xs) ' ')
+	where
+		ltosacc i [h:t] arr = ltosacc (inc i) t {arr & [i]=toChar h}
+		ltosacc _ []    arr = arr
+
+(++) infixr 5 :: ![.a] u:[.a] -> u:[.a]
+(++) [hd:tl] list = [hd:tl ++ list]
+(++) nil     list = list
 
 hd :: ![.a] -> .a
 hd [x:_] = x
@@ -36,3 +49,11 @@ where
 	reverse_ :: ![.a] u:[.a] -> v:[.a], [u <= v]
 	reverse_ [hd:tl] list = reverse_ tl [hd:list]
 	reverse_ []      list = list
+
+repeatn :: !.Int a -> .[a]
+repeatn n x = take n (repeat x)
+
+repeat :: a -> [a]
+repeat x = cons
+where
+	cons = [x:cons]

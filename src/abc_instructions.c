@@ -1159,7 +1159,7 @@ char *instruction_type (BC_WORD i) {
 		case CpushBFALSE:            return "?";
 		case CpushBTRUE:             return "?";
 		case CpushB_a:               return "n";
-		case CpushC:                 return "?";
+		case CpushC:                 return "c";
 		case CpushC_a:               return "n";
 		case CpushD:                 return "l";
 		case CpushD_a:               return "?";
