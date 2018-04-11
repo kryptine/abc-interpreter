@@ -31,13 +31,13 @@ void print_code(FILE *f, BC_WORD *code, uint32_t length, BC_WORD *data, uint32_t
 				case 'a': /* Arity */
 					fprintf(f, " %d", (int16_t) ((BC_WORD_S) code[i] >> IF_INT_64_OR_32(48,16)));
 					break;
+				case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
 				case 's': { /* String */
-					uint32_t *s = (uint32_t*) code[i];
+					uint32_t *s = (uint32_t*) code[i] + (*fmt == 's' ? 0 : 1);
 					uint32_t length = s[0];
 					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
-					uint32_t i;
-					fprintf(f, " \"", length);
-					for (i=0; i<length; i++) {
+					fprintf(f, " \"");
+					for (; length; length--) {
 						fprintf(f, "%s", escape(*cs++));
 					}
 					fprintf(f, "\"");
