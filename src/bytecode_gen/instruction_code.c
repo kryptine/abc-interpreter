@@ -30,6 +30,7 @@ uint32_t list_code = 0;
 
 uint32_t allocated_code_size;
 uint32_t allocated_data_size;
+uint32_t allocated_strings_size;
 uint32_t allocated_code_relocations_size;
 uint32_t allocated_data_relocations_size;
 
@@ -48,7 +49,10 @@ void initialize_code(void) {
 		0,
 		0,
 		0,
+		0,
+		0,
 		(struct word*) safe_malloc(512 * sizeof(struct word)),
+		(uint32_t*) safe_malloc(512 * sizeof(uint32_t)),
 		(uint64_t*) safe_malloc(512 * sizeof(uint64_t)),
 		(relocation*) safe_malloc(512 * sizeof(relocation)),
 		(relocation*) safe_malloc(512 * sizeof(relocation)),
@@ -56,6 +60,7 @@ void initialize_code(void) {
 
 	allocated_code_size = 512;
 	allocated_data_size = 512;
+	allocated_strings_size = 512;
 	allocated_code_relocations_size = 512;
 	allocated_data_relocations_size = 512;
 }
@@ -70,6 +75,11 @@ void code_next_module(void) {
 static void realloc_code(void) {
 	allocated_code_size *= 2;
 	pgrm.code = (struct word*) safe_realloc(pgrm.code, allocated_code_size * sizeof(struct word));
+}
+
+static void realloc_strings(void) {
+	allocated_strings_size *= 2;
+	pgrm.strings = (uint32_t*) safe_realloc(pgrm.strings, allocated_strings_size * sizeof(uint32_t));
 }
 
 static void realloc_data(void) {
@@ -890,25 +900,44 @@ void print_string_directive(char *string,int string_length) {
 }
 
 void store_string(char *string,int string_length) {
-	int i;
+	if (pgrm.strings_size >= allocated_data_size)
+		realloc_strings();
 
-	i=0;
-	while(i+4<=string_length) {
-		store_data_l(string[i] + (string[i+1]<<8) + (string[i+2]<<16) + (string[i+3]<<24));
-		i+=4;
+	pgrm.strings[pgrm.strings_size++] = pgrm.data_size;
+
+	if (list_code)
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
+	store_data_l(string_length);
+
+	if (list_code)
+		print_string_directive(string,string_length);
+
+	int i=0;
+	while(i+8<=string_length) {
+		store_data_l(
+				string[i] +
+				((uint64_t)string[i+1]<<8) +
+				((uint64_t)string[i+2]<<16) +
+				((uint64_t)string[i+3]<<24) +
+				((uint64_t)string[i+4]<<32) +
+				((uint64_t)string[i+5]<<40) +
+				((uint64_t)string[i+6]<<48) +
+				((uint64_t)string[i+7]<<56));
+		i+=8;
 	}
 	if (i!=string_length) {
-		int n,s;
+		uint64_t n = 0;
+		int s = 0;
 
-		n=0;
-		s=0;
 		while(i<string_length) {
-			n |= string[i]<<s;
+			n |= (uint64_t)string[i]<<s;
 			s+=8;
 			++i;
 		}
 		store_data_l(n);
 	}
+
+	pgrm.words_in_strings += string_length / 8 + (string_length % 8 == 0 ? 0 : 1);
 }
 
 void code_buildAC(char *string,int string_length) {
@@ -925,12 +954,6 @@ void code_buildAC(char *string,int string_length) {
 	}
 //	store_data_label_value("__STRING__",2);
 	store_data_l(2);
-	if (list_code) {
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
-	}
-	store_data_l(string_length);
-	if (list_code)
-		print_string_directive(string,string_length);
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -1328,13 +1351,8 @@ void code_eqAC_a(char *string,int string_length) {
 
 	add_instruction_internal_label(CeqAC_a,string_label);
 
-	if (list_code) {
-		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
-	}
-	store_data_l(string_length);
 	if (list_code)
-		print_string_directive(string,string_length);
+		printf("\t.data\n");
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -2130,13 +2148,8 @@ void code_print(char *string,int length) {
 
 	add_instruction_internal_label(Cprint,string_label);
 
-	if (list_code) {
-		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,length);
-	}
-	store_data_l(length);
 	if (list_code)
-		print_string_directive(string,length);
+		printf("\t.data\n");
 	store_string(string,length);
 	if (list_code)
 		printf("\t.text\n");
@@ -2150,13 +2163,8 @@ void code_print_sc(char *string,int length) {
 
 	add_instruction_internal_label(Cprint,string_label);
 
-	if (list_code) {
-		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,length);
-	}
-	store_data_l(length);
 	if (list_code)
-		print_string_directive(string,length);
+		printf("\t.data\n");
 	store_string(string,length);
 	if (list_code)
 		printf("\t.text\n");
@@ -3159,13 +3167,8 @@ void code_jmp_eqACio(char *string,int string_length,int a_offset,char label_name
 
 	add_instruction_w_internal_label_label(Cjmp_eqACio,-a_offset,string_label,label_name);
 
-	if (list_code) {
-		printf("\t.data\n");
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
-	}
-	store_data_l(string_length);
 	if (list_code)
-		print_string_directive(string,string_length);
+		printf("\t.data\n");
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -3703,11 +3706,6 @@ struct label *code_descriptor
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
-	store_data_l(descriptor_name_length);
-	if (list_code)
-		print_string_directive(descriptor_name,descriptor_name_length);
 	store_string(descriptor_name,descriptor_name_length);
 
 	if (list_code)
@@ -3754,11 +3752,6 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
-	store_data_l(descriptor_name_length);
-	if (list_code)
-		print_string_directive(descriptor_name,descriptor_name_length);
 	store_string(descriptor_name,descriptor_name_length);
 
 	if (list_code)
@@ -3791,11 +3784,6 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
-	store_data_l(descriptor_name_length);
-	if (list_code)
-		print_string_directive(descriptor_name,descriptor_name_length);
 	store_string(descriptor_name,descriptor_name_length);
 
 	if (list_code)
@@ -3837,11 +3825,6 @@ void code_descs(char label_name[],char node_entry_label_name[],char *result_desc
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,descriptor_name_length);
-	store_data_l(descriptor_name_length);
-	if (list_code)
-		print_string_directive(descriptor_name,descriptor_name_length);
 	store_string(descriptor_name,descriptor_name_length);
 
 	if (list_code)
@@ -3906,8 +3889,6 @@ void code_module(char label_name[],char string[],uint32_t string_length) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	if (list_code)
-		print_string_directive(string,string_length);
 	store_string(string,string_length);
 
 	if (list_code)
@@ -4111,8 +4092,6 @@ void code_string(char label_name[],char string[],int string_length) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	if (list_code)
-		print_string_directive(string,string_length);
 	store_string(string,string_length);
 
 	if (list_code)
@@ -4132,6 +4111,16 @@ static void print_code(int segment_size,struct word *segment,FILE *program_file)
 		fprintf(stderr, "%u:\t%ld (%s: %s)\n", segment[i].width, segment[i].value, instruction_name(segment[i].value), instruction_type(segment[i].value));
 #endif
 		fwrite(&segment[i].value, segment[i].width, 1, program_file);
+	}
+}
+
+static void print_strings(int segment_size,uint32_t *segment,FILE *program_file) {
+	if (segment_size <= 0)
+		return;
+
+	unsigned int i;
+	for (i = 0; i < segment_size; i++) {
+		fwrite(&segment[i], sizeof(segment[i]), 1, program_file);
 	}
 }
 
@@ -4171,18 +4160,21 @@ void write_program(FILE* program_file) {
 	n_data_code_relocations=pgrm.data_reloc_size-n_data_data_relocations;
 
 	fwrite(&pgrm.code_size, sizeof(pgrm.code_size), 1, program_file);
+	fwrite(&pgrm.words_in_strings, sizeof(pgrm.words_in_strings), 1, program_file);
+	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
+	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
+
 	fwrite(&n_code_code_relocations, sizeof(uint32_t), 1, program_file);
 	fwrite(&n_code_data_relocations, sizeof(uint32_t), 1, program_file);
-
-	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 	fwrite(&n_data_code_relocations, sizeof(uint32_t), 1, program_file);
 	fwrite(&n_data_data_relocations, sizeof(uint32_t), 1, program_file);
 
 	print_code(pgrm.code_size,pgrm.code,program_file);
+	print_strings(pgrm.strings_size,pgrm.strings,program_file);
+	print_data(pgrm.data_size,pgrm.data,program_file);
+
 	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);
 	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
-
-	print_data(pgrm.data_size,pgrm.data,program_file);
 	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
 	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
 

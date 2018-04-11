@@ -35,18 +35,14 @@
 #ifndef BC_GEN
 struct program {
 	uint32_t code_size;
-	uint32_t code_code_size;
-	uint32_t code_data_size;
 	uint32_t data_size;
-	uint32_t data_code_size;
-	uint32_t data_data_size;
 	BC_WORD *code;
 	BC_WORD *data;
 };
 #endif
 
 #ifndef BC_GEN
-void print_program(FILE*, struct program*, int human_readable);
+void print_program(FILE*, struct program*);
 #endif
 
 #endif

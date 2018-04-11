@@ -119,8 +119,9 @@ void load_instruction_table(void) {
 	put_instruction_name("mulI",                  parse_instruction,               code_mulI );
 	put_instruction_name("mulR",                  parse_instruction,               code_mulR );
 	put_instruction_name("negI",                  parse_instruction,               code_negI );
-	put_instruction_name("notB",                  parse_instruction,               code_notB );
+	put_instruction_name("no_op",                 parse_instruction,               code_dummy );
 	put_instruction_name("not%",                  parse_instruction,               code_not );
+	put_instruction_name("notB",                  parse_instruction,               code_notB );
 	put_instruction_name("or%",                   parse_instruction,               code_or );
 	put_instruction_name("pop_a",                 parse_instruction_n,             code_pop_a );
 	put_instruction_name("pop_b",                 parse_instruction_n,             code_pop_b );

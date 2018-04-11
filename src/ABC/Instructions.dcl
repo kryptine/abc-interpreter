@@ -75,6 +75,7 @@ from StdFile import class <<<
 	| IpushI_a !Int
 	| Ipush_a !Int
 	| Ipush_a2 !Int !Int
+	| Ipush_a_jsr !Int !String
 	| Ipush_ab !Int !Int
 	| Ipush_args !Int !Int !Int
 	| Ipush_arraysize !String !Int !Int
