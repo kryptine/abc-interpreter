@@ -19,8 +19,6 @@ void clean_catAC (void)
 	l1=s1[1];
 	l2=s2[1];
 
-/*	printf ("clean_catAC %d %d\n",l1,l2); */
-
 	s1_p=(unsigned char*)&s1[2];
 	s2_p=(unsigned char*)&s2[2];
 
@@ -122,8 +120,8 @@ void clean_readLineF (void)
 void clean_sliceAC (void)
 {
 	BC_WORD *asp,*bsp,*hp;
-	unsigned int *s,n_words;
-	unsigned int l,first_i,end_i,i;
+	uint32_t *s,n_words;
+	uint32_t l,first_i,end_i,i;
 	unsigned char *s_p,*new_s_p;
 
 	asp=g_asp;
@@ -135,9 +133,9 @@ void clean_sliceAC (void)
 		exit (1);
 	}
 
-	s=(unsigned int*)asp[0];
-	l=s[1];
-	s_p=(unsigned char*)&s[2];
+	s=(uint32_t*)asp[0];
+	l=s[IF_INT_64_OR_32(2,1)];
+	s_p=(unsigned char*)&s[IF_INT_64_OR_32(4,2)];
 
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=0;
@@ -155,7 +153,7 @@ void clean_sliceAC (void)
 	l=end_i-first_i;
 
 	hp[-1]=l;
-	n_words=(l+3)>>2;
+	n_words=IF_INT_64_OR_32((l+7)/8, (l+3)/4);
 	if ( (g_heap_free -= n_words) < 0){
 		printf ("clean_sliceAC gc\n");
 		exit (1);

@@ -185,14 +185,13 @@ eval_to_hnf_return:
 	}
 }
 
-const char usage[] = "Usage: %s [-l] [-H] [-R] [-h SIZE] [-s SIZE] FILE\n";
+const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
 
 #ifndef LINK_CLEAN_RUNTIME
 int main(int argc, char **argv) {
 	int opt;
 
 	int list_program = 0;
-	int human_readable = 0;
 	int run = 1;
 	FILE *input = NULL;
 	size_t stack_size = (512 << 10) * 2;
@@ -204,13 +203,10 @@ int main(int argc, char **argv) {
 	struct parser state;
 	init_parser(&state);
 
-	while ((opt = getopt(argc, argv, "lHRs:h:")) != -1) {
+	while ((opt = getopt(argc, argv, "lRs:h:")) != -1) {
 		switch (opt) {
 			case 'l':
 				list_program = 1;
-				break;
-			case 'H':
-				human_readable = 1;
 				break;
 			case 'R':
 				run = 0;
@@ -255,6 +251,7 @@ int main(int argc, char **argv) {
 	struct char_provider cp;
 	new_file_char_provider(&cp, input);
 	int res = parse_program(&state, &cp);
+	free_parser(&state);
 	fclose(input);
 	if (res) {
 		fprintf(stderr, "Parsing failed (%d)\n", res);
@@ -262,7 +259,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (list_program) {
-		print_program(stdout, state.program, human_readable);
+		print_program(stdout, state.program);
 	}
 
 	if (!run)

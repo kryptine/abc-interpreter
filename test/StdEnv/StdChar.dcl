@@ -14,3 +14,5 @@ instance one 			Char
 
 instance ==				Char
 instance <  			Char
+
+instance toChar Char

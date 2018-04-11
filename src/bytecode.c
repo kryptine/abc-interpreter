@@ -31,18 +31,14 @@ void print_code(FILE *f, BC_WORD *code, uint32_t length, BC_WORD *data, uint32_t
 				case 'a': /* Arity */
 					fprintf(f, " %d", (int16_t) ((BC_WORD_S) code[i] >> IF_INT_64_OR_32(48,16)));
 					break;
+				case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
 				case 's': { /* String */
-					uint32_t *s = (uint32_t*) code[i];
+					uint32_t *s = (uint32_t*) code[i] + (*fmt == 's' ? 0 : 1);
 					uint32_t length = s[0];
-					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)]; /* TODO: strings need to be properly stored on 64-bit */
-					uint32_t i;
+					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
 					fprintf(f, " \"");
-					for (i=0; i<length; i++) {
+					for (; length; length--) {
 						fprintf(f, "%s", escape(*cs++));
-#if (WORD_WIDTH == 64)
-						if (i > 0 && i % 4 == 3) /* TODO: strings need to be properly stored on 64-bit */
-							cs += 4;
-#endif
 					}
 					fprintf(f, "\"");
 					break;
@@ -81,19 +77,7 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 	}
 }
 
-void print_program(FILE *f, struct program *pgm, int human) {
-	if (!human) {
-		fprintf(f, "%d %d %d\n",
-				pgm->code_size,
-				pgm->code_code_size,
-				pgm->code_data_size);
-		fprintf(f, "%d %d %d\n",
-				pgm->data_size,
-				pgm->data_code_size,
-				pgm->data_data_size);
-		fprintf(f, "\n");
-	}
-
+void print_program(FILE *f, struct program *pgm) {
 	print_code(f, pgm->code, pgm->code_size, pgm->data, pgm->data_size);
 	fprintf(f, "\n");
 	print_data(f, pgm->data, pgm->data_size, pgm->code, pgm->code_size);

@@ -3220,11 +3220,6 @@ case Cprint:
 	cs=(char*)&s[1];
 	for (i=0; i<length; ++i) {
 		putchar(*cs++);
-#if (WORD_WIDTH == 64)
-	/* TODO: strings need to be stored properly on 64-bit */
-		if (i > 0 && i % 4 == 3)
-			cs += 4;
-#endif
 	}
 	continue;
 }
@@ -3254,11 +3249,6 @@ case Cprint_symbol_sc:
 		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
 		for (i=0; i<l; ++i) {
 			putchar (cs[i]);
-#if (WORD_WIDTH == 64)
-			/* TODO: strings need to be stored properly on 64-bit */
-			if (i > 0 && i % 4 == 3)
-				cs += 4;
-#endif
 		}
 	}
 	pc+=2;
