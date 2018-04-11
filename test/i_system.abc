@@ -1,4 +1,4 @@
-
+.export ARRAY
 .export	_Nil _Cons
 .export e_system_dAP e_system_nAP e_system_eaAP
 .export _cycle_in_spine _hnf
