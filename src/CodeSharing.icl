@@ -24,6 +24,10 @@ import StdList
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
 
+OFFSET_PARSER_PROGRAM :==  8 // Offset to the program field in the parser struct (parse.h)
+OFFSET_PROGRAM_CODE   :==  8 // Offset to the code field in the program struct (bytecode.h)
+OFFSET_PROGRAM_DATA   :== 12 // Offset to the data field in the program struct (bytecode.h)
+
 // Example: run a bytecode program
 Start w
 # (bc,w) = readFile "../test/e.bc" w
@@ -32,8 +36,8 @@ Start w
 # pgm = parse bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
-# code_segment = readInt pgm 24 // TODO 32-bit offset?
-# data_segment = readInt pgm 32 // TODO 32-bit offset?
+# code_segment = readInt pgm OFFSET_PROGRAM_CODE
+# data_segment = readInt pgm OFFSET_PROGRAM_DATA
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
 # heapp = malloc (IF_INT_64_OR_32 8 4)
 # heapp = writeInt heapp 0 (malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE))
@@ -86,13 +90,19 @@ parse s
 #! res = parse_program parser cp
 | free_to_false cp = Nothing
 | res <> 0 = Nothing
-#! pgm = readInt parser 8 // TODO 32-bit offset?
+#! pgm = readInt parser OFFSET_PARSER_PROGRAM // TODO 32-bit offset?
+#! parser = free_parser parser parser
 | free_to_false parser = Nothing
 = Just pgm
+where
+	free_parser :: !Pointer !Pointer -> Pointer
+	free_parser _ _ = code {
+		ccall free_parser "p:V:p"
+	}
 
 new_parser :: Pointer
 new_parser
-#! parser = malloc 24
+#! parser = malloc (IF_INT_64_OR_32 32 56) // size of the parser struct
 #! parser = init parser parser
 = parser
 where
