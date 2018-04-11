@@ -339,7 +339,7 @@ opt_abc_new2 [Ipush_a n,Ipush_arraysize t i0 i1:is] = case is of
 	is                                               -> [Ipush_arraysize_a t i0 i1 n:opt_abc_new2 is]
 opt_abc_new2 [i0=:Ipush_a n:is] = case skip_b_instructions is 0 of
 	([annot=:Annotation (Ad da db dbs),jsr=:Ijsr l:is`], n_b) -> case n_b of
-		0 -> [annot,jsr:opt_abc_new2 is`]
+		0 -> [annot,Ipush_a_jsr n l:opt_abc_new2 is`]
 		_ -> opt_abc_new2 (take n_b is ++ [annot,jsr:is`])
 	_     -> [i0:opt_abc_new2 is]
 opt_abc_new2 [Ipush_b s0,Ipush_b s1:is]

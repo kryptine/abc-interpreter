@@ -1396,7 +1396,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpop_b_pushBTRUE:       return "N";
 		case Cpop_b_rtn:             return "N";
 		case CpushD_a_jmp_eqD_b2:    return "?";
-		case Cpush_a_jsr:            return "?";
+		case Cpush_a_jsr:            return "nl";
 		case Cpush_b_incI:           return "?";
 		case Cpush_b_jsr:            return "nl";
 		case Cpush_arraysize_a:      return "n";
