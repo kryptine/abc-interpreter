@@ -899,8 +899,6 @@ void print_string_directive(char *string,int string_length) {
 }
 
 void store_string(char *string,int string_length) {
-	int i;
-
 	if (pgrm.strings_size >= allocated_data_size)
 		realloc_strings();
 
@@ -908,18 +906,25 @@ void store_string(char *string,int string_length) {
 	s->data_offset = pgrm.data_size;
 	s->length = string_length;
 
-	i=0;
-	while(i+4<=string_length) {
-		store_data_l(string[i] + (string[i+1]<<8) + (string[i+2]<<16) + (string[i+3]<<24));
-		i+=4;
+	int i=0;
+	while(i+8<=string_length) {
+		store_data_l(
+				string[i] +
+				((uint64_t)string[i+1]<<8) +
+				((uint64_t)string[i+2]<<16) +
+				((uint64_t)string[i+3]<<24) +
+				((uint64_t)string[i+4]<<32) +
+				((uint64_t)string[i+5]<<40) +
+				((uint64_t)string[i+6]<<48) +
+				((uint64_t)string[i+7]<<56));
+		i+=8;
 	}
 	if (i!=string_length) {
-		int n,s;
+		uint64_t n = 0;
+		int s = 0;
 
-		n=0;
-		s=0;
 		while(i<string_length) {
-			n |= string[i]<<s;
+			n |= (uint64_t)string[i]<<s;
 			s+=8;
 			++i;
 		}
