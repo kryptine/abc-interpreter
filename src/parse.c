@@ -12,6 +12,11 @@ void init_parser(struct parser *state) {
 	state->strings = NULL;
 }
 
+void free_parser(struct parser *state) {
+	if (state->strings != NULL)
+		free(state->strings);
+}
+
 void next_state(struct parser *state) {
 	switch (state->state) {
 		case PS_init_code:
@@ -38,11 +43,11 @@ void next_state(struct parser *state) {
 				return;
 		case PS_code:
 			state->state = PS_code_code_rel;
-			if (state->program->code_code_size > 0)
+			if (state->code_code_size > 0)
 				return;
 		case PS_code_code_rel:
 			state->state = PS_code_data_rel;
-			if (state->program->code_data_size > 0)
+			if (state->code_data_size > 0)
 				return;
 		case PS_code_data_rel:
 			state->state = PS_strings;
@@ -54,11 +59,11 @@ void next_state(struct parser *state) {
 				return;
 		case PS_data:
 			state->state = PS_data_code_rel;
-			if (state->program->data_code_size > 0)
+			if (state->data_code_size > 0)
 				return;
 		case PS_data_code_rel:
 			state->state = PS_data_data_rel;
-			if (state->program->data_data_size > 0)
+			if (state->data_data_size > 0)
 				return;
 		case PS_data_data_rel:
 		case PS_end:
@@ -86,12 +91,12 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_init_code_code:
 				safe_read(&elem32, sizeof(elem32), 1, file);
-				state->program->code_code_size = elem32;
+				state->code_code_size = elem32;
 				next_state(state);
 				break;
 			case PS_init_code_data:
 				safe_read(&elem32, sizeof(elem32), 1, file);
-				state->program->code_data_size = elem32;
+				state->code_data_size = elem32;
 				next_state(state);
 				break;
 			case PS_init_strings:
@@ -108,12 +113,12 @@ int parse_file(struct parser *state, FILE *file) {
 				break;
 			case PS_init_data_code:
 				safe_read(&elem32, sizeof(elem32), 1, file);
-				state->program->data_code_size = elem32;
+				state->data_code_size = elem32;
 				next_state(state);
 				break;
 			case PS_init_data_data:
 				safe_read(&elem32, sizeof(elem32), 1, file);
-				state->program->data_data_size = elem32;
+				state->data_data_size = elem32;
 				next_state(state);
 				break;
 			case PS_code: {
@@ -177,7 +182,7 @@ int parse_file(struct parser *state, FILE *file) {
 				shift_address(&state->program->code[elem32]);
 #endif
 				state->program->code[elem32] += (BC_WORD) state->program->code;
-				if (++state->ptr >= state->program->code_code_size) {
+				if (++state->ptr >= state->code_code_size) {
 					state->ptr = 0;
 					next_state(state);
 				}
@@ -188,7 +193,7 @@ int parse_file(struct parser *state, FILE *file) {
 				shift_address(&state->program->code[elem32]);
 #endif
 				state->program->code[elem32] += (BC_WORD) state->program->data;
-				if (++state->ptr >= state->program->code_data_size) {
+				if (++state->ptr >= state->code_data_size) {
 					state->ptr = 0;
 					next_state(state);
 				}
@@ -217,7 +222,7 @@ int parse_file(struct parser *state, FILE *file) {
 				shift_address(&state->program->data[elem32]);
 #endif
 				state->program->data[elem32] += (BC_WORD) state->program->code;
-				if (++state->ptr >= state->program->data_code_size) {
+				if (++state->ptr >= state->data_code_size) {
 					state->ptr = 0;
 					next_state(state);
 				}
@@ -228,7 +233,7 @@ int parse_file(struct parser *state, FILE *file) {
 				shift_address(&state->program->data[elem32]);
 #endif
 				state->program->data[elem32] += (BC_WORD) state->program->data;
-				if (++state->ptr >= state->program->data_data_size) {
+				if (++state->ptr >= state->data_data_size) {
 					state->ptr = 0;
 					next_state(state);
 				}

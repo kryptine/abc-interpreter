@@ -23,14 +23,25 @@ enum parse_state {
 };
 
 struct parser {
+	/* State */
 	enum parse_state state;
-	uint32_t ptr;
+	/* The program */
 	struct program *program;
+
+	/* Index to the segment being written */
+	uint32_t ptr;
+
+	/* Auxiliary information during parsing: */
+	uint32_t code_code_size;
+	uint32_t code_data_size;
+	uint32_t data_code_size;
+	uint32_t data_data_size;
 	uint32_t strings_size;
 	struct string *strings;
 };
 
 void init_parser(struct parser*);
+void free_parser(struct parser*);
 int parse_file(struct parser*, FILE*);
 
 #endif

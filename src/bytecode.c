@@ -81,19 +81,7 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 	}
 }
 
-void print_program(FILE *f, struct program *pgm, int human) {
-	if (!human) {
-		fprintf(f, "%d %d %d\n",
-				pgm->code_size,
-				pgm->code_code_size,
-				pgm->code_data_size);
-		fprintf(f, "%d %d %d\n",
-				pgm->data_size,
-				pgm->data_code_size,
-				pgm->data_data_size);
-		fprintf(f, "\n");
-	}
-
+void print_program(FILE *f, struct program *pgm) {
 	print_code(f, pgm->code, pgm->code_size, pgm->data, pgm->data_size);
 	fprintf(f, "\n");
 	print_data(f, pgm->data, pgm->data_size, pgm->code, pgm->code_size);
