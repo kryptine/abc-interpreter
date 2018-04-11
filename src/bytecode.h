@@ -32,6 +32,15 @@
 #define SS short /* TODO check what to do with this */
 #endif
 
+/**
+ * Indication in a bytecode file where a string is stored, because they are
+ * stored as single bytes (thus 32-bit systems cannot discard the upper half).
+ */
+struct string {
+	uint32_t data_offset;
+	uint32_t length;
+};
+
 #ifndef BC_GEN
 struct program {
 	uint32_t code_size;

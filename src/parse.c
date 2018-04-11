@@ -9,6 +9,7 @@ void init_parser(struct parser *state) {
 	state->state = PS_init_code;
 	state->ptr = 0;
 	state->program = safe_malloc(sizeof(struct program));
+	state->strings = NULL;
 }
 
 void next_state(struct parser *state) {
@@ -20,6 +21,9 @@ void next_state(struct parser *state) {
 			state->state = PS_init_code_data;
 			return;
 		case PS_init_code_data:
+			state->state = PS_init_strings;
+			return;
+		case PS_init_strings:
 			state->state = PS_init_data;
 			return;
 		case PS_init_data:
@@ -41,6 +45,10 @@ void next_state(struct parser *state) {
 			if (state->program->code_data_size > 0)
 				return;
 		case PS_code_data_rel:
+			state->state = PS_strings;
+			if (state->strings_size > 0)
+				return;
+		case PS_strings:
 			state->state = PS_data;
 			if (state->program->data_size > 0)
 				return;
@@ -84,6 +92,12 @@ int parse_file(struct parser *state, FILE *file) {
 			case PS_init_code_data:
 				safe_read(&elem32, sizeof(elem32), 1, file);
 				state->program->code_data_size = elem32;
+				next_state(state);
+				break;
+			case PS_init_strings:
+				safe_read(&elem32, sizeof(elem32), 1, file);
+				state->strings_size = elem32;
+				state->strings = safe_malloc(sizeof(struct string) * elem32);
 				next_state(state);
 				break;
 			case PS_init_data:
@@ -175,6 +189,16 @@ int parse_file(struct parser *state, FILE *file) {
 #endif
 				state->program->code[elem32] += (BC_WORD) state->program->data;
 				if (++state->ptr >= state->program->code_data_size) {
+					state->ptr = 0;
+					next_state(state);
+				}
+				break;
+			case PS_strings:
+				safe_read(&elem32, sizeof(elem32), 1, file);
+				state->strings[state->ptr].data_offset = elem32;
+				safe_read(&elem32, sizeof(elem32), 1, file);
+				state->strings[state->ptr].length = elem32;
+				if (++state->ptr >= state->strings_size) {
 					state->ptr = 0;
 					next_state(state);
 				}

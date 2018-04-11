@@ -30,6 +30,7 @@ uint32_t list_code = 0;
 
 uint32_t allocated_code_size;
 uint32_t allocated_data_size;
+uint32_t allocated_strings_size;
 uint32_t allocated_code_relocations_size;
 uint32_t allocated_data_relocations_size;
 
@@ -48,7 +49,9 @@ void initialize_code(void) {
 		0,
 		0,
 		0,
+		0,
 		(struct word*) safe_malloc(512 * sizeof(struct word)),
+		(struct string*) safe_malloc(512 * sizeof(struct string)),
 		(uint64_t*) safe_malloc(512 * sizeof(uint64_t)),
 		(relocation*) safe_malloc(512 * sizeof(relocation)),
 		(relocation*) safe_malloc(512 * sizeof(relocation)),
@@ -56,6 +59,7 @@ void initialize_code(void) {
 
 	allocated_code_size = 512;
 	allocated_data_size = 512;
+	allocated_strings_size = 512;
 	allocated_code_relocations_size = 512;
 	allocated_data_relocations_size = 512;
 }
@@ -70,6 +74,11 @@ void code_next_module(void) {
 static void realloc_code(void) {
 	allocated_code_size *= 2;
 	pgrm.code = (struct word*) safe_realloc(pgrm.code, allocated_code_size * sizeof(struct word));
+}
+
+static void realloc_strings(void) {
+	allocated_strings_size *= 2;
+	pgrm.strings = (struct string*) safe_realloc(pgrm.strings, allocated_strings_size * sizeof(struct string));
 }
 
 static void realloc_data(void) {
@@ -891,6 +900,13 @@ void print_string_directive(char *string,int string_length) {
 
 void store_string(char *string,int string_length) {
 	int i;
+
+	if (pgrm.strings_size >= allocated_data_size)
+		realloc_strings();
+
+	struct string *s = &pgrm.strings[pgrm.strings_size++];
+	s->data_offset = pgrm.data_size;
+	s->length = string_length;
 
 	i=0;
 	while(i+4<=string_length) {
@@ -4135,6 +4151,17 @@ static void print_code(int segment_size,struct word *segment,FILE *program_file)
 	}
 }
 
+static void print_strings(int segment_size,struct string *segment,FILE *program_file) {
+	if (segment_size <= 0)
+		return;
+
+	unsigned int i;
+	for (i = 0; i < segment_size; i++) {
+		fwrite(&segment[i].data_offset, sizeof(segment[i].data_offset), 1, program_file);
+		fwrite(&segment[i].length, sizeof(segment[i].length), 1, program_file);
+	}
+}
+
 static void print_data(int segment_size,uint64_t *segment,FILE *program_file) {
 	if (segment_size <= 0)
 		return;
@@ -4174,6 +4201,8 @@ void write_program(FILE* program_file) {
 	fwrite(&n_code_code_relocations, sizeof(uint32_t), 1, program_file);
 	fwrite(&n_code_data_relocations, sizeof(uint32_t), 1, program_file);
 
+	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
+
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 	fwrite(&n_data_code_relocations, sizeof(uint32_t), 1, program_file);
 	fwrite(&n_data_data_relocations, sizeof(uint32_t), 1, program_file);
@@ -4181,6 +4210,8 @@ void write_program(FILE* program_file) {
 	print_code(pgrm.code_size,pgrm.code,program_file);
 	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);
 	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
+
+	print_strings(pgrm.strings_size,pgrm.strings,program_file);
 
 	print_data(pgrm.data_size,pgrm.data,program_file);
 	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
