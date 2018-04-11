@@ -34,15 +34,11 @@ void print_code(FILE *f, BC_WORD *code, uint32_t length, BC_WORD *data, uint32_t
 				case 's': { /* String */
 					uint32_t *s = (uint32_t*) code[i];
 					uint32_t length = s[0];
-					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)]; /* TODO: strings need to be properly stored on 64-bit */
+					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
 					uint32_t i;
-					fprintf(f, " \"");
+					fprintf(f, " \"", length);
 					for (i=0; i<length; i++) {
 						fprintf(f, "%s", escape(*cs++));
-#if (WORD_WIDTH == 64)
-						if (i > 0 && i % 4 == 3) /* TODO: strings need to be properly stored on 64-bit */
-							cs += 4;
-#endif
 					}
 					fprintf(f, "\"");
 					break;
