@@ -8,12 +8,14 @@ IP=../src/interpret
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
+PURPLE="\033[0;35m"
 RESET="\033[0m"
 
 FAILED=0
 
 RUNFLAGS=""
 
+BENCHMARK=0
 X86=0
 RUN_ONLY=""
 PROFILE=0
@@ -28,6 +30,7 @@ print_help () {
 	echo
 	echo "  -o/--only TEST     Only run test TEST"
 	echo
+	echo "  -b/--benchmark     Run benchmarks"
 	echo "  -f/--fast          Compile the interpreter with -O3"
 	echo "  -h/--heap SIZE     Set heap size to SIZE"
 	echo "  -O/--no-opt        Skip the ABC optimisation step"
@@ -48,7 +51,7 @@ print_usage () {
 	exit 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:fh:Os:3Rdlpq" "$@"` || print_usage
+OPTS=`getopt -n "$0" -l help,only:,benchmark,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:bfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -60,6 +63,9 @@ while true; do
 			RUN_ONLY="$2"
 			shift 2;;
 
+		-b | --benchmark)
+			BENCHMARK=1
+			shift;;
 		-f | --fast)
 			CFLAGS+=" -Ofast"
 			shift;;
@@ -123,9 +129,19 @@ do
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
+	BENCHMARK_THIS=0
+	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm.sed" ]; then
+		BENCHMARK_THIS=1
+		cp "$MODULE.icl" /tmp
+		sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+	fi
+
 	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
-	if [ $? -ne 0 ]; then
+	CLMRESULT=$?
+
+	if [ $CLMRESULT -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (compilation)$RESET"
+		[ $BENCHMARK_THIS -gt 0 ] && mv "/tmp/$MODULE.icl" .
 		FAILED=1
 		continue
 	fi
@@ -134,6 +150,8 @@ do
 		sleep 1
 		$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
 	fi
+
+	[ $BENCHMARK_THIS -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
 	ABCDEPS=()
 	for dep in ${DEPS[@]}; do
@@ -150,7 +168,23 @@ do
 		continue
 	fi
 
-	if [ $QUIET -gt 0 ]; then
+	if [ $BENCHMARK_THIS -gt 0 ]; then
+		# https://unix.stackexchange.com/a/430182/37050
+		WALL_TIME=""
+		{
+			/usr/bin/time -f %e $IP $RUNFLAGS $MODULE.bc 2>/dev/fd/3 >$MODULE.result
+			WALL_TIME="$(cat<&3)"
+		} 3<<EOF
+EOF
+		WALL_TIME_NATIVE=""
+		{
+			/usr/bin/time -f %e ./a.out -nt -nr 2>/dev/fd/3
+			WALL_TIME_NATIVE="$(cat<&3)"
+		} 3<<EOF
+EOF
+		WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)"
+		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO}x)$RESET"
+	elif [ $QUIET -gt 0 ]; then
 		/usr/bin/time $IP $RUNFLAGS $MODULE.bc > $MODULE.result
 	else
 		/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
@@ -160,7 +194,9 @@ do
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
 	fi
 
-	if [ $X86 -gt 0 ] && [ -f "$MODULE.32.expected" ]; then
+	if [ $BENCHMARK_THIS -gt 0 ] && [ -f "$MODULE.bm.expected" ]; then
+		diff $MODULE.bm.expected $MODULE.result
+	elif [ $X86 -gt 0 ] && [ -f "$MODULE.32.expected" ]; then
 		diff $MODULE.32.expected $MODULE.result
 	elif [ $X86 -le 0 ] && [ -f "$MODULE.64.expected" ]; then
 		diff $MODULE.64.expected $MODULE.result
