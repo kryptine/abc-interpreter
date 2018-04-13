@@ -9,3 +9,5 @@ test:
     - cd test
     - ./run_tests.sh
     - ./run_tests.sh --32-bit
+    - ./run_tests.sh --benchmark --fast
+    - ./run_tests.sh --32-bit --benchmark --fast

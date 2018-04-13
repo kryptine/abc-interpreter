@@ -216,6 +216,7 @@ int main(int argc, char **argv) {
 	if (!run)
 		return 0;
 
+	heap_size /= sizeof(BC_WORD);
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
