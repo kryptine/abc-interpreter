@@ -152,23 +152,19 @@ void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_siz
 #endif
 
 		if (node[0] & 2) { /* HNF */
-			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
-				/* No pointer elements */
-			} else {
-				if (arity > 0)
-					add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-				if (arity > 1) {
-					BC_WORD **rest = (BC_WORD**) node[2];
-					if (*rest >= heap && *rest < heap + heap_size) {
-						/* 3-node with pointer to rest */
-						int i;
-						for (i = 0; i < arity-1; i++)
-							add_grey_node(set, rest[i], heap, heap_size);
-					} else {
-						/* full arity node */
-						for (; arity; arity--) {
-							add_grey_node(set, (BC_WORD*) node[arity], heap, heap_size);
-						}
+			if (arity > 0)
+				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
+			if (arity > 1) {
+				BC_WORD **rest = (BC_WORD**) node[2];
+				if (*rest >= heap && *rest < heap + heap_size) {
+					/* 3-node with pointer to rest */
+					int i;
+					for (i = 0; i < arity-1; i++)
+						add_grey_node(set, rest[i], heap, heap_size);
+				} else {
+					/* full arity node */
+					for (; arity; arity--) {
+						add_grey_node(set, (BC_WORD*) node[arity], heap, heap_size);
 					}
 				}
 			}
@@ -192,15 +188,17 @@ void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_siz
 			}
 			if (arity > 0) {
 				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-				BC_WORD **rest = (BC_WORD**) node[2];
-				if (on_heap((BC_WORD) *rest, heap, heap_size)) {
-					int i;
-					for (i = 0; i < arity-1; i++)
-						add_grey_node(set, rest[i], heap, heap_size);
-				} else {
-					int i;
-					for (i = 2; i <= arity; i++)
-						add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);
+				if (arity > 1) {
+					BC_WORD **rest = (BC_WORD**) node[2];
+					if (on_heap((BC_WORD) *rest, heap, heap_size)) {
+						int i;
+						for (i = 0; i < arity-1; i++)
+							add_grey_node(set, rest[i], heap, heap_size);
+					} else {
+						int i;
+						for (i = 2; i <= arity; i++)
+							add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);
+					}
 				}
 			}
 		}

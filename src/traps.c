@@ -6,16 +6,12 @@
 
 void clean_catAC (void)
 {
-	BC_WORD *asp,*hp;
 	BC_WORD *s1,*s2;
 	unsigned int l1,l2,l,lw,i;
 	unsigned char *s1_p,*s2_p,*s_p;
 
-	asp=g_asp;
-	hp=g_hp;
-
-	s1=(BC_WORD*)asp[0];
-	s2=(BC_WORD*)asp[-1];
+	s1=(BC_WORD*)g_asp[0];
+	s2=(BC_WORD*)g_asp[-1];
 	l1=s1[1];
 	l2=s2[1];
 
@@ -25,22 +21,19 @@ void clean_catAC (void)
 	l=l1+l2;
 	lw=(l+3)>>2;
 
-	if ( (g_heap_free -= (int)(lw+2)) < 0){
-		printf("clean_catAC %d %d\n", l1, l2);
-		printf("clean_catAC gc %d %d\n", (int) g_heap_free, lw+2);
-		exit(1);
+	if ((g_heap_free -= (int)(lw+2)) < 0){
+		trap_needs_gc = 1;
+		return;
 	}
 
-	hp[0]=(BC_WORD)&__STRING__+2;
-	hp[1]=l;
+	g_hp[0]=(BC_WORD)&__STRING__+2;
+	g_hp[1]=l;
 
-	asp-=1;
-	asp[0] = (BC_WORD)hp;
-	g_asp=asp;
+	g_asp-=1;
+	g_asp[0] = (BC_WORD)g_hp;
 
-	s_p=(unsigned char *)&hp[2];
-	hp+=2+lw;
-	g_hp=hp;
+	s_p=(unsigned char *)&g_hp[2];
+	g_hp+=2+lw;
 
 	for (i=0; i<l1; ++i)
 		s_p[i]=s1_p[i];
@@ -119,32 +112,16 @@ void clean_readLineF (void)
 
 void clean_sliceAC (void)
 {
-	BC_WORD *asp,*bsp,*hp;
 	uint32_t *s,n_words;
 	uint32_t l,first_i,end_i,i;
 	unsigned char *s_p,*new_s_p;
 
-	asp=g_asp;
-	bsp=g_bsp;
-	hp=g_hp;
-
-	if ( (g_heap_free -= 2) < 0){
-		printf ("clean_sliceAC gc\n");
-		exit (1);
-	}
-
-	s=(uint32_t*)asp[0];
+	s=(uint32_t*)g_asp[0];
 	l=s[IF_INT_64_OR_32(2,1)];
 	s_p=(unsigned char*)&s[IF_INT_64_OR_32(4,2)];
 
-	hp[0]=(BC_WORD)&__STRING__+2;
-	hp[1]=0;
-	asp[0]=(BC_WORD)hp;
-	hp+=2;
-
-	first_i=bsp[0];
-	end_i=bsp[1]+1;
-	g_bsp = bsp+2;
+	first_i=g_bsp[0];
+	end_i=g_bsp[1]+1;
 
 	if (first_i<0)
 		first_i=0;
@@ -152,17 +129,22 @@ void clean_sliceAC (void)
 		end_i=l;
 	l=end_i-first_i;
 
-	hp[-1]=l;
 	n_words=IF_INT_64_OR_32((l+7)/8, (l+3)/4);
-	if ( (g_heap_free -= n_words) < 0){
-		printf ("clean_sliceAC gc\n");
-		exit (1);
+	if ((g_heap_free -= 2+n_words) < 0){
+		trap_needs_gc = 1;
+		return;
 	}
 
-	g_hp=hp+n_words;
+	g_bsp += 2;
+	g_hp[0]=(BC_WORD)&__STRING__+2;
+	g_hp[1]=0;
+	g_asp[0]=(BC_WORD)g_hp;
+	g_hp+=2;
+	g_hp[-1]=l;
 
-	new_s_p=(unsigned char*)hp;
+	new_s_p=(unsigned char*)g_hp;
 	s_p=&s_p[first_i];
+	g_hp+=n_words;
 
 	for (i=0; i<l; ++i)
 		new_s_p[i]=s_p[i];
