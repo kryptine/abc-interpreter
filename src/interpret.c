@@ -57,6 +57,7 @@ static BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
+int trap_needs_gc = 0;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 

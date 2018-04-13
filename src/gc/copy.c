@@ -80,6 +80,19 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 				node[0] = (BC_WORD) new_heap;
 				new_heap++;
 				*new_heap++ = node[1];
+			} else if (node[0] == (BC_WORD) &__STRING__ + 2) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(__STRING__)\n");
+#endif
+				*new_heap = node[0];
+				node[0] = (BC_WORD) new_heap;
+				new_heap++;
+				*new_heap++ = node[1];
+				uint32_t l = node[1] / IF_INT_64_OR_32(8,4) + (node[1] % IF_INT_64_OR_32(8,4) ? 1 : 0);
+				BC_WORD *start_string = &node[2];
+				for (; l; l--) {
+					*new_heap++ = *start_string++;
+				}
 			} else {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\t(HNF with arity %d)\n", arity);
