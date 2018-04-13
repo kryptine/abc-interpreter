@@ -8,13 +8,15 @@ IP=../src/interpret
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
+PURPLE="\033[0;35m"
 RESET="\033[0m"
 
 FAILED=0
 
 RUNFLAGS=""
 
-X86=0
+BENCHMARK=0
+EXPECTED_PREFIX=".64"
 RUN_ONLY=""
 PROFILE=0
 RECOMPILE=1
@@ -28,6 +30,7 @@ print_help () {
 	echo
 	echo "  -o/--only TEST     Only run test TEST"
 	echo
+	echo "  -b/--benchmark     Run benchmarks"
 	echo "  -f/--fast          Compile the interpreter with -Ofast"
 	echo "  -h/--heap SIZE     Set heap size to SIZE"
 	echo "  -O/--no-opt        Skip the ABC optimisation step"
@@ -48,7 +51,7 @@ print_usage () {
 	exit 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:fh:Os:3Rdlpq" "$@"` || print_usage
+OPTS=`getopt -n "$0" -l help,only:,benchmark,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:bfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -60,6 +63,9 @@ while true; do
 			RUN_ONLY="$2"
 			shift 2;;
 
+		-b | --benchmark)
+			BENCHMARK=1
+			shift;;
 		-f | --fast)
 			CFLAGS+=" -Ofast"
 			shift;;
@@ -73,7 +79,7 @@ while true; do
 			RUNFLAGS+=" -s $2"
 			shift 2;;
 		-3 | --32-bit)
-			X86=1
+			EXPECTED_PREFIX=".32"
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
 			shift;;
 		-R | --no-recompile)
@@ -104,16 +110,24 @@ while true; do
 	esac
 done
 
+if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
+	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
+	sleep 1
+fi
+
 CFLAGS="$CFLAGS" make -BC ../src || exit 1
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files StdEnv/Clean\ System\ Files 2>/dev/null
 fi
 
-while IFS=$'\t' read -r -a line
+while read line
 do
+	line="${line//$'\t\t'/ , }"
+	line=(${line//$'\t'/ })
 	MODULE=${line[0]}
-	IFS=',' read -r -a DEPS <<< "${line[1]}"
+	MODULE_RUNFLAGS=${line[1]//,/ }
+	IFS=',' read -r -a DEPS <<< "${line[2]}"
 
 	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
@@ -121,11 +135,22 @@ do
 		continue
 	fi
 
+	if [ $BENCHMARK -gt 0 ]; then
+		if [ ! -f "$MODULE.bm.sed" ]; then
+			continue
+		fi
+		cp "$MODULE.icl" /tmp
+		sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+	fi
+
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
 	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
-	if [ $? -ne 0 ]; then
+	CLMRESULT=$?
+
+	if [ $CLMRESULT -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (compilation)$RESET"
+		[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 		FAILED=1
 		continue
 	fi
@@ -134,6 +159,8 @@ do
 		sleep 1
 		$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
 	fi
+
+	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
 	ABCDEPS=()
 	for dep in ${DEPS[@]}; do
@@ -150,22 +177,36 @@ do
 		continue
 	fi
 
-	if [ $QUIET -gt 0 ]; then
-		/usr/bin/time $IP $RUNFLAGS $MODULE.bc > $MODULE.result
+	if [ $BENCHMARK -gt 0 ]; then
+		# https://unix.stackexchange.com/a/430182/37050
+		WALL_TIME=""
+		{
+			/usr/bin/time -f %e $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>/dev/fd/3 >$MODULE.result
+			WALL_TIME="$(cat<&3)"
+		} 3<<EOF
+EOF
+		WALL_TIME_NATIVE=""
+		{
+			/usr/bin/time -f %e ./a.out -gci 2m -nt -nr 2>/dev/fd/3
+			WALL_TIME_NATIVE="$(cat<&3)"
+		} 3<<EOF
+EOF
+		WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)"
+		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO}x)$RESET"
+	elif [ $QUIET -gt 0 ]; then
+		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc > $MODULE.result
 	else
-		/usr/bin/time $IP $RUNFLAGS $MODULE.bc | tee $MODULE.result
+		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc | tee $MODULE.result
 	fi
 
 	if [ $PROFILE -ne 0 ]; then
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
 	fi
 
-	if [ $X86 -gt 0 ] && [ -f "$MODULE.32.expected" ]; then
-		diff $MODULE.32.expected $MODULE.result
-	elif [ $X86 -le 0 ] && [ -f "$MODULE.64.expected" ]; then
-		diff $MODULE.64.expected $MODULE.result
+	if [ $BENCHMARK -gt 0 ]; then
+		diff $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
 	else
-		diff $MODULE.expected $MODULE.result
+		diff $MODULE$EXPECTED_PREFIX.expected $MODULE.result
 	fi
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"

@@ -77,6 +77,7 @@ static BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
+int trap_needs_gc = 0;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
@@ -265,6 +266,7 @@ int main(int argc, char **argv) {
 	if (!run)
 		return 0;
 
+	heap_size /= sizeof(BC_WORD);
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 

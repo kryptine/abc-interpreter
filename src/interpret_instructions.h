@@ -6751,110 +6751,58 @@ case Cjesr:
 #if DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t" BC_WORD_FMT "\n",pc[1]);
 #endif
+	g_asp=asp;
+	g_bsp=bsp;
+	g_heap_free=heap_free;
+	g_hp=hp;
 	switch (pc[1]){
 		case 1:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
-			g_heap_free=heap_free;
-			g_hp=hp;
 			clean_catAC();
-			asp=g_asp;
-			bsp=g_bsp;
-			heap_free=g_heap_free;
-			hp=g_hp;
-			continue;
+			break;
 		case 2:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
-			g_heap_free=heap_free;
-			g_hp=hp;
 			clean_sliceAC();
-			asp=g_asp;
-			bsp=g_bsp;
-			heap_free=g_heap_free;
-			hp=g_hp;
-			continue;
+			break;
 		case 3:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
-			g_heap_free=heap_free;
-			g_hp=hp;
 			clean_ItoAC();
-			asp=g_asp;
-			bsp=g_bsp;
-			heap_free=g_heap_free;
-			hp=g_hp;
-			continue;
+			break;
 		case 5:
-			pc+=2;
-			g_asp=asp;
 			clean_print_string_();
-			asp=g_asp;
-			continue;
+			break;
 		case 6:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
 			clean_openF();
-			asp=g_asp;
-			bsp=g_bsp;
-			continue;
+			break;
 		case 8:
-			pc+=2;
-			g_bsp=bsp;
 			clean_closeF();
-			bsp=g_bsp;
-			continue;
+			break;
 		case 9:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
-			g_heap_free=heap_free;
-			g_hp=hp;
 			clean_readLineF();
-			asp=g_asp;
-			bsp=g_bsp;
-			heap_free=g_heap_free;
-			hp=g_hp;
-			continue;
+			break;
 		case 10:
-			pc+=2;
-			g_bsp=bsp;
 			clean_endF();
-			bsp=g_bsp;
-			continue;
+			break;
 		case 11:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
 			clean_cmpAC();
-			asp=g_asp;
-			bsp=g_bsp;
-			continue;
+			break;
 		case 12:
-			pc+=2;
-			g_bsp=bsp;
 			clean_writeFI();
-			bsp=g_bsp;
-			continue;
+			break;
 		case 13:
-			pc+=2;
-			g_asp=asp;
-			g_bsp=bsp;
 			clean_writeFS();
-			asp=g_asp;
-			bsp=g_bsp;
-			continue;
+			break;
 		case 14:
-			pc+=2;
-			g_bsp=bsp;
 			clean_writeFC();
-			bsp=g_bsp;
-			continue;
+			break;
 	}
+	asp=g_asp;
+	bsp=g_bsp;
+	heap_free=g_heap_free;
+	hp=g_hp;
+	if (trap_needs_gc) {
+		trap_needs_gc = 0;
+		break;
+	}
+	pc+=2;
+	continue;
 case EVAL_TO_HNF_LABEL:
 	goto eval_to_hnf_return;
 	break;
