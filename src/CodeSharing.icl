@@ -6,6 +6,7 @@ import StdClass
 import StdFile
 import StdInt
 import StdMisc
+import StdOverloadedList
 
 import Data.Error
 import Data.Maybe
@@ -13,6 +14,7 @@ import System.CommandLine
 import System.File
 import System._Pointer
 import System._Posix
+import Text
 
 import symbols_in_program
 
@@ -30,6 +32,8 @@ OFFSET_PROGRAM_DATA   :== 12 // Offset to the data field in the program struct (
 
 // Example: run a bytecode program
 Start w
+# ([prog:_],w) = getCommandLine w
+# (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile "../test/e.bc" w
 | isError bc = abort "Failed to read the file\n"
 # bc = fromOk bc
@@ -40,18 +44,67 @@ Start w
 # data_segment = readInt pgm OFFSET_PROGRAM_DATA
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
 # heapp = malloc (IF_INT_64_OR_32 8 4)
-# heapp = writeInt heapp 0 (malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE))
 # asp = stack
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
-# heapp = make_thunk (code_segment + IF_INT_64_OR_32 8 4 * 12) heapp asp heapp // create Start node
+# hp = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
+# hp = writeInt hp 0 (code_segment + IF_INT_64_OR_32 8 4 * 12)
+# asp = writeInt asp 0 hp
+# start_node = asp
+# hp = hp + IF_INT_64_OR_32 24 12
+# heapp = writeInt heapp 0 hp
 //= interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp 0
-= interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp asp
+# ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp start_node
+| ok <> 0 = abort "Failed to interpret\n"
+# (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+= coerce syms code_segment data_segment stack heapp asp bsp csp hp start_node ++| [!"\n"!]
 where
-	make_thunk :: !Pointer !Pointer !Pointer !Pointer -> Pointer
-	make_thunk code_segment heapp asp _ = code {
-		ccall make_thunk "ppp:V:p"
+	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
+	get_stack_and_heap_addresses _ = code {
+		ccall get_stack_and_heap_addresses "I:Vpppp"
 	}
+
+	coerce :: !{#Symbol} !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> [!String!]
+	coerce syms code_segment data_segment stack heapp asp bsp csp hp p
+	#! (name,arity) = node_descriptor p
+	| arity == 0
+		| name == "INT"
+			= [!toString (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))!]
+			= [!name!]
+	| arity == 2
+		#! n = readInt p 0
+		#! childa = readInt n (IF_INT_64_OR_32  8 4)
+		#! childb = readInt n (IF_INT_64_OR_32 16 8)
+		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
+
+		#! asp = writeInt asp 0 childa
+		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+		| ok <> 0 = [!name,"A-side failed to eval"!]
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+		#! namesa = coerce syms code_segment data_segment stack heapp asp bsp csp hp asp
+		| IsEmpty namesa = abort "should not happen; just to evaluate the left child\n"
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+
+		#! asp = writeInt asp 0 childb
+		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+		| ok <> 0 = [!name," (":namesa ++| [!") B-side failed to eval"!]!]
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+		#! namesb = coerce syms code_segment data_segment stack heapp asp bsp csp hp asp
+
+		= [!name," ":namesa ++| [!" (":namesb ++| [!")"!]!]!]
+	//# val  = get_symbol_value name syms
+	//| val == -1 = abort "Unknown descriptor\n"
+	//| otherwise = abort "Known value returned from interpreter\n"
+
+	// Returns name and arity
+	node_descriptor :: !Pointer -> (String, Int)
+	node_descriptor p
+	#! hp   = readInt p 0
+	#! desc = readInt hp 0
+	#! s    = desc + IF_INT_64_OR_32 (22 + 2 * readInt2S desc 0) (10 + readInt2S desc 0)
+	#! l    = readInt s 0
+	#! s    = s + IF_INT_64_OR_32 8 4
+	= (derefCharArray s l, readInt2S desc -2)
 
 // Example: work with copy_to_string_with_names and read_symbols
 Start w
@@ -78,9 +131,9 @@ where
 		  new & [n] = e
 		= copy (n+1) s old new
 
-interpret :: !Pointer !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Int
-interpret code_segment data_segment stack stack_size heap heap_size asp bsp csp node = code {
-	ccall interpret "pppIpIpppp:I"
+interpret :: !Pointer !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
+interpret code_segment data_segment stack stack_size heap heap_size asp bsp csp hp node = code {
+	ccall interpret "pppIpIppppp:I"
 }
 
 parse :: !String -> Maybe Program

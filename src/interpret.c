@@ -93,7 +93,7 @@ static void* __indirection[9] = { // TODO what does this do?
 	(void*) Cfill_a01_pop_rtn
 };
 
-static BC_WORD *asp, *bsp, *csp;
+static BC_WORD *asp, *bsp, *csp, *hp;
 
 #ifdef POSIX
 #include <signal.h>
@@ -108,23 +108,23 @@ void handle_segv(int sig) {
 }
 #endif
 
-/* TODO: TEMPORARY to test Clean linking */
-void make_thunk(BC_WORD *node, BC_WORD **heapp, BC_WORD *asp) {
-	BC_WORD *hp = *heapp;
-	*asp = (BC_WORD) hp;
-	hp[0]=(BC_WORD)node;
+void get_stack_and_heap_addresses(int ignored, BC_WORD **_asp, BC_WORD **_bsp, BC_WORD **_csp, BC_WORD **_hp) {
+	*_asp = asp;
+	*_bsp = bsp;
+	*_csp = csp;
+	*_hp = hp;
 }
 
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD **heap, size_t heap_size,
-		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp,
+		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *node) {
 	BC_WORD *pc = code;
 	asp = _asp;
 	bsp = _bsp;
 	csp = _csp;
-	BC_WORD *hp = *heap;
+	hp = _hp;
 	BC_WORD_S heap_free = heap_size;
 
 #ifdef POSIX
@@ -144,8 +144,9 @@ int interpret(BC_WORD *code, BC_WORD *data,
 	if (node != NULL) {
 		BC_WORD *n = (BC_WORD*) *node;
 
-		if (n[0] & 2) /* HNF */
+		if (n[0] & 2) { /* HNF */
 			return 0;
+		}
 
 		BC_WORD ret = EVAL_TO_HNF_LABEL;
 		*--csp = (BC_WORD) &ret;
@@ -153,8 +154,7 @@ int interpret(BC_WORD *code, BC_WORD *data,
 
 		if (0) {
 eval_to_hnf_return:
-			fprintf(stderr, "Todo: returned from eval_to_hnf\n");
-			exit(1);
+			return 0;
 		}
 	}
 
@@ -276,6 +276,7 @@ int main(int argc, char **argv) {
 			stack, /* asp */
 			&stack[stack_size], /* bsp */
 			&stack[stack_size >> 1], /* csp */
+			heap,
 			NULL);
 
 	free(state.program->code);

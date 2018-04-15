@@ -31,7 +31,7 @@ extern int trap_needs_gc;
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD **heap, size_t heap_size,
-		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp,
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
 		BC_WORD *node);
 
 #endif
