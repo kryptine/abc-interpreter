@@ -6,9 +6,9 @@ import StdClass
 import StdFile
 import StdInt
 import StdMisc
-import StdOverloadedList
 
 import Data.Error
+from Data.Func import hyperstrict
 import Data.Maybe
 import System.CommandLine
 import System.File
@@ -57,20 +57,20 @@ Start w
 # ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp start_node
 | ok <> 0 = abort "Failed to interpret\n"
 # (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-= coerce syms code_segment data_segment stack heapp asp bsp csp hp start_node ++| [!"\n"!]
+= coerce syms code_segment data_segment stack heapp asp bsp csp hp start_node ++ ["\n"]
 where
 	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
 	get_stack_and_heap_addresses _ = code {
 		ccall get_stack_and_heap_addresses "I:Vpppp"
 	}
 
-	coerce :: !{#Symbol} !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> [!String!]
+	coerce :: !{#Symbol} !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> [String]
 	coerce syms code_segment data_segment stack heapp asp bsp csp hp p
 	#! (name,arity) = node_descriptor p
 	| arity == 0
 		| name == "INT"
-			= [!toString (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))!]
-			= [!name!]
+			= [toString (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))]
+			= [name]
 	| arity == 2
 		#! n = readInt p 0
 		#! childa = readInt n (IF_INT_64_OR_32  8 4)
@@ -79,19 +79,19 @@ where
 
 		#! asp = writeInt asp 0 childa
 		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = [!name,"A-side failed to eval"!]
+		| ok <> 0 = [name,"A-side failed to eval"]
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! namesa = coerce syms code_segment data_segment stack heapp asp bsp csp hp asp
-		| IsEmpty namesa = abort "should not happen; just to evaluate the left child\n"
+		#! namesa = hyperstrict (coerce syms code_segment data_segment stack heapp asp bsp csp hp asp)
+		| isEmpty namesa = abort "should not happen; just to evaluate the left child\n"
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 
 		#! asp = writeInt asp 0 childb
 		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = [!name," (":namesa ++| [!") B-side failed to eval"!]!]
+		| ok <> 0 = [name," (":namesa ++ [") B-side failed to eval"]]
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 		#! namesb = coerce syms code_segment data_segment stack heapp asp bsp csp hp asp
 
-		= [!name," ":namesa ++| [!" (":namesb ++| [!")"!]!]!]
+		= [name," ":namesa ++ [" (":namesb ++ [")"]]]
 	//# val  = get_symbol_value name syms
 	//| val == -1 = abort "Unknown descriptor\n"
 	//| otherwise = abort "Known value returned from interpreter\n"
