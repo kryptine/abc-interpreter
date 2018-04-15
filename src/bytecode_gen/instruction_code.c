@@ -4146,6 +4146,33 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 	}
 }
 
+static unsigned int n_global_labels(struct label_node *tree, unsigned int *total_string_count) {
+	unsigned int n = 0;
+	if (tree->label_node_label_p->label_module_n == -1) {
+		n++;
+		*total_string_count += strlen(tree->label_node_label_p->label_name);
+	}
+	if (tree->label_node_left != NULL)
+		n += n_global_labels(tree->label_node_left, total_string_count);
+	if (tree->label_node_right != NULL)
+		n += n_global_labels(tree->label_node_right, total_string_count);
+
+	return n;
+}
+
+static void print_global_labels(struct label_node *tree, FILE *program_file) {
+	if (tree->label_node_label_p->label_module_n == -1) {
+		uint32_t length = strlen(tree->label_node_label_p->label_name);
+		fwrite(&length, sizeof(length), 1, program_file);
+		fwrite(&tree->label_node_label_p->label_offset, sizeof(tree->label_node_label_p->label_offset), 1, program_file);
+		fwrite(tree->label_node_label_p->label_name, length+1, 1, program_file);
+	}
+	if (tree->label_node_left != NULL)
+		print_global_labels(tree->label_node_left, program_file);
+	if (tree->label_node_right != NULL)
+		print_global_labels(tree->label_node_right, program_file);
+}
+
 void write_program(FILE* program_file) {
 	// uint32_t should be enough
 	uint32_t i,n_code_code_relocations,n_code_data_relocations,n_data_code_relocations,n_data_data_relocations;
@@ -4177,6 +4204,18 @@ void write_program(FILE* program_file) {
 	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
 	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
 	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
+
+	if (labels != NULL) {
+		uint32_t total_string_count;
+		uint32_t n_symbols = n_global_labels(labels, &total_string_count);
+		fwrite(&n_symbols, sizeof(n_symbols), 1, program_file);
+		fwrite(&total_string_count, sizeof(total_string_count), 1, program_file);
+		print_global_labels(labels, program_file);
+	} else {
+		uint32_t zero = 0;
+		fwrite(&zero, sizeof(zero), 1, program_file);
+		fwrite(&zero, sizeof(zero), 1, program_file);
+	}
 
 	if (fclose(program_file)) {
 		fprintf(stderr, "Error writing program file\n");
