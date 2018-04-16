@@ -26,9 +26,9 @@ import StdList
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
 
-OFFSET_PARSER_PROGRAM :==  8 // Offset to the program field in the parser struct (parse.h)
-OFFSET_PROGRAM_CODE   :==  8 // Offset to the code field in the program struct (bytecode.h)
-OFFSET_PROGRAM_DATA   :== 12 // Offset to the data field in the program struct (bytecode.h)
+OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
+OFFSET_PROGRAM_CODE   :== 8 // Offset to the code field in the program struct (bytecode.h)
+OFFSET_PROGRAM_DATA   :== IF_INT_64_OR_32 16 8 // Offset to the data field in the program struct (bytecode.h)
 
 // Example: run a bytecode program
 Start w
@@ -40,6 +40,7 @@ Start w
 # pgm = parse bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
+# int_syms = get_symbols pgm
 # code_segment = readInt pgm OFFSET_PROGRAM_CODE
 # data_segment = readInt pgm OFFSET_PROGRAM_DATA
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
@@ -57,16 +58,17 @@ Start w
 # ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp start_node
 | ok <> 0 = abort "Failed to interpret\n"
 # (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-= coerce syms code_segment data_segment stack heapp asp bsp csp hp start_node ++ ["\n"]
+= coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node
 where
 	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
 	get_stack_and_heap_addresses _ = code {
 		ccall get_stack_and_heap_addresses "I:Vpppp"
 	}
 
-	coerce :: !{#Symbol} !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> [String]
-	coerce syms code_segment data_segment stack heapp asp bsp csp hp p
-	#! (name,arity) = node_descriptor p
+	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a //[String]
+	coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp p
+	#! (offset,name,arity) = node_descriptor data_segment p
+	/*
 	| arity == 0
 		| name == "INT"
 			= [toString (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))]
@@ -81,7 +83,7 @@ where
 		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
 		| ok <> 0 = [name,"A-side failed to eval"]
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! namesa = hyperstrict (coerce syms code_segment data_segment stack heapp asp bsp csp hp asp)
+		#! namesa = hyperstrict (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp)
 		| isEmpty namesa = abort "should not happen; just to evaluate the left child\n"
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 
@@ -89,22 +91,67 @@ where
 		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
 		| ok <> 0 = [name," (":namesa ++ [") B-side failed to eval"]]
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! namesb = coerce syms code_segment data_segment stack heapp asp bsp csp hp asp
+		#! namesb = coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp
 
 		= [name," ":namesa ++ [" (":namesb ++ [")"]]]
-	//# val  = get_symbol_value name syms
-	//| val == -1 = abort "Unknown descriptor\n"
-	//| otherwise = abort "Known value returned from interpreter\n"
+		*/
+	| name == "INT"
+		= cast (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))
+	| name == "Nil"
+		= cast []
+	| name == "Cons"
+		#! n = readInt p 0
+		#! childa = readInt n (IF_INT_64_OR_32  8 4)
+		#! childb = readInt n (IF_INT_64_OR_32 16 8)
+		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
 
-	// Returns name and arity
-	node_descriptor :: !Pointer -> (String, Int)
-	node_descriptor p
-	#! hp   = readInt p 0
-	#! desc = readInt hp 0
-	#! s    = desc + IF_INT_64_OR_32 (22 + 2 * readInt2S desc 0) (10 + readInt2S desc 0)
-	#! l    = readInt s 0
-	#! s    = s + IF_INT_64_OR_32 8 4
-	= (derefCharArray s l, readInt2S desc -2)
+		#! asp = writeInt asp 0 childa
+		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+		| ok <> 0 = abort "A-side failed to eval\n"
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+		#! vala = hyperstrict (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp)
+		| cast vala == -1 = abort "should not happen; just to evaluate vala\n"
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses 0
+
+		#! asp = writeInt asp 0 childb
+		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+		| ok <> 0 = abort "B-side failed to eval\n"
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+		#! valb = coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp
+
+		= cast [vala:valb]
+	where
+		get_offset_symbol :: !Int ![(String,Int)] -> String
+		get_offset_symbol offset [] = abort "symbol not found in table\n"
+		get_offset_symbol offset [(name,o):rest]
+		| o == offset || o+1 == offset = name
+		| otherwise                    = get_offset_symbol offset rest
+
+		cast :: a -> b
+		cast _ = code {
+			no_op
+		}
+
+	// Returns offset from data segment, name and arity
+	node_descriptor :: !Pointer !Pointer -> (!Int, !String, !Int)
+	node_descriptor data_segment p
+	#! hp     = readInt p 0
+	#! desc   = readInt hp 0
+	#! arity  = readInt2S desc -2
+	#! s      = desc + IF_INT_64_OR_32 (22 + 2 * readInt2Z desc 0) (10 + readInt2Z desc 0)
+	#! name   = derefCharArray (s + IF_INT_64_OR_32 8 4) (readInt s 0)
+	#! offset = (s - data_segment) / IF_INT_64_OR_32 2 1 - 12 - arity * 8 // TODO is this correct?
+	= (offset, name, arity)
+
+	get_symbols :: !Pointer -> [(String,Int)]
+	get_symbols pgm = get_syms (readInt pgm (IF_INT_64_OR_32 24 16)) (readInt pgm (IF_INT_64_OR_32 32 20)) []
+	where
+		get_syms :: !Int !Pointer ![(String,Int)] -> [(String,Int)]
+		get_syms 0 _ syms = syms
+		get_syms n p syms
+		#! offset = readInt p 0
+		#! string = derefString (readInt p (IF_INT_64_OR_32 8 4))
+		= get_syms (n-1) (p + IF_INT_64_OR_32 16 8) [(string,offset):syms]
 
 // Example: work with copy_to_string_with_names and read_symbols
 Start w
@@ -155,7 +202,7 @@ where
 
 new_parser :: Pointer
 new_parser
-#! parser = malloc (IF_INT_64_OR_32 32 56) // size of the parser struct
+#! parser = malloc (IF_INT_64_OR_32 44 64) // size of the parser struct
 #! parser = init parser parser
 = parser
 where

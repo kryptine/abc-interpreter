@@ -21,6 +21,10 @@ enum parse_state {
 	PS_code_data_rel,
 	PS_data_code_rel,
 	PS_data_data_rel,
+#ifdef PARSE_SYMBOL_TABLE
+	PS_init_symbol_table,
+	PS_symbol_table,
+#endif
 	PS_end
 };
 
@@ -54,6 +58,10 @@ struct parser {
 	uint32_t *strings;          /* An array of indices to data with strings */
 	uint32_t strings_ptr;       /* Pointer to place in strings during reading data */
 	uint32_t relocation_offset; /* Offset to add to relocations in the data section based on strings */
+#endif
+
+#ifdef PARSE_SYMBOL_TABLE
+	uint32_t symbols_ptr;
 #endif
 };
 

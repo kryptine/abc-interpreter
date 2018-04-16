@@ -32,12 +32,24 @@
 #define SS short /* TODO check what to do with this */
 #endif
 
+#ifdef PARSE_SYMBOL_TABLE
+struct symbol {
+	uint32_t offset;
+	char *name;
+};
+#endif
+
 #ifndef BC_GEN
 struct program {
 	uint32_t code_size;
 	uint32_t data_size;
 	BC_WORD *code;
 	BC_WORD *data;
+#ifdef PARSE_SYMBOL_TABLE
+	uint32_t symbol_table_size;
+	struct symbol *symbol_table;
+	char *symbols;
+#endif
 };
 #endif
 

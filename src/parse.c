@@ -24,6 +24,10 @@ void init_parser(struct parser *state) {
 	state->strings_ptr = 0;
 	state->relocation_offset = 0;
 #endif
+
+#ifdef PARSE_SYMBOL_TABLE
+	state->symbols_ptr = 0;
+#endif
 }
 
 void free_parser(struct parser *state) {
@@ -38,6 +42,9 @@ void next_state(struct parser *state) {
 #if (WORD_WIDTH == 32)
 	state->strings_ptr = 0;
 	state->relocation_offset = 0;
+#endif
+#ifdef PARSE_SYMBOL_TABLE
+	state->symbols_ptr = 0;
 #endif
 
 	switch (state->state) {
@@ -91,6 +98,15 @@ void next_state(struct parser *state) {
 			if (state->data_data_size > 0)
 				return;
 		case PS_data_data_rel:
+#ifdef PARSE_SYMBOL_TABLE
+			state->state = PS_init_symbol_table;
+			return;
+		case PS_init_symbol_table:
+			state->state = PS_symbol_table;
+			if (state->program->symbol_table_size > 0)
+				return;
+		case PS_symbol_table:
+#endif
 		case PS_end:
 			state->state = PS_end;
 			return;
@@ -102,6 +118,9 @@ void shift_address(BC_WORD *addr) {
 }
 
 int parse_program(struct parser *state, struct char_provider *cp) {
+#ifdef PARSE_SYMBOL_TABLE
+	char elem8;
+#endif
 	int16_t elem16;
 	int32_t elem32;
 	int64_t elem64;
@@ -358,6 +377,31 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (++state->ptr >= state->data_data_size)
 					next_state(state);
 				break;
+#ifdef PARSE_SYMBOL_TABLE
+			case PS_init_symbol_table:
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbol_table_size = elem32;
+				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
+				next_state(state);
+				break;
+			case PS_symbol_table:
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbol_table[state->ptr].offset = elem32;
+				state->program->symbol_table[state->ptr].name = state->program->symbols + state->symbols_ptr;
+				do {
+					if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
+						return 1;
+					state->program->symbols[state->symbols_ptr++] = elem8;
+				} while (elem8);
+				if (++state->ptr >= state->program->symbol_table_size)
+					next_state(state);
+				break;
+#endif
 			default:
 				return 3;
 		}

@@ -4161,16 +4161,15 @@ static unsigned int n_global_labels(struct label_node *tree, unsigned int *total
 }
 
 static void print_global_labels(struct label_node *tree, FILE *program_file) {
+	if (tree->label_node_right != NULL)
+		print_global_labels(tree->label_node_right, program_file);
 	if (tree->label_node_label_p->label_module_n == -1) {
 		uint32_t length = strlen(tree->label_node_label_p->label_name);
-		fwrite(&length, sizeof(length), 1, program_file);
 		fwrite(&tree->label_node_label_p->label_offset, sizeof(tree->label_node_label_p->label_offset), 1, program_file);
 		fwrite(tree->label_node_label_p->label_name, length+1, 1, program_file);
 	}
 	if (tree->label_node_left != NULL)
 		print_global_labels(tree->label_node_left, program_file);
-	if (tree->label_node_right != NULL)
-		print_global_labels(tree->label_node_right, program_file);
 }
 
 void write_program(FILE* program_file) {
