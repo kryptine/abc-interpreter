@@ -24,6 +24,10 @@ where
 (++) [hd:tl] list = [hd:tl ++ list]
 (++) nil     list = list
 
+isEmpty :: ![.a] -> Bool
+isEmpty [] = True
+isEmpty _  = False
+
 hd :: ![.a] -> .a
 hd [x:_] = x
 
@@ -38,6 +42,18 @@ take :: !Int [.a] -> [.a]
 take 0 _      = []
 take n [x:xs] = [x:take (n-1) xs]
 take _ _      = []
+
+takeWhile :: (a -> .Bool) !.[a] -> .[a]
+takeWhile f [a:x]
+| f a       = [a:takeWhile f x]
+| otherwise = []
+takeWhile f [] = []
+
+filter :: (a -> .Bool) !.[a] -> .[a]
+filter f [a:x]
+| f a       = [a:filter f x]
+| otherwise = filter f x
+filter f [] = []
 
 map :: (.a -> .b) ![.a] -> [.b]
 map f [x:xs] = [f x:map f xs]

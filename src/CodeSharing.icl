@@ -34,7 +34,7 @@ OFFSET_PROGRAM_DATA   :== IF_INT_64_OR_32 16 8 // Offset to the data field in th
 Start w
 # ([prog:_],w) = getCommandLine w
 # (syms,w) = accFiles (read_symbols prog) w
-# (bc,w) = readFile "../test/e.bc" w
+# (bc,w) = readFile "../test/infprimes.bc" w
 | isError bc = abort "Failed to read the file\n"
 # bc = fromOk bc
 # pgm = parse bc
@@ -50,15 +50,11 @@ Start w
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
 # hp = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
 # hp = writeInt hp 0 (code_segment + IF_INT_64_OR_32 8 4 * 12)
-# asp = writeInt asp 0 hp
-# start_node = asp
+# start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 # heapp = writeInt heapp 0 hp
 //= interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp 0
-# ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp start_node
-| ok <> 0 = abort "Failed to interpret\n"
-# (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-= coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node
+= take 100 (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node)
 where
 	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
 	get_stack_and_heap_addresses _ = code {
@@ -67,7 +63,11 @@ where
 
 	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a //[String]
 	coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp p
-	#! (offset,name,arity) = node_descriptor data_segment p
+	#! asp = writeInt asp 0 p
+	#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+	| ok <> 0 = abort "Failed to interpret\n"
+	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
 	/*
 	| arity == 0
 		| name == "INT"
@@ -96,29 +96,15 @@ where
 		= [name," ":namesa ++ [" (":namesb ++ [")"]]]
 		*/
 	| name == "INT"
-		= cast (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))
+		= cast (readInt p (IF_INT_64_OR_32 8 4))
 	| name == "Nil"
 		= cast []
 	| name == "Cons"
-		#! n = readInt p 0
-		#! childa = readInt n (IF_INT_64_OR_32  8 4)
-		#! childb = readInt n (IF_INT_64_OR_32 16 8)
+		#! childa = readInt p (IF_INT_64_OR_32  8 4)
+		#! childb = readInt p (IF_INT_64_OR_32 16 8)
 		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
-
-		#! asp = writeInt asp 0 childa
-		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = abort "A-side failed to eval\n"
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! vala = hyperstrict (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp)
-		| cast vala == -1 = abort "should not happen; just to evaluate vala\n"
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses 0
-
-		#! asp = writeInt asp 0 childb
-		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = abort "B-side failed to eval\n"
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! valb = coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp
-
+		# vala = hyperstrict (coerce` syms int_syms code_segment data_segment stack heapp childa)
+		# valb = coerce` syms int_syms code_segment data_segment stack heapp childb
 		= cast [vala:valb]
 	where
 		get_offset_symbol :: !Int ![(String,Int)] -> String
@@ -132,11 +118,15 @@ where
 			no_op
 		}
 
+		coerce` :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer -> a
+		coerce` syms int_syms codes datas stack heapp p
+		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses p
+		= coerce syms int_syms codes datas stack heapp asp bsp csp hp p
+
 	// Returns offset from data segment, name and arity
 	node_descriptor :: !Pointer !Pointer -> (!Int, !String, !Int)
-	node_descriptor data_segment p
-	#! hp     = readInt p 0
-	#! desc   = readInt hp 0
+	node_descriptor data_segment n
+	#! desc   = readInt n 0
 	#! arity  = readInt2S desc -2
 	#! s      = desc + IF_INT_64_OR_32 (22 + 2 * readInt2Z desc 0) (10 + readInt2Z desc 0)
 	#! name   = derefCharArray (s + IF_INT_64_OR_32 8 4) (readInt s 0)
