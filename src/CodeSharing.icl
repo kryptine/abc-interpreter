@@ -5,7 +5,9 @@ import StdBool
 import StdClass
 import StdFile
 import StdInt
+import StdList
 import StdMisc
+import StdString
 
 import Data.Error
 from Data.Func import hyperstrict
@@ -18,10 +20,13 @@ import Text
 
 import symbols_in_program
 
-:: Program :== Pointer
+// Example: get an infinite list of primes from a bytecode file and take only
+// the first 100 elements.
+Start w
+# (primes,w) = get_expression "../test/infprimes.bc" w
+= take 100 primes
 
-import graph_copy_with_names
-import StdList
+:: Program :== Pointer
 
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
@@ -30,11 +35,11 @@ OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct 
 OFFSET_PROGRAM_CODE   :== 8 // Offset to the code field in the program struct (bytecode.h)
 OFFSET_PROGRAM_DATA   :== IF_INT_64_OR_32 16 8 // Offset to the data field in the program struct (bytecode.h)
 
-// Example: run a bytecode program
-Start w
+get_expression :: !String !*World -> *(a, *World)
+get_expression filename w
 # ([prog:_],w) = getCommandLine w
 # (syms,w) = accFiles (read_symbols prog) w
-# (bc,w) = readFile "../test/infprimes.bc" w
+# (bc,w) = readFile filename w
 | isError bc = abort "Failed to read the file\n"
 # bc = fromOk bc
 # pgm = parse bc
@@ -53,48 +58,20 @@ Start w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 # heapp = writeInt heapp 0 hp
-//= interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp 0
-= take 100 (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node)
+= (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node,w)
 where
 	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
 	get_stack_and_heap_addresses _ = code {
 		ccall get_stack_and_heap_addresses "I:Vpppp"
 	}
 
-	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a //[String]
+	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a
 	coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp p
 	#! asp = writeInt asp 0 p
 	#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
 	| ok <> 0 = abort "Failed to interpret\n"
 	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
-	/*
-	| arity == 0
-		| name == "INT"
-			= [toString (readInt (readInt p 0) (IF_INT_64_OR_32 8 4))]
-			= [name]
-	| arity == 2
-		#! n = readInt p 0
-		#! childa = readInt n (IF_INT_64_OR_32  8 4)
-		#! childb = readInt n (IF_INT_64_OR_32 16 8)
-		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
-
-		#! asp = writeInt asp 0 childa
-		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = [name,"A-side failed to eval"]
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! namesa = hyperstrict (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp)
-		| isEmpty namesa = abort "should not happen; just to evaluate the left child\n"
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-
-		#! asp = writeInt asp 0 childb
-		#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-		| ok <> 0 = [name," (":namesa ++ [") B-side failed to eval"]]
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-		#! namesb = coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp asp
-
-		= [name," ":namesa ++ [" (":namesb ++ [")"]]]
-		*/
 	| name == "INT"
 		= cast (readInt p (IF_INT_64_OR_32 8 4))
 	| name == "Nil"
@@ -142,31 +119,6 @@ where
 		#! offset = readInt p 0
 		#! string = derefString (readInt p (IF_INT_64_OR_32 8 4))
 		= get_syms (n-1) (p + IF_INT_64_OR_32 16 8) [(string,offset):syms]
-
-// Example: work with copy_to_string_with_names and read_symbols
-Start w
-# ([prog:_],w) = getCommandLine w
-# (syms,w) = accFiles (read_symbols prog) w
-# (s,desc,mod) = copy_to_string_with_names (filter isEven [0,1,2,3,4,5,6,7,8,9,10])
-# (desc`,desc) = copyArray desc
-# (mod`,mod) = copyArray mod
-# (x,_) = copy_from_string_with_names s desc mod syms
-= (x,desc`,mod`)
-where
-	copyArray :: !*(a e) -> *(*(a e), *(a e)) | Array a e
-	copyArray old
-	# (s,old) = usize old
-	| s == 0 = ({}, old)
-	# (e,old) = old![0]
-	# new = createArray s e
-	= copy 0 s old new
-	where
-		copy :: !Int !Int !*(a e) !*(a e) -> *(*(a e), *(a e)) | Array a e
-		copy n s old new
-		| n == s = (new,old)
-		# (e,old) = old![n]
-		  new & [n] = e
-		= copy (n+1) s old new
 
 interpret :: !Pointer !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
 interpret code_segment data_segment stack stack_size heap heap_size asp bsp csp hp node = code {
