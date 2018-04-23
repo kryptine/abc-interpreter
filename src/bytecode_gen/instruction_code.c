@@ -23,6 +23,10 @@ struct label_node {
 };
 
 struct label_node *labels;
+uint32_t label_id;
+uint32_t label_string_count;
+struct label **label_array;
+uint32_t label_array_size;
 
 uint32_t module_n;
 
@@ -42,6 +46,11 @@ void initialize_code(void) {
 		Fadd_arg_label_used[i] = 0;
 
 	labels = NULL;
+	label_id = 0;
+	label_string_count = 0;
+	label_array = safe_malloc(512 * sizeof(struct label_node*));
+	label_array_size = 512;
+
 	module_n = 0;
 
 	pgrm = (struct program) {
@@ -97,6 +106,11 @@ static void realloc_data_relocations(void) {
 	pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations_size * sizeof(relocation));
 }
 
+static void realloc_label_array(void) {
+	label_array_size *= 2;
+	label_array = (struct label**) safe_realloc(label_array, label_array_size * sizeof(struct label*));
+}
+
 void store_code_elem(uint8_t bitwidth, uint64_t value) {
 	if (pgrm.code_size >= allocated_code_size)
 		realloc_code();
@@ -108,7 +122,11 @@ struct label *new_internal_label(void) {
 	struct label *new_label_p;
 
 	new_label_p = (struct label*) safe_malloc(sizeof(struct label));
+	if (label_id == label_array_size)
+		realloc_label_array();
+	label_array[label_id] = new_label_p;
 	new_label_p->label_name="internal label";
+	new_label_p->label_id=label_id++;
 	new_label_p->label_module_n=module_n;
 	new_label_p->label_offset=-1;
 
@@ -135,9 +153,14 @@ struct label *enter_label(char *label_name) {
 					struct label *new_label_p;
 
 					new_label_p = (struct label*) safe_malloc(sizeof(struct label));
+					if (label_id == label_array_size)
+						realloc_label_array();
+					label_array[label_id] = new_label_p;
 					new_label_p->label_name=label_node_p->label_node_label_p->label_name;
+					new_label_p->label_id=label_id++;
 					new_label_p->label_module_n=module_n;
 					new_label_p->label_offset=-1;
+					label_string_count+=strlen(new_label_p->label_name);
 
 					label_node_p->label_node_label_p=new_label_p;
 					return new_label_p;
@@ -157,13 +180,18 @@ struct label *enter_label(char *label_name) {
 
 	new_label_node_p = (struct label_node*) safe_malloc(sizeof(struct label_node));
 	new_label_p = (struct label*) safe_malloc(sizeof(struct label));
+	if (label_id == label_array_size)
+		realloc_label_array();
+	label_array[label_id] = new_label_p;
 	new_label_node_p->label_node_left = NULL;
 	new_label_node_p->label_node_right = NULL;
 	new_label_node_p->label_node_label_p = new_label_p;
 	new_label_p->label_name = (char*) safe_malloc(strlen(label_name) + 1);
+	new_label_p->label_id=label_id++;
 	strcpy(new_label_p->label_name, label_name);
 	new_label_p->label_module_n = module_n;
 	new_label_p->label_offset = -1;
+	label_string_count+=strlen(new_label_p->label_name);
 
 	*label_node_pp = new_label_node_p;
 	return new_label_p;
@@ -4146,31 +4174,16 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 	}
 }
 
-static unsigned int n_global_labels(struct label_node *tree, unsigned int *total_string_count) {
-	unsigned int n = 0;
-	if (tree->label_node_label_p->label_module_n == -1) {
-		n++;
-		*total_string_count += strlen(tree->label_node_label_p->label_name);
+static void print_global_labels(struct label **labels, uint32_t count, FILE *program_file) {
+	uint32_t i;
+	for (i = 0; i < count; i++) {
+		if (labels[i]->label_module_n == -1) {
+			uint32_t length = strlen(labels[i]->label_name);
+			fwrite(&length, sizeof(length), 1, program_file);
+			fwrite(&labels[i]->label_offset, sizeof(labels[i]->label_offset), 1, program_file);
+			fwrite(labels[i]->label_name, length+1, 1, program_file);
+		}
 	}
-	if (tree->label_node_left != NULL)
-		n += n_global_labels(tree->label_node_left, total_string_count);
-	if (tree->label_node_right != NULL)
-		n += n_global_labels(tree->label_node_right, total_string_count);
-
-	return n;
-}
-
-static void print_global_labels(struct label_node *tree, FILE *program_file) {
-	if (tree->label_node_label_p->label_module_n == -1) {
-		uint32_t length = strlen(tree->label_node_label_p->label_name);
-		fwrite(&length, sizeof(length), 1, program_file);
-		fwrite(&tree->label_node_label_p->label_offset, sizeof(tree->label_node_label_p->label_offset), 1, program_file);
-		fwrite(tree->label_node_label_p->label_name, length+1, 1, program_file);
-	}
-	if (tree->label_node_left != NULL)
-		print_global_labels(tree->label_node_left, program_file);
-	if (tree->label_node_right != NULL)
-		print_global_labels(tree->label_node_right, program_file);
 }
 
 void write_program(FILE* program_file) {
@@ -4205,17 +4218,10 @@ void write_program(FILE* program_file) {
 	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
 	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
 
-	if (labels != NULL) {
-		uint32_t total_string_count;
-		uint32_t n_symbols = n_global_labels(labels, &total_string_count);
-		fwrite(&n_symbols, sizeof(n_symbols), 1, program_file);
-		fwrite(&total_string_count, sizeof(total_string_count), 1, program_file);
-		print_global_labels(labels, program_file);
-	} else {
-		uint32_t zero = 0;
-		fwrite(&zero, sizeof(zero), 1, program_file);
-		fwrite(&zero, sizeof(zero), 1, program_file);
-	}
+	fwrite(&label_id, sizeof(label_id), 1, program_file);
+	fwrite(&label_string_count, sizeof(label_string_count), 1, program_file);
+	if (labels != NULL)
+		print_global_labels(label_array, label_id, program_file);
 
 	if (fclose(program_file)) {
 		fprintf(stderr, "Error writing program file\n");

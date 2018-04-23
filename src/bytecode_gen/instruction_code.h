@@ -6,6 +6,7 @@
 struct label {
 	char *label_name;
 	int32_t label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
+	int32_t label_id;
 	int32_t label_module_n;
 };
 
