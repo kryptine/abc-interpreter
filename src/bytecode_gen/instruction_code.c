@@ -313,9 +313,8 @@ static struct label Fadd_arg_labels[N_ADD_ARG_LABELS]
 		{/*label_name*/ "_add_arg31", /*label_offset*/ -1 }
 	  };
 
-struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
+struct word *relocate_code_and_data(void) {
 	int i,undefined_label;
-	size_t code_offset,data_offset;
 
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
@@ -335,14 +334,6 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 	undefined_label=0;
 
-	if (add_code_or_data_offset) {
-		code_offset = (size_t) pgrm.code;
-		data_offset = (size_t) pgrm.data;
-	} else {
-		code_offset = 0;
-		data_offset = 0;
-	}
-
 	for(i=0; i<pgrm.code_reloc_size; ++i) {
 		struct relocation *relocation_p;
 		int32_t offset;
@@ -355,11 +346,6 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
 		}
-
-		if ((offset & 1)==0)
-			pgrm.code[relocation_p->relocation_offset].value += offset + code_offset;
-		else
-			pgrm.code[relocation_p->relocation_offset].value +=(offset & ~1) + data_offset;
 	}
 
 	for(i=0; i<pgrm.data_reloc_size; ++i) {
@@ -374,11 +360,6 @@ struct word *relocate_code_and_data(uint32_t add_code_or_data_offset) {
 
 			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
 		}
-
-		if ((offset & 1)==0)
-			*(SI*)&pgrm.data[relocation_p->relocation_offset] += offset + code_offset;
-		else
-			*(SI*)&pgrm.data[relocation_p->relocation_offset] +=(offset & ~1) + data_offset;
 	}
 
 	if (undefined_label) {
@@ -4170,6 +4151,7 @@ static void print_relocations(int reloc_size, int n_relocations,struct relocatio
 	for (i = 0; i < n_relocations; i++) {
 		if ((relocations[i].relocation_label->label_offset & 1) == do_data) {
 			fwrite(&relocations[i].relocation_offset, sizeof(relocations[i].relocation_offset), 1, program_file);
+			fwrite(&relocations[i].relocation_label->label_id, sizeof(relocations[i].relocation_label->label_id), 1, program_file);
 		}
 	}
 }
@@ -4213,15 +4195,15 @@ void write_program(FILE* program_file) {
 	print_strings(pgrm.strings_size,pgrm.strings,program_file);
 	print_data(pgrm.data_size,pgrm.data,program_file);
 
-	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);
-	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
-	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
-	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
-
 	fwrite(&label_id, sizeof(label_id), 1, program_file);
 	fwrite(&label_string_count, sizeof(label_string_count), 1, program_file);
 	if (labels != NULL)
 		print_global_labels(label_array, label_id, program_file);
+
+	print_relocations(n_code_code_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,0);
+	print_relocations(n_code_data_relocations,pgrm.code_reloc_size,pgrm.code_relocations,program_file,1);
+	print_relocations(n_data_code_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,0);
+	print_relocations(n_data_data_relocations,pgrm.data_reloc_size,pgrm.data_relocations,program_file,1);
 
 	if (fclose(program_file)) {
 		fprintf(stderr, "Error writing program file\n");
