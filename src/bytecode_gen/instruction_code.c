@@ -4156,7 +4156,6 @@ static void print_data(int segment_size,uint64_t *segment,FILE *program_file) {
 static void print_relocations(int n_relocations, struct relocation *relocations, FILE *program_file) {
 	unsigned int i;
 	for (i = 0; i < n_relocations; i++) {
-		fprintf(stderr,"reloc: %d -> %s (%d)\n",relocations[i].relocation_offset,relocations[i].relocation_label->label_name,relocations[i].relocation_label->label_id);
 		fwrite(&relocations[i].relocation_offset, sizeof(relocations[i].relocation_offset), 1, program_file);
 		fwrite(&relocations[i].relocation_label->label_id, sizeof(relocations[i].relocation_label->label_id), 1, program_file);
 	}

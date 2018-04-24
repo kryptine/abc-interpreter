@@ -284,7 +284,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
-				fprintf(stderr,"%d:\t%s\n",elem32,state->program->symbol_table[state->ptr].name);
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
 				break;
@@ -296,16 +295,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
 						return 1;
-					struct symbol sym = state->program->symbol_table[sym_i];
-
-					fprintf(stderr,"code reloc: %d to symbol %d (%d: %s)\n", code_i, sym_i, sym.offset, sym.name);
+					struct symbol *sym = &state->program->symbol_table[sym_i];
 
 #if (WORD_WIDTH == 64)
 					shift_address(&state->program->code[code_i]);
 #endif
 
+					state->program->code[code_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
+
 #if (WORD_WIDTH == 32)
-					if (sym.offset & 1) {
+					if (sym->offset & 1) {
 						/* code[elem32] is an offset to the abstract data segment.
 						 * This offset is incorrect, because strings are longer on
 						 * 32-bit. Thus, we add the required offset. This is not
@@ -318,16 +317,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					}
 #endif
 
-					if (sym.offset & 1) {
-						state->program->code[code_i] += IF_INT_64_OR_32(2,1) * (sym.offset - 1) + (BC_WORD) state->program->data;
-					} else {
-						state->program->code[code_i] += IF_INT_64_OR_32(2,1) * sym.offset + (BC_WORD) state->program->code;
-					}
-
-					if (++state->ptr >= state->code_reloc_size)
-						next_state(state);
-					break;
+					state->program->code[code_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
 				}
+
+				if (++state->ptr >= state->code_reloc_size)
+					next_state(state);
+				break;
 			case PS_data_reloc:
 				{
 					uint32_t data_i,sym_i;
@@ -336,13 +331,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
 						return 1;
-					struct symbol sym = state->program->symbol_table[sym_i];
-
-					fprintf(stderr,"data reloc: %d to symbol %d (%d: %s)\n", data_i, sym_i, sym.offset, sym.name);
+					struct symbol *sym = &state->program->symbol_table[sym_i];
 
 #if (WORD_WIDTH == 64)
 					shift_address(&state->program->data[data_i]);
 #endif
+
 #if (WORD_WIDTH == 32)
 					/* data_i is an offset to the abstract data segment. We need to
 					 * fix it up for the extra length of strings on 32-bit. */
@@ -351,9 +345,13 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						state->strings_ptr++;
 					}
 					data_i += state->relocation_offset;
+#endif
 
+					state->program->data[data_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
+
+#if (WORD_WIDTH == 32)
 					/* See comments on PS_code_reloc. */
-					if (sym.offset & 1) {
+					if (sym->offset & 1) {
 						int temp_relocation_offset = 0;
 						for (int i = 0; state->program->data[data_i] / 4 > state->strings[i] && i < state->strings_size; i++)
 							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
@@ -361,16 +359,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					}
 #endif
 
-					if (sym.offset & 1) {
-						state->program->data[data_i] += IF_INT_64_OR_32(2,1) * (sym.offset - 1) + (BC_WORD) state->program->data;
-					} else {
-						state->program->data[data_i] += IF_INT_64_OR_32(2,1) * sym.offset + (BC_WORD) state->program->code;
-					}
-
-					if (++state->ptr >= state->data_reloc_size)
-						next_state(state);
-					break;
+					state->program->data[data_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
 				}
+
+				if (++state->ptr >= state->data_reloc_size)
+					next_state(state);
+				break;
 			default:
 				return 3;
 		}
