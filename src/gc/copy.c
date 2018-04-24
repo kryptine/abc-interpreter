@@ -1,6 +1,10 @@
 #include "copy.h"
+
+#include <stdlib.h>
+
 #include "mark.h"
 #include "util.h"
+
 #include "../interpret.h"
 #include "../util.h"
 

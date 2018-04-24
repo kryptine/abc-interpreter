@@ -31,7 +31,7 @@ print_help () {
 	echo "  -o/--only TEST     Only run test TEST"
 	echo
 	echo "  -b/--benchmark     Run benchmarks"
-	echo "  -f/--fast          Compile the interpreter with -O3"
+	echo "  -f/--fast          Compile the interpreter with -Ofast"
 	echo "  -h/--heap SIZE     Set heap size to SIZE"
 	echo "  -O/--no-opt        Skip the ABC optimisation step"
 	echo "  -s/--stack SIZE    Set stack size to SIZE"

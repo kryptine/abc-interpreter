@@ -6803,6 +6803,9 @@ case Cjesr:
 	}
 	pc+=2;
 	continue;
+case EVAL_TO_HNF_LABEL:
+	goto eval_to_hnf_return;
+	break;
 default:
 	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-code));
 	if (asp + 10 > csp)

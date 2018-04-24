@@ -13,6 +13,16 @@
 #include "traps.h"
 #include "util.h"
 
+/* Used to store the return address when evaluating a node on the heap */
+#define EVAL_TO_HNF_LABEL CMAX
+
+#ifdef LINK_CLEAN_RUNTIME
+extern void* __STRING__[];
+extern void* BOOL[];
+extern void* CHAR[];
+extern void* REAL[];
+#endif
+
 #define _2chars2int(a,b)             ((void*) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
@@ -26,30 +36,40 @@
 static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e','m')};
 
 static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
-void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
+static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
+static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
+
+# ifndef LINK_CLEAN_RUNTIME
+void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
 void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
 void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
 void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
-static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
-static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
+# endif
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
 
 static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
-void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
+static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
+static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
+
+# ifndef LINK_CLEAN_RUNTIME
+void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
 void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
 void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
 void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
-static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
-static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
+# endif
 #endif /* Word-width dependency */
 
 #define __Nil (d___Nil[1])
 #define dFILE (d_FILE[2])
 
+#ifdef LINK_CLEAN_RUNTIME
+extern BC_WORD __cycle__in__spine;
+#else
 BC_WORD __cycle__in__spine = Chalt;
+#endif
 
 static BC_WORD Fjmp_ap1 = Cjmp_ap1;
 static BC_WORD Fjmp_ap2 = Cjmp_ap2;
@@ -73,7 +93,7 @@ static void* __indirection[9] = { // TODO what does this do?
 	(void*) Cfill_a01_pop_rtn
 };
 
-static BC_WORD *asp, *bsp, *csp;
+static BC_WORD *asp, *bsp, *csp, *hp;
 
 #ifdef POSIX
 #include <signal.h>
@@ -88,14 +108,23 @@ void handle_segv(int sig) {
 }
 #endif
 
+void get_stack_and_heap_addresses(int ignored, BC_WORD **_asp, BC_WORD **_bsp, BC_WORD **_csp, BC_WORD **_hp) {
+	*_asp = asp;
+	*_bsp = bsp;
+	*_csp = csp;
+	*_hp = hp;
+}
+
 int interpret(BC_WORD *code, BC_WORD *data,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD **heap, size_t heap_size) {
+		BC_WORD **heap, size_t heap_size,
+		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
+		BC_WORD *node) {
 	BC_WORD *pc = code;
-	asp = stack;
-	bsp = &stack[stack_size];
-	csp = &stack[stack_size >> 1];
-	BC_WORD *hp = *heap;
+	asp = _asp;
+	bsp = _bsp;
+	csp = _csp;
+	hp = _hp;
 	BC_WORD_S heap_free = heap_size;
 
 #ifdef POSIX
@@ -111,6 +140,23 @@ int interpret(BC_WORD *code, BC_WORD *data,
 		return 1;
 	}
 #endif
+
+	if (node != NULL) {
+		BC_WORD *n = (BC_WORD*) *node;
+
+		if (n[0] & 2) { /* HNF */
+			return 0;
+		}
+
+		BC_WORD ret = EVAL_TO_HNF_LABEL;
+		*--csp = (BC_WORD) &ret;
+		pc = (BC_WORD*) n[0];
+
+		if (0) {
+eval_to_hnf_return:
+			return 0;
+		}
+	}
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
@@ -142,6 +188,7 @@ int interpret(BC_WORD *code, BC_WORD *data,
 
 const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
 
+#ifndef LINK_CLEAN_RUNTIME
 int main(int argc, char **argv) {
 	int opt;
 
@@ -202,7 +249,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	int res = parse_file(&state, input);
+	struct char_provider cp;
+	new_file_char_provider(&cp, input);
+	int res = parse_program(&state, &cp);
 	free_parser(&state);
 	fclose(input);
 	if (res) {
@@ -223,7 +272,12 @@ int main(int argc, char **argv) {
 
 	interpret(state.program->code, state.program->data,
 			stack, stack_size,
-			&heap, heap_size);
+			&heap, heap_size,
+			stack, /* asp */
+			&stack[stack_size], /* bsp */
+			&stack[stack_size >> 1], /* csp */
+			heap,
+			NULL);
 
 	free(state.program->code);
 	free(state.program->data);
@@ -233,3 +287,4 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
+#endif

@@ -22,3 +22,7 @@
 
 - `BCGEN_INSTRUCTION_TABLE_SIZE`:
   The initial size of instruction tables in the bytecode generator.
+
+- `LINK_CLEAN_RUNTIME`:
+  Compile for linking with the Clean run-time system. This means sharing some
+  internal descriptors (such as `INT`) and excluding `main`.
