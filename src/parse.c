@@ -10,10 +10,8 @@ void init_parser(struct parser *state) {
 
 	state->ptr = 0;
 
-	state->code_code_size = 0;
-	state->code_data_size = 0;
-	state->data_code_size = 0;
-	state->data_data_size = 0;
+	state->code_reloc_size = 0;
+	state->data_reloc_size = 0;
 
 	state->strings_size = 0;
 #if (WORD_WIDTH == 32)
@@ -25,9 +23,7 @@ void init_parser(struct parser *state) {
 	state->relocation_offset = 0;
 #endif
 
-#ifdef PARSE_SYMBOL_TABLE
 	state->symbols_ptr = 0;
-#endif
 }
 
 void free_parser(struct parser *state) {
@@ -43,9 +39,7 @@ void next_state(struct parser *state) {
 	state->strings_ptr = 0;
 	state->relocation_offset = 0;
 #endif
-#ifdef PARSE_SYMBOL_TABLE
 	state->symbols_ptr = 0;
-#endif
 
 	switch (state->state) {
 		case PS_init_code:
@@ -58,18 +52,12 @@ void next_state(struct parser *state) {
 			state->state = PS_init_data;
 			return;
 		case PS_init_data:
-			state->state = PS_init_code_code;
+			state->state = PS_init_code_reloc;
 			return;
-		case PS_init_code_code:
-			state->state = PS_init_code_data;
+		case PS_init_code_reloc:
+			state->state = PS_init_data_reloc;
 			return;
-		case PS_init_code_data:
-			state->state = PS_init_data_code;
-			return;
-		case PS_init_data_code:
-			state->state = PS_init_data_data;
-			return;
-		case PS_init_data_data:
+		case PS_init_data_reloc:
 			state->state = PS_code;
 			if (state->program->code_size > 0)
 				return;
@@ -82,23 +70,6 @@ void next_state(struct parser *state) {
 			if (state->program->data_size > 0)
 				return;
 		case PS_data:
-			state->state = PS_code_code_rel;
-			if (state->code_code_size > 0)
-				return;
-		case PS_code_code_rel:
-			state->state = PS_code_data_rel;
-			if (state->code_data_size > 0)
-				return;
-		case PS_code_data_rel:
-			state->state = PS_data_code_rel;
-			if (state->data_code_size > 0)
-				return;
-		case PS_data_code_rel:
-			state->state = PS_data_data_rel;
-			if (state->data_data_size > 0)
-				return;
-		case PS_data_data_rel:
-#ifdef PARSE_SYMBOL_TABLE
 			state->state = PS_init_symbol_table;
 			return;
 		case PS_init_symbol_table:
@@ -106,7 +77,14 @@ void next_state(struct parser *state) {
 			if (state->program->symbol_table_size > 0)
 				return;
 		case PS_symbol_table:
-#endif
+			state->state = PS_code_reloc;
+			if (state->code_reloc_size > 0)
+				return;
+		case PS_code_reloc:
+			state->state = PS_data_reloc;
+			if (state->data_reloc_size > 0)
+				return;
+		case PS_data_reloc:
 		case PS_end:
 			state->state = PS_end;
 			return;
@@ -118,9 +96,7 @@ void shift_address(BC_WORD *addr) {
 }
 
 int parse_program(struct parser *state, struct char_provider *cp) {
-#ifdef PARSE_SYMBOL_TABLE
 	char elem8;
-#endif
 	int16_t elem16;
 	int32_t elem32;
 	int64_t elem64;
@@ -166,28 +142,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
 				next_state(state);
 				break;
-			case PS_init_code_code:
+			case PS_init_code_reloc:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
-				state->code_code_size = elem32;
+				state->code_reloc_size = elem32;
 				next_state(state);
 				break;
-			case PS_init_code_data:
+			case PS_init_data_reloc:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
-				state->code_data_size = elem32;
-				next_state(state);
-				break;
-			case PS_init_data_code:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->data_code_size = elem32;
-				next_state(state);
-				break;
-			case PS_init_data_data:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->data_data_size = elem32;
+				state->data_reloc_size = elem32;
 				next_state(state);
 				break;
 			case PS_code: {
@@ -300,84 +264,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					next_state(state);
 #endif
 				break;
-			case PS_code_code_rel:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-#if (WORD_WIDTH == 64)
-				shift_address(&state->program->code[elem32]);
-#endif
-				state->program->code[elem32] += (BC_WORD) state->program->code;
-				if (++state->ptr >= state->code_code_size)
-					next_state(state);
-				break;
-			case PS_code_data_rel:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-#if (WORD_WIDTH == 64)
-				shift_address(&state->program->code[elem32]);
-#endif
-#if (WORD_WIDTH == 32)
-				{
-					/* code[elem32] is an offset to the abstract data segment.
-					 * This offset is incorrect, because strings are longer on
-					 * 32-bit. Thus, we add the required offset. This is not
-					 * that efficient, but it's okay since it is only for
-					 * 32-bit and only during parsing. */
-					int temp_relocation_offset = 0;
-					for (int i = 0; state->program->code[elem32] / 4 > state->strings[i] && i < state->strings_size; i++)
-						temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-					state->program->code[elem32] += temp_relocation_offset * 4;
-				}
-#endif
-				state->program->code[elem32] += (BC_WORD) state->program->data;
-				if (++state->ptr >= state->code_data_size)
-					next_state(state);
-				break;
-			case PS_data_code_rel:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-#if (WORD_WIDTH == 64)
-				shift_address(&state->program->data[elem32]);
-#endif
-#if (WORD_WIDTH == 32)
-				/* elem32 is an offset to the abstract data segment. We need to
-				 * fix it up for the extra length of strings on 32-bit. */
-				while (elem32 >= state->strings[state->strings_ptr]) {
-					state->relocation_offset += (state->program->data[state->strings[state->strings_ptr] + state->relocation_offset] + 3) / 8;
-					state->strings_ptr++;
-				}
-				elem32 += state->relocation_offset;
-#endif
-				state->program->data[elem32] += (BC_WORD) state->program->code;
-				if (++state->ptr >= state->data_code_size)
-					next_state(state);
-				break;
-			case PS_data_data_rel:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-#if (WORD_WIDTH == 64)
-				shift_address(&state->program->data[elem32]);
-#endif
-#if (WORD_WIDTH == 32)
-				/* See comments on PS_data_code_rel. */
-				while (elem32 >= state->strings[state->strings_ptr]) {
-					state->relocation_offset += (state->program->data[state->strings[state->strings_ptr] + state->relocation_offset] + 3) / 8;
-					state->strings_ptr++;
-				}
-				elem32 += state->relocation_offset;
-				{
-					/* See comments at PS_code_data_rel. */
-					int temp_relocation_offset = 0;
-					for (int i = 0; state->program->data[elem32] / 4 > state->strings[i] && i < state->strings_size; i++)
-						temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-					state->program->data[elem32] += temp_relocation_offset * 4;
-				}
-#endif
-				state->program->data[elem32] += (BC_WORD) state->program->data;
-				if (++state->ptr >= state->data_data_size)
-					next_state(state);
-				break;
-#ifdef PARSE_SYMBOL_TABLE
 			case PS_init_symbol_table:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
@@ -398,10 +284,93 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
+				fprintf(stderr,"%d:\t%s\n",elem32,state->program->symbol_table[state->ptr].name);
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
 				break;
+			case PS_code_reloc:
+				{
+					uint32_t code_i,sym_i;
+					if (provide_chars(&code_i, sizeof(code_i), 1, cp) < 0)
+						return 1;
+
+					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
+						return 1;
+					struct symbol sym = state->program->symbol_table[sym_i];
+
+					fprintf(stderr,"code reloc: %d to symbol %d (%d: %s)\n", code_i, sym_i, sym.offset, sym.name);
+
+#if (WORD_WIDTH == 64)
+					shift_address(&state->program->code[code_i]);
 #endif
+
+#if (WORD_WIDTH == 32)
+					if (sym.offset & 1) {
+						/* code[elem32] is an offset to the abstract data segment.
+						 * This offset is incorrect, because strings are longer on
+						 * 32-bit. Thus, we add the required offset. This is not
+						 * that efficient, but it's okay since it is only for
+						 * 32-bit and only during parsing. */
+						int temp_relocation_offset = 0;
+						for (int i = 0; state->program->code[code_i] / 4 > state->strings[i] && i < state->strings_size; i++)
+							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
+						state->program->code[code_i] += temp_relocation_offset * 4;
+					}
+#endif
+
+					if (sym.offset & 1) {
+						state->program->code[code_i] += IF_INT_64_OR_32(2,1) * (sym.offset - 1) + (BC_WORD) state->program->data;
+					} else {
+						state->program->code[code_i] += IF_INT_64_OR_32(2,1) * sym.offset + (BC_WORD) state->program->code;
+					}
+
+					if (++state->ptr >= state->code_reloc_size)
+						next_state(state);
+					break;
+				}
+			case PS_data_reloc:
+				{
+					uint32_t data_i,sym_i;
+					if (provide_chars(&data_i, sizeof(data_i), 1, cp) < 0)
+						return 1;
+
+					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
+						return 1;
+					struct symbol sym = state->program->symbol_table[sym_i];
+
+					fprintf(stderr,"data reloc: %d to symbol %d (%d: %s)\n", data_i, sym_i, sym.offset, sym.name);
+
+#if (WORD_WIDTH == 64)
+					shift_address(&state->program->data[data_i]);
+#endif
+#if (WORD_WIDTH == 32)
+					/* data_i is an offset to the abstract data segment. We need to
+					 * fix it up for the extra length of strings on 32-bit. */
+					while (data_i >= state->strings[state->strings_ptr]) {
+						state->relocation_offset += (state->program->data[state->strings[state->strings_ptr] + state->relocation_offset] + 3) / 8;
+						state->strings_ptr++;
+					}
+					data_i += state->relocation_offset;
+
+					/* See comments on PS_code_reloc. */
+					if (sym.offset & 1) {
+						int temp_relocation_offset = 0;
+						for (int i = 0; state->program->data[data_i] / 4 > state->strings[i] && i < state->strings_size; i++)
+							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
+						state->program->data[data_i] += temp_relocation_offset * 4;
+					}
+#endif
+
+					if (sym.offset & 1) {
+						state->program->data[data_i] += IF_INT_64_OR_32(2,1) * (sym.offset - 1) + (BC_WORD) state->program->data;
+					} else {
+						state->program->data[data_i] += IF_INT_64_OR_32(2,1) * sym.offset + (BC_WORD) state->program->code;
+					}
+
+					if (++state->ptr >= state->data_reloc_size)
+						next_state(state);
+					break;
+				}
 			default:
 				return 3;
 		}

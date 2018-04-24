@@ -6,6 +6,7 @@
 struct label {
 	char *label_name;
 	int32_t label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */
+	int32_t label_id;
 	int32_t label_module_n;
 };
 
@@ -18,7 +19,7 @@ extern uint32_t list_code;
 
 void initialize_code(void);
 void code_next_module(void);
-struct word *relocate_code_and_data(uint32_t add_code_or_data_offset);
+struct word *relocate_code_and_data();
 void write_program(FILE*);
 void add_code_and_data_offsets(void);
 
