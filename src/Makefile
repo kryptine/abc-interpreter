@@ -8,13 +8,35 @@ override CFLAGS+=\
 	-DPOSIX\
 	-lm
 
-all: optimise interpret bytecode
+all: optimise bytecode link interpret
 
 CodeSharing: interpret.a .FORCE
 	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns -l $< $@ -o $@
 
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
+
+SRC_BYTECODE:=\
+	abc_instructions.c\
+	util.c\
+	bytecode_gen/bytecode_gen.c\
+	bytecode_gen/instruction_code.c\
+	bytecode_gen/instruction_parse.c\
+	bytecode_gen/instruction_table.c
+DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
+
+bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
+	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
+
+SRC_LINK:=\
+	abc_instructions.c\
+	link.c\
+	parse.c\
+	util.c
+DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
+
+link: $(SRC_LINK) $(DEP_LINK)
+	$(CC) $(CFLAGS) $(SRC_LINK) -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -41,18 +63,6 @@ interpret.a: $(OBJ_INTERPRET)
 
 $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
 	$(CC) -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
-
-SRC_BYTECODE:=\
-	abc_instructions.c\
-	util.c\
-	bytecode_gen/bytecode_gen.c\
-	bytecode_gen/instruction_code.c\
-	bytecode_gen/instruction_parse.c\
-	bytecode_gen/instruction_table.c
-DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
-
-bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
-	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
 
 clean:
 	$(RM) -r \
