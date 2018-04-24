@@ -164,7 +164,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
 					switch (*type) {
-						case 'I':
+						case 'I': /* Instruction */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
 							state->program->code[state->ptr++] = elem16;
@@ -184,6 +184,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 								return 1;
 							/* Shift so that offset -1 contains the arity; this is used in the garbage collector */
 							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
+							break;
+						case 'd': /* Descriptor */
+						case 'l': /* Label */
+							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+								return 1;
+							state->program->code[state->ptr++] = (BC_WORD) elem32;
 							break;
 						case 'r': /* Real */
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)

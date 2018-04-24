@@ -234,7 +234,7 @@ void store_code_label_value(char *label_name,int32_t offset) {
 		relocation_p->relocation_label=label;
 	}
 
-	store_code_elem(8, offset);
+	store_code_elem(4, offset);
 }
 
 static void store_data_label_value_of_label(struct label *label,uint32_t offset) {
@@ -261,6 +261,13 @@ void add_data2_to_code(int i) {
 		printf("%d\t.data2 %d\n",pgrm.code_size,i);
 
 	store_code_elem(2, i);
+}
+
+void add_data4_to_code(int i) {
+	if (list_code)
+		printf("%d\t.data4 %d\n",pgrm.code_size,i);
+
+	store_code_elem(4, i);
 }
 
 void add_data8_to_code(int i) {
@@ -3966,7 +3973,7 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		}
 
 		if (descriptor_name==NULL)
-			add_data8_to_code(0);
+			add_data4_to_code(0);
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name != NULL) {
@@ -3996,7 +4003,7 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 		add_instruction(Chalt);
 
 		if (descriptor_name==NULL)
-			add_data8_to_code(0);
+			add_data4_to_code(0);
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name!=NULL) {
