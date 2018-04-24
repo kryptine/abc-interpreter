@@ -69,7 +69,7 @@ int main (int argc, char *argv[]) {
 
 	parse_files(input_files, nr_abc_files);
 
-	relocate_code_and_data();
+	add_add_arg_labels();
 	write_program(output_file);
 
 	return 0;

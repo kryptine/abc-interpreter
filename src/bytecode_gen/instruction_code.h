@@ -19,7 +19,7 @@ extern uint32_t list_code;
 
 void initialize_code(void);
 void code_next_module(void);
-struct word *relocate_code_and_data();
+struct word *add_add_arg_labels(void);
 void write_program(FILE*);
 void add_code_and_data_offsets(void);
 

@@ -320,8 +320,8 @@ static struct label Fadd_arg_labels[N_ADD_ARG_LABELS]
 		{/*label_name*/ "_add_arg31", /*label_offset*/ -1 }
 	  };
 
-struct word *relocate_code_and_data(void) {
-	int i,undefined_label;
+struct word *add_add_arg_labels(void) {
+	int i;
 
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
@@ -342,41 +342,6 @@ struct word *relocate_code_and_data(void) {
 			}
 			add_instruction(Cadd_arg0+i);
 		}
-
-	undefined_label=0;
-
-	for(i=0; i<pgrm.code_reloc_size; ++i) {
-		struct relocation *relocation_p;
-		int32_t offset;
-
-		relocation_p=&pgrm.code_relocations[i];
-
-		offset = relocation_p->relocation_label->label_offset;
-		if (offset<0) {
-			undefined_label = 1;
-
-			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
-		}
-	}
-
-	for(i=0; i<pgrm.data_reloc_size; ++i) {
-		struct relocation *relocation_p;
-		int32_t offset;
-
-		relocation_p=&pgrm.data_relocations[i];
-
-		offset = relocation_p->relocation_label->label_offset;
-		if (offset<0) {
-			undefined_label = 1;
-
-			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
-		}
-	}
-
-	if (undefined_label) {
-		fprintf(stderr, "Error: undefined label\n");
-		exit(1);
-	}
 
 	return pgrm.code;
 }
@@ -4172,7 +4137,7 @@ static void print_global_labels(struct label **labels, uint32_t count, FILE *pro
 	uint32_t i;
 	for (i = 0; i < count; i++) {
 		fwrite(&labels[i]->label_offset, sizeof(labels[i]->label_offset), 1, program_file);
-		if (labels[i]->label_module_n == -1)
+		if (labels[i]->label_module_n == -1 || labels[i]->label_offset < 0)
 			fprintf(program_file, "%s", labels[i]->label_name);
 		fprintf(program_file, "%c", '\0');
 	}
