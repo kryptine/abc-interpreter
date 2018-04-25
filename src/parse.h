@@ -57,6 +57,8 @@ struct parser {
 #ifdef BC_GEN
 	uint32_t code_size;
 	uint32_t data_size;
+	uint32_t code_offset;
+	uint32_t data_offset;
 #endif
 };
 

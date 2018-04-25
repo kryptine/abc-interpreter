@@ -196,9 +196,11 @@ struct label *new_label(uint32_t offset) {
 }
 
 void make_label_global(struct label *label) {
-	label->label_module_n = -1;
-	global_label_count++;
-	global_label_string_count+=strlen(label->label_name);
+	if (label->label_module_n != -1) {
+		label->label_module_n = -1;
+		global_label_count++;
+		global_label_string_count+=strlen(label->label_name);
+	}
 }
 
 void store_data_l(uint64_t v) {
@@ -349,6 +351,13 @@ struct word *add_add_arg_labels(void) {
 		}
 
 	return pgrm.code;
+}
+
+void make_undefined_labels_global(void) {
+	uint32_t i;
+	for (i = 0; i < label_id; i++)
+		if (label_array[i]->label_offset < 0)
+			make_label_global(label_array[i]);
 }
 
 void add_code_and_data_offsets(void) {
@@ -889,8 +898,8 @@ void print_string_directive(char *string,int string_length) {
 	printf("\"\n");
 }
 
-void set_words_in_strings(uint32_t val) {
-	pgrm.words_in_strings = val;
+void add_words_in_strings(uint32_t val) {
+	pgrm.words_in_strings += val;
 }
 
 void add_string_information(uint32_t data_offset) {

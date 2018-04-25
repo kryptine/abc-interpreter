@@ -94,6 +94,10 @@ void next_state(struct parser *state) {
 				return;
 		case PS_data_reloc:
 		case PS_end:
+#ifdef BC_GEN
+			state->code_offset += state->code_size;
+			state->data_offset += state->data_size;
+#endif
 			state->state = PS_end;
 			return;
 	}
@@ -126,7 +130,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef BC_GEN
-				set_words_in_strings(elem32);
+				add_words_in_strings(elem32);
 #else
 # if (WORD_WIDTH == 32)
 				state->words_in_strings = elem32;
@@ -363,6 +367,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
 #ifdef BC_GEN
+				state->program->symbol_table[state->ptr].offset += (elem32 & 1 ? state->data_offset : state->code_offset) * 4;
+
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
 					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
 					label->label_offset = state->program->symbol_table[state->ptr].offset;
@@ -390,7 +396,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						label = new_label(sym->offset);
 					else
 						label = enter_label(sym->name);
-					add_code_relocation(label, code_i);
+					add_code_relocation(label, code_i + state->code_offset);
 #else
 # if (WORD_WIDTH == 64)
 					shift_address(&state->program->code[code_i]);
@@ -435,7 +441,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						label = new_label(sym->offset);
 					else
 						label = enter_label(sym->name);
-					add_data_relocation(label, data_i);
+					add_data_relocation(label, data_i + state->data_offset);
 #else
 # if (WORD_WIDTH == 64)
 					shift_address(&state->program->data[data_i]);
