@@ -6,6 +6,7 @@
 #include "parse.h"
 #include "settings.h"
 #include "util.h"
+#include "bytecode_gen/instruction_code.h"
 
 #define MAX_INPUT_FILES 1024
 
@@ -41,6 +42,8 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	initialize_code();
+
 	for (int i = 0; input_file_names[i]; i++) {
 		FILE *f;
 		struct char_provider cp;
@@ -54,12 +57,15 @@ int main(int argc, char **argv) {
 
 		new_file_char_provider(&cp, f);
 		init_parser(&parser);
+		code_next_module();
 
 		if (parse_program(&parser, &cp)) {
 			fprintf(stderr, "Could not parse '%s'.\n", input_file_names[i]);
 			exit(1);
 		}
 	}
+
+	write_program(output_file);
 
 	return 0;
 }

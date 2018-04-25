@@ -53,6 +53,11 @@ struct parser {
 #endif
 
 	uint32_t symbols_ptr;
+
+#ifdef BC_GEN
+	uint32_t code_size;
+	uint32_t data_size;
+#endif
 };
 
 void init_parser(struct parser*);

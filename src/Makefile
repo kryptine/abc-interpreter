@@ -30,13 +30,14 @@ bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
 
 SRC_LINK:=\
 	abc_instructions.c\
+	bytecode_gen/instruction_code.c\
 	link.c\
 	parse.c\
 	util.c
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) $(SRC_LINK) -o $@
+	$(CC) $(CFLAGS) $(SRC_LINK) -DBC_GEN -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
