@@ -176,7 +176,6 @@ do
 	$CG i_system.abc -o i_system.o.bc
 
 	rm $MODULE.bc 2>/dev/null
-	echo "$LINK $MODULE.o.bc i_system.o.bc ${BCDEPS[@]} -o $MODULE.bc"
 	$LINK $MODULE.o.bc i_system.o.bc ${BCDEPS[@]} -o $MODULE.bc
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
