@@ -456,6 +456,14 @@ void add_instruction_label_w_w(SS i,char *label_name,SI n1,SI n2) {
 	store_code_elem(2, n2);
 }
 
+void add_instruction_c(SS i,char n) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(1, n);
+}
+
 void add_instruction_w(SS i,SI n) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
@@ -558,6 +566,15 @@ void add_instruction_w_label_offset_w_w_w(SS i,SI n1,char *label_name,uint32_t o
 	store_code_elem(2, n4);
 }
 
+void add_instruction_w_c(SS i,SI n1,char n2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n1);
+	store_code_elem(1, n2);
+}
+
 void add_instruction_w_w(SS i,SI n1,SI n2) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
@@ -574,6 +591,16 @@ void add_instruction_i_w(SS i,SI n1,SI n2) {
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(8, n1);
 	store_code_elem(2, n2);
+}
+
+void add_instruction_w_c_label(SS i,SI n1,char n2,char *label_name) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n1);
+	store_code_elem(1, n2);
+	store_code_label_value(label_name,0);
 }
 
 void add_instruction_w_w_label(SS i,SI n1,SI n2,char *label_name) {
@@ -615,6 +642,18 @@ void add_instruction_w_w_label_w(SS i,SI n1,SI n2,char *label_name,SI n3) {
 	store_code_elem(2, n2);
 	store_code_label_value(label_name,0);
 	store_code_elem(2, n3);
+}
+
+void add_instruction_w_c_label_c_label(SS i,SI n1,char n2,char *label_name1,char n3,char *label_name2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d %s %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name1,(int)n3,label_name2);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n1);
+	store_code_elem(1, n2);
+	store_code_label_value(label_name1,0);
+	store_code_elem(1, n3);
+	store_code_label_value(label_name2,0);
 }
 
 void add_instruction_w_w_label_w_label(SS i,SI n1,SI n2,char *label_name1,SI n3,char *label_name2) {
@@ -988,7 +1027,7 @@ void code_buildB_b(int b_offset) {
 }
 
 void code_buildC(int value) {
-	add_instruction_w(CbuildC,value);
+	add_instruction_c(CbuildC,value);
 }
 
 void code_buildC_b(int b_offset) {
@@ -1420,11 +1459,11 @@ void code_eqC(void) {
 }
 
 void code_eqC_a(int value,int a_offset) {
-	add_instruction_w_w(CeqC_a,-a_offset,value);
+	add_instruction_w_c(CeqC_a,-a_offset,value);
 }
 
 void code_eqC_b(int value,int b_offset) {
-	add_instruction_w_w(CeqC_b,b_offset,value);
+	add_instruction_w_c(CeqC_b,b_offset,value);
 }
 
 void code_eqD_b(char descriptor_name[],int arity) {
@@ -2245,7 +2284,7 @@ void code_pushB_a(int a_offset) {
 }
 
 void code_pushC(int c) {
-	add_instruction_w(CpushC,c);
+	add_instruction_c(CpushC,c);
 }
 
 void code_pushC_a(int a_offset) {
@@ -3263,11 +3302,11 @@ void code_jmp_eqACio(char *string,int string_length,int a_offset,char label_name
 }
 
 void code_jmp_eqC_b(int value,int b_offset,char label_name[]) {
-	add_instruction_w_w_label(Cjmp_eqC_b,b_offset,value,label_name);
+	add_instruction_w_c_label(Cjmp_eqC_b,b_offset,value,label_name);
 }
 
 void code_jmp_eqC_b2(int value1,int value2,int b_offset,char label_name1[],char label_name2[]) {
-	add_instruction_w_w_label_w_label(Cjmp_eqC_b2,b_offset,value1,label_name1,value2,label_name2);
+	add_instruction_w_c_label_c_label(Cjmp_eqC_b2,b_offset,value1,label_name1,value2,label_name2);
 }
 
 void code_jmp_eqD_b(char descriptor_name[],int arity,char label_name[]) {
@@ -3304,7 +3343,7 @@ void code_jmp_ltI(char label_name[]) {
 }
 
 void code_jmp_neC_b(int value,int b_offset,char label_name[]) {
-	add_instruction_w_w_label(Cjmp_neC_b,b_offset,value,label_name);
+	add_instruction_w_c_label(Cjmp_neC_b,b_offset,value,label_name);
 }
 
 void code_jmp_neI(char label_name[]) {
