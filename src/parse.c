@@ -181,7 +181,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 			case PS_code: {
 				if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 					return 1;
-#if 1
+#if 0
 				fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 #endif
 #ifdef BC_GEN
@@ -307,7 +307,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 					return 1;
 #ifdef BC_GEN
-				fprintf(stderr,".data %d:\t0x%016lx\n",state->ptr,elem64);
 				store_data_l(elem64);
 				state->ptr++;
 #else
@@ -360,6 +359,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table[state->ptr].offset = elem32;
+#ifdef BC_GEN
+				if (elem32 != -1)
+					state->program->symbol_table[state->ptr].offset += (elem32 & 1 ? state->data_offset : state->code_offset) * 4;
+#endif
 				state->program->symbol_table[state->ptr].name = state->program->symbols + state->symbols_ptr;
 				do {
 					if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
@@ -367,11 +370,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
 #ifdef BC_GEN
-				state->program->symbol_table[state->ptr].offset += (elem32 & 1 ? state->data_offset : state->code_offset) * 4;
-
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
 					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
-					label->label_offset = state->program->symbol_table[state->ptr].offset;
+					if (state->program->symbol_table[state->ptr].offset != -1)
+						label->label_offset = state->program->symbol_table[state->ptr].offset;
 					make_label_global(label);
 				}
 #endif
@@ -387,8 +389,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
 						return 1;
 					struct symbol *sym = &state->program->symbol_table[sym_i];
-
-					fprintf(stderr,"Code reloc @%d with symbol %d (%s, %d)\n",code_i,sym_i,sym->name,sym->offset);
 
 #ifdef BC_GEN
 					struct label *label;
