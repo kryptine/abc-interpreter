@@ -296,7 +296,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef BC_GEN
-				add_string_information(elem32);
+				add_string_information(elem32 + state->data_offset);
 #elif WORD_WIDTH == 32
 				state->strings[state->ptr] = elem32;
 #endif
