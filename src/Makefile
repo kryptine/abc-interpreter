@@ -37,7 +37,7 @@ SRC_LINK:=\
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) $(SRC_LINK) -DBC_GEN -o $@
+	$(CC) $(CFLAGS) $(SRC_LINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -57,7 +57,7 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
-	$(CC) $(CFLAGS) $(SRC_INTERPRET) -o $@
+	$(CC) $(CFLAGS) $(SRC_INTERPRET) -DINTERPRETER -o $@
 
 interpret.a: $(OBJ_INTERPRET)
 	ar cr $@ $^

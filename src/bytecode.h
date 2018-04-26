@@ -31,9 +31,11 @@
 # define BC_WORD_S_FMT "%d"
 # define BC_REAL float
 #endif
+
 #define BC_BOOL uint8_t
-#ifndef BC_GEN
-#define SS short /* TODO check what to do with this */
+
+#ifdef INTERPRETER
+# define SS short /* TODO check what to do with this */
 #endif
 
 struct symbol {
@@ -44,10 +46,10 @@ struct symbol {
 struct program {
 	uint32_t code_size;
 	uint32_t data_size;
-#ifndef BC_GEN
+#ifdef INTERPRETER
 	BC_WORD *code;
 	BC_WORD *data;
-#else
+#elif defined(BC_GEN) || defined(LINKER)
 	uint32_t strings_size;
 	uint32_t words_in_strings;
 	uint32_t code_reloc_size;
