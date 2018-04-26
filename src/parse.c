@@ -269,13 +269,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case 'c': /* Char */
-							/* TODO should be 8 bits of course */
-							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
+							if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
 								return 1;
 #ifdef LINKER
-							store_code_elem(2, elem16);
+							store_code_elem(1, elem8);
 #else
-							state->program->code[state->ptr++] = elem16;
+							state->program->code[state->ptr++] = elem8;
 #endif
 							break;
 						case '?':
