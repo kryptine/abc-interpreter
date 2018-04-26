@@ -2,3 +2,4 @@ bytecode
 interpret
 link
 optimise
+CodeSharing

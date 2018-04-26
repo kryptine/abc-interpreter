@@ -64,7 +64,7 @@ interpret.a: $(OBJ_INTERPRET)
 	ar cr $@ $^
 
 $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
-	$(CC) -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
+	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
 
 clean:
 	$(RM) -r \
