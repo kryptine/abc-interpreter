@@ -6,6 +6,8 @@ LINK=../src/link
 OPT=../src/optimise
 IP=../src/interpret
 
+StdEnv="$CLEAN_HOME/lib/StdEnv"
+
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
@@ -119,7 +121,7 @@ fi
 CFLAGS="$CFLAGS" make -BC ../src || exit 1
 
 if [ $RECOMPILE -gt 0 ]; then
-	rm -r Clean\ System\ Files StdEnv/Clean\ System\ Files 2>/dev/null
+	rm -r Clean\ System\ Files 2>/dev/null
 fi
 
 while read line
@@ -146,7 +148,7 @@ do
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
-	$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
+	$CLM -d $MODULE
 	CLMRESULT=$?
 
 	if [ $CLMRESULT -ne 0 ]; then
@@ -158,16 +160,21 @@ do
 	if [ $RECOMPILE -gt 0 ]; then
 		touch "$MODULE.icl"
 		sleep 1
-		$CLM -d -P "StdEnv:$CLEAN_HOME/lib/StdEnv" $MODULE
+		$CLM -d $MODULE
 	fi
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
 	BCDEPS=()
 	for dep in ${DEPS[@]}; do
-		$OPT < StdEnv/Clean\ System\ Files/$dep.abc > StdEnv/$dep.opt.abc
-		$CG StdEnv/$dep.opt.abc -o StdEnv/$dep.o.bc
-		BCDEPS+=(StdEnv/$dep.o.bc)
+		$OPT < "$StdEnv/Clean System Files/$dep.abc" > "$StdEnv/Clean System Files/$dep.opt.abc"
+		$CG "$StdEnv/Clean System Files/$dep.opt.abc" -o "$StdEnv/Clean System Files/$dep.o.bc"
+		if [ $? -ne 0 ]; then
+			echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
+			FAILED=1
+			continue 2
+		fi
+		BCDEPS+=("$StdEnv/Clean System Files/$dep.o.bc")
 	done
 
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
@@ -176,7 +183,7 @@ do
 	$CG i_system.abc -o i_system.o.bc
 
 	rm $MODULE.bc 2>/dev/null
-	$LINK $MODULE.o.bc i_system.o.bc ${BCDEPS[@]} -o $MODULE.bc
+	$LINK $MODULE.o.bc i_system.o.bc "${BCDEPS[@]}" -o $MODULE.bc
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 		FAILED=1

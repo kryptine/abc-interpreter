@@ -810,6 +810,14 @@ void add_label(char *label_name) {
 	store_code_label_value(label_name,0);
 }
 
+void code_absR(void) {
+	add_instruction(CabsR);
+}
+
+void code_acosR(void) {
+	add_instruction(CacosR);
+}
+
 void code_addI(void) {
 	add_instruction(CaddI);
 }
@@ -820,6 +828,14 @@ void code_addR(void) {
 
 void code_and(void) {
 	add_instruction(CandI);
+}
+
+void code_asinR(void) {
+	add_instruction(CasinR);
+}
+
+void code_atanR(void) {
+	add_instruction(CatanR);
 }
 
 void code_buildh(char descriptor_name[],int arity);
@@ -1211,6 +1227,10 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 	exit(1);
 }
 
+void code_cosR(void) {
+	add_instruction(CcosR);
+}
+
 void code_create(int n_arguments) {
 	if (n_arguments<=2) {
 		add_instruction(Ccreate);
@@ -1254,6 +1274,13 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 				return;
 			}
 			break;
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0')
+			{
+				add_instruction(Ccreate_arrayREAL);
+				return;
+			}
 		case '_':
 			if (element_descriptor[1]=='_' && element_descriptor[2]=='\0') {
 				add_instruction(Ccreate_array);
@@ -1351,6 +1378,10 @@ void code_divR(void) {
 	add_instruction(CdivR);
 }
 
+void code_entierR(void) {
+	add_instruction(CentierR);
+}
+
 void code_eqAC_a(char *string,int string_length) {
 	struct label *string_label;
 
@@ -1422,6 +1453,10 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 
 void code_exit_false(char label_name[]) {
 	add_instruction_label(Cjmp_false,label_name);
+}
+
+void code_expR(void) {
+	add_instruction(CexpR);
 }
 
 void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
@@ -2104,6 +2139,14 @@ void code_jsr_eval(int a_offset) {
 	}
 }
 
+void code_lnR(void) {
+	add_instruction(ClnR);
+}
+
+void code_log10R(void) {
+	add_instruction(Clog10R);
+}
+
 void code_ltC(void) {
 	add_instruction(CltC);
 }
@@ -2128,6 +2171,10 @@ void code_negI(void) {
 	add_instruction(CnegI);
 }
 
+void code_negR(void) {
+	add_instruction(CnegR);
+}
+
 void code_not(void) {
 	add_instruction(CnotI);
 }
@@ -2146,6 +2193,10 @@ void code_pop_a(int n) {
 
 void code_pop_b(int n) {
 	add_instruction_w(Cpop_b,n);
+}
+
+void code_powR(void) {
+	add_instruction(CpowR);
 }
 
 void code_print(char *string,int length) {
@@ -2644,6 +2695,13 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 				add_instruction(CreplaceINT);
 				return;
 			}
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0')
+			{
+				add_instruction(CreplaceREAL);
+				return;
+			}
 	}
 
 
@@ -2850,6 +2908,13 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 				return;
 			}
 			break;
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0')
+			{
+				add_instruction(CselectREAL);
+				return;
+			}
 		case '_':
 			if (element_descriptor[1]=='_' && element_descriptor[2]=='\0') {
 				add_instruction(Cselect);
@@ -2907,6 +2972,10 @@ void code_shiftr(void) {
 	add_instruction(CshiftrI);
 }
 
+void code_sinR(void) {
+	add_instruction(CsinR);
+}
+
 void code_subI(void) {
 	add_instruction(CsubI);
 }
@@ -2917,6 +2986,10 @@ void code_subR(void) {
 
 void code_sqrtR(void) {
 	add_instruction(CsqrtR);
+}
+
+void code_tanR(void) {
+	add_instruction(CtanR);
 }
 
 void code_testcaf(char *label_name) {
@@ -2947,6 +3020,13 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 				return;
 			}
 			break;
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0')
+			{
+				add_instruction(CupdateREAL);
+				return;
+			}
 		case '_':
 			if (element_descriptor[1]=='_' && element_descriptor[2]=='\0') {
 				add_instruction(Cupdate);

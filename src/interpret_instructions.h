@@ -1,3 +1,17 @@
+case CabsR:
+{
+	BC_REAL d=abs(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case CacosR:
+{
+	BC_REAL d=acos(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case CaddI:
 	bsp[1]=bsp[0] + bsp[1];
 	++bsp;
@@ -39,6 +53,20 @@ case CandI:
 	++bsp;
 	pc+=1;
 	continue;
+case CasinR:
+{
+	BC_REAL d=asin(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case CatanR:
+{
+	BC_REAL d=atan(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case Cbuild:
 {
 	BC_WORD s;
@@ -1453,6 +1481,13 @@ case Cbuild_ua1:
 	hp[-1]=*bsp++;
 	continue;
 }
+case CcosR:
+{
+	BC_REAL d=cos(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case Ccreate:
 	if ((heap_free-=3)<0)
 		break;
@@ -1556,6 +1591,26 @@ case Ccreate_arrayINT:
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=(BC_WORD)&INT+2;
+	*++asp=(BC_WORD)hp;
+	hp+=3;
+	n=bsp[1];
+	bsp+=2;
+	pc+=1;
+	for (i=0; i!=s; ++i)
+		hp[i]=n;
+	hp+=s;
+	continue;
+}
+case Ccreate_arrayREAL:
+{
+	BC_WORD s,i,n;
+
+	s=bsp[0];
+	if ((heap_free-=s+3)<0)
+		break;
+	hp[0]=(BC_WORD)&__ARRAY__+2;
+	hp[1]=s;
+	hp[2]=(BC_WORD)&REAL+2;
 	*++asp=(BC_WORD)hp;
 	hp+=3;
 	n=bsp[1];
@@ -1756,6 +1811,21 @@ case CdivI:
 	++bsp;
 	pc+=1;
 	continue;
+case CdivR:
+{
+	BC_REAL d=*(BC_REAL*)&bsp[0] / *(BC_REAL*)&bsp[1];
+	bsp[1]=*(BC_WORD*)&d;
+	++bsp;
+	pc+=1;
+	continue;
+}
+case CentierR:
+{
+	BC_REAL d=floor(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case Ceq_desc:
 {
 	BC_WORD *n;
@@ -1932,6 +2002,13 @@ case CeqD_b:
 	b=*bsp==*(BC_WORD_S*)&pc[1];
 	*--bsp=b;
 	pc+=2;
+	continue;
+}
+case CexpR:
+{
+	BC_REAL d=exp(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
 	continue;
 }
 case Cfill:
@@ -3158,6 +3235,20 @@ case Cjsr_eval3:
 	asp[0]=(BC_WORD)n;
 	continue;
 }
+case ClnR:
+{
+	BC_REAL d=log(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case Clog10R:
+{
+	BC_REAL d=log10(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case CltC:
 case CltI:
 	bsp[1] = (BC_WORD_S)bsp[0] < (BC_WORD_S)bsp[1];
@@ -3186,6 +3277,13 @@ case CnegI:
 	*bsp = - *bsp;
 	pc+=1;
 	continue;
+case CnegR:
+{
+	BC_REAL d=-(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case CnotB:
 	*bsp = *bsp==0;
 	pc+=1;
@@ -3207,6 +3305,14 @@ case Cpop_b:
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
 	pc+=2;
 	continue;
+case CpowR:
+{
+	BC_REAL d=pow(*(BC_REAL*)&bsp[0], *(BC_REAL*)&bsp[1]);
+	bsp[1]=*(BC_WORD*)&d;
+	++bsp;
+	pc+=1;
+	continue;
+}
 case Cprint:
 {
 	BC_WORD *s;
@@ -4307,6 +4413,7 @@ case CreplaceCHAR:
 	continue;
 }
 case CreplaceINT:
+case CreplaceREAL:
 {
 	BC_WORD *array,i,v;
 
@@ -4934,6 +5041,7 @@ case CselectCHAR:
 	continue;
 }
 case CselectINT:
+case CselectREAL:
 {
 	BC_WORD *array,i;
 
@@ -5194,6 +5302,13 @@ case CshiftrI:
 	++bsp;
 	pc+=2;
 	continue;
+case CsinR:
+{
+	BC_REAL d=sin(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
 case CsubI:
 	bsp[1]=bsp[0] - bsp[1];
 	++bsp;
@@ -5210,6 +5325,13 @@ case CsubR:
 case CsqrtR:
 {
 	BC_REAL d=sqrt(*(BC_REAL*)&bsp[0]);
+	bsp[0]=*(BC_WORD*)&d;
+	pc+=1;
+	continue;
+}
+case CtanR:
+{
+	BC_REAL d=tan(*(BC_REAL*)&bsp[0]);
 	bsp[0]=*(BC_WORD*)&d;
 	pc+=1;
 	continue;
@@ -5254,6 +5376,7 @@ case CupdateCHAR:
 	continue;
 }
 case CupdateINT:
+case CupdateREAL:
 {
 	BC_WORD *array,i;
 
