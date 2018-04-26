@@ -188,8 +188,9 @@ struct label *enter_label(char *label_name) {
 }
 
 struct label *new_label(uint32_t offset) {
-	char *name = safe_malloc(16);
-	sprintf(name, "i%d", offset);
+	char name[16];
+	snprintf(name, 16, "i%x", offset);
+	name[15] = '\0';
 	struct label *label = enter_label(name);
 	label->label_offset = offset;
 	return label;

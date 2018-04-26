@@ -44,6 +44,9 @@ int main(int argc, char **argv) {
 
 	initialize_code();
 
+	uint32_t g_code_offset = 0;
+	uint32_t g_data_offset = 0;
+
 	for (int i = 0; input_file_names[i]; i++) {
 		FILE *f;
 		struct char_provider cp;
@@ -53,16 +56,23 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Could not open '%s' for reading.\n", input_file_names[i]);
 			exit(1);
 		}
-		fprintf(stderr, "Linking %s...\n", input_file_names[i]);
 
 		new_file_char_provider(&cp, f);
 		init_parser(&parser);
+		parser.code_offset = g_code_offset;
+		parser.data_offset = g_data_offset;
 		code_next_module();
 
 		if (parse_program(&parser, &cp)) {
 			fprintf(stderr, "Could not parse '%s'.\n", input_file_names[i]);
 			exit(1);
 		}
+
+		g_code_offset = parser.code_offset;
+		g_data_offset = parser.data_offset;
+
+		free_program(parser.program);
+		free(parser.program);
 	}
 
 	write_program(output_file);

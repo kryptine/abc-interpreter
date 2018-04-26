@@ -10,7 +10,7 @@
 
 void init_parser(struct parser *state) {
 	state->state = PS_init_code;
-	state->program = safe_malloc(sizeof(struct program));
+	state->program = safe_calloc(1, sizeof(struct program));
 
 	state->ptr = 0;
 
@@ -28,6 +28,13 @@ void init_parser(struct parser *state) {
 #endif
 
 	state->symbols_ptr = 0;
+
+#ifdef LINKER
+	state->code_size = 0;
+	state->data_size = 0;
+	state->code_offset = 0;
+	state->data_offset = 0;
+#endif
 }
 
 void free_parser(struct parser *state) {

@@ -30,6 +30,7 @@ bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
 
 SRC_LINK:=\
 	abc_instructions.c\
+	bytecode.c\
 	bytecode_gen/instruction_code.c\
 	link.c\
 	parse.c\

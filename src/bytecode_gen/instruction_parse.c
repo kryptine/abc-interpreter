@@ -78,7 +78,7 @@ void parse_line(char* line, unsigned int line_nr) {
 	while (isspace(*end))
 		end++;
 
-	if (*(end-1) == '\n' || *end == '|') {
+	if ((end != line && *(end-1) == '\n') || *end == '|') {
 		return;
 	} else if (end == line && line[0] != '.' && line[0] != '|') {
 		char s[MAX_STRING_LENGTH];

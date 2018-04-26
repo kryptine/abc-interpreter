@@ -65,6 +65,8 @@ struct program {
 	char *symbols;
 };
 
-#ifndef BC_GEN
+void free_program(struct program *pgm);
+
+#ifdef INTERPRETER
 void print_program(FILE*, struct program*);
 #endif
