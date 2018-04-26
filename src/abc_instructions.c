@@ -8,6 +8,10 @@
 
 char *instruction_name(BC_WORD i) {
 	switch (i) {
+		case CabsR:
+			return "absR";
+		case CacosR:
+			return "acosR";
 		case CaddI:
 			return "addI";
 		case CaddR:
@@ -18,6 +22,10 @@ char *instruction_name(BC_WORD i) {
 			return "add_empty_node3";
 		case CandI:
 			return "andI";
+		case CasinR:
+			return "asinR";
+		case CatanR:
+			return "atanR";
 		case Cbuild:
 			return "build";
 		case Cbuild0:
@@ -156,6 +164,8 @@ char *instruction_name(BC_WORD i) {
 			return "build_u31";
 		case Cbuild_ua1:
 			return "build_ua1";
+		case CcosR:
+			return "cosR";
 		case Ccreate:
 			return "create";
 		case Ccreates:
@@ -168,6 +178,8 @@ char *instruction_name(BC_WORD i) {
 			return "create_arrayCHAR";
 		case Ccreate_arrayINT:
 			return "create_arrayINT";
+		case Ccreate_arrayREAL:
+			return "create_arrayREAL";
 		case Ccreate_array_r:
 			return "create_array_r";
 		case Ccreate_array_:
@@ -190,6 +202,8 @@ char *instruction_name(BC_WORD i) {
 			return "divI";
 		case CdivR:
 			return "divR";
+		case CentierR:
+			return "entierR";
 		case CeqAC:
 			return "eqAC";
 		case CeqAC_a:
@@ -222,6 +236,8 @@ char *instruction_name(BC_WORD i) {
 			return "eqR";
 		case Ceq_desc:
 			return "eq_desc";
+		case CexpR:
+			return "expR";
 		case Cfill:
 			return "fill";
 		case Cfill1:
@@ -362,6 +378,10 @@ char *instruction_name(BC_WORD i) {
 			return "jsr_eval3";
 		case Cjesr:
 			return "jesr";
+		case ClnR:
+			return "lnR";
+		case Clog10R:
+			return "log10R";
 		case CltC:
 			return "ltC";
 		case CltI:
@@ -374,6 +394,8 @@ char *instruction_name(BC_WORD i) {
 			return "mulR";
 		case CnegI:
 			return "negI";
+		case CnegR:
+			return "negR";
 		case CnotB:
 			return "notB";
 		case CnotI:
@@ -384,6 +406,8 @@ char *instruction_name(BC_WORD i) {
 			return "pop_a";
 		case Cpop_b:
 			return "pop_b";
+		case CpowR:
+			return "powR";
 		case Cprint:
 			return "print";
 		case Cprint_symbol_sc:
@@ -564,6 +588,8 @@ char *instruction_name(BC_WORD i) {
 			return "replaceCHAR";
 		case CreplaceINT:
 			return "replaceINT";
+		case CreplaceREAL:
+			return "replaceREAL";
 		case Creplace_ra:
 			return "replace_ra";
 		case Crepl_args:
@@ -632,6 +658,8 @@ char *instruction_name(BC_WORD i) {
 			return "selectCHAR";
 		case CselectINT:
 			return "selectINT";
+		case CselectREAL:
+			return "selectREAL";
 		case Cselect_r:
 			return "select_r";
 		case Cselect_ra:
@@ -650,6 +678,8 @@ char *instruction_name(BC_WORD i) {
 			return "shiftlI";
 		case CshiftrI:
 			return "shiftrI";
+		case CsinR:
+			return "sinR";
 		case CsubI:
 			return "subI";
 		case CsubR:
@@ -658,6 +688,8 @@ char *instruction_name(BC_WORD i) {
 			return "sqrtR";
 		case Crtn:
 			return "rtn";
+		case CtanR:
+			return "tanR";
 		case Ctestcaf:
 			return "testcaf";
 		case Cupdate:
@@ -668,6 +700,8 @@ char *instruction_name(BC_WORD i) {
 			return "updateCHAR";
 		case CupdateINT:
 			return "updateINT";
+		case CupdateREAL:
+			return "updateREAL";
 		case Cupdatepop_a:
 			return "updatepop_a";
 		case Cupdatepop_b:
@@ -966,11 +1000,15 @@ char *instruction_name(BC_WORD i) {
 
 char *instruction_type (BC_WORD i) {
 	switch (i){
+		case CabsR:                  return "";
+		case CacosR:                 return "";
 		case CaddI:                  return "";
 		case CaddR:                  return "";
 		case Cadd_empty_node2:       return "l";
 		case Cadd_empty_node3:       return "l";
 		case CandI:                  return "";
+		case CasinR:                 return "";
+		case CatanR:                 return "";
 		case Cbuild:                 return "nl";
 		case Cbuild0:                return "l";
 		case Cbuild1:                return "l";
@@ -1030,22 +1068,24 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_r31:             return "?";
 		case Cbuild_r40:             return "nl";
 		case Cbuild_u:               return "nln";
-		case Cbuild_u01:             return "?";
+		case Cbuild_u01:             return "l";
 		case Cbuild_u02:             return "l";
 		case Cbuild_u03:             return "l";
 		case Cbuild_u11:             return "l";
 		case Cbuild_u12:             return "l";
-		case Cbuild_u13:             return "?";
-		case Cbuild_u21:             return "?";
-		case Cbuild_u22:             return "?";
-		case Cbuild_u31:             return "?";
+		case Cbuild_u13:             return "l";
+		case Cbuild_u21:             return "l";
+		case Cbuild_u22:             return "l";
+		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "?";
+		case CcosR:                  return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "?";
 		case Ccreate_array:          return "";
 		case Ccreate_arrayBOOL:      return "";
 		case Ccreate_arrayCHAR:      return "";
 		case Ccreate_arrayINT:       return "";
+		case Ccreate_arrayREAL:      return "";
 		case Ccreate_array_r:        return "?";
 		case Ccreate_array_:         return "";
 		case Ccreate_array_BOOL:     return "";
@@ -1053,10 +1093,11 @@ char *instruction_type (BC_WORD i) {
 		case Ccreate_array_INT:      return "";
 		case Ccreate_array_r_:       return "?";
 		case Ccreate_array_r_a:      return "?";
-		case Ccreate_array_r_b:      return "?";
+		case Ccreate_array_r_b:      return "nl";
 		case CdecI:                  return "";
 		case CdivI:                  return "";
 		case CdivR:                  return "";
+		case CentierR:               return "";
 		case CeqAC:                  return "";
 		case CeqAC_a:                return "S";
 		case CeqB:                   return "";
@@ -1073,6 +1114,7 @@ char *instruction_type (BC_WORD i) {
 		case CeqI_b:                 return "ni";
 		case CeqR:                   return "";
 		case Ceq_desc:               return "nd";
+		case CexpR:                  return "";
 		case Cfill:                  return "?";
 		case Cfill1:                 return "nd";
 		case Cfill2:                 return "nd";
@@ -1143,21 +1185,25 @@ char *instruction_type (BC_WORD i) {
 		case Cjsr_eval2:             return "";
 		case Cjsr_eval3:             return "";
 		case Cjesr:                  return "n";
+		case ClnR:                   return "";
+		case Clog10R:                return "";
 		case CltC:                   return "";
 		case CltI:                   return "";
-		case CmulI:                  return "";
 		case CltR:                   return "";
+		case CmulI:                  return "";
 		case CmulR:                  return "";
 		case CnegI:                  return "";
+		case CnegR:                  return "";
 		case CnotB:                  return "";
 		case CnotI:                  return "";
 		case CorI:                   return "";
 		case Cpop_a:                 return "N";
 		case Cpop_b:                 return "N";
+		case CpowR:                  return "";
 		case Cprint:                 return "s";
 		case Cprint_symbol_sc:       return "n";
-		case CpushBFALSE:            return "?";
-		case CpushBTRUE:             return "?";
+		case CpushBFALSE:            return "";
+		case CpushBTRUE:             return "";
 		case CpushB_a:               return "n";
 		case CpushC:                 return "c";
 		case CpushC_a:               return "n";
@@ -1197,15 +1243,15 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node4:            return "l";
 		case Cpush_node_u:           return "nln";
 		case Cpush_node_ua1:         return "?";
-		case Cpush_node_u01:         return "?";
+		case Cpush_node_u01:         return "l";
 		case Cpush_node_u02:         return "l";
 		case Cpush_node_u03:         return "l";
 		case Cpush_node_u11:         return "l";
 		case Cpush_node_u12:         return "l";
-		case Cpush_node_u13:         return "?";
-		case Cpush_node_u21:         return "?";
-		case Cpush_node_u22:         return "?";
-		case Cpush_node_u31:         return "?";
+		case Cpush_node_u13:         return "l";
+		case Cpush_node_u21:         return "l";
+		case Cpush_node_u22:         return "l";
+		case Cpush_node_u31:         return "l";
 		case Cpush_r_args:           return "?";
 		case Cpush_r_argsa0:         return "?";
 		case Cpush_r_argsa1:         return "?";
@@ -1244,6 +1290,7 @@ char *instruction_type (BC_WORD i) {
 		case CreplaceBOOL:           return "";
 		case CreplaceCHAR:           return "";
 		case CreplaceINT:            return "";
+		case CreplaceREAL:           return "";
 		case Creplace_ra:            return "?";
 		case Crepl_args:             return "n";
 		case Crepl_args1:            return "";
@@ -1278,6 +1325,7 @@ char *instruction_type (BC_WORD i) {
 		case CselectBOOL:            return "";
 		case CselectCHAR:            return "";
 		case CselectINT:             return "";
+		case CselectREAL:            return "";
 		case Cselect_r:              return "?";
 		case Cselect_ra:             return "?";
 		case Cselect_ra1:            return "?";
@@ -1285,17 +1333,20 @@ char *instruction_type (BC_WORD i) {
 		case Cselect_r12:            return "?";
 		case Cselect_r20:            return "?";
 		case Cselect_r21:            return "?";
-		case CshiftlI:               return "?";
-		case CshiftrI:               return "?";
+		case CshiftlI:               return "";
+		case CshiftrI:               return "";
+		case CsinR:                  return "";
 		case CsubI:                  return "";
 		case CsubR:                  return "";
 		case CsqrtR:                 return "";
 		case Crtn:                   return "";
+		case CtanR:                  return "";
 		case Ctestcaf:               return "?";
 		case Cupdate:                return "";
 		case CupdateBOOL:            return "";
 		case CupdateCHAR:            return "";
 		case CupdateINT:             return "";
+		case CupdateREAL:            return "";
 		case Cupdatepop_a:           return "nn";
 		case Cupdatepop_b:           return "nn";
 		case Cupdate_a:              return "nn";
@@ -1350,8 +1401,8 @@ char *instruction_type (BC_WORD i) {
 		case Cfill_a01_pop_rtn:      return "";
 
 		case CaddIi:                 return "?";
-		case CandIi:                 return "?";
-		case CandIio:                return "?";
+		case CandIi:                 return "i";
+		case CandIio:                return "ni";
 		case Cbuildh0_dup_a:         return "ln";
 		case Cbuildh0_dup2_a:        return "ln";
 		case Cbuildh0_dup3_a:        return "ln";
@@ -1363,12 +1414,12 @@ char *instruction_type (BC_WORD i) {
 		case Cdup_a:                 return "n";
 		case Cdup2_a:                return "n";
 		case Cdup3_a:                return "?";
-		case CneI:                   return "?";
+		case CneI:                   return "";
 		case Cexchange_a:            return "nn";
-		case CgeC:                   return "?";
+		case CgeC:                   return "";
 		case Cjmp_b_false:           return "nl";
 		case Cjmp_eqACio:            return "?";
-		case Cjmp_eqC_b:             return "?";
+		case Cjmp_eqC_b:             return "ncl";
 		case Cjmp_eqC_b2:            return "?";
 		case Cjmp_eqD_b:             return "?";
 		case Cjmp_eqD_b2:            return "?";
@@ -1378,7 +1429,7 @@ char *instruction_type (BC_WORD i) {
 		case Cjmp_eq_desc:           return "nll";
 		case Cjmp_geI:               return "l";
 		case Cjmp_ltI:               return "l";
-		case Cjmp_neC_b:             return "?";
+		case Cjmp_neC_b:             return "ncl";
 		case Cjmp_neI:               return "l";
 		case Cjmp_neI_b:             return "nil";
 		case Cjmp_ne_desc:           return "nll";
@@ -1397,7 +1448,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpop_b_rtn:             return "N";
 		case CpushD_a_jmp_eqD_b2:    return "?";
 		case Cpush_a_jsr:            return "nl";
-		case Cpush_b_incI:           return "?";
+		case Cpush_b_incI:           return "n";
 		case Cpush_b_jsr:            return "nl";
 		case Cpush_arraysize_a:      return "n";
 		case Cpush_jsr_eval:         return "n";
@@ -1411,14 +1462,14 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_update_a:         return "nn";
 		case Cput_a:                 return "n";
 		case Cput_b:                 return "n";
-		case CselectCHARoo:          return "?";
+		case CselectCHARoo:          return "nn";
 		case Cselectoo:              return "?";
 		case Cupdate2_a:             return "nn";
 		case Cupdate2_b:             return "?";
 		case Cupdate2pop_a:          return "nn";
 		case Cupdate2pop_b:          return "nn";
 		case Cupdate3_a:             return "nn";
-		case Cupdate3_b:             return "?";
+		case Cupdate3_b:             return "nn";
 		case Cupdate3pop_a:          return "nn";
 		case Cupdate3pop_b:          return "nn";
 		case Cupdate4_a:             return "nn";
@@ -1426,11 +1477,11 @@ char *instruction_type (BC_WORD i) {
 		case Cupdates2_a_pop_a:      return "nnnn";
 		case Cupdates2_b:            return "nnn";
 		case Cupdates2pop_a:         return "nnn";
-		case Cupdates2pop_b:         return "?";
+		case Cupdates2pop_b:         return "nnn";
 		case Cupdates3_a:            return "nnnn";
-		case Cupdates3_b:            return "?";
+		case Cupdates3_b:            return "nnnn";
 		case Cupdates3pop_a:         return "nnnn";
-		case Cupdates3pop_b:         return "?";
+		case Cupdates3pop_b:         return "nnnn";
 		case Cupdates4_a:            return "nnnnn";
 
 		case Cjsr_stack_check:       return "?";
