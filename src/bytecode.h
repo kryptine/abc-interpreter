@@ -1,10 +1,14 @@
-#ifndef _H_ABCINT_BYTECODE
-#define _H_ABCINT_BYTECODE
+#pragma once
 
 #include <inttypes.h>
 #include <stdio.h>
 
 #include "settings.h"
+
+#ifdef BC_GEN
+# include "bytecode_gen/bytecode_gen.h"
+# include "bytecode_gen/instruction_code.h"
+#endif
 
 /* Size of an instruction in binary bytecode, in bytes */
 #define BYTEWIDTH_INSTRUCTION 2
@@ -27,9 +31,11 @@
 # define BC_WORD_S_FMT "%d"
 # define BC_REAL float
 #endif
+
 #define BC_BOOL uint8_t
-#ifndef BC_GEN
-#define SS short /* TODO check what to do with this */
+
+#ifdef INTERPRETER
+# define SS short /* TODO check what to do with this */
 #endif
 
 struct symbol {
@@ -37,20 +43,30 @@ struct symbol {
 	char *name;
 };
 
-#ifndef BC_GEN
 struct program {
 	uint32_t code_size;
 	uint32_t data_size;
+#ifdef INTERPRETER
 	BC_WORD *code;
 	BC_WORD *data;
+#elif defined(BC_GEN) || defined(LINKER)
+	uint32_t strings_size;
+	uint32_t words_in_strings;
+	uint32_t code_reloc_size;
+	uint32_t data_reloc_size;
+	struct word *code;
+	uint32_t *strings;
+	uint64_t *data;
+	struct relocation *code_relocations;
+	struct relocation *data_relocations;
+#endif
 	uint32_t symbol_table_size;
 	struct symbol *symbol_table;
 	char *symbols;
 };
-#endif
 
-#ifndef BC_GEN
+void free_program(struct program *pgm);
+
+#ifdef INTERPRETER
 void print_program(FILE*, struct program*);
-#endif
-
 #endif

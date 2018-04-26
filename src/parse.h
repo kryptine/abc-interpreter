@@ -36,7 +36,7 @@ struct parser {
 	uint32_t data_reloc_size;
 
 	uint32_t strings_size;      /* The number of strings */
-#if (WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 	/* These auxiliary variables are needed for strings. Unlike with other
 	 * values, we cannot simply discard the upper half of the bytecode values
 	 * for strings. This means that the data section on 32-bit will actually be
@@ -53,6 +53,13 @@ struct parser {
 #endif
 
 	uint32_t symbols_ptr;
+
+#ifdef LINKER
+	uint32_t code_size;
+	uint32_t data_size;
+	uint32_t code_offset;
+	uint32_t data_offset;
+#endif
 };
 
 void init_parser(struct parser*);

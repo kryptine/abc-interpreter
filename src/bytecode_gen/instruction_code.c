@@ -13,7 +13,7 @@
 #define N_ADD_ARG_LABELS 32
 #define MAX_Cadd_arg_INSTRUCTION_N 16
 
-program pgrm;
+struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
 
 struct label_node {
@@ -98,26 +98,16 @@ static void realloc_data(void) {
 	pgrm.data = (uint64_t*) safe_realloc(pgrm.data, allocated_data_size * sizeof(uint64_t));
 }
 
-static void realloc_code_relocations(void) {
-	allocated_code_relocations_size *= 2;
-	pgrm.code_relocations = (relocation*) safe_realloc(pgrm.code_relocations, allocated_code_relocations_size * sizeof(relocation));
-}
-
-static void realloc_data_relocations(void) {
-	allocated_data_relocations_size *= 2;
-	pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations_size * sizeof(relocation));
-}
-
 static void realloc_label_array(void) {
 	label_array_size *= 2;
 	label_array = (struct label**) safe_realloc(label_array, label_array_size * sizeof(struct label*));
 }
 
-void store_code_elem(uint8_t bitwidth, uint64_t value) {
+void store_code_elem(uint8_t bytewidth, uint64_t value) {
 	if (pgrm.code_size >= allocated_code_size)
 		realloc_code();
 
-	pgrm.code[pgrm.code_size++] = (struct word) {bitwidth, value};
+	pgrm.code[pgrm.code_size++] = (struct word) {bytewidth, value};
 }
 
 struct label *new_internal_label(void) {
@@ -197,24 +187,61 @@ struct label *enter_label(char *label_name) {
 	return new_label_p;
 }
 
+struct label *new_label(uint32_t offset) {
+	char name[16];
+	snprintf(name, 16, "i%x", offset);
+	name[15] = '\0';
+	struct label *label = enter_label(name);
+	label->label_offset = offset;
+	return label;
+}
+
+void make_label_global(struct label *label) {
+	if (label->label_module_n != -1) {
+		label->label_module_n = -1;
+		global_label_count++;
+		global_label_string_count+=strlen(label->label_name);
+	}
+}
+
 void store_data_l(uint64_t v) {
 	if (pgrm.data_size >= allocated_data_size)
 		realloc_data();
 	*(uint64_t*)&pgrm.data[pgrm.data_size++] = v;
 }
 
-void store_code_internal_label_value(struct label *label,uint32_t offset) {
-	if (pgrm.code_reloc_size>=allocated_code_relocations_size)
-		realloc_code_relocations();
-
-	{
-		struct relocation *relocation_p;
-
-		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
-		relocation_p->relocation_offset=pgrm.code_size;
-		relocation_p->relocation_label=label;
+struct relocation *add_code_relocation(struct label *label, uint32_t offset) {
+	if (pgrm.code_reloc_size>=allocated_code_relocations_size) {
+		allocated_code_relocations_size *= 2;
+		pgrm.code_relocations = (relocation*) safe_realloc(pgrm.code_relocations, allocated_code_relocations_size * sizeof(relocation));
 	}
 
+	struct relocation *relocation_p;
+
+	relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
+	relocation_p->relocation_offset=offset;
+	relocation_p->relocation_label=label;
+
+	return relocation_p;
+}
+
+struct relocation *add_data_relocation(struct label *label, uint32_t offset) {
+	if (pgrm.data_reloc_size>=allocated_data_relocations_size) {
+		allocated_data_relocations_size *= 2;
+		pgrm.data_relocations = (relocation*) safe_realloc(pgrm.data_relocations, allocated_data_relocations_size * sizeof(relocation));
+	}
+
+	struct relocation *relocation_p;
+
+	relocation_p=&pgrm.data_relocations[pgrm.data_reloc_size++];
+	relocation_p->relocation_offset=offset;
+	relocation_p->relocation_label=label;
+
+	return relocation_p;
+}
+
+void store_code_internal_label_value(struct label *label,uint32_t offset) {
+	add_code_relocation(label, pgrm.code_size);
 	store_code_elem(8, offset);
 }
 
@@ -223,32 +250,13 @@ void store_code_label_value(char *label_name,int32_t offset) {
 
 	label=enter_label(label_name);
 
-	if (pgrm.code_reloc_size>=allocated_code_relocations_size)
-		realloc_code_relocations();
-
-	{
-		struct relocation *relocation_p;
-
-		relocation_p=&pgrm.code_relocations[pgrm.code_reloc_size++];
-		relocation_p->relocation_offset=pgrm.code_size;
-		relocation_p->relocation_label=label;
-	}
+	add_code_relocation(label, pgrm.code_size);
 
 	store_code_elem(4, offset);
 }
 
 static void store_data_label_value_of_label(struct label *label,uint32_t offset) {
-	if (pgrm.data_reloc_size>=allocated_data_relocations_size)
-		realloc_data_relocations();
-
-	{
-		struct relocation *relocation_p;
-
-		relocation_p=&pgrm.data_relocations[pgrm.data_reloc_size++];
-		relocation_p->relocation_offset=pgrm.data_size;
-		relocation_p->relocation_label=label;
-	}
-
+	add_data_relocation(label, pgrm.data_size);
 	store_data_l(offset);
 }
 
@@ -320,8 +328,8 @@ static struct label Fadd_arg_labels[N_ADD_ARG_LABELS]
 		{/*label_name*/ "_add_arg31", /*label_offset*/ -1 }
 	  };
 
-struct word *relocate_code_and_data(void) {
-	int i,undefined_label;
+struct word *add_add_arg_labels(void) {
+	int i;
 
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
@@ -343,42 +351,14 @@ struct word *relocate_code_and_data(void) {
 			add_instruction(Cadd_arg0+i);
 		}
 
-	undefined_label=0;
-
-	for(i=0; i<pgrm.code_reloc_size; ++i) {
-		struct relocation *relocation_p;
-		int32_t offset;
-
-		relocation_p=&pgrm.code_relocations[i];
-
-		offset = relocation_p->relocation_label->label_offset;
-		if (offset<0) {
-			undefined_label = 1;
-
-			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
-		}
-	}
-
-	for(i=0; i<pgrm.data_reloc_size; ++i) {
-		struct relocation *relocation_p;
-		int32_t offset;
-
-		relocation_p=&pgrm.data_relocations[i];
-
-		offset = relocation_p->relocation_label->label_offset;
-		if (offset<0) {
-			undefined_label = 1;
-
-			printf("%d\t%d\t%s\n",relocation_p->relocation_offset,offset,relocation_p->relocation_label->label_name);
-		}
-	}
-
-	if (undefined_label) {
-		fprintf(stderr, "Error: undefined label\n");
-		exit(1);
-	}
-
 	return pgrm.code;
+}
+
+void make_undefined_labels_global(void) {
+	uint32_t i;
+	for (i = 0; i < label_id; i++)
+		if (label_array[i]->label_offset < 0)
+			make_label_global(label_array[i]);
 }
 
 void add_code_and_data_offsets(void) {
@@ -919,11 +899,19 @@ void print_string_directive(char *string,int string_length) {
 	printf("\"\n");
 }
 
-void store_string(char *string,int string_length) {
+void add_words_in_strings(uint32_t val) {
+	pgrm.words_in_strings += val;
+}
+
+void add_string_information(uint32_t data_offset) {
 	if (pgrm.strings_size >= allocated_data_size)
 		realloc_strings();
 
-	pgrm.strings[pgrm.strings_size++] = pgrm.data_size;
+	pgrm.strings[pgrm.strings_size++] = data_offset;
+}
+
+void store_string(char *string,int string_length) {
+	add_string_information(pgrm.data_size);
 
 	if (list_code)
 		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
@@ -3856,14 +3844,10 @@ void code_descexp(char label_name[],char node_entry_label_name[],char *code_labe
 	struct label *label,*node_entry_label;
 
 	label = code_descriptor(label_name,code_label_name,arity,lazy_record_flag,descriptor_name,descriptor_name_length);
-	label->label_module_n=-1;
-	global_label_count++;
-	global_label_string_count+=strlen(label_name);
+	make_label_global(label);
 
 	node_entry_label=enter_label(node_entry_label_name);
-	node_entry_label->label_module_n=-1;
-	global_label_count++;
-	global_label_string_count+=strlen(node_entry_label_name);
+	make_label_global(node_entry_label);
 }
 
 void code_label(char *label_name) {
@@ -3884,9 +3868,7 @@ void code_export(char *label_name) {
 	struct label *label;
 
 	label=enter_label(label_name);
-	label->label_module_n=-1;
-	global_label_count++;
-	global_label_string_count+=strlen(label_name);
+	make_label_global(label);
 }
 
 void code_impdesc(char *label_name) {
@@ -4172,7 +4154,7 @@ static void print_global_labels(struct label **labels, uint32_t count, FILE *pro
 	uint32_t i;
 	for (i = 0; i < count; i++) {
 		fwrite(&labels[i]->label_offset, sizeof(labels[i]->label_offset), 1, program_file);
-		if (labels[i]->label_module_n == -1)
+		if (labels[i]->label_module_n == -1 || labels[i]->label_offset < 0)
 			fprintf(program_file, "%s", labels[i]->label_name);
 		fprintf(program_file, "%c", '\0');
 	}

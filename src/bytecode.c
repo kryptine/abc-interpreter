@@ -4,6 +4,17 @@
 #include "bytecode.h"
 #include "util.h"
 
+void free_program(struct program *pgm) {
+	if (pgm->code != NULL)
+		free(pgm->code);
+	if (pgm->data != NULL)
+		free(pgm->data);
+	if (pgm->symbol_table != NULL)
+		free(pgm->symbol_table);
+	if (pgm->symbols != NULL)
+		free(pgm->symbols);
+}
+
 void print_code(FILE *f, BC_WORD *code, uint32_t length, BC_WORD *data, uint32_t data_length) {
 	uint32_t i;
 	for (i = 0; i < length; i++) {
@@ -77,8 +88,10 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 	}
 }
 
+#ifdef INTERPRETER
 void print_program(FILE *f, struct program *pgm) {
 	print_code(f, pgm->code, pgm->code_size, pgm->data, pgm->data_size);
 	fprintf(f, "\n");
 	print_data(f, pgm->data, pgm->data_size, pgm->code, pgm->code_size);
 }
+#endif

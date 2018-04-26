@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../util.h"
@@ -14,10 +15,11 @@ void parse_file(FILE *file) {
 
 	code_next_module();
 
-	while(getline(&line, &size, file) > 0) {
+	while (getline(&line, &size, file) > 0) {
 		line_number++;
 		parse_line(line, line_number);
 	}
+	free(line);
 }
 
 void parse_files(FILE **abc_files, unsigned int nr_abc_files) {
@@ -69,7 +71,8 @@ int main (int argc, char *argv[]) {
 
 	parse_files(input_files, nr_abc_files);
 
-	relocate_code_and_data();
+	add_add_arg_labels();
+	make_undefined_labels_global();
 	write_program(output_file);
 
 	return 0;

@@ -2,6 +2,7 @@
 
 CLM=clm
 CG=../src/bytecode
+LINK=../src/link
 OPT=../src/optimise
 IP=../src/interpret
 
@@ -162,15 +163,20 @@ do
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
-	ABCDEPS=()
+	BCDEPS=()
 	for dep in ${DEPS[@]}; do
 		$OPT < StdEnv/Clean\ System\ Files/$dep.abc > StdEnv/$dep.opt.abc
-		ABCDEPS+=(StdEnv/$dep.opt.abc)
+		$CG StdEnv/$dep.opt.abc -o StdEnv/$dep.o.bc
+		BCDEPS+=(StdEnv/$dep.o.bc)
 	done
+
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
+	$CG $MODULE.opt.abc -o $MODULE.o.bc
+
+	$CG i_system.abc -o i_system.o.bc
 
 	rm $MODULE.bc 2>/dev/null
-	$CG $MODULE.opt.abc i_system.abc ${ABCDEPS[@]} -o $MODULE.bc
+	$LINK $MODULE.o.bc i_system.o.bc ${BCDEPS[@]} -o $MODULE.bc
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 		FAILED=1

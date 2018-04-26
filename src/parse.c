@@ -4,9 +4,13 @@
 #include "parse.h"
 #include "util.h"
 
+#ifdef LINKER
+# include "bytecode_gen/instruction_code.h"
+#endif
+
 void init_parser(struct parser *state) {
 	state->state = PS_init_code;
-	state->program = safe_malloc(sizeof(struct program));
+	state->program = safe_calloc(1, sizeof(struct program));
 
 	state->ptr = 0;
 
@@ -14,7 +18,7 @@ void init_parser(struct parser *state) {
 	state->data_reloc_size = 0;
 
 	state->strings_size = 0;
-#if (WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 	state->read_n = 0;
 	state->data_n_words = 0;
 	state->words_in_strings = 0;
@@ -24,10 +28,17 @@ void init_parser(struct parser *state) {
 #endif
 
 	state->symbols_ptr = 0;
+
+#ifdef LINKER
+	state->code_size = 0;
+	state->data_size = 0;
+	state->code_offset = 0;
+	state->data_offset = 0;
+#endif
 }
 
 void free_parser(struct parser *state) {
-#if (WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 	if (state->strings != NULL)
 		free(state->strings);
 #endif
@@ -35,7 +46,7 @@ void free_parser(struct parser *state) {
 
 void next_state(struct parser *state) {
 	state->ptr = 0;
-#if (WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 	state->strings_ptr = 0;
 	state->relocation_offset = 0;
 #endif
@@ -59,7 +70,11 @@ void next_state(struct parser *state) {
 			return;
 		case PS_init_data_reloc:
 			state->state = PS_code;
+#ifdef LINKER
+			if (state->code_size > 0)
+#else
 			if (state->program->code_size > 0)
+#endif
 				return;
 		case PS_code:
 			state->state = PS_strings;
@@ -67,7 +82,11 @@ void next_state(struct parser *state) {
 				return;
 		case PS_strings:
 			state->state = PS_data;
+#ifdef LINKER
+			if (state->data_size > 0)
+#else
 			if (state->program->data_size > 0)
+#endif
 				return;
 		case PS_data:
 			state->state = PS_init_symbol_table;
@@ -86,6 +105,10 @@ void next_state(struct parser *state) {
 				return;
 		case PS_data_reloc:
 		case PS_end:
+#ifdef LINKER
+			state->code_offset += state->code_size;
+			state->data_offset += state->data_size;
+#endif
 			state->state = PS_end;
 			return;
 	}
@@ -106,15 +129,23 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 			case PS_init_code:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+#ifdef LINKER
+				state->code_size = elem32;
+#else
 				state->program->code_size = elem32;
+#endif
 				state->program->code = safe_malloc(sizeof(BC_WORD) * elem32);
 				next_state(state);
 				break;
 			case PS_init_words_in_strings:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
-#if (WORD_WIDTH == 32)
+#ifdef LINKER
+				add_words_in_strings(elem32);
+#else
+# if (WORD_WIDTH == 32)
 				state->words_in_strings = elem32;
+# endif
 #endif
 				next_state(state);
 				break;
@@ -122,7 +153,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->strings_size = elem32;
-#if (WORD_WIDTH == 32)
+#if !defined(LINKER) && WORD_WIDTH == 32
 				/* Allocate one more to prevent reading out of bounds in PS_data */
 				state->strings = safe_malloc(sizeof(uint32_t*) * (elem32+1));
 				state->strings[elem32] = 0;
@@ -132,14 +163,18 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 			case PS_init_data:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
-#if (WORD_WIDTH == 32)
+#ifdef LINKER
+				state->data_size = elem32;
+#else
+# if (WORD_WIDTH == 32)
 				state->data_n_words = elem32;
 				/* Allocate extra space because strings take more words on 32-bit */
 				state->program->data_size = elem32 + state->words_in_strings;
-#else
+# else
 				state->program->data_size = elem32;
-#endif
+# endif
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
+#endif
 				next_state(state);
 				break;
 			case PS_init_code_reloc:
@@ -160,52 +195,88 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #if 0
 				fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 #endif
+#ifdef LINKER
+				state->ptr++;
+				store_code_elem(2, elem16);
+#else
 				state->program->code[state->ptr++] = elem16;
+#endif
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
+#ifdef LINKER
+					state->ptr++;
+#endif
 					switch (*type) {
 						case 'I': /* Instruction */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(2, elem16);
+#else
 							state->program->code[state->ptr++] = elem16;
+#endif
 							break;
 						case 'n': /* Stack index */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(2, elem16);
+#else
 							state->program->code[state->ptr++] = elem16;
+#endif
 							break;
 						case 'N': /* Stack index, optimised to byte width */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(2, elem16);
+#else
 							state->program->code[state->ptr++] = ((BC_WORD_S) elem16) * IF_INT_64_OR_32(8, 4);
+#endif
 							break;
 						case 'a': /* Arity */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(2, elem16);
+#else
 							/* Shift so that offset -1 contains the arity; this is used in the garbage collector */
 							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
+#endif
 							break;
 						case 'd': /* Descriptor */
 						case 'l': /* Label */
 							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 								return 1;
-							state->program->code[state->ptr++] = (BC_WORD) elem32;
+#ifdef LINKER
+							store_code_elem(4, elem32);
+#else
+							state->program->code[state->ptr++] = elem32;
+#endif
 							break;
 						case 'r': /* Real */
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 								return 1;
-#if (WORD_WIDTH == 64)
-							state->program->code[state->ptr++] = elem64;
+#ifdef LINKER
+							store_code_elem(8, elem64);
 #else
+# if (WORD_WIDTH == 64)
+							state->program->code[state->ptr++] = elem64;
+# else
 							float f = *(double*)&elem64;
 							state->program->code[state->ptr++] = *(BC_WORD*)&f;
+# endif
 #endif
 							break;
 						case 'c': /* Char */
 							/* TODO should be 8 bits of course */
 							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(2, elem16);
+#else
 							state->program->code[state->ptr++] = elem16;
+#endif
 							break;
 						case '?':
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
@@ -215,10 +286,19 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						default:
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 								return 1;
+#ifdef LINKER
+							store_code_elem(8, elem64);
+#else
 							state->program->code[state->ptr++] = elem64;
+#endif
 					}
 				}
+
+#ifdef LINKER
+				if (state->ptr >= state->code_size) {
+#else
 				if (state->ptr >= state->program->code_size) {
+#endif
 					state->ptr = 0;
 					next_state(state);
 				}
@@ -226,19 +306,24 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 			case PS_strings:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
-#if (WORD_WIDTH == 32)
-				state->strings[state->ptr++] = elem32;
-#else
-				state->ptr++;
+#ifdef LINKER
+				add_string_information(elem32 + state->data_offset);
+#elif WORD_WIDTH == 32
+				state->strings[state->ptr] = elem32;
 #endif
-				if (state->ptr >= state->strings_size)
+				if (++state->ptr >= state->strings_size)
 					next_state(state);
 				break;
 			case PS_data:
 				if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 					return 1;
+#ifdef LINKER
+				store_data_l(elem64);
+				state->ptr++;
+#else
 				state->program->data[state->ptr++] = elem64;
-#if (WORD_WIDTH == 32)
+#endif
+#if (!defined(LINKER) && WORD_WIDTH == 32)
 				/* On 64-bit, strings can be read as-is. On 32-bit, we need to
 				 * read 64 bits and store them in two words. */
 				if (state->strings[state->strings_ptr] == state->read_n) {
@@ -264,11 +349,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				}
 
 				if (++state->read_n >= state->data_n_words)
-					next_state(state);
+#elif defined(LINKER)
+				if (state->ptr >= state->data_size)
 #else
 				if (state->ptr >= state->program->data_size)
-					next_state(state);
 #endif
+					next_state(state);
 				break;
 			case PS_init_symbol_table:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
@@ -284,12 +370,24 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table[state->ptr].offset = elem32;
+#ifdef LINKER
+				if (elem32 != -1)
+					state->program->symbol_table[state->ptr].offset += (elem32 & 1 ? state->data_offset : state->code_offset) * 4;
+#endif
 				state->program->symbol_table[state->ptr].name = state->program->symbols + state->symbols_ptr;
 				do {
 					if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
+#ifdef LINKER
+				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
+					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
+					if (state->program->symbol_table[state->ptr].offset != -1)
+						label->label_offset = state->program->symbol_table[state->ptr].offset;
+					make_label_global(label);
+				}
+#endif
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
 				break;
@@ -303,13 +401,21 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					struct symbol *sym = &state->program->symbol_table[sym_i];
 
-#if (WORD_WIDTH == 64)
+#ifdef LINKER
+					struct label *label;
+					if (sym->name[0] == '\0')
+						label = new_label(sym->offset);
+					else
+						label = enter_label(sym->name);
+					add_code_relocation(label, code_i + state->code_offset);
+#else
+# if (WORD_WIDTH == 64)
 					shift_address(&state->program->code[code_i]);
-#endif
+# endif
 
 					state->program->code[code_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
 
-#if (WORD_WIDTH == 32)
+# if (WORD_WIDTH == 32)
 					if (sym->offset & 1) {
 						/* code[elem32] is an offset to the abstract data segment.
 						 * This offset is incorrect, because strings are longer on
@@ -321,9 +427,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
 						state->program->code[code_i] += temp_relocation_offset * 4;
 					}
-#endif
+# endif
 
 					state->program->code[code_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
+#endif
 				}
 
 				if (++state->ptr >= state->code_reloc_size)
@@ -339,11 +446,19 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					struct symbol *sym = &state->program->symbol_table[sym_i];
 
-#if (WORD_WIDTH == 64)
+#ifdef LINKER
+					struct label *label;
+					if (sym->name[0] == '\0')
+						label = new_label(sym->offset);
+					else
+						label = enter_label(sym->name);
+					add_data_relocation(label, data_i + state->data_offset);
+#else
+# if (WORD_WIDTH == 64)
 					shift_address(&state->program->data[data_i]);
-#endif
+# endif
 
-#if (WORD_WIDTH == 32)
+# if (WORD_WIDTH == 32)
 					/* data_i is an offset to the abstract data segment. We need to
 					 * fix it up for the extra length of strings on 32-bit. */
 					while (data_i >= state->strings[state->strings_ptr]) {
@@ -351,11 +466,11 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						state->strings_ptr++;
 					}
 					data_i += state->relocation_offset;
-#endif
+# endif
 
 					state->program->data[data_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
 
-#if (WORD_WIDTH == 32)
+# if (WORD_WIDTH == 32)
 					/* See comments on PS_code_reloc. */
 					if (sym->offset & 1) {
 						int temp_relocation_offset = 0;
@@ -363,9 +478,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
 						state->program->data[data_i] += temp_relocation_offset * 4;
 					}
-#endif
+# endif
 
 					state->program->data[data_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
+#endif
 				}
 
 				if (++state->ptr >= state->data_reloc_size)

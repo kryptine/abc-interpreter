@@ -19,9 +19,21 @@ extern uint32_t list_code;
 
 void initialize_code(void);
 void code_next_module(void);
-struct word *relocate_code_and_data();
+struct word *add_add_arg_labels(void);
+void make_undefined_labels_global(void);
 void write_program(FILE*);
 void add_code_and_data_offsets(void);
+
+struct label *enter_label(char *label_name);
+struct label *new_label(uint32_t offset);
+void make_label_global(struct label *label);
+struct relocation *add_code_relocation(struct label *label, uint32_t offset);
+struct relocation *add_data_relocation(struct label *label, uint32_t offset);
+void add_words_in_strings(uint32_t val);
+void add_string_information(uint32_t data_offset);
+
+void store_code_elem(uint8_t bytewidth, uint64_t value);
+void store_data_l(uint64_t v);
 
 void code_addI(void);
 void code_addR(void);

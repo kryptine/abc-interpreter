@@ -279,8 +279,7 @@ int main(int argc, char **argv) {
 			heap,
 			NULL);
 
-	free(state.program->code);
-	free(state.program->data);
+	free_program(state.program);
 	free(state.program);
 	free(stack);
 	free(heap);
