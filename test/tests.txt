@@ -10,6 +10,7 @@ lqueen		StdList
 mulmat
 nfib
 pascal		StdChar,StdCharList,StdInt,StdList,_SystemArray
+reals		StdReal
 reverse		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 reverse2		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
 revrec		StdFunc,StdInt,StdList

@@ -759,7 +759,7 @@ static int parse_real (double *real_p)
 	}
 
 	if (last_char=='0'){
-		real_string[real_string_length++]='-';
+		real_string[real_string_length++]='0';
 		last_char=next_character();
 
 		if (last_char=='x'){

@@ -52,6 +52,7 @@ void code_buildC_b(int b_offset);
 void code_buildF_b(int b_offset);
 void code_buildI(CleanInt value);
 void code_buildI_b(int b_offset);
+void code_buildR(double value);
 void code_buildR_b(int b_offset);
 void code_buildhr(char descriptor_name[], int a_size, int b_size);
 void code_build_r(char descriptor_name[], int a_size, int b_size, int a_offset, int b_offset);

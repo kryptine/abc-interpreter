@@ -50,12 +50,14 @@ char *instruction_name(BC_WORD i) {
 			return "buildC";
 		case CbuildC_b:
 			return "buildC_b";
-		case CbuildI:
-			return "buildI";
 		case CbuildF_b:
 			return "buildF_b";
+		case CbuildI:
+			return "buildI";
 		case CbuildI_b:
 			return "buildI_b";
+		case CbuildR:
+			return "buildR";
 		case CbuildR_b:
 			return "buildR_b";
 		case Cbuildh:
@@ -1021,9 +1023,10 @@ char *instruction_type (BC_WORD i) {
 		case CbuildB_b:              return "n";
 		case CbuildC:                return "c";
 		case CbuildC_b:              return "n";
-		case CbuildI:                return "i";
 		case CbuildF_b:              return "?";
+		case CbuildI:                return "i";
 		case CbuildI_b:              return "n";
+		case CbuildR:                return "r";
 		case CbuildR_b:              return "n";
 		case Cbuildh:                return "?";
 		case Cbuildh0:               return "l";

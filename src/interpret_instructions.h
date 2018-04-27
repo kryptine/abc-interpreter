@@ -1,6 +1,6 @@
 case CabsR:
 {
-	BC_REAL d=abs(*(BC_REAL*)&bsp[0]);
+	BC_REAL d=fabs(*(BC_REAL*)&bsp[0]);
 	bsp[0]=*(BC_WORD*)&d;
 	pc+=1;
 	continue;
@@ -475,6 +475,15 @@ case CbuildI_b:
 	pc+=2;
 	continue;
 }
+case CbuildR:
+	if ((heap_free-=2)<0)
+		break;
+	hp[0]=(BC_WORD)&REAL+2;
+	hp[1]=pc[1];
+	*++asp=(BC_WORD)hp;
+	hp+=2;
+	pc+=2;
+	continue;
 case Cbuildhr:
 {
 	BC_WORD n_a,n_b,n_ab;
@@ -1820,12 +1829,9 @@ case CdivR:
 	continue;
 }
 case CentierR:
-{
-	BC_REAL d=floor(*(BC_REAL*)&bsp[0]);
-	bsp[0]=*(BC_WORD*)&d;
+	bsp[0]=floor(*(BC_REAL*)&bsp[0]);
 	pc+=1;
 	continue;
-}
 case Ceq_desc:
 {
 	BC_WORD *n;
@@ -1924,6 +1930,11 @@ case CeqB:
 case CeqC:
 case CeqI:
 	bsp[1]=bsp[0] == bsp[1];
+	++bsp;
+	pc+=1;
+	continue;
+case CeqR:
+	bsp[1]=*(BC_REAL*)&bsp[0] == *(BC_REAL*)&bsp[1];
 	++bsp;
 	pc+=1;
 	continue;
@@ -3340,7 +3351,7 @@ case Cprint_symbol_sc:
 	} else if (d==(BC_WORD)&CHAR+2){
 		printf ("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
-		printf ("%f",*(BC_REAL*)&n[1]);
+		printf ("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
 	} else {
 		uint32_t *s;
 		int l,i;
@@ -3378,6 +3389,7 @@ case CpushR:
 case CpushB_a:
 case CpushC_a:
 case CpushI_a:
+case CpushR_a:
 case Cpush_r_args_b0b11:
 case Cpush_r_args01:
 case Cpush_arraysize_a:

@@ -39,6 +39,9 @@ void print_code(FILE *f, BC_WORD *code, uint32_t length, BC_WORD *data, uint32_t
 				case 'N': /* Stack index times WORD_WIDTH/8 */
 					fprintf(f, " " BC_WORD_S_FMT, (BC_WORD_S) code[i] / IF_INT_64_OR_32(8,4));
 					break;
+				case 'r': /* Real constant */
+					fprintf(f, " %.15g", (*(BC_REAL*)&code[i]) + 0.0);
+					break;
 				case 'a': /* Arity */
 					fprintf(f, " %d", (int16_t) ((BC_WORD_S) code[i] >> IF_INT_64_OR_32(48,16)));
 					break;

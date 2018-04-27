@@ -63,6 +63,7 @@ void load_instruction_table(void) {
 	put_instruction_name("buildF_b",              parse_instruction_n,             code_buildF_b );
 	put_instruction_name("buildI",                parse_instruction_i,             code_buildI );
 	put_instruction_name("buildI_b",              parse_instruction_n,             code_buildI_b );
+	put_instruction_name("buildR",                parse_instruction_r,             code_buildR );
 	put_instruction_name("buildR_b",              parse_instruction_n,             code_buildR_b );
 	put_instruction_name("buildhr",               parse_instruction_a_n_n,         code_buildhr );
 	put_instruction_name("build_r",               parse_instruction_a_n_n_n_n,     code_build_r );

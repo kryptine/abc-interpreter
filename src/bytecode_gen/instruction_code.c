@@ -1046,6 +1046,10 @@ void code_buildI_b(int b_offset) {
 	add_instruction_w(CbuildI_b,b_offset);
 }
 
+void code_buildR(double value) {
+	add_instruction_r(CbuildR,value);
+}
+
 void code_buildR_b(int b_offset) {
 	add_instruction_w(CbuildR_b,b_offset);
 }
