@@ -379,6 +379,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
+#ifdef INTERPRETER
+				if (state->program->symbol_table[state->ptr].offset == -1)
+					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
+#endif
 #ifdef LINKER
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
 					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
