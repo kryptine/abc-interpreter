@@ -4161,7 +4161,6 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l((a_size + b_size + 256) | (a_size << 16));
-	fprintf(stderr,"%s (%s): A:%d; B:%d --> %d\n",record_label_name,type,a_size,b_size,(a_size + b_size + 256) | (a_size << 16));
 
 	/* TODO: do we need the type string? */
 

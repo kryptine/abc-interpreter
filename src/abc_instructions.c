@@ -1086,7 +1086,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_u21:             return "l";
 		case Cbuild_u22:             return "l";
 		case Cbuild_u31:             return "l";
-		case Cbuild_ua1:             return "?";
+		case Cbuild_ua1:             return "nl";
 		case CcosR:                  return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "?";
@@ -1251,7 +1251,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node3:            return "l";
 		case Cpush_node4:            return "l";
 		case Cpush_node_u:           return "nln";
-		case Cpush_node_ua1:         return "?";
+		case Cpush_node_ua1:         return "nl";
 		case Cpush_node_u01:         return "l";
 		case Cpush_node_u02:         return "l";
 		case Cpush_node_u03:         return "l";

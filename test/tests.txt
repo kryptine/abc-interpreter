@@ -1,5 +1,6 @@
 # vim: ts=12:
 acker
+brainfuck		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdList,StdEnv:_SystemArray
 chars		StdEnv:_SystemArray
 e		StdEnv:StdInt,StdEnv:StdList
 fsieve		StdEnv:StdReal
