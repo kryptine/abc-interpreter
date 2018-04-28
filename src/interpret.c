@@ -115,7 +115,8 @@ void get_stack_and_heap_addresses(int ignored, BC_WORD **_asp, BC_WORD **_bsp, B
 	*_hp = hp;
 }
 
-int interpret(BC_WORD *code, BC_WORD *data,
+int interpret(BC_WORD *code, size_t code_size,
+		BC_WORD *data, size_t data_size,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD **heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
@@ -160,7 +161,7 @@ eval_to_hnf_return:
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
-		if (pc > data)
+		if (data <= pc && pc < data + data_size)
 			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
 		else
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
@@ -270,7 +271,8 @@ int main(int argc, char **argv) {
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
-	interpret(state.program->code, state.program->data,
+	interpret(state.program->code, state.program->code_size,
+			state.program->data, state.program->data_size,
 			stack, stack_size,
 			&heap, heap_size,
 			stack, /* asp */

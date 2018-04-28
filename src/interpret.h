@@ -28,7 +28,8 @@ extern int trap_needs_gc;
  *  - Pointer to a node to evaluate to HNF;
  *  - NULL if we should just start running at code[0].
  */
-int interpret(BC_WORD *code, BC_WORD *data,
+int interpret(BC_WORD *code, size_t code_size,
+		BC_WORD *data, size_t data_size,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD **heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
