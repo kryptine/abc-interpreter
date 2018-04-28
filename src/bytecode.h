@@ -39,7 +39,7 @@
 #endif
 
 struct symbol {
-	uint32_t offset;
+	BC_WORD offset;
 	char *name;
 };
 

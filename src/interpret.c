@@ -16,13 +16,6 @@
 /* Used to store the return address when evaluating a node on the heap */
 #define EVAL_TO_HNF_LABEL CMAX
 
-#ifdef LINK_CLEAN_RUNTIME
-extern void* __STRING__[];
-extern void* BOOL[];
-extern void* CHAR[];
-extern void* REAL[];
-#endif
-
 #define _2chars2int(a,b)             ((void*) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
@@ -35,8 +28,8 @@ extern void* REAL[];
 
 static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e','m')};
 
-static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
-static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
+void* __ARRAY__[]         = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
+void* d___Nil[]           = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 
@@ -49,8 +42,8 @@ void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E',
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
 
-static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
-static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
+void* __ARRAY__[]         = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
+void* d___Nil[]           = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 
@@ -62,7 +55,6 @@ void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E'
 # endif
 #endif /* Word-width dependency */
 
-#define __Nil (d___Nil[1])
 #define dFILE (d_FILE[2])
 
 #ifdef LINK_CLEAN_RUNTIME

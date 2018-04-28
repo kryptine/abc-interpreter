@@ -4,9 +4,13 @@
 #include "bytecode.h"
 
 extern void* __STRING__[];
+extern void* __ARRAY__[];
+extern void* d___Nil[];
+#define __Nil (d___Nil[1])
 extern void* INT[];
 extern void* BOOL[];
 extern void* CHAR[];
+extern void* REAL[];
 
 extern BC_WORD __cycle__in__spine;
 
