@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 	uint32_t g_code_offset = 0;
 	uint32_t g_data_offset = 0;
 
-	for (int i = 0; input_file_names[i]; i++) {
+	for (int i = 0; input_file_names[i] != NULL; i++) {
 		FILE *f;
 		struct char_provider cp;
 		struct parser parser;
@@ -71,7 +71,6 @@ int main(int argc, char **argv) {
 		g_code_offset = parser.code_offset;
 		g_data_offset = parser.data_offset;
 
-		free_program(parser.program);
 		free(parser.program);
 	}
 
