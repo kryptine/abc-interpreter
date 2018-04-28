@@ -369,6 +369,8 @@ enum {
 	CItoC,
 	CItoR,
 	CRtoI,
+	Cjsr_ap5,
+	Cjmp_ap5,
 	Cjsr_ap4,
 	Cjmp_ap4,
 	Cjsr_ap3,

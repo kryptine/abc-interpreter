@@ -756,12 +756,18 @@ char *instruction_name(BC_WORD i) {
 			return "jsr_ap3";
 		case Cjsr_ap4:
 			return "jsr_ap4";
+		case Cjsr_ap5:
+			return "jsr_ap5";
 		case Cjmp_ap1:
 			return "jmp_ap1";
 		case Cjmp_ap2:
 			return "jmp_ap2";
 		case Cjmp_ap3:
 			return "jmp_ap3";
+		case Cjmp_ap4:
+			return "jmp_ap4";
+		case Cjmp_ap5:
+			return "jmp_ap5";
 		case Cadd_arg0:
 			return "add_arg0";
 		case Cadd_arg1:
@@ -1376,9 +1382,12 @@ char *instruction_type (BC_WORD i) {
 		case Cjsr_ap2:               return "";
 		case Cjsr_ap3:               return "";
 		case Cjsr_ap4:               return "";
+		case Cjsr_ap5:               return "";
 		case Cjmp_ap1:               return "";
 		case Cjmp_ap2:               return "";
 		case Cjmp_ap3:               return "";
+		case Cjmp_ap4:               return "";
+		case Cjmp_ap5:               return "";
 		case Cadd_arg0:              return "";
 		case Cadd_arg1:              return "";
 		case Cadd_arg2:              return "";
