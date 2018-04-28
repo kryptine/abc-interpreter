@@ -1,12 +1,12 @@
 #!/bin/bash
 
 CLM=clm
+CLMFLAGS=""
+#CLMFLAGS="-IL Platform -IL Dynamics -dynamics"
 CG=../src/bytecode
 LINK=../src/link
 OPT=../src/optimise
 IP=../src/interpret
-
-StdEnv="$CLEAN_HOME/lib/StdEnv"
 
 RED="\033[0;31m"
 GREEN="\033[0;32m"
@@ -93,7 +93,7 @@ while true; do
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS"
 			shift;;
 		-l | --list-code)
-			RUNFLAGS+=" -l -H"
+			RUNFLAGS+=" -l"
 			shift;;
 		-p | --profile)
 			CFLAGS+=" -g -lprofiler"
@@ -148,7 +148,7 @@ do
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
-	$CLM -d $MODULE
+	$CLM $CLMFLAGS -d $MODULE
 	CLMRESULT=$?
 
 	if [ $CLMRESULT -ne 0 ]; then
@@ -160,21 +160,23 @@ do
 	if [ $RECOMPILE -gt 0 ]; then
 		touch "$MODULE.icl"
 		sleep 1
-		$CLM -d $MODULE
+		$CLM $CLMFLAGS -d $MODULE
 	fi
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
 	BCDEPS=()
 	for dep in ${DEPS[@]}; do
-		$OPT < "$StdEnv/Clean System Files/$dep.abc" > "$StdEnv/Clean System Files/$dep.opt.abc"
-		$CG "$StdEnv/Clean System Files/$dep.opt.abc" -o "$StdEnv/Clean System Files/$dep.o.bc"
+		IFS=':' read -r -a dep <<< "$dep"
+		SYSFILES="$CLEAN_HOME/lib/${dep[0]}/Clean System Files"
+		$OPT < "$SYSFILES/${dep[1]}.abc" > "$SYSFILES/${dep[1]}.opt.abc"
+		$CG "$SYSFILES/${dep[1]}.opt.abc" -o "$SYSFILES/${dep[1]}.o.bc"
 		if [ $? -ne 0 ]; then
 			echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 			FAILED=1
 			continue 2
 		fi
-		BCDEPS+=("$StdEnv/Clean System Files/$dep.o.bc")
+		BCDEPS+=("$SYSFILES/${dep[1]}.o.bc")
 	done
 
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
