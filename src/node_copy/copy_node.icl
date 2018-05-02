@@ -14,5 +14,5 @@ outputCons :: !a -> Int
 outputCons x = code {
 	.d 1 0
 		jsr _output_cons_asm
-	.o 1 0
+	.o 0 1 i
 }

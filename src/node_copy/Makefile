@@ -15,3 +15,6 @@ asm: copy_node.s
 clean:
 	$(RM) -r "Clean System Files" $(EXE).out
 	mkdir $(DIR)
+
+run: all
+	./copy_node.out
