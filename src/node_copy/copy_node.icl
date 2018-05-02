@@ -1,13 +1,14 @@
 module copy_node
 
 import StdEnv
-//import code from "copy_graph."
-//import code from "copy_graph_interface."
+import StdDebug
+import code from "copy_node_c."
+import code from "copy_node_asm."
 
 :: Test = Test
 
 Start :: Int
-Start = outputCons Test
+Start = trace_n "Test Clean" outputCons Test
 
 outputCons :: !a -> Int
 outputCons x = code {
