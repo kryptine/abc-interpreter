@@ -1,12 +1,8 @@
-#include <stdio.h>
+#include <stdint.h>
+#include "../bytecode.h"
 
-extern void *INT_descriptor,*CHAR,*BOOL,*REAL,*__STRING__,*__ARRAY__;
-
-int output_cons_c(int *node) {
-	int desc = *node;
-	unsigned int arity = ((unsigned short *) desc)[-1];
-
-	printf("Desc: %d\n", desc);
-	printf("Arity: %d\n", arity);
-	return 1;
+int64_t get_arity_c(int16_t **node) {
+	int16_t *desc = *node;
+	int64_t arity = *(desc - 1);
+	return arity;
 }
