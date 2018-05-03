@@ -7,10 +7,10 @@ import code from "copy_node_asm."
 
 :: Test = Test
 
-Start :: Int
+Start :: Bool
 Start = trace_n "Test Clean" outputCons Test
 
-outputCons :: !a -> Int
+outputCons :: !a -> Bool
 outputCons x = code {
 	.d 1 0
 		jsr _output_cons_asm
