@@ -1,4 +1,4 @@
-NCLUDES:=-I $$CLEAN_HOME/lib/Platform -I $$CLEAN_HOME/lib/Generics -I $$CLEAN_HOME/lib/StdLib -I $$CLEAN_HOME/lib/Dynamics
+INCLUDES:=-I $$CLEAN_HOME/lib/Platform -I $$CLEAN_HOME/lib/Generics -I $$CLEAN_HOME/lib/StdLib -I $$CLEAN_HOME/lib/Dynamics
 FLAGS:=
 DIR:="Clean System Files"
 EXE:=copy_node

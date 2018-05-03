@@ -8,7 +8,7 @@ import code from "copy_node_asm."
 :: Test = Test
 
 Start :: Bool
-Start = trace_n "Test Clean" outputCons Test
+Start = outputCons (1, 2, 3)
 
 outputCons :: !a -> Bool
 outputCons x = code {

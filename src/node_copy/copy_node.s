@@ -28,5 +28,5 @@ __output__cons__asm:
 	// Restore rcx
 	pop    rcx
 
-	// Return (rax will be the result of output_cons_c
+	// Return (rax will be the result of output_cons_c)
 	ret
