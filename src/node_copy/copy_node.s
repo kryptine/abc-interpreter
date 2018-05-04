@@ -5,24 +5,31 @@
 
 .text
 
+# rcx: Top of A-Stack
+# rdi: Pointer to top of Heap
+# r15: Amount of free words on heap
+# rsi: ?
+
 __get__arity__asm:
-	// To restore later
-	mov   r12, rcx
-	mov    r13, rsi
-	mov    r14, rdi
-	mov    r15, rsp
+	# To restore later
+	push   rcx
+	push   rsi
+	push   rdi
+	push   rsp
 
-	// Set argument
-	mov    rdi, rcx
+	# Set arguments
+	mov    rdi, rdi # Heap pointer
+	lea    rsi, [rdi + r15 * 8] # End of free heap
+	mov    rdx, rcx # Top of A Stack
 
-	// Call function
+	# Call function (rdi, rsi, rdx)
 	call   get_arity_c
 
-	// Restore registers
-	mov    rcx, r12
-	mov    rsi, r13
-	mov    rdi, r14
-	mov    rsp, r15
+	# Restore registers
+	pop    rsp
+	pop    rdi
+	pop    rsi
+	pop    rcx
 
-	// Return (rax will be the result of output_cons_c)
+	# Return (rax will be the result of get_arity_c)
 	ret
