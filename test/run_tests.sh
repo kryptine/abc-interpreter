@@ -1,8 +1,7 @@
 #!/bin/bash
 
 CLM=clm
-CLMFLAGS=""
-#CLMFLAGS="-IL Platform -IL Dynamics -dynamics"
+CLMFLAGS="-IL Platform"
 CG=../src/bytecode
 LINK=../src/link
 OPT=../src/optimise

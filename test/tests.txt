@@ -20,6 +20,7 @@ revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdOverloaded
 rfib		StdEnv:StdReal
 sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 squeen		StdEnv:StdList
+sudoku		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdTuple,StdEnv:_SystemArray,StdEnv:_SystemEnum,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
 str_arit		StdEnv:StdString
 stwice
 tak
