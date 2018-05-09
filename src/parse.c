@@ -386,9 +386,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				} while (elem8);
 #ifdef INTERPRETER
 				if (state->program->symbol_table[state->ptr].offset == -1) {
-					if (!strcmp(state->program->symbol_table[state->ptr].name, "ARRAY"))
-						state->program->symbol_table[state->ptr].offset = (BC_WORD) &__ARRAY__;
-					else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL"))
+					if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL"))
 						state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
 					else
 						fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
@@ -409,6 +407,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						 * 32-bit. Thus, we add the required offset. This is not
 						 * that efficient, but it's okay since it is only for
 						 * 32-bit and only during parsing. */
+						state->program->symbol_table[state->ptr].offset &= -2;
 						int temp_relocation_offset = 0;
 						for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
 							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;

@@ -15,6 +15,9 @@
 
 .desc e_system_dind	e_system_nind	_hnf	0 0	"_ind"
 
+.export ARRAY
+.desc ARRAY	_hnf	_hnf	1 0	"ARRAY"
+
 .export	d_S.1 d_S.2 d_S.3 d_S.4 d_S.5 d_S.6
 .export	n_S.1 n_S.2 n_S.3 n_S.4 n_S.5 n_S.6
 .export	ea_S.1 ea_S.2 ea_S.3 ea_S.4 ea_S.5 ea_S.6

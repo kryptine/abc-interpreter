@@ -5,7 +5,6 @@ chars		StdEnv:_SystemArray
 e		StdEnv:StdInt,StdEnv:StdList
 fsieve		StdEnv:StdReal
 hamming		StdEnv:StdInt,StdEnv:StdList
-iks		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:_SystemArray,StdEnv:_SystemEnum,Dynamics:_SystemDynamic,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Either,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
 #infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 invperm		StdEnv:StdInt
 lqueen		StdEnv:StdList
@@ -14,6 +13,7 @@ nfib
 pascal		StdEnv:StdChar,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:_SystemArray
 reals		StdEnv:StdReal
 reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemArray,StdEnv:_SystemEnum
 reverse2		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 revrec		StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList
 revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdOverloaded,StdEnv:_SystemEnum
