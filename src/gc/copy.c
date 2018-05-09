@@ -76,9 +76,12 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 		int16_t arity = ((int16_t*)node[0])[-1];
 
 		if (node[0] & 2) { /* HNF */
-			if (node[0] == (BC_WORD) &INT + 2) { /* TODO more basic types */
+			if (node[0] == (BC_WORD) &INT + 2 ||
+					node[0] == (BC_WORD) &CHAR + 2 ||
+					node[0] == (BC_WORD) &BOOL + 2 ||
+					node[0] == (BC_WORD) &REAL + 2) { /* TODO more basic types */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\t(INT)\n");
+				fprintf(stderr, "\t\t(INT / CHAR / BOOL / REAL)\n");
 #endif
 				*new_heap = node[0];
 				node[0] = (BC_WORD) new_heap;
@@ -96,6 +99,62 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 				BC_WORD *start_string = &node[2];
 				for (; l; l--) {
 					*new_heap++ = *start_string++;
+				}
+			} else if (node[0] == (BC_WORD) &__ARRAY__ + 2) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\t(__ARRAY__)\n");
+#endif
+				*new_heap = node[0];
+				node[0] = (BC_WORD) new_heap;
+				new_heap++;
+				*new_heap++ = node[1];
+				*new_heap++ = node[2];
+				BC_WORD *start_array = &node[3];
+				uint32_t l = node[1];
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+				fprintf(stderr, "\t\tlength is %d\n", l);
+#endif
+				if (node[2] == (BC_WORD) &INT + 2 || node[2] == (BC_WORD) &REAL + 2) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+					fprintf(stderr, "\t\tof type Int/Real\n");
+#endif
+					for (; l; l--)
+						*new_heap++ = *start_array++;
+				} else if (node[2] == (BC_WORD) &BOOL + 2) {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+					fprintf(stderr, "\t\tof type Bool\n");
+#endif
+					l = l / IF_INT_64_OR_32(8,4) + (l % IF_INT_64_OR_32(8,4) ? 1 : 0);
+					for (; l; l--)
+						*new_heap++ = *start_array++;
+				} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 2)
+					fprintf(stderr, "\t\tof a boxed type\n");
+#endif
+					for (; l; l--) {
+						if (on_heap(*start_array, old_heap, heap_size)) {
+							if (*start_array <= (BC_WORD) node) { /* Indirected */
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+								fprintf(stderr, "\t\tElem is indirected; now %p\n", (void*)*(BC_WORD*)*start_array);
+#endif
+								*new_heap++ = *(BC_WORD*)*start_array;
+							} else { /* Reverse pointer */
+								BC_WORD temp = *(BC_WORD*)*start_array;
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+								fprintf(stderr, "\t\tReversing elem (%p)\n", (void*)temp);
+#endif
+								*(BC_WORD*)*start_array = (BC_WORD) new_heap | 1;
+								*new_heap++ = temp;
+							}
+						} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+							fprintf(stderr, "\t\tElem is not on the heap\n");
+#endif
+							*new_heap++ = *start_array;
+						}
+
+						start_array++;
+					}
 				}
 			} else {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)

@@ -31,9 +31,11 @@ Start w
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
 
-OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
-OFFSET_PROGRAM_CODE   :== 8 // Offset to the code field in the program struct (bytecode.h)
-OFFSET_PROGRAM_DATA   :== IF_INT_64_OR_32 16 8 // Offset to the data field in the program struct (bytecode.h)
+OFFSET_PARSER_PROGRAM    :== 8 // Offset to the program field in the parser struct (parse.h)
+OFFSET_PROGRAM_CODE      :== 8 // Offset to the code field in the program struct (bytecode.h)
+OFFSET_PROGRAM_CODE_SIZE :== 0
+OFFSET_PROGRAM_DATA      :== 16 // Offset to the data field in the program struct (bytecode.h)
+OFFSET_PROGRAM_DATA_SIZE :== 4
 
 get_expression :: !String !*World -> *(a, *World)
 get_expression filename w
@@ -47,7 +49,9 @@ get_expression filename w
 # pgm = fromJust pgm
 # int_syms = get_symbols pgm
 # code_segment = readInt pgm OFFSET_PROGRAM_CODE
+# csize = readInt4Z pgm OFFSET_PROGRAM_CODE_SIZE
 # data_segment = readInt pgm OFFSET_PROGRAM_DATA
+# dsize = readInt4Z pgm OFFSET_PROGRAM_DATA_SIZE
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
 # heapp = malloc (IF_INT_64_OR_32 8 4)
 # asp = stack
@@ -58,17 +62,17 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 # heapp = writeInt heapp 0 hp
-= (coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp start_node,w)
+= (coerce syms int_syms code_segment csize data_segment dsize stack heapp asp bsp csp hp start_node,w)
 where
 	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
 	get_stack_and_heap_addresses _ = code {
 		ccall get_stack_and_heap_addresses "I:Vpppp"
 	}
 
-	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a
-	coerce syms int_syms code_segment data_segment stack heapp asp bsp csp hp p
+	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a
+	coerce syms int_syms code_segment csize data_segment dsize stack heapp asp bsp csp hp p
 	#! asp = writeInt asp 0 p
-	#! ok = interpret code_segment data_segment stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
+	#! ok = interpret code_segment csize data_segment dsize stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
 	| ok <> 0 = abort "Failed to interpret\n"
 	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
@@ -80,8 +84,8 @@ where
 		#! childa = readInt p (IF_INT_64_OR_32  8 4)
 		#! childb = readInt p (IF_INT_64_OR_32 16 8)
 		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
-		# vala = hyperstrict (coerce` syms int_syms code_segment data_segment stack heapp childa)
-		# valb = coerce` syms int_syms code_segment data_segment stack heapp childb
+		# vala = hyperstrict (coerce` syms int_syms code_segment csize data_segment dsize stack heapp childa)
+		# valb = coerce` syms int_syms code_segment csize data_segment dsize stack heapp childb
 		= cast [vala:valb]
 	where
 		get_offset_symbol :: !Int ![(String,Int)] -> String
@@ -95,10 +99,10 @@ where
 			no_op
 		}
 
-		coerce` :: !{#Symbol} ![(String,Int)] !Pointer !Pointer !Pointer !Pointer !Pointer -> a
-		coerce` syms int_syms codes datas stack heapp p
+		coerce` :: !{#Symbol} ![(String,Int)] !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer -> a
+		coerce` syms int_syms codes csize datas dsize stack heapp p
 		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses p
-		= coerce syms int_syms codes datas stack heapp asp bsp csp hp p
+		= coerce syms int_syms codes csize datas dsize stack heapp asp bsp csp hp p
 
 	// Returns offset from data segment, name and arity
 	node_descriptor :: !Pointer !Pointer -> (!Int, !String, !Int)
@@ -120,9 +124,9 @@ where
 		#! string = derefString (readInt p (IF_INT_64_OR_32 8 4))
 		= get_syms (n-1) (p + IF_INT_64_OR_32 16 8) [(string,offset):syms]
 
-interpret :: !Pointer !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
-interpret code_segment data_segment stack stack_size heap heap_size asp bsp csp hp node = code {
-	ccall interpret "pppIpIppppp:I"
+interpret :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
+interpret code_segment csize data_segment dsize stack stack_size heap heap_size asp bsp csp hp node = code {
+	ccall interpret "pIpIpIpIppppp:I"
 }
 
 parse :: !String -> Maybe Program

@@ -1,25 +1,27 @@
 # vim: ts=12:
 acker
-chars		_SystemArray
-e		StdInt,StdList
-fsieve		StdReal
-hamming		StdInt,StdList
-#infprimes		StdChar,StdClass,StdInt,StdList,StdOverloaded,_SystemEnum
-invperm		StdInt
-lqueen		StdList
+brainfuck		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+chars		StdEnv:_SystemArray
+e		StdEnv:StdInt,StdEnv:StdList
+fsieve		StdEnv:StdReal
+hamming		StdEnv:StdInt,StdEnv:StdList
+#infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+invperm		StdEnv:StdInt
+lqueen		StdEnv:StdList
 mulmat
 nfib
-pascal		StdChar,StdCharList,StdInt,StdList,_SystemArray
-reals		StdReal
-reverse		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-reverse2		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-revrec		StdFunc,StdInt,StdList
-revtwice	-h,4m	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
-rfib		StdReal
-sieve		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-squeen		StdList
-str_arit		StdString
+pascal		StdEnv:StdChar,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:_SystemArray
+reals		StdEnv:StdReal
+reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemArray,StdEnv:_SystemEnum
+reverse2		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+revrec		StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList
+revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+rfib		StdEnv:StdReal
+sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+squeen		StdEnv:StdList
+str_arit		StdEnv:StdString
 stwice
 tak
 twice
-war_seq		StdInt
+war_seq		StdEnv:StdInt

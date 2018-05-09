@@ -429,8 +429,8 @@ void clean_print_string_ (void)
 	s=(char*)asp[0];
 	g_asp=asp-1;
 
-	l=*(int*)(s+4);
-	s+=8;
+	l=*(BC_WORD_S*)(s+IF_INT_64_OR_32(8,4));
+	s+=IF_INT_64_OR_32(16,8);
 
 	while (l!=0){
 		putchar (*s);

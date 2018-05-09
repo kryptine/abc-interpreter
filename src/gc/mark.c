@@ -152,9 +152,24 @@ void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_siz
 #endif
 
 		if (node[0] & 2) { /* HNF */
-			if (arity > 0)
+			if (node[0] == (BC_WORD) &INT + 2 ||
+					node[0] == (BC_WORD) &CHAR + 2 ||
+					node[0] == (BC_WORD) &BOOL + 2 ||
+					node[0] == (BC_WORD) &REAL + 2 ||
+					node[0] == (BC_WORD) &__STRING__ + 2) {
+			} else if (node[0] == (BC_WORD) &__ARRAY__ + 2) {
+				if (node[2] != (BC_WORD) &INT + 2 &&
+						node[2] != (BC_WORD) &REAL + 2 &&
+						node[2] != (BC_WORD) &BOOL + 2) {
+					uint32_t l = node[1];
+					BC_WORD **rest = (BC_WORD**) &node[3];
+					for (int i = 0; i < l; i++) {
+						add_grey_node(set, rest[i], heap, heap_size);
+					}
+				}
+			} else if (arity > 0) {
 				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-			if (arity > 1) {
+			} if (arity > 1) {
 				BC_WORD **rest = (BC_WORD**) node[2];
 				if (*rest >= heap && *rest < heap + heap_size) {
 					/* 3-node with pointer to rest */

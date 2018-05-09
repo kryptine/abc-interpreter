@@ -16,13 +16,6 @@
 /* Used to store the return address when evaluating a node on the heap */
 #define EVAL_TO_HNF_LABEL CMAX
 
-#ifdef LINK_CLEAN_RUNTIME
-extern void* __STRING__[];
-extern void* BOOL[];
-extern void* CHAR[];
-extern void* REAL[];
-#endif
-
 #define _2chars2int(a,b)             ((void*) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
@@ -35,12 +28,12 @@ extern void* REAL[];
 
 static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e','m')};
 
-static void* __ARRAY__[]  = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
-static void* d___Nil[]    = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
+void* d___Nil[]           = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 
 # ifndef LINK_CLEAN_RUNTIME
+void* __ARRAY__[]         = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
 void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S','T','R','I','N','G','_')};
 void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
 void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
@@ -49,12 +42,12 @@ void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E',
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
 
-static void* __ARRAY__[]  = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
-static void* d___Nil[]    = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
+void* d___Nil[]           = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
 void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 
 # ifndef LINK_CLEAN_RUNTIME
+void* __ARRAY__[]         = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
 void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S','T','R'), _4chars2int ('I','N','G','_') };
 void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
 void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
@@ -62,7 +55,6 @@ void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E'
 # endif
 #endif /* Word-width dependency */
 
-#define __Nil (d___Nil[1])
 #define dFILE (d_FILE[2])
 
 #ifdef LINK_CLEAN_RUNTIME
@@ -115,7 +107,8 @@ void get_stack_and_heap_addresses(int ignored, BC_WORD **_asp, BC_WORD **_bsp, B
 	*_hp = hp;
 }
 
-int interpret(BC_WORD *code, BC_WORD *data,
+int interpret(BC_WORD *code, size_t code_size,
+		BC_WORD *data, size_t data_size,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD **heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
@@ -160,7 +153,7 @@ eval_to_hnf_return:
 
 	for (;;) {
 #ifdef DEBUG_ALL_INSTRUCTIONS
-		if (pc > data)
+		if (data <= pc && pc < data + data_size)
 			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
 		else
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
@@ -270,7 +263,8 @@ int main(int argc, char **argv) {
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
-	interpret(state.program->code, state.program->data,
+	interpret(state.program->code, state.program->code_size,
+			state.program->data, state.program->data_size,
 			stack, stack_size,
 			&heap, heap_size,
 			stack, /* asp */

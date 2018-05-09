@@ -6562,6 +6562,60 @@ case Cupdates4_a:
 	continue;
 }
 
+case Cjsr_ap5:
+	*--csp=(BC_WORD)&pc[1];
+case Cjmp_ap5:
+{
+	BC_WORD *n,d;
+
+	n=(BC_WORD*)asp[0];
+	d=n[0];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
+			d-(BC_WORD)data,
+			((uint16_t*)d)[0],
+			((uint16_t*)d)[-1],
+			(*(BC_WORD*)(d+40-6) - (BC_WORD) code) / 8);
+#endif
+	if (((uint16_t*)d)[0]==40){
+		BC_WORD arity;
+
+		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+40+6)) - 24);
+#else
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+40-6)) - 12);
+#endif
+		if (arity<=1){
+			if (arity<1){
+				--asp;
+			} else {
+				asp[0]=n[1];
+			}
+		} else {
+			BC_WORD *args,a1;
+
+			args=(BC_WORD*)n[2];
+			a1=n[1];
+			if (arity==2){
+				*++asp=(BC_WORD)args;
+			} else {
+				asp[0]=args[arity-2];
+				arity-=3;
+				do {
+					*++asp = args[arity];
+					--arity;
+				} while (arity!=0);
+			}
+			*++asp = a1;
+		}
+		continue;
+	} else {
+		*--csp=(BC_WORD)&Fjmp_ap2;
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
+		continue;
+	}
+}
 case Cjsr_ap4:
 	*--csp=(BC_WORD)&pc[1];
 case Cjmp_ap4:

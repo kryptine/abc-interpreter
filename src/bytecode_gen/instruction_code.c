@@ -2138,21 +2138,12 @@ void code_jsr(char label_name[]) {
 }
 
 void code_jsr_ap(int n_apply_args) {
-	if (n_apply_args==1) {
-		add_instruction(Cjsr_ap1);
-		return;
-	}
-	if (n_apply_args==2) {
-		add_instruction(Cjsr_ap2);
-		return;
-	}
-	if (n_apply_args==3) {
-		add_instruction(Cjsr_ap3);
-		return;
-	}
-	if (n_apply_args==4) {
-		add_instruction(Cjsr_ap4);
-		return;
+	switch (n_apply_args) {
+		case 1: add_instruction(Cjsr_ap1); return;
+		case 2: add_instruction(Cjsr_ap2); return;
+		case 3: add_instruction(Cjsr_ap3); return;
+		case 4: add_instruction(Cjsr_ap4); return;
+		case 5: add_instruction(Cjsr_ap5); return;
 	}
 
 	fprintf(stderr, "Error: jsr_ap %d\n",n_apply_args);

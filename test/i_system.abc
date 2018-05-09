@@ -1,4 +1,3 @@
-.export ARRAY
 .export	_Nil _Cons
 .export e_system_dAP e_system_nAP e_system_eaAP
 .export _cycle_in_spine _hnf
@@ -16,6 +15,7 @@
 
 .desc e_system_dind	e_system_nind	_hnf	0 0	"_ind"
 
+.export ARRAY
 .desc ARRAY	_hnf	_hnf	1 0	"ARRAY"
 
 .export	d_S.1 d_S.2 d_S.3 d_S.4 d_S.5 d_S.6
@@ -335,17 +335,18 @@ _print
 _continue_print
 	jsr_eval 0
 
-	is_record	0
-	jmp_true	_print_record
-
 	get_node_arity 0
 	eqI_b 0 0
 	jmp_true _print_last
 
-	eq_desc	_Cons 2 0
-	jmp_true _print_list
 	eq_desc	ARRAY 1 0
 	jmp_true	_print_array
+
+	is_record	0
+	jmp_true	_print_record
+
+	eq_desc	_Cons 2 0
+	jmp_true _print_list
 
 	print_sc	"("
 	print_symbol_sc	0
@@ -447,7 +448,6 @@ _print_record
 	| TODO
 	print_sc "<record>"
 	pop_a 1
-	pop_b 1
 	jmp _print_brackets
 
 .n 0 _
