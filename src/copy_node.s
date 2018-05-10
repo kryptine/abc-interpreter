@@ -105,4 +105,6 @@ pop_b_rbp:
 	mov    r11, r12
 	mov    r12, r13
 	mov    r13, r14
+	# Note: RSP is automatically descreased
 	pop    r14
+	ret
