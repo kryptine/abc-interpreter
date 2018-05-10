@@ -78,6 +78,7 @@ copy_node_1:
 	mov    rbp, rdi
 	add    rdi, 16
 	call   push_rbp_a
+	sub    r15, 3
 	ret
 
 copy_node_2:
