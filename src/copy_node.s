@@ -1,6 +1,6 @@
 .intel_syntax noprefix
 
-.globl    __get__arity__asm
+.globl    __copy__node__asm
 .extern   get_arity_c
 
 .text
@@ -22,7 +22,7 @@
 # (res) r14: B5
 # (res) r15: Number of free words on heap
 
-__get__arity__asm:
+__copy__node__asm:
 	# Save all volatile registers
 	push   rax
 	push   rcx
@@ -35,12 +35,10 @@ __get__arity__asm:
 	push   r10
 	push   r11
 
-	# Set arguments
-	mov    rdi, rdi # Heap pointer
-	lea    rsi, [rdi + r15 * 8] # End of free heap
-	mov    rdx, rcx # Top of A Stack
+	# Set argument
+	mov    rdi, rax
 
-	# Call function (rdi, rsi, rdx)
+	# Call function (rdi)
 	call   get_arity_c
 
 	# Restore registers
@@ -53,24 +51,58 @@ __get__arity__asm:
 	pop    rsi
 	pop    rdx
 	pop    rcx
+
+	# Jump based on arity
+	mov    rbp, rax
 	pop    rax
+	cmp    rbp, 2
+	jbe    copy_node_1
+	cmp    rbp, 2
+	jg     copy_node_2
 
 	ret
 
-create_space_a_stack:
+copy_node_1:
+	# Copy node to heap
+	mov    rbp, [rax]
+	mov    [rdi], rbp
+	mov    rbp, [rax + 8]
+	mov    [rdi + 8], rbp
+	mov    rbp, [rax + 16]
+	mov    [rdi + 16], rbp
+
+	# Pop B stack
+	call   pop_b_rbp
+
+	# Push to A stack
+	mov    rbp, rdi
+	add    rdi, 16
+	call   push_rbp_a
+	ret
+
+copy_node_2:
+	ret
+
+push_rbp_a:
 	# Put r9 on top of stack
 	mov    [rsi], r9
 	# Increase A heap
-	inc    rsi
+	sub    rsi, 4
 	# Shift A regs by 1
 	mov    r9, r8
 	mov    r8, rdx
 	mov    rdx, rcx
+	mov    rcx, rbp
 
 	# A0 is now free to be used
 	ret
 
-push_rax_a_stack:
-	call   create_space_a_stack
-	mov    rcx, rax
-	ret
+pop_b_rbp:
+	mov    rbp, rax
+	mov    rax, rbx
+	mov    rbx, r10
+	mov    r10, r11
+	mov    r11, r12
+	mov    r12, r13
+	mov    r13, r14
+	pop    r14
