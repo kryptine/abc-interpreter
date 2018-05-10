@@ -18,6 +18,10 @@ extern BC_WORD *g_asp, *g_bsp, *g_hp;
 extern BC_WORD_S g_heap_free;
 extern int trap_needs_gc;
 
+extern BC_WORD Fjmp_ap1;
+extern BC_WORD Fjmp_ap2;
+extern BC_WORD Fjmp_ap3;
+
 /**
  * code: code segment
  * data: data segment

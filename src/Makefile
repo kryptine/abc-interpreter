@@ -43,6 +43,7 @@ link: $(SRC_LINK) $(DEP_LINK)
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
+	debug_curses.c\
 	gc.c\
 	gc/compact.c\
 	gc/copy.c\

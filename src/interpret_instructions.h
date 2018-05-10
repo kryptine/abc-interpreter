@@ -1043,6 +1043,9 @@ case Cbuild_r0b:
 case Cbuild_r10:
 {
 	BC_WORD_S ao;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT_HEX "\n", (void*)(asp+1), (void*) hp, (BC_WORD) pc[2]);
+#endif
 
 	if ((heap_free-=2)<0)
 		break;
