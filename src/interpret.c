@@ -24,6 +24,10 @@
 #define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
 
+#ifdef DEBUG_CURSES
+void** ARRAY;
+#endif
+
 #if (WORD_WIDTH == 64)
 # define _5chars2int(a,b,c,d,e)       ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)))
 # define _6chars2int(a,b,c,d,e,f)     ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)+((BC_WORD)f<<40)))
@@ -92,18 +96,21 @@ static void* __indirection[9] = { // TODO what does this do?
 static BC_WORD *asp, *bsp, *csp, *hp;
 
 #ifdef POSIX
-#include <signal.h>
+# include <signal.h>
+# ifdef DEBUG_CURSES
+jmp_buf segfault_restore_point;
+# endif
+
 void handle_segv(int sig) {
-#ifdef DEBUG_CURSES
-	close_debugger();
-#endif
 	if (asp >= csp) {
 		fprintf(stderr, "A/C-stack overflow\n");
-		exit(1);
 	} else {
+# ifdef DEBUG_CURSES
+		siglongjmp(segfault_restore_point, SIGSEGV);
+# endif
 		fprintf(stderr, "Untracable segmentation fault\n");
-		exit(1);
 	}
+	exit(1);
 }
 #endif
 

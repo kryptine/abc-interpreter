@@ -126,6 +126,8 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 	uint32_t min_distance = -1;
 	char *min_distance_label = "?";
 	for (int i = 0; i < pgm->symbol_table_size; i++) {
+		if (pgm->symbol_table[i].offset < 0)
+			continue;
 		if ((BC_WORD*) pgm->symbol_table[i].offset - label == 0) {
 			if (*pgm->symbol_table[i].name)
 				return used + print_label_name(s, size - used, pgm->symbol_table[i].name);

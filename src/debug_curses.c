@@ -70,7 +70,7 @@ void init_debugger(struct program *_program,
 	winh_a = newwin(1, COLWIDTH(3), 0, COLWIDTH(4));
 	winh_b = newwin(1, COLWIDTH(2), 0, COLWIDTH(4) + COLWIDTH(3));
 	winh_c = newwin(1, COLWIDTH(2), LINEHEIGHT(1), COLWIDTH(4) + COLWIDTH(3));
-	win_a = newwin(LINEHEIGHT(1) - 1, COLWIDTH(3), 1, COLWIDTH(4));
+	win_a = newpad(20000, 255);
 	win_b = newwin(LINEHEIGHT(1) - 1, COLWIDTH(2), 1, COLWIDTH(4) + COLWIDTH(3));
 	win_c = newwin(LINEHEIGHT(1) - 1, COLWIDTH(2), LINEHEIGHT(1) + 1, COLWIDTH(4) + COLWIDTH(3));
 	scrollok(win_a, TRUE);
@@ -85,7 +85,7 @@ void init_debugger(struct program *_program,
 	wrefresh(winh_a);
 	wrefresh(winh_b);
 	wrefresh(winh_c);
-	wrefresh(win_a);
+	prefresh(win_a, 0, 0, 1, COLWIDTH(4), LINEHEIGHT(1) - 1, COLWIDTH(4) + COLWIDTH(3));
 	wrefresh(win_b);
 	wrefresh(win_c);
 
@@ -203,7 +203,7 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 		start++;
 	}
 	wclrtobot(win_a);
-	wrefresh(win_a);
+	prefresh(win_a, ptr-asp-LINEHEIGHT(1)+2, 0, 1, COLWIDTH(4), LINEHEIGHT(1) - 1, COLWIDTH(4) + COLWIDTH(3));
 }
 
 #if (WORD_WIDTH == 32)
@@ -280,8 +280,6 @@ void debugger_update_heap(BC_WORD *stack, BC_WORD *asp) {
 }
 
 void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_t indent_mask, int max_depth, int is_last) {
-	int16_t arity = ((int16_t*)node[0])[-1];
-
 	if (indent > 0) {
 		waddch(win, ' ');
 		for (int i = indent-1; i > 0; i--) {
@@ -291,28 +289,35 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		waddch(win, is_last ? ACS_LLCORNER : ACS_LTEE);
 	}
 	waddch(win, ACS_HLINE);
-	if (arity > 0)
-		waddch(win, ACS_DIAMOND);
-	waddch(win, ' ');
 
 	if (is_last)
 		indent_mask ^= 1;
 
+	int arity = 0;
+
 	if (node[0] == (BC_WORD) &INT+2)
-		wprintw(win, "INT %d", node[1]);
+		wprintw(win, " INT %d", node[1]);
 	else if (node[0] == (BC_WORD) &BOOL+2)
-		wprintw(win, "BOOL %s", node[1] ? "true" : "false");
+		wprintw(win, " BOOL %s", node[1] ? "true" : "false");
 	else if (node[0] == (BC_WORD) &CHAR+2)
-		wprintw(win, "CHAR '%c'", node[1]);
+		wprintw(win, " CHAR '%c'", node[1]);
 	else if (node[0] == (BC_WORD) &REAL+2)
-		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
-	else if (node[0] == (BC_WORD) &__cycle__in__spine) {
-		wprintw(win, "__cycle__in__spine");
-		arity = 0;
-	} else {
+		wprintw(win, " REAL %f", *(BC_REAL*)&node[1]);
+	else if (node[0] == (BC_WORD) &__STRING__+2)
+		wprintw(win, " __STRING__");
+	else if (node[0] == (BC_WORD) &__ARRAY__+2)
+		wprintw(win, " __ARRAY__");
+	else if (node[0] == (BC_WORD) ARRAY+18)
+		wprintw(win, " ARRAY");
+	else if (node[0] == (BC_WORD) &__cycle__in__spine)
+		wprintw(win, " __cycle__in__spine");
+	else {
 		char _tmp[256];
+		arity = ((int16_t*)node[0])[-1];
+		if (arity > 0)
+			waddch(win, ACS_DIAMOND);
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
-		wprintw(win, "%s", _tmp);
+		wprintw(win, " %s", _tmp);
 	}
 
 	if (on_heap((BC_WORD) node, hp, heap_size))
@@ -341,7 +346,11 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 
 void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 	wmove(win_heap, 0, 0);
-	debugger_show_node_as_tree_(win_heap, node, 0, 0, max_depth, 0);
+	if (sigsetjmp(segfault_restore_point, 1) == 0) {
+		debugger_show_node_as_tree_(win_heap, node, 0, 0, max_depth, 0);
+	} else {
+		mvwprintw(win_heap, 0, 0, "(failed to read graph - perhaps the node is a string?)");
+	}
 	wclrtobot(win_heap);
 	wrefresh(win_heap);
 }
@@ -349,17 +358,18 @@ void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 BC_WORD *inspected_a_stack_node = NULL;
 int highlighted_a_stack_line = -1;
 void inspect_a_stack(BC_WORD *top, int up) {
+	if (highlighted_a_stack_line >= 0)
+		mvwchgat(win_a, highlighted_a_stack_line, 0, -1, A_NORMAL, 0, NULL);
+
 	inspected_a_stack_node += up;
 	if (inspected_a_stack_node <= asp)
 		inspected_a_stack_node = asp + 1;
 	if (inspected_a_stack_node >= top)
 		inspected_a_stack_node = top;
 
-	if (highlighted_a_stack_line >= 0)
-		mvwchgat(win_a, highlighted_a_stack_line, 0, -1, A_NORMAL, 0, NULL);
 	highlighted_a_stack_line = inspected_a_stack_node - asp - 1;
 	mvwchgat(win_a, highlighted_a_stack_line, 0, -1, A_UNDERLINE, 0, NULL);
-	wrefresh(win_a);
+	prefresh(win_a, highlighted_a_stack_line - LINEHEIGHT(1) / 2, 0, 1, COLWIDTH(4), LINEHEIGHT(1) - 1, COLWIDTH(4) + COLWIDTH(3));
 
 	debugger_show_node_as_tree((BC_WORD*) *inspected_a_stack_node, 5);
 }
