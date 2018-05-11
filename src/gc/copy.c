@@ -189,6 +189,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 
 					if (arity > 1) {
 						BC_WORD **rest = (BC_WORD**) node[2];
+						/* TODO: see issue #32 */
 						if ((BC_WORD) *rest >= (BC_WORD) old_heap && (BC_WORD) *rest < (BC_WORD) (old_heap + heap_size)) {
 							/* 3-node with pointer to rest */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
@@ -369,6 +370,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 		}
 	}
 
+	free_nodes_set(&nodes_set);
 	free(old_heap);
 	*heap = heap2;
 	return new_heap;

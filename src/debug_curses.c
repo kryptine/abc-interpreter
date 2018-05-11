@@ -6,6 +6,8 @@
 
 #include "abc_instructions.h"
 #include "gc/mark.h"
+#include "gc/util.h"
+#include "interpret.h"
 #include "util.h"
 
 WINDOW *win_listing, *win_a, *win_b, *win_c, *win_heap, *win_output;
@@ -32,6 +34,9 @@ void init_program_lines(struct program *program) {
 	}
 }
 
+#define COLWIDTH(n) (COLS * n / 9)
+#define LINEHEIGHT(n) ((LINES-2) / 2 * n)
+
 void init_debugger(struct program *_program,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp,
 		BC_WORD *_hp, size_t _heap_size) {
@@ -49,24 +54,24 @@ void init_debugger(struct program *_program,
 
 	WINDOW *win_vertical_bar;
 
-	winh_listing = newwin(1, COLS / 3, 0, 0);
+	winh_listing = newwin(1, COLWIDTH(4), 0, 0);
 	win_listing = newpad(20000, 255);
 	wprintw(winh_listing, "Program listing");
 	wbkgd(winh_listing, A_STANDOUT);
 	print_program(win_listing, program);
 	wrefresh(winh_listing);
-	prefresh(win_listing, 0, 0, 1, 0, (LINES-2) / 2 * 2 - 1, COLS / 3 - 1);
+	prefresh(win_listing, 0, 0, 1, 0, LINEHEIGHT(2) - 1, COLWIDTH(4) - 2);
 
-	win_vertical_bar = newwin(LINES - 3, 1, 1, COLS / 3 - 1);
+	win_vertical_bar = newwin(LINEHEIGHT(2), 1, 1, COLWIDTH(4) - 1);
 	wbkgd(win_vertical_bar, A_STANDOUT);
 	wrefresh(win_vertical_bar);
 
-	winh_a = newwin(1, COLS * 2 / 9, 0, COLS / 3);
-	winh_b = newwin(1, COLS * 2 / 9, 0, COLS / 3 + COLS * 2 / 9);
-	winh_c = newwin(1, COLS * 2 / 9, 0, COLS / 3 + COLS * 2 / 9 * 2);
-	win_a = newwin((LINES-2) / 2 - 1, COLS * 2 / 9, 1, COLS / 3);
-	win_b = newwin((LINES-2) / 2 - 1, COLS * 2 / 9, 1, COLS / 3 + COLS * 2 / 9);
-	win_c = newwin((LINES-2) / 2 - 1, COLS * 2 / 9, 1, COLS / 3 + COLS * 2 / 9 * 2);
+	winh_a = newwin(1, COLWIDTH(3), 0, COLWIDTH(4));
+	winh_b = newwin(1, COLWIDTH(2), 0, COLWIDTH(4) + COLWIDTH(3));
+	winh_c = newwin(1, COLWIDTH(2), LINEHEIGHT(1), COLWIDTH(4) + COLWIDTH(3));
+	win_a = newwin(LINEHEIGHT(1) - 1, COLWIDTH(3), 1, COLWIDTH(4));
+	win_b = newwin(LINEHEIGHT(1) - 1, COLWIDTH(2), 1, COLWIDTH(4) + COLWIDTH(3));
+	win_c = newwin(LINEHEIGHT(1) - 1, COLWIDTH(2), LINEHEIGHT(1) + 1, COLWIDTH(4) + COLWIDTH(3));
 	scrollok(win_a, TRUE);
 	scrollok(win_b, TRUE);
 	scrollok(win_c, TRUE);
@@ -83,8 +88,8 @@ void init_debugger(struct program *_program,
 	wrefresh(win_b);
 	wrefresh(win_c);
 
-	winh_heap = newwin(1, COLS * 2 / 3, (LINES-2) / 2, COLS / 3);
-	win_heap = newwin((LINES-2) / 2 - 1, COLS * 2 / 3, (LINES-2) / 2 + 1, COLS / 3);
+	winh_heap = newwin(1, COLWIDTH(3), LINEHEIGHT(1), COLWIDTH(4));
+	win_heap = newwin(LINEHEIGHT(1) - 1, COLWIDTH(3), LINEHEIGHT(1) + 1, COLWIDTH(4));
 	wbkgd(winh_heap, A_STANDOUT);
 	wprintw(winh_heap, "Heap");
 	scrollok(win_heap, TRUE);
@@ -103,7 +108,12 @@ void init_debugger(struct program *_program,
 	init_program_lines(program);
 }
 
+void debugger_set_heap(BC_WORD *_hp) {
+	hp = _hp;
+}
+
 void close_debugger(void) {
+	free(program_lines);
 	endwin();
 }
 
@@ -121,7 +131,53 @@ void debugger_set_pc(BC_WORD *pc) {
 		start_of_program_view = highlighted_line > 10 ? highlighted_line - 10 : 0;
 	}
 
-	prefresh(win_listing, start_of_program_view, 0, 1, 0, (LINES-2) / 2 * 2 - 1, COLS / 3 - 2);
+	prefresh(win_listing, start_of_program_view, 0, 1, 0, LINEHEIGHT(2) - 1, COLWIDTH(4) - 2);
+}
+
+void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
+	int16_t arity = ((int16_t*)node[0])[-1];
+
+	if (node[0] == (BC_WORD) &INT+2)
+		wprintw(win, "INT %d", node[1]);
+	else if (node[0] == (BC_WORD) &BOOL+2)
+		wprintw(win, "BOOL %s", node[1] ? "true" : "false");
+	else if (node[0] == (BC_WORD) &CHAR+2)
+		wprintw(win, "CHAR '%c'", node[1]);
+	else if (node[0] == (BC_WORD) &REAL+2)
+		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
+	else {
+		char _tmp[256];
+		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
+		wprintw(win, "%s", _tmp);
+
+		if (!with_arguments)
+			return;
+
+		if (arity <= 0)
+			return;
+
+		/* TODO: unboxed values */
+
+		print_label(_tmp, 256, 0, (BC_WORD*) node[1], program, hp, heap_size);
+		wprintw(win, " %s", _tmp);
+		if (arity <= 1)
+			return;
+
+		BC_WORD **rest = (BC_WORD**) node[2];
+		/* TODO: see issue #32 */
+		if (on_heap((BC_WORD) *rest, hp, heap_size)) {
+			wprintw(win, " ->");
+			for (int i = 0; i < arity-1; i++) {
+				print_label(_tmp, 256, 0, (BC_WORD*) rest[i], program, hp, heap_size);
+				wprintw(win, " %s", _tmp);
+			}
+		} else {
+			for (int i = 2; i <= arity; i++) {
+				print_label(_tmp, 256, 0, (BC_WORD*) node[i], program, hp, heap_size);
+				wprintw(win, " %s", _tmp);
+			}
+		}
+	}
 }
 
 void debugger_update_a_stack(BC_WORD *ptr) {
@@ -134,7 +190,12 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 	wmove(win_a, 0, 0);
 	while (start <= ptr) {
 		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
-		wprintw(win_a, "%3d  %s\n", ptr-start, _tmp);
+		wprintw(win_a, "%3d  %s", ptr-start, _tmp);
+		if (hp <= (BC_WORD*) *start && (BC_WORD*) *start < hp + heap_size) {
+			wprintw(win_a, "  ");
+			wprint_node(win_a, (BC_WORD*) *start, 0);
+		}
+		wprintw(win_a, "\n");
 		start++;
 	}
 	wclrtobot(win_a);
@@ -188,11 +249,12 @@ void debugger_update_c_stack(BC_WORD *ptr) {
 	wrefresh(win_c);
 }
 
-void debugger_update_heap(BC_WORD *node) {
+void debugger_update_heap(BC_WORD *stack, BC_WORD *asp) {
+	char _tmp[256];
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
 
-	add_grey_node(&nodes_set, node, hp, heap_size);
+	mark_a_stack(stack, asp, hp, heap_size, &nodes_set);
 	evaluate_grey_nodes(hp, heap_size, &nodes_set);
 
 	wmove(win_heap, 0, 0);
@@ -202,9 +264,13 @@ void debugger_update_heap(BC_WORD *node) {
 			break;
 		BC_WORD *node = hp + offset;
 
-		wprintw(win_heap, "0x%4x  \n", (BC_WORD) node & 0xffff);
+		print_label(_tmp, 256, 0, node, program, hp, heap_size);
+		wprintw(win_heap, "%s\t", _tmp);
+		wprint_node(win_heap, (BC_WORD*) node, 1);
+		wprintw(win_heap, "\n");
 	}
 
+	free_nodes_set(&nodes_set);
 	wclrtobot(win_heap);
 	wrefresh(win_heap);
 }

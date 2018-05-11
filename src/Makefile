@@ -8,7 +8,7 @@ override CFLAGS+=\
 	-DPOSIX\
 	-lm
 
-all: optimise bytecode link interpret
+all: optimise bytecode link interpret debug
 
 CodeSharing: interpret.a .FORCE
 	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns -l $< $@ -o $@

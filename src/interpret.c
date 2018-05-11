@@ -94,6 +94,9 @@ static BC_WORD *asp, *bsp, *csp, *hp;
 #ifdef POSIX
 #include <signal.h>
 void handle_segv(int sig) {
+#ifdef DEBUG_CURSES
+	close_debugger();
+#endif
 	if (asp >= csp) {
 		fprintf(stderr, "A/C-stack overflow\n");
 		exit(1);
@@ -167,7 +170,7 @@ eval_to_hnf_return:
 		debugger_update_a_stack(asp);
 		debugger_update_b_stack(bsp);
 		debugger_update_c_stack(csp);
-		debugger_update_heap((BC_WORD*) *asp);
+		debugger_update_heap(stack, asp);
 		while (debugger_input() != 0);
 #endif
 		switch (*pc) {
@@ -179,6 +182,9 @@ eval_to_hnf_return:
 				, code, data
 #endif
 				);
+#ifdef DEBUG_CURSES
+		debugger_set_heap(hp);
+#endif
 		heap_free = heap_size-(hp-*heap);
 		if (heap_free <= old_heap_free) {
 			fprintf(stderr, "Heap full.\n");
