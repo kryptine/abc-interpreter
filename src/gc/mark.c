@@ -147,6 +147,8 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 	BC_WORD *node;
 	while ((node = get_grey_node(set)) != NULL) {
 		int16_t arity = ((int16_t*)(node[0]))[-1];
+		int16_t b_arity = arity >> 8;
+		arity = (arity & 0xff) - b_arity;
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\t%p -> black: %lx; arity %d\n", (void*) node, node[0], arity);
 #endif
