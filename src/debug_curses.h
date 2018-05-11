@@ -18,7 +18,12 @@ void debugger_update_a_stack(BC_WORD *asp);
 void debugger_update_b_stack(BC_WORD *bsp);
 void debugger_update_c_stack(BC_WORD *csp);
 void debugger_update_heap(BC_WORD *stack, BC_WORD *asp);
+void debugger_show_node_as_tree(BC_WORD *node, int max_depth);
 
-int debugger_input(void);
+void debugger_printf(const char *format, ...);
+void debugger_putchar(char c);
+
+int debugger_input(BC_WORD *asp);
+void debugger_graceful_end(void);
 
 #endif

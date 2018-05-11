@@ -1840,9 +1840,6 @@ case Ceq_desc:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-#if 0
-	printf ("Ceq_desc %d %d %d\n",(int)n,(int)*n,(int)*n-(int)data);
-#endif
 	*--bsp = *n==pc[2];
 	pc+=3;
 	continue;
@@ -2565,9 +2562,6 @@ case CfillI_b:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	i=(BC_WORD_S)bsp[pc[2]];
-#if 0
-	printf ("fillI_b %d\n",i);
-#endif
 	n[0]=(BC_WORD)&INT+2;
 	n[1]=i;
 	pc+=3;
@@ -2593,9 +2587,6 @@ case Cfill_a:
 	ao_d=((BC_WORD_S*)pc)[2];
 	n_s=(BC_WORD*)asp[ao_s];
 	n_d=(BC_WORD*)asp[ao_d];
-#if 0
-	printf ("Cfill_a %d %d\n",(int)n_s,(int)n_d);
-#endif
 	n_d[0]=n_s[0];
 	n_d[1]=n_s[1];
 	n_d[2]=n_s[2];
@@ -2608,9 +2599,6 @@ case Cfill_a01_pop_rtn:
 
 	n_s=(BC_WORD*)asp[0];
 	n_d=(BC_WORD*)asp[-1];
-#if 0
-	printf ("Cfill_a01_pop_rtn %d %d\n",(int)n_s,(int)n_d);
-#endif
 	asp-=1;
 	pc=(BC_WORD*)*csp++;
 	n_d[0]=n_s[0];
@@ -3090,11 +3078,11 @@ case CgtI:
 	pc+=1;
 	continue;
 case Chalt:
-	printf("\nhalt at %d\n", (int) (pc-code));
-#if 0
-	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
+	PRINTF("\nhalt at %d\n", (int) (pc-code));
+	PRINTF("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
+#ifdef DEBUG_CURSES
+	debugger_graceful_end();
 #endif
-	printf("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
 	return 0;
 /*				exit (1); */
 case CincI:
@@ -3129,9 +3117,6 @@ case Cjmp_eval_upd:
 	BC_WORD *n1,*n2,d;
 	n1=(BC_WORD*)asp[0];
 	d=n1[0];
-#if 0
-	printf ("jmp_eval_upd %d %d\n",(int)n1,(int)d);
-#endif
 	if ((d & 2)!=0){
 		n2=(BC_WORD*)asp[-1];
 		pc=(BC_WORD*)*csp++;
@@ -3141,9 +3126,6 @@ case Cjmp_eval_upd:
 		--asp;
 		continue;
 	}
-#if 0
-	printf ("jmp_eval_upd %d %d\n",(int)d-(int)program,((int)d-(int)program)>>2);
-#endif
 	pc=(BC_WORD*)(d-IF_INT_64_OR_32(40,20));
 	continue;
 }
@@ -3190,16 +3172,9 @@ case Cjsr_eval0:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-#if 0
-	printf ("Cjsr_eval0 %d\n",n);
-	printf ("Cjsr_eval0 %d\n",(int)n[0]);
-#endif
 	pc+=1;
 	if ((n[0] & 2)!=0)
 		continue;
-#if 0
-	printf ("Cjsr_eval0 %d %d\n",n,(int)n[0]);
-#endif
 	*--csp=(BC_WORD)pc;
 	pc=(BC_WORD*)n[0];
 	continue;
@@ -3339,7 +3314,7 @@ case Cprint:
 	length=s[0];
 	cs=(char*)&s[1];
 	for (i=0; i<length; ++i) {
-		putchar(*cs++);
+		PUTCHAR(*cs++);
 	}
 	continue;
 }
@@ -3350,11 +3325,11 @@ case Cprint_symbol_sc:
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
 	if (d==(BC_WORD)&INT+2){
-		printf ("%d",(int)n[1]);
+		PRINTF("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
-		printf ("'%c'",(int)n[1]);
+		PRINTF("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
-		printf ("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
+		PRINTF("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
 	} else {
 		uint32_t *s;
 		int l,i;
@@ -3568,9 +3543,6 @@ case Cpush_r_args20:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-#if 0
-	printf ("Cpush_args2 %d %d %d\n",(int)n,(int)n[1],(int)n[2]);
-#endif
 	asp[2]=n[1];
 	asp[1]=n[2];
 	asp+=2;
@@ -6798,9 +6770,6 @@ case Cjmp_ap1:
 case Cadd_arg0:
 {
 	BC_WORD *n;
-#if 0
-	printf ("Cadd_arg0 %d %d\n",(int)(pc-program),(int)n);
-#endif
 	if ((heap_free-=2)<0)
 		break;
 	n=(BC_WORD*)asp[0];
@@ -6896,9 +6865,6 @@ case Ceval_upd2:
 	n[0]=(BC_WORD)&__indirection[5];
 	asp[1]=n[1];
 	n[1]=asp[-1];
-#if 0
-	printf ("Ceval_upd2 %d %d\n",(int)n,(int)asp[-1]);
-#endif
 	asp[0]=n[2];
 	pc=*(BC_WORD**)&pc[1];
 	asp+=1;
@@ -6927,13 +6893,13 @@ case Cjsr_stack_check:
 	continue;
 case Cstack_check:
 	if (csp[0]!=(BC_WORD)asp){
-		printf("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	if (csp[1]!=(BC_WORD)bsp){
-		printf("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;

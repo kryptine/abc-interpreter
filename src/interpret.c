@@ -171,7 +171,7 @@ eval_to_hnf_return:
 		debugger_update_b_stack(bsp);
 		debugger_update_c_stack(csp);
 		debugger_update_heap(stack, asp);
-		while (debugger_input() != 0);
+		while (debugger_input(asp) != 0);
 #endif
 		switch (*pc) {
 #include "interpret_instructions.h"

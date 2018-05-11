@@ -34,8 +34,9 @@ void init_program_lines(struct program *program) {
 	}
 }
 
+#define LINES_OUTPUT 5
 #define COLWIDTH(n) (COLS * n / 9)
-#define LINEHEIGHT(n) ((LINES-2) / 2 * n)
+#define LINEHEIGHT(n) ((LINES-LINES_OUTPUT-1) / 2 * n)
 
 void init_debugger(struct program *_program,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp,
@@ -96,10 +97,11 @@ void init_debugger(struct program *_program,
 	wrefresh(winh_heap);
 	wrefresh(win_heap);
 
-	winh_output = newwin(1, COLS, (LINES-2) / 2 * 2, 0);
-	win_output = newwin(1, COLS, (LINES-2) / 2 * 2 + 1, 0);
+	winh_output = newwin(1, COLS, LINEHEIGHT(2), 0);
+	win_output = newwin(LINES_OUTPUT, COLS, LINEHEIGHT(2) + 1, 0);
 	wbkgd(winh_output, A_STANDOUT);
 	wprintw(winh_output, "Program output");
+	scrollok(win_output, TRUE);
 	wrefresh(winh_output);
 	wrefresh(win_output);
 
@@ -145,6 +147,8 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		wprintw(win, "CHAR '%c'", node[1]);
 	else if (node[0] == (BC_WORD) &REAL+2)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
+	else if (node[0] == (BC_WORD) &__cycle__in__spine)
+		wprintw(win, "__cycle__in__spine");
 	else {
 		char _tmp[256];
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
@@ -275,8 +279,106 @@ void debugger_update_heap(BC_WORD *stack, BC_WORD *asp) {
 	wrefresh(win_heap);
 }
 
+void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_t indent_mask, int max_depth, int is_last) {
+	int16_t arity = ((int16_t*)node[0])[-1];
+
+	if (indent > 0) {
+		waddch(win, ' ');
+		for (int i = indent-1; i > 0; i--) {
+			waddch(win, (indent_mask & (1 << i)) ? ACS_VLINE : ' ');
+			waddch(win, ' ');
+		}
+		waddch(win, is_last ? ACS_LLCORNER : ACS_LTEE);
+	}
+	waddch(win, ACS_HLINE);
+	if (arity > 0)
+		waddch(win, ACS_DIAMOND);
+	waddch(win, ' ');
+
+	if (is_last)
+		indent_mask ^= 1;
+
+	if (node[0] == (BC_WORD) &INT+2)
+		wprintw(win, "INT %d", node[1]);
+	else if (node[0] == (BC_WORD) &BOOL+2)
+		wprintw(win, "BOOL %s", node[1] ? "true" : "false");
+	else if (node[0] == (BC_WORD) &CHAR+2)
+		wprintw(win, "CHAR '%c'", node[1]);
+	else if (node[0] == (BC_WORD) &REAL+2)
+		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
+	else if (node[0] == (BC_WORD) &__cycle__in__spine) {
+		wprintw(win, "__cycle__in__spine");
+		arity = 0;
+	} else {
+		char _tmp[256];
+		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
+		wprintw(win, "%s", _tmp);
+	}
+
+	if (on_heap((BC_WORD) node, hp, heap_size))
+		wprintw(win, "  {%d}\n", node - hp);
+	else
+		waddch(win, '\n');
+
+	if (max_depth == 0 || arity <= 0)
+		return;
+
+	/* TODO: unboxed values */
+
+	debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent+1, (indent_mask << 1) + 1, max_depth-1, arity == 1);
+	if (arity <= 1)
+		return;
+
+	BC_WORD **rest = (BC_WORD**) node[2];
+	/* TODO: see issue #32 */
+	if (on_heap((BC_WORD) *rest, hp, heap_size))
+		for (int i = 0; i < arity-1; i++)
+			debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent+1, (indent_mask << 1) + 1, max_depth-1, i == arity-2);
+	else
+		for (int i = 2; i <= arity; i++)
+			debugger_show_node_as_tree_(win, (BC_WORD*) node[i], indent+1, (indent_mask << 1) + 1, max_depth-1, i == arity);
+}
+
+void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
+	wmove(win_heap, 0, 0);
+	debugger_show_node_as_tree_(win_heap, node, 0, 0, max_depth, 0);
+	wclrtobot(win_heap);
+	wrefresh(win_heap);
+}
+
+BC_WORD *inspected_a_stack_node = NULL;
+int highlighted_a_stack_line = -1;
+void inspect_a_stack(BC_WORD *top, int up) {
+	inspected_a_stack_node += up;
+	if (inspected_a_stack_node <= asp)
+		inspected_a_stack_node = asp + 1;
+	if (inspected_a_stack_node >= top)
+		inspected_a_stack_node = top;
+
+	if (highlighted_a_stack_line >= 0)
+		mvwchgat(win_a, highlighted_a_stack_line, 0, -1, A_NORMAL, 0, NULL);
+	highlighted_a_stack_line = inspected_a_stack_node - asp - 1;
+	mvwchgat(win_a, highlighted_a_stack_line, 0, -1, A_UNDERLINE, 0, NULL);
+	wrefresh(win_a);
+
+	debugger_show_node_as_tree((BC_WORD*) *inspected_a_stack_node, 5);
+}
+
+void debugger_printf(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	vw_printw(win_output, format, args);
+	wrefresh(win_output);
+}
+
+void debugger_putchar(char c) {
+	waddch(win_output, c);
+	wrefresh(win_output);
+}
+
 static int running = 0;
-int debugger_input(void) {
+static int inspecting_a_stack = 0;
+int debugger_input(BC_WORD *_asp) {
 	if (running) {
 		if (wgetch(win_listing) != ERR) {
 			running = 0;
@@ -287,6 +389,12 @@ int debugger_input(void) {
 	}
 
 	int c = wgetch(win_listing);
+
+	if (!inspecting_a_stack)
+		inspected_a_stack_node = _asp+2;
+	else if (c != 'a' && c != 'A')
+		inspecting_a_stack = 0;
+
 	switch (c) {
 		case '\n':
 			return 0;
@@ -298,9 +406,28 @@ int debugger_input(void) {
 			close_debugger();
 			exit(0);
 			break;
+		case 'A':
+			if (inspecting_a_stack)
+				inspect_a_stack(_asp, 1);
+			break;
+		case 'a':
+			if (asp != _asp) {
+				inspecting_a_stack = 1;
+				inspect_a_stack(_asp, -1);
+			}
+			break;
 		default:
 			break;
 	}
 	return 1;
+}
+
+void debugger_graceful_end(void) {
+	wattron(win_output, A_BLINK);
+	wprintw(win_output, "Press any key to exit.");
+	wattroff(win_output, A_BLINK);
+	wrefresh(win_output);
+	nodelay(win_listing, FALSE);
+	wgetch(win_listing);
 }
 #endif
