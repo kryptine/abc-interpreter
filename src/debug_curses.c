@@ -138,6 +138,8 @@ void debugger_set_pc(BC_WORD *pc) {
 
 void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 	int16_t arity = ((int16_t*)node[0])[-1];
+	int16_t b_arity = arity >> 8;
+	arity = (arity & 0xff) - b_arity;
 
 	if (node[0] == (BC_WORD) &INT+2)
 		wprintw(win, "INT %d", node[1]);
@@ -270,6 +272,7 @@ void debugger_update_heap(BC_WORD *stack, BC_WORD *asp) {
 
 		print_label(_tmp, 256, 0, node, program, hp, heap_size);
 		wprintw(win_heap, "%s\t", _tmp);
+		wrefresh(win_heap);
 		wprint_node(win_heap, (BC_WORD*) node, 1);
 		wprintw(win_heap, "\n");
 	}
@@ -314,6 +317,8 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 	else {
 		char _tmp[256];
 		arity = ((int16_t*)node[0])[-1];
+		int16_t b_arity = arity >> 8;
+		arity = (arity & 0xff) - b_arity;
 		if (arity > 0)
 			waddch(win, ACS_DIAMOND);
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
