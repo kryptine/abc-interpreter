@@ -68,5 +68,12 @@ struct program {
 void free_program(struct program *pgm);
 
 #ifdef INTERPRETER
-void print_program(FILE*, struct program*);
+int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
+		struct program *pgm, BC_WORD *heap, size_t heap_size);
+# ifdef DEBUG_CURSES
+#  include <curses.h>
+void print_program(WINDOW *f, struct program *pgm);
+# else
+void print_program(FILE *f, struct program *pgm);
+# endif
 #endif

@@ -31,4 +31,5 @@ BC_WORD next_black_node(struct nodes_set *set);
 void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t heap_size);
 BC_WORD *get_grey_node(struct nodes_set *set);
 
-void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
+void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
+void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set);

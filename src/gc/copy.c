@@ -25,7 +25,8 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
 
-	mark_all_nodes(stack, asp, *heap, heap_size, &nodes_set);
+	mark_a_stack(stack, asp, *heap, heap_size, &nodes_set);
+	evaluate_grey_nodes(*heap, heap_size, &nodes_set);
 
 	/* Pass 1: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
@@ -188,6 +189,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 
 					if (arity > 1) {
 						BC_WORD **rest = (BC_WORD**) node[2];
+						/* TODO: see issue #32 */
 						if ((BC_WORD) *rest >= (BC_WORD) old_heap && (BC_WORD) *rest < (BC_WORD) (old_heap + heap_size)) {
 							/* 3-node with pointer to rest */
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
@@ -368,6 +370,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 		}
 	}
 
+	free_nodes_set(&nodes_set);
 	free(old_heap);
 	*heap = heap2;
 	return new_heap;
