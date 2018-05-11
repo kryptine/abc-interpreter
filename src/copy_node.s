@@ -42,6 +42,7 @@ copy_node_1:
 	mov    [rdi + 8], rbp
 	mov    rbp, [rcx + 16]
 	mov    [rdi + 16], rbp
+	sub    r15, 24
 
 	# Place on top of A stack
 	mov    rcx, rdi
