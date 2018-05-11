@@ -3343,7 +3343,7 @@ case Cprint_symbol_sc:
 		l=s[0];
 		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
 		for (i=0; i<l; ++i) {
-			putchar (cs[i]);
+			PUTCHAR(cs[i]);
 		}
 	}
 	pc+=2;
@@ -6573,7 +6573,7 @@ case Cjmp_ap5:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6616,7 +6616,7 @@ case Cjmp_ap4:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6670,7 +6670,7 @@ case Cjmp_ap3:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6724,7 +6724,7 @@ case Cjmp_ap2:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
