@@ -3,6 +3,7 @@ module CodeSharing
 import StdArray
 import StdBool
 import StdClass
+import StdDebug
 import StdFile
 import StdInt
 import StdList
@@ -22,6 +23,7 @@ import symbols_in_program
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
+Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
 = take 100 primes
@@ -73,8 +75,7 @@ where
 	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
 	| name == "INT"
-		#! n = readInt p (IF_INT_64_OR_32 8 4)
-		#! n = copy_node n
+		#! n = copy_node p
 		= cast n
 	| name == "Nil"
 		= cast []
@@ -176,7 +177,7 @@ free_to_false p
 # n = free p
 = n == 0 && n <> 0
 
-copy_node :: !a -> a
+copy_node :: !a -> b
 copy_node x = code {
 	.d 1 0
 		jsr _copy_node_asm

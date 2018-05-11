@@ -1,7 +1,7 @@
 .intel_syntax noprefix
 
 .globl    __copy__node__asm
-.extern   get_arity_c
+.extern   print_reg
 
 .text
 
@@ -23,7 +23,32 @@
 # (res) r15: Number of free words on heap
 
 __copy__node__asm:
-	# Save all volatile registers
+	call   get_node
+	# Pointer is now in rxc
+	call   get_arity_asm
+
+	# Jump based on arity
+	cmp    rbp, 2
+	jbe    copy_node_1
+
+copy_node_2:
+	ret
+
+copy_node_1:
+	# Copy node to heap
+	mov    rbp, [rcx]
+	mov    [rdi], rbp
+	mov    rbp, [rcx + 8]
+	mov    [rdi + 8], rbp
+	mov    rbp, [rcx + 16]
+	mov    [rdi + 16], rbp
+
+	# Place on top of A stack
+	mov    rcx, rdi
+	add    rdi, 24
+	ret
+
+print_rbp:
 	push   rax
 	push   rcx
 	push   rdx
@@ -35,16 +60,9 @@ __copy__node__asm:
 	push   r10
 	push   r11
 
-	# Set argument
-	#mov    rdi, rax
+	mov    rdi, rbp
+	call   print_reg
 
-	# Call function (rdi)
-	#call   get_arity_c
-
-	mov rdi, [rcx+8]
-	call print_reg
-
-	# Restore registers
 	pop    r11
 	pop    r10
 	pop    r9
@@ -54,61 +72,15 @@ __copy__node__asm:
 	pop    rsi
 	pop    rdx
 	pop    rcx
-
-	# Jump based on arity
-	#mov    rbp, rax
 	pop    rax
-	#cmp    rbp, 2
-	#jbe    copy_node_1
-	#cmp    rbp, 2
-	#jg     copy_node_2
-
 	ret
 
-copy_node_1:
-	# Copy node to heap
-	mov    rbp, [rax]
-	mov    [rdi], rbp
-	mov    rbp, [rax + 8]
-	mov    [rdi + 8], rbp
-	mov    rbp, [rax + 16]
-	mov    [rdi + 16], rbp
-
-	# Pop B stack
-	call   pop_b_rbp
-
-	# Push to A stack
-	mov    rbp, rdi
-	add    rdi, 16
-	call   push_rbp_a
-	sub    r15, 3
+get_arity_asm:
+	mov    rbp, [rcx]
+	mov    rbp, [rbp - 2]
 	ret
 
-copy_node_2:
-	ret
-
-push_rbp_a:
-	# Put r9 on top of stack
-	mov    [rsi], r9
-	# Increase A heap
-	sub    rsi, 4
-	# Shift A regs by 1
-	mov    r9, r8
-	mov    r8, rdx
-	mov    rdx, rcx
-	mov    rcx, rbp
-
-	# A0 is now free to be used
-	ret
-
-pop_b_rbp:
-	mov    rbp, rax
-	mov    rax, rbx
-	mov    rbx, r10
-	mov    r10, r11
-	mov    r11, r12
-	mov    r12, r13
-	mov    r13, r14
-	# Note: RSP is automatically descreased
-	pop    r14
+get_node:
+	# Dereference A0 once (is still pointer)
+	mov    rcx, [rcx + 8]
 	ret
