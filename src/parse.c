@@ -418,6 +418,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
 					}
 # endif
+# ifdef DEBUG_CURSES
+					if (!strcmp(state->program->symbol_table[state->ptr].name, "ARRAY"))
+						ARRAY = (void*) state->program->symbol_table[state->ptr].offset;
+# endif
 				}
 #endif
 #ifdef LINKER

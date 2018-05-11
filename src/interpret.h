@@ -5,6 +5,9 @@
 
 extern void* __STRING__[];
 extern void* __ARRAY__[];
+#ifdef DEBUG_CURSES
+extern void** ARRAY;
+#endif
 extern void* d___Nil[];
 #define __Nil (d___Nil[1])
 extern void* INT[];
@@ -17,6 +20,15 @@ extern BC_WORD __cycle__in__spine;
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
 extern BC_WORD_S g_heap_free;
 extern int trap_needs_gc;
+
+extern BC_WORD Fjmp_ap1;
+extern BC_WORD Fjmp_ap2;
+extern BC_WORD Fjmp_ap3;
+
+#if defined(POSIX) && defined(DEBUG_CURSES)
+# include <setjmp.h>
+extern jmp_buf segfault_restore_point;
+#endif
 
 /**
  * code: code segment

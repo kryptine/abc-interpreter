@@ -13,12 +13,20 @@
 #include "traps.h"
 #include "util.h"
 
+#ifdef DEBUG_CURSES
+# include "debug_curses.h"
+#endif
+
 /* Used to store the return address when evaluating a node on the heap */
 #define EVAL_TO_HNF_LABEL CMAX
 
 #define _2chars2int(a,b)             ((void*) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((void*) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((void*) (a+(b<<8)+(c<<16)+(d<<24)))
+
+#ifdef DEBUG_CURSES
+void** ARRAY;
+#endif
 
 #if (WORD_WIDTH == 64)
 # define _5chars2int(a,b,c,d,e)       ((void*) (a+(b<<8)+(c<<16)+(d<<24)+((BC_WORD)e<<32)))
@@ -63,9 +71,9 @@ extern BC_WORD __cycle__in__spine;
 BC_WORD __cycle__in__spine = Chalt;
 #endif
 
-static BC_WORD Fjmp_ap1 = Cjmp_ap1;
-static BC_WORD Fjmp_ap2 = Cjmp_ap2;
-static BC_WORD Fjmp_ap3 = Cjmp_ap3;
+BC_WORD Fjmp_ap1 = Cjmp_ap1;
+BC_WORD Fjmp_ap2 = Cjmp_ap2;
+BC_WORD Fjmp_ap3 = Cjmp_ap3;
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
@@ -88,15 +96,21 @@ static void* __indirection[9] = { // TODO what does this do?
 static BC_WORD *asp, *bsp, *csp, *hp;
 
 #ifdef POSIX
-#include <signal.h>
+# include <signal.h>
+# ifdef DEBUG_CURSES
+jmp_buf segfault_restore_point;
+# endif
+
 void handle_segv(int sig) {
 	if (asp >= csp) {
 		fprintf(stderr, "A/C-stack overflow\n");
-		exit(1);
 	} else {
+# ifdef DEBUG_CURSES
+		siglongjmp(segfault_restore_point, SIGSEGV);
+# endif
 		fprintf(stderr, "Untracable segmentation fault\n");
-		exit(1);
 	}
+	exit(1);
 }
 #endif
 
@@ -158,6 +172,14 @@ eval_to_hnf_return:
 		else
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 #endif
+#ifdef DEBUG_CURSES
+		debugger_set_pc(pc);
+		debugger_update_a_stack(asp);
+		debugger_update_b_stack(bsp);
+		debugger_update_c_stack(csp);
+		debugger_update_heap(stack, asp);
+		while (debugger_input(asp) != 0);
+#endif
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
@@ -167,6 +189,9 @@ eval_to_hnf_return:
 				, code, data
 #endif
 				);
+#ifdef DEBUG_CURSES
+		debugger_set_heap(hp);
+#endif
 		heap_free = heap_size-(hp-*heap);
 		if (heap_free <= old_heap_free) {
 			fprintf(stderr, "Heap full.\n");
@@ -179,14 +204,20 @@ eval_to_hnf_return:
 	}
 }
 
+#ifdef DEBUG_CURSES
+const char usage[] = "Usage: %s [-h SIZE] [-s SIZE] FILE\n";
+#else
 const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
+#endif
 
 #ifndef LINK_CLEAN_RUNTIME
 int main(int argc, char **argv) {
 	int opt;
 
+#ifndef DEBUG_CURSES
 	int list_program = 0;
 	int run = 1;
+#endif
 	FILE *input = NULL;
 	size_t stack_size = (512 << 10) * 2;
 	size_t heap_size = 2 << 20;
@@ -197,14 +228,22 @@ int main(int argc, char **argv) {
 	struct parser state;
 	init_parser(&state);
 
-	while ((opt = getopt(argc, argv, "lRs:h:")) != -1) {
+#ifdef DEBUG_CURSES
+	char *optstring = "s:h:";
+#else
+	char *optstring = "lRs:h:";
+#endif
+
+	while ((opt = getopt(argc, argv, optstring)) != -1) {
 		switch (opt) {
+#ifndef DEBUG_CURSES
 			case 'l':
 				list_program = 1;
 				break;
 			case 'R':
 				run = 0;
 				break;
+#endif
 			case 's':
 				stack_size = string_to_size(optarg) * 2;
 				if (stack_size == -1) {
@@ -252,26 +291,39 @@ int main(int argc, char **argv) {
 		exit(res);
 	}
 
+#ifndef DEBUG_CURSES
 	if (list_program) {
 		print_program(stdout, state.program);
 	}
 
 	if (!run)
 		return 0;
+#endif
 
 	heap_size /= sizeof(BC_WORD);
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
+	BC_WORD *asp = stack;
+	BC_WORD *bsp = &stack[stack_size];
+	BC_WORD *csp = &stack[stack_size >> 1];
+
+#ifdef DEBUG_CURSES
+	init_debugger(state.program, asp, bsp, csp, heap, heap_size);
+#endif
+
 	interpret(state.program->code, state.program->code_size,
 			state.program->data, state.program->data_size,
 			stack, stack_size,
 			&heap, heap_size,
-			stack, /* asp */
-			&stack[stack_size], /* bsp */
-			&stack[stack_size >> 1], /* csp */
+			asp, bsp, csp,
 			heap,
 			NULL);
+
+#ifdef DEBUG_CURSES
+	close_debugger();
+	return 0;
+#endif
 
 	free_program(state.program);
 	free(state.program);

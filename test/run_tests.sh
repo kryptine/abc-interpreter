@@ -1,8 +1,7 @@
 #!/bin/bash
 
 CLM=clm
-CLMFLAGS=""
-#CLMFLAGS="-IL Platform -IL Dynamics -dynamics"
+CLMFLAGS="-IL Platform"
 CG=../src/bytecode
 LINK=../src/link
 OPT=../src/optimise
@@ -118,7 +117,7 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	sleep 1
 fi
 
-CFLAGS="$CFLAGS" make -BC ../src || exit 1
+CFLAGS="$CFLAGS" make -BC ../src optimise bytecode link interpret || exit 1
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null
