@@ -167,6 +167,7 @@ eval_to_hnf_return:
 		debugger_update_a_stack(asp);
 		debugger_update_b_stack(bsp);
 		debugger_update_c_stack(csp);
+		debugger_update_heap((BC_WORD*) *asp);
 		while (debugger_input() != 0);
 #endif
 		switch (*pc) {

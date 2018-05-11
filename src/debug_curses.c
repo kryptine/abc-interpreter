@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "abc_instructions.h"
-#include "interpret.h"
+#include "gc/mark.h"
 #include "util.h"
 
 WINDOW *win_listing, *win_a, *win_b, *win_c, *win_heap, *win_output;
@@ -125,6 +125,7 @@ void debugger_set_pc(BC_WORD *pc) {
 }
 
 void debugger_update_a_stack(BC_WORD *ptr) {
+	char _tmp[256];
 	BC_WORD *start = asp + 1;
 	mvwprintw(winh_a, 0, 0, "A-stack  (%d)", ptr-start+1);
 	wclrtobot(winh_a);
@@ -132,16 +133,8 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 
 	wmove(win_a, 0, 0);
 	while (start <= ptr) {
-		wprintw(win_a, "%3d  ", ptr-start);
-		if ((BC_WORD) program->code <= *start && *start < (BC_WORD) (program->code + program->code_size)) {
-			wprintw(win_a, "<code+%d>\n", (BC_WORD*) *start - program->code);
-		} else if ((BC_WORD) program->data <= *start && *start < (BC_WORD) (program->data + program->data_size)) {
-			wprintw(win_a, "<data+%d>\n", (BC_WORD*) *start - program->data);
-		} else if ((BC_WORD) hp <= *start && *start < (BC_WORD) (hp + heap_size)) {
-			wprintw(win_a, "<heap+%d>\n", (BC_WORD*) *start - hp);
-		} else {
-			wprintw(win_a, "  ???\n");
-		}
+		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
+		wprintw(win_a, "%3d  %s\n", ptr-start, _tmp);
 		start++;
 	}
 	wclrtobot(win_a);
@@ -179,6 +172,7 @@ void debugger_update_b_stack(BC_WORD *ptr) {
 }
 
 void debugger_update_c_stack(BC_WORD *ptr) {
+	char _tmp[256];
 	BC_WORD **start = (BC_WORD**) csp - 1;
 	mvwprintw(winh_c, 0, 0, "C-stack  (%d)", start-(BC_WORD**)ptr+1);
 	wclrtobot(winh_c);
@@ -186,20 +180,33 @@ void debugger_update_c_stack(BC_WORD *ptr) {
 
 	wmove(win_c, 0, 0);
 	while (start >= (BC_WORD**) ptr) {
-		wprintw(win_c, "%3d  ", start-(BC_WORD**)ptr);
-		if (*start == &Fjmp_ap1) {
-			wprintw(win_c, "jmp_ap1\n");
-		} else if (*start == &Fjmp_ap2) {
-			wprintw(win_c, "jmp_ap2\n");
-		} else if (*start == &Fjmp_ap3) {
-			wprintw(win_c, "jmp_ap3\n");
-		} else {
-			wprintw(win_c, "<code+%d>\n", (BC_WORD*) *start - program->code);
-		}
+		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
+		wprintw(win_c, "%3d  %s\n", start-(BC_WORD**)ptr, _tmp);
 		start--;
 	}
 	wclrtobot(win_c);
 	wrefresh(win_c);
+}
+
+void debugger_update_heap(BC_WORD *node) {
+	struct nodes_set nodes_set;
+	init_nodes_set(&nodes_set, heap_size);
+
+	add_grey_node(&nodes_set, node, hp, heap_size);
+	evaluate_grey_nodes(hp, heap_size, &nodes_set);
+
+	wmove(win_heap, 0, 0);
+	for (;;) {
+		BC_WORD offset = next_black_node(&nodes_set);
+		if (offset == -1)
+			break;
+		BC_WORD *node = hp + offset;
+
+		wprintw(win_heap, "0x%4x  \n", (BC_WORD) node & 0xffff);
+	}
+
+	wclrtobot(win_heap);
+	wrefresh(win_heap);
 }
 
 static int running = 0;
@@ -230,5 +237,4 @@ int debugger_input(void) {
 	}
 	return 1;
 }
-
 #endif

@@ -136,14 +136,14 @@ BC_WORD *get_grey_node(struct nodes_set *set) {
 	}
 }
 
-void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
+void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *asp_temp;
-	/* Add full A-stack to the grey set */
 	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
 		add_grey_node(set, (BC_WORD*) *asp_temp, heap, heap_size);
 	}
+}
 
-	/* Evaluate full grey set */
+void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *node;
 	while ((node = get_grey_node(set)) != NULL) {
 		int16_t arity = ((int16_t*)(node[0]))[-1];

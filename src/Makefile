@@ -43,7 +43,6 @@ link: $(SRC_LINK) $(DEP_LINK)
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
-	debug_curses.c\
 	gc.c\
 	gc/compact.c\
 	gc/copy.c\
@@ -59,7 +58,7 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
-	$(CC) $(CFLAGS) $(SRC_INTERPRET) -DINTERPRETER -o $@
+	$(CC) $(CFLAGS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
 interpret.a: $(OBJ_INTERPRET)
 	ar cr $@ $^
@@ -67,11 +66,16 @@ interpret.a: $(OBJ_INTERPRET)
 $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
 
+debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
+	$(CC) $(CFLAGS) -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
+
 clean:
 	$(RM) -r \
-		optimise\
-		interpret\
 		bytecode\
+		debug\
+		interpret\
+		link\
+		optimise\
 		**/Clean\ System\ Files
 
 .FORCE:
