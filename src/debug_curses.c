@@ -48,7 +48,7 @@ void init_debugger(struct program *_program,
 	hp = _hp;
 	heap_size = _heap_size;
 
-	initscr();
+	newterm(NULL, stderr, stdin);
 	cbreak();
 	nodelay(curscr, FALSE);
 	noecho();

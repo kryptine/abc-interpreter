@@ -29,6 +29,64 @@ int print_plain_label(char *s, size_t size, BC_WORD *label,
 		return snprintf(s, size, "0x" BC_WORD_FMT_HEX, (BC_WORD) label);
 }
 
+int print_label_name(char *s, size_t size, char *label) {
+	int printed = 0;
+#define add_char(c) {if (++printed < size-1) *s++ = c;}
+
+	while (*label) {
+		if (*label == '_') {
+			label++;
+			switch (*label) {
+				case '_': add_char('_'); break;
+				case 'A': add_char('+'); break;
+				case 'B': add_char('`'); break;
+				case 'C': add_char(':'); break;
+				case 'D': add_char('/'); break;
+				case 'E': add_char('='); break;
+				case 'G': add_char('>'); break;
+				case 'H': add_char('#'); break;
+				case 'I': add_char(';'); break;
+				case 'L': add_char('<'); break;
+				case 'M': add_char('*'); break;
+				case 'O': add_char('|'); break;
+				case 'P': add_char('.'); break;
+				case 'Q': add_char('?'); break;
+				case 'S': add_char('-'); break;
+				case 'T': add_char('~'); break;
+				case 'N':
+					label++;
+					switch (*label) {
+						case 'A': add_char('&'); break;
+						case 'B': add_char('\\'); break;
+						case 'C': add_char('^'); break;
+						case 'D': add_char('$'); break;
+						case 'E': add_char('!'); break;
+						case 'P': add_char('%'); break;
+						case 'Q': add_char('"'); break;
+						case 'S': add_char('\''); break;
+						case 'T': add_char('@'); break;
+						default:
+							add_char('_');
+							add_char('N');
+							add_char(*(label-1));
+					}
+					label++;
+					break;
+				default:
+					add_char('_');
+					add_char(*(label-1));
+			}
+			label++;
+		} else {
+			add_char(*label++);
+		}
+	}
+
+	add_char('\0');
+
+	return printed-1;
+}
+
 int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
 	if (heap != NULL && heap <= label && label < heap + heap_size)
@@ -70,7 +128,7 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 	for (int i = 0; i < pgm->symbol_table_size; i++) {
 		if ((BC_WORD*) pgm->symbol_table[i].offset - label == 0) {
 			if (*pgm->symbol_table[i].name)
-				return used + snprintf(s, size - used, "%s", pgm->symbol_table[i].name);
+				return used + print_label_name(s, size - used, pgm->symbol_table[i].name);
 			else
 				break;
 		}
@@ -92,8 +150,10 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		}
 	}
 
-	return used + snprintf(s, size - used, "%s%c%u",
-			min_distance_label, distance_positive, min_distance);
+	int more_used = print_label_name(s, size - used, min_distance_label);
+	s += more_used;
+	used += more_used;
+	return used + snprintf(s, size - used, "%c%u", distance_positive, min_distance);
 }
 
 # ifdef DEBUG_CURSES
