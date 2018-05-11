@@ -4,7 +4,7 @@ chars		_SystemArray
 e		StdInt,StdList
 fsieve		StdReal
 hamming		StdInt,StdList
-#infprimes		StdChar,StdClass,StdInt,StdList,StdOverloaded,_SystemEnum
+infprimes		StdChar,StdClass,StdInt,StdList,StdOverloaded,_SystemEnum
 invperm		StdInt
 lqueen		StdList
 mulmat

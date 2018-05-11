@@ -36,10 +36,13 @@ __copy__node__asm:
 	push   r11
 
 	# Set argument
-	mov    rdi, rax
+	#mov    rdi, rax
 
 	# Call function (rdi)
-	call   get_arity_c
+	#call   get_arity_c
+
+	mov rdi, [rcx+8]
+	call print_reg
 
 	# Restore registers
 	pop    r11
@@ -53,12 +56,12 @@ __copy__node__asm:
 	pop    rcx
 
 	# Jump based on arity
-	mov    rbp, rax
+	#mov    rbp, rax
 	pop    rax
-	cmp    rbp, 2
-	jbe    copy_node_1
-	cmp    rbp, 2
-	jg     copy_node_2
+	#cmp    rbp, 2
+	#jbe    copy_node_1
+	#cmp    rbp, 2
+	#jg     copy_node_2
 
 	ret
 
