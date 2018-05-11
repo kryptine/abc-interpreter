@@ -9,6 +9,7 @@
 #include "util.h"
 
 WINDOW *win_listing, *win_a, *win_b, *win_c, *win_heap, *win_output;
+WINDOW *winh_listing, *winh_a, *winh_b, *winh_c, *winh_heap, *winh_output;
 
 static struct program *program;
 static uint32_t *program_lines;
@@ -42,8 +43,10 @@ void init_debugger(struct program *_program,
 	heap_size = _heap_size;
 
 	initscr();
+	cbreak();
+	nodelay(curscr, FALSE);
+	noecho();
 
-	WINDOW *winh_listing, *winh_a, *winh_b, *winh_c, *winh_heap, *winh_output;
 	WINDOW *win_vertical_bar;
 
 	winh_listing = newwin(1, COLS / 3, 0, 0);
@@ -123,6 +126,10 @@ void debugger_set_pc(BC_WORD *pc) {
 
 void debugger_update_a_stack(BC_WORD *ptr) {
 	BC_WORD *start = asp + 1;
+	mvwprintw(winh_a, 0, 0, "A-stack  (%d)", ptr-start+1);
+	wclrtobot(winh_a);
+	wrefresh(winh_a);
+
 	wmove(win_a, 0, 0);
 	while (start <= ptr) {
 		wprintw(win_a, "%3d  ", ptr-start);
@@ -149,6 +156,10 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 
 void debugger_update_b_stack(BC_WORD *ptr) {
 	BC_WORD *start = bsp - 1;
+	mvwprintw(winh_b, 0, 0, "B-stack  (%d)", start-ptr+1);
+	wclrtobot(winh_b);
+	wrefresh(winh_b);
+
 	wmove(win_b, 0, 0);
 	while (start >= ptr) {
 		wprintw(win_b, "%3d  " BC_WORD_S_FMT5, start-ptr, *start);
@@ -169,6 +180,10 @@ void debugger_update_b_stack(BC_WORD *ptr) {
 
 void debugger_update_c_stack(BC_WORD *ptr) {
 	BC_WORD **start = (BC_WORD**) csp - 1;
+	mvwprintw(winh_c, 0, 0, "C-stack  (%d)", start-(BC_WORD**)ptr+1);
+	wclrtobot(winh_c);
+	wrefresh(winh_c);
+
 	wmove(win_c, 0, 0);
 	while (start >= (BC_WORD**) ptr) {
 		wprintw(win_c, "%3d  ", start-(BC_WORD**)ptr);
@@ -187,10 +202,24 @@ void debugger_update_c_stack(BC_WORD *ptr) {
 	wrefresh(win_c);
 }
 
+static int running = 0;
 int debugger_input(void) {
-	char c = getchar();
+	if (running) {
+		if (wgetch(win_listing) != ERR) {
+			running = 0;
+			nodelay(win_listing, FALSE);
+			return 1;
+		}
+		return 0;
+	}
+
+	int c = wgetch(win_listing);
 	switch (c) {
-		case '\r':
+		case '\n':
+			return 0;
+		case 'r':
+			running = 1;
+			nodelay(win_listing, TRUE);
 			return 0;
 		case 'q':
 			close_debugger();
