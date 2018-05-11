@@ -6,11 +6,13 @@ Usage is just like the interpreter:
 debug [-s SIZE] [-h SIZE] PROGRAM.bc
 ```
 
-## Instructions
+## Commands
 
 - <kbd>Enter</kbd> steps one instruction
 - <kbd>r</kbd> runs until any key is pressed
 - <kbd>q</kbd> terminates the program gracefully
+- <kbd>a</kbd> to inspect the A-stack (repeated to move down the stack;
+  <kbd>A</kbd> to move up the stack)
 
 ## Output format
 
