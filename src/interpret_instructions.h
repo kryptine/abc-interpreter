@@ -3326,6 +3326,8 @@ case Cprint_symbol_sc:
 	d=n[0];
 	if (d==(BC_WORD)&INT+2){
 		PRINTF("%d",(int)n[1]);
+	} else if (d==(BC_WORD)&BOOL+2) {
+		PRINTF("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
 		PRINTF("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
@@ -4311,6 +4313,20 @@ case Cpush_r_args_aa1:
 	a=(BC_WORD*)n[2];
 	*++asp=*(BC_WORD*)((BC_WORD_S)a+a_o);
 	pc+=3;
+	continue;
+}
+case Cpush_r_args_b:
+{
+	BC_WORD *n,*a;
+	BC_WORD bo=pc[2];
+	int n_args=pc[3];
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	a=(BC_WORD*)n[2];
+	for (int i=0; i<n_args; i++)
+		bsp[0-n_args+i]=a[i+bo-3]; /* TODO why -3? */
+	bsp-=n_args;
+	pc+=4;
 	continue;
 }
 case Cpush_r_args_b2l1:

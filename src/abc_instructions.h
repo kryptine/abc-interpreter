@@ -278,6 +278,7 @@ enum {
 	Cpush_r_args_a3,
 	Cpush_r_args_a4,
 	Cpush_r_args_aa1,
+	Cpush_r_args_b,
 	Cpush_r_args_b0b11,
 	Cpush_r_args_b0221,
 	Cpush_r_args_b1,

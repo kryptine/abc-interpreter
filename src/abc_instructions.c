@@ -560,6 +560,8 @@ char *instruction_name(BC_WORD i) {
 			return "push_r_args_a3";
 		case Cpush_r_args_a4:
 			return "push_r_args_a4";
+		case Cpush_r_args_b:
+			return "push_r_args_b";
 		case Cpush_r_args_b0b11:
 			return "push_r_args_b0b11";
 		case Cpush_r_args_b0221:
@@ -1170,7 +1172,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill_r10:              return "nnl";
 		case Cfill_r11:              return "nnnl";
 		case Cfill_r12:              return "?";
-		case Cfill_r13:              return "?";
+		case Cfill_r13:              return "nnnl";
 		case Cfill_r20:              return "nnl";
 		case Cfill_r21:              return "nnnl";
 		case Cfill_r22:              return "?";
@@ -1284,14 +1286,15 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_args_a2l:       return "n";
 		case Cpush_r_args_a3:        return "?";
 		case Cpush_r_args_a4:        return "?";
+		case Cpush_r_args_b:         return "nnn";
 		case Cpush_r_args_b0b11:     return "?";
 		case Cpush_r_args_b0221:     return "?";
 		case Cpush_r_args_b1111:     return "?";
 		case Cpush_r_args_b1:        return "?";
-		case Cpush_r_args_b2l1:      return "?";
+		case Cpush_r_args_b2l1:      return "n";
 		case Cpush_r_args_b31:       return "n";
 		case Cpush_r_args_b41:       return "?";
-		case Cpush_r_args_b2:        return "?";
+		case Cpush_r_args_b2:        return "nn";
 		case Cpush_r_args_b1l2:      return "?";
 		case Cpush_r_args_b22:       return "?";
 		case CremI:                  return "";
