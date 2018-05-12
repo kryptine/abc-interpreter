@@ -173,11 +173,7 @@ eval_to_hnf_return:
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
 #endif
 #ifdef DEBUG_CURSES
-		debugger_set_pc(pc);
-		debugger_update_a_stack(asp);
-		debugger_update_b_stack(bsp);
-		debugger_update_c_stack(csp);
-		debugger_update_heap(stack, asp);
+		debugger_update_views(pc, asp, bsp, csp);
 		while (debugger_input(asp) != 0);
 #endif
 		switch (*pc) {
@@ -309,7 +305,7 @@ int main(int argc, char **argv) {
 	BC_WORD *csp = &stack[stack_size >> 1];
 
 #ifdef DEBUG_CURSES
-	init_debugger(state.program, asp, bsp, csp, heap, heap_size);
+	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
 #endif
 
 	interpret(state.program->code, state.program->code_size,
