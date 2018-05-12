@@ -2909,7 +2909,7 @@ case Cfill_r11:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=bsp[bo];
@@ -2925,7 +2925,7 @@ case Cfill_r12:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -2944,7 +2944,7 @@ case Cfill_r13:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -2977,7 +2977,7 @@ case Cfill_r21:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -2996,7 +2996,7 @@ case Cfill_r22:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -3034,7 +3034,7 @@ case Cfill_r31:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
