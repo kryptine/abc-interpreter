@@ -2,6 +2,7 @@
 
 .globl    __copy__node__asm
 .extern   print_reg
+.extern   dINT
 
 .text
 
@@ -36,16 +37,14 @@ copy_node_2:
 
 copy_node_1:
 	# Copy node to heap
-	mov    rbp, [rcx]
+	lea    rbp, [dINT + 2]
 	mov    [rdi], rbp
 	mov    rbp, [rcx + 8]
 	mov    [rdi + 8], rbp
 	mov    rbp, [rcx + 16]
 	mov    [rdi + 16], rbp
-	sub    r15, 24
-
-	# Place on top of A stack
 	mov    rcx, rdi
+	sub    r15, 3
 	add    rdi, 24
 	ret
 
@@ -78,7 +77,8 @@ print_rbp:
 
 get_arity_asm:
 	mov    rbp, [rcx]
-	mov    rbp, [rbp - 2]
+	mov    rbp, [rbp - 8]
+	and    rbp, 0x000000000000FFFF
 	ret
 
 get_node:
