@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
 		g_code_offset = parser.code_offset;
 		g_data_offset = parser.data_offset;
 
+		free_program(parser.program);
 		free(parser.program);
 	}
 
