@@ -19,7 +19,7 @@ RUNFLAGS=""
 
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
-RUN_ONLY=""
+RUN_ONLY=()
 PROFILE=0
 RECOMPILE=1
 QUIET=0
@@ -53,6 +53,13 @@ print_usage () {
 	exit 1
 }
 
+contains () {
+	local e match="$1"
+	shift
+	for e; do [[ "$e" == "$match" ]] && return 0; done
+	return 1
+}
+
 OPTS=`getopt -n "$0" -l help,only:,benchmark,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:bfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
@@ -62,7 +69,7 @@ while true; do
 			print_help;;
 
 		-o | --only)
-			RUN_ONLY="$2"
+			RUN_ONLY+=("$2")
 			shift 2;;
 
 		-b | --benchmark)
@@ -133,7 +140,7 @@ do
 
 	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
-	elif [[ "$RUN_ONLY" != "" ]] && [[ "$MODULE" != "$RUN_ONLY" ]]; then
+	elif [[ "${#RUN_ONLY[@]}" -gt 0 ]] && ! contains "$MODULE" "${RUN_ONLY[@]}"; then
 		continue
 	fi
 
