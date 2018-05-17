@@ -959,7 +959,7 @@ void add_words_in_strings(uint32_t val) {
 }
 
 void add_string_information(uint32_t data_offset) {
-	if (pgrm.strings_size >= allocated_data_size)
+	if (pgrm.strings_size >= allocated_strings_size)
 		realloc_strings();
 
 	pgrm.strings[pgrm.strings_size++] = data_offset;
@@ -4280,6 +4280,9 @@ void write_program(FILE* program_file) {
 	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 
+	fwrite(&label_id, sizeof(label_id), 1, program_file);
+	fwrite(&global_label_string_count, sizeof(global_label_string_count), 1, program_file);
+
 	fwrite(&pgrm.code_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 	fwrite(&pgrm.data_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 
@@ -4287,8 +4290,6 @@ void write_program(FILE* program_file) {
 	print_strings(pgrm.strings_size,pgrm.strings,program_file);
 	print_data(pgrm.data_size,pgrm.data,program_file);
 
-	fwrite(&label_id, sizeof(label_id), 1, program_file);
-	fwrite(&global_label_string_count, sizeof(global_label_string_count), 1, program_file);
 	if (labels != NULL)
 		print_global_labels(label_array, label_id, program_file);
 

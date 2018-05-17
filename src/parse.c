@@ -68,6 +68,9 @@ void next_state(struct parser *state) {
 			state->state = PS_init_data;
 			return;
 		case PS_init_data:
+			state->state = PS_init_symbol_table;
+			return;
+		case PS_init_symbol_table:
 			state->state = PS_init_code_reloc;
 			return;
 		case PS_init_code_reloc:
@@ -94,9 +97,6 @@ void next_state(struct parser *state) {
 #endif
 				return;
 		case PS_data:
-			state->state = PS_init_symbol_table;
-			return;
-		case PS_init_symbol_table:
 			state->state = PS_symbol_table;
 			if (state->program->symbol_table_size > 0)
 				return;
@@ -180,6 +180,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
 #endif
+				next_state(state);
+				break;
+			case PS_init_symbol_table:
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbol_table_size = elem32;
+				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
 				next_state(state);
 				break;
 			case PS_init_code_reloc:
@@ -359,16 +369,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (state->ptr >= state->program->data_size)
 #endif
 					next_state(state);
-				break;
-			case PS_init_symbol_table:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->program->symbol_table_size = elem32;
-				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
-				next_state(state);
 				break;
 			case PS_symbol_table:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
