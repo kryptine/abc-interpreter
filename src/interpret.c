@@ -17,6 +17,10 @@
 # include "debug_curses.h"
 #endif
 
+#ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
+# include "gc/mark.h"
+#endif
+
 /* Used to store the return address when evaluating a node on the heap */
 #define EVAL_TO_HNF_LABEL CMAX
 
@@ -171,6 +175,13 @@ eval_to_hnf_return:
 			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
 		else
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+#endif
+#ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
+		struct nodes_set nodes_set;
+		init_nodes_set(&nodes_set, heap_size);
+		mark_a_stack(stack, asp, *heap, heap_size, &nodes_set);
+		evaluate_grey_nodes(*heap, heap_size, &nodes_set);
+		free_nodes_set(&nodes_set);
 #endif
 #ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);

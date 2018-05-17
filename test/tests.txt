@@ -26,3 +26,4 @@ stwice
 tak
 twice
 war_seq		StdEnv:StdInt
+weird_types

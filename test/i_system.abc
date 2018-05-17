@@ -448,6 +448,7 @@ _print_record
 	| TODO
 	print_sc "<record>"
 	pop_a 1
+	pop_b 1
 	jmp _print_brackets
 
 .n 0 _
