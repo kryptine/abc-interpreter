@@ -1,6 +1,7 @@
 .intel_syntax noprefix
 
 .globl    __copy__node__asm
+.globl    __copy__node__int__asm
 .extern   print_reg
 .extern   dINT
 
@@ -23,6 +24,19 @@
 # (res) r14: B5
 # (res) r15: Number of free words on heap
 
+__copy__node__int__asm:
+	call   get_node
+	lea    rbp, [dINT + 2]
+	mov    [rdi], rbp
+	mov    rbp, [rcx + 8]
+	mov    [rdi + 8], rbp
+	mov    rbp, [rcx + 16]
+	mov    [rdi + 16], rbp
+	mov    rcx, rdi
+	sub    r15, 3
+	add    rdi, 24
+	ret
+
 __copy__node__asm:
 	call   get_node
 	# Pointer is now in rxc
@@ -37,7 +51,7 @@ copy_node_2:
 
 copy_node_1:
 	# Copy node to heap
-	lea    rbp, [dINT + 2]
+	mov    rbp, [rcx]
 	mov    [rdi], rbp
 	mov    rbp, [rcx + 8]
 	mov    [rdi + 8], rbp

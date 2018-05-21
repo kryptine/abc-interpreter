@@ -75,10 +75,11 @@ where
 	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
 	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
 	| name == "INT"
-		#! n = copy_node p
+		#! n = copy_node_int p
 		= cast n
 	| name == "Nil"
-		= cast []
+		#! n = copy_node p
+		= cast n
 	| name == "Cons"
 		#! childa = readInt p (IF_INT_64_OR_32  8 4)
 		#! childb = readInt p (IF_INT_64_OR_32 16 8)
@@ -183,5 +184,13 @@ copy_node x = code {
 		jsr _copy_node_asm
 	.o 1 0
 }
+
+copy_node_int :: !a -> b
+copy_node_int x = code {
+	.d 1 0
+		jsr _copy_node_int_asm
+	.o 1 0
+}
+
 import code from "copy_node_c."
 import code from "copy_node_asm."
