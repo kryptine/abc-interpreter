@@ -1556,6 +1556,18 @@ int parse_directive_n_l (instruction *instruction)
 	return 1;
 }
 
+int parse_directive_n_n_n (instruction *instruction)
+{
+	LONG n1,n2,n3;
+
+	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2)
+	||  !parse_unsigned_integer (&n3))
+		return 0;
+
+	instruction->code_function ((int)n1,(int)n2,(int)n3);
+	return 1;
+}
+
 #define SMALL_VECTOR_SIZE 32
 #define LOG_SMALL_VECTOR_SIZE 5
 #define MASK_SMALL_VECTOR_SIZE 31
@@ -1617,6 +1629,17 @@ int parse_directive_label (instruction *instruction)
 	instruction->code_function (s);
 	skip_spaces_and_tabs();
 
+	return 1;
+}
+
+int parse_directive_pb (instruction *instruction)
+{
+	STRING s;
+	int length;
+
+	if (!parse_descriptor_string (s,&length))
+		return 0;
+	instruction->code_function (s,length);
 	return 1;
 }
 

@@ -108,6 +108,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fill_a",                parse_instruction_n_n,           code_fill_a );
 	put_instruction_name("fill_r",                parse_instruction_a_n_n_n_n_n,   code_fill_r );
 	put_instruction_name("get_node_arity",        parse_instruction_n,             code_get_node_arity );
+	put_instruction_name("getWL",                 parse_instruction_n,             code_dummy );
 	put_instruction_name("gtI",                   parse_instruction,               code_gtI );
 	put_instruction_name("halt",                  parse_instruction,               code_halt );
 	put_instruction_name("incI",                  parse_instruction,               code_incI );
@@ -168,6 +169,7 @@ void load_instruction_table(void) {
 	put_instruction_name("push_r_args_a",         parse_instruction_n_n_n_n_n,     code_push_r_args_a );
 	put_instruction_name("push_r_args_b",         parse_instruction_n_n_n_n_n,     code_push_r_args_b );
 	put_instruction_name("push_r_args_u",         parse_instruction_n_n_n,         code_push_r_args_u );
+	put_instruction_name("release",               parse_instruction,               code_dummy );
 	put_instruction_name("remI",                  parse_instruction,               code_remI );
 	put_instruction_name("replace",               parse_instruction_a_n_n,         code_replace );
 	put_instruction_name("repl_arg",              parse_instruction_n_n,           code_repl_arg );
@@ -284,6 +286,7 @@ void load_instruction_table(void) {
 	put_instruction_name(".a",                    parse_directive_a,               code_a );
 	put_instruction_name(".algtype",              parse_instruction_n,             code_algtype );
 	put_instruction_name(".caf",                  parse_instruction_a_n_n,         code_caf );
+	put_instruction_name(".code",                 parse_directive_n_n_n,           code_dummy );
 	put_instruction_name(".comp",                 parse_directive_n_l,             code_comp    );
 	put_instruction_name(".d",                    parse_directive_n_n_t,           code_d );
 	put_instruction_name(".depend",               parse_directive_depend,          code_depend );
@@ -304,6 +307,13 @@ void load_instruction_table(void) {
 	put_instruction_name(".n",                    parse_directive_n,               code_n );
 	put_instruction_name(".nu",                   parse_directive_nu,              code_nu );
 	put_instruction_name(".o",                    parse_directive_n_n_t,           code_o );
+	put_instruction_name(".pb",                   parse_directive_pb,              code_dummy );
+	put_instruction_name(".pd",                   parse_directive,                 code_dummy );
+	put_instruction_name(".pe",                   parse_directive,                 code_dummy );
+	put_instruction_name(".pl",                   parse_directive,                 code_dummy );
+	put_instruction_name(".pld",                  parse_directive,                 code_dummy );
+	put_instruction_name(".pn",                   parse_directive,                 code_dummy );
+	put_instruction_name(".pt",                   parse_directive,                 code_dummy );
 	put_instruction_name(".record",               parse_directive_record,          code_record );
 	put_instruction_name(".start",                parse_directive_label,           code_start );
 	put_instruction_name(".string",               parse_directive_string,          code_string );
