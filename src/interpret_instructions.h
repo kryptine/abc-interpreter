@@ -3332,6 +3332,21 @@ case Cprint:
 	}
 	continue;
 }
+case CprintD:
+{
+	uint32_t *s;
+	int l,i;
+	char *cs;
+
+	s=(uint32_t*)*bsp++;
+	l=s[0];
+	cs=(char*)&s[IF_INT_64_OR_32(2,1)];
+	for (i=0; i<l; ++i) {
+		PUTCHAR(cs[i]);
+	}
+	pc+=1;
+	continue;
+}
 case Cprint_symbol_sc:
 {
 	BC_WORD *n,d;

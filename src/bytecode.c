@@ -192,7 +192,7 @@ void print_code(FILE *f, struct program *pgm) {
 					break;
 				case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
 				case 's': { /* String */
-					uint32_t *s = (uint32_t*) pgm->code[i] + (*fmt == 's' ? 0 : 1);
+					uint32_t *s = (uint32_t*) pgm->code[i] + (*fmt == 's' ? 0 : IF_INT_64_OR_32(2,1));
 					uint32_t length = s[0];
 					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
 					FPRINTF(f, " \"");

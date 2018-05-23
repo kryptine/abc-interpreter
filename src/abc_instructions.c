@@ -604,6 +604,8 @@ char *instruction_name(BC_WORD i) {
 			return "push_r_args_b1l2";
 		case Cpush_r_args_b22:
 			return "push_r_args_b22";
+		case Cpush_t_r_a:
+			return "push_t_r_a";
 		case Cpush_t_r_args:
 			return "push_t_r_args";
 		case CremI:
