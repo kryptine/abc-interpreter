@@ -76,4 +76,4 @@ FormatRows [] = []
    triangle by means of FormatRows.
 */
 
-Start = [[c \\ c <-: s] \\ s <- FormatRows (take NrRows Pascal)]
+Start = FormatRows (take NrRows Pascal)

@@ -11,7 +11,7 @@
 #define max_implemented_instruction_n CMAX-1
 
 #define N_ADD_ARG_LABELS 32
-#define MAX_Cadd_arg_INSTRUCTION_N 16
+#define MAX_Cadd_arg_INSTRUCTION_N 32
 
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
@@ -1012,11 +1012,9 @@ void code_buildAC(char *string,int string_length) {
 	add_instruction_internal_label(CbuildAC,string_label);
 	if (list_code) {
 		printf("\t.data\n");
-//		printf("\t.data4 __STRING__+2\n");
-		printf("\t.data4 2\n");
+		printf("\t.data4 __STRING__+2\n");
 	}
-//	store_data_label_value("__STRING__",2);
-	store_data_l(2);
+	store_data_label_value("__STRING__",2);
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -1492,6 +1490,20 @@ void code_eqR(void) {
 
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
+}
+
+void code_eq_desc_b(char descriptor_name[],int arity) {
+	if (arity == 0) {
+		add_instruction_label_offset(Ceq_desc_b0,descriptor_name,2);
+		return;
+	}
+
+	fprintf(stderr, "Error: eq_desc_b %d\n", arity);
+	exit(1);
+}
+
+void code_eq_nulldesc(char descriptor_name[], int a_offset) {
+	add_instruction_w_label_offset(Ceq_nulldesc,-a_offset,descriptor_name,2);
 }
 
 void code_exit_false(char label_name[]) {
@@ -2044,7 +2056,12 @@ int last_da,last_db;
 void code_jmp(char label_name[]) {
 	last_d=0;
 
-	add_instruction_label(Cjmp,label_name);
+	if (!strcmp(label_name,"__driver")) {
+		add_instruction_label(Cjsr,"__print__graph");
+		add_instruction(Chalt);
+	} else {
+		add_instruction_label(Cjmp,label_name);
+	}
 }
 
 void code_jmp_ap(int n_apply_args) {
@@ -2248,6 +2265,22 @@ void code_print(char *string,int length) {
 		printf("\t.text\n");
 }
 
+void code_printD(void) {
+	add_instruction(CprintD);
+}
+
+void code_print_char(void) {
+	add_instruction(Cprint_char);
+}
+
+void code_print_int(void) {
+	add_instruction(Cprint_int);
+}
+
+void code_print_real(void) {
+	add_instruction(Cprint_real);
+}
+
 void code_print_sc(char *string,int length) {
 	struct label *string_label;
 
@@ -2265,6 +2298,10 @@ void code_print_sc(char *string,int length) {
 
 void code_print_symbol_sc(int a_offset) {
 	add_instruction_w(Cprint_symbol_sc,-a_offset);
+}
+
+void code_pushA_a(int a_offset) {
+	add_instruction_w(CpushA_a,-a_offset);
 }
 
 void code_pushB(int b) {
@@ -2343,6 +2380,10 @@ void code_push_a(int a_offset) {
 	add_instruction_w(Cpush_a,-a_offset);
 }
 
+void code_push_a_r_args(void) {
+	add_instruction(Cpush_a_r_args);
+}
+
 void code_push_a_b(int a_offset) {
 	add_instruction_w(Cpush_a_b,-a_offset);
 }
@@ -2404,10 +2445,10 @@ void code_push_args_u(int a_offset,int arity,int n_arguments) {
 	if (arity==n_arguments) {
 		code_push_args(a_offset,arity,n_arguments);
 		return;
+	} else {
+		add_instruction_w_w_w(Cpush_args_u,a_offset,arity,n_arguments);
+		return;
 	}
-
-	fprintf(stderr, "Error: push_args_u %d %d %d\n",a_offset,arity,n_arguments);
-	exit(1);
 }
 
 void code_push_arg_b(int a_offset) {
@@ -2427,6 +2468,9 @@ void code_push_b(int b_offset) {
 }
 
 void code_push_node(char *label_name,int n_arguments) {
+	if (strcmp(label_name,"__cycle__in__spine") && strcmp(label_name,"__reserve"))
+		fprintf(stderr, "Warning: push_node not implemented for '%s'\n", label_name);
+
 	switch(n_arguments) {
 		case 0:
 			add_instruction_label(Cpush_node0,label_name);
@@ -2502,6 +2546,14 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 
 void code_remI(void) {
 	add_instruction(CremI);
+}
+
+void code_push_r_arg_D(void) {
+	add_instruction(Cpush_r_arg_D);
+}
+
+void code_push_r_arg_t(void) {
+	add_instruction(Cpush_r_arg_t);
 }
 
 void code_push_r_arg_u(int a_offset,int a_size,int b_size,int a_arg_offset,int a_arg_size,int b_arg_offset,int b_arg_size) {
@@ -2701,6 +2753,14 @@ void code_push_r_args_u(int a_offset,int a_size,int b_size) {
 	code_push_r_args(a_offset,a_size,b_size);
 }
 
+void code_push_t_r_a(int a_offset) {
+	add_instruction_w(Cpush_t_r_a,-a_offset);
+}
+
+void code_push_t_r_args(void) {
+	add_instruction(Cpush_t_r_args);
+}
+
 void code_replace(char element_descriptor[],int a_size,int b_size) {
 	switch(element_descriptor[0]) {
 		case '_':
@@ -2797,6 +2857,10 @@ void code_repl_args(int arity,int n_arguments) {
 
 	fprintf(stderr, "Error: repl_args %d %d\n",arity,n_arguments);
 	exit(1);
+}
+
+void code_repl_args_b(void) {
+	add_instruction(Crepl_args_b);
 }
 
 void code_repl_r_args(int a_size,int b_size) {

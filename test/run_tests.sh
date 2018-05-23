@@ -130,6 +130,8 @@ if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null
 fi
 
+$CG "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc"
+
 while read line
 do
 	line="${line//$'\t\t'/ , }"
@@ -188,10 +190,8 @@ do
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 	$CG $MODULE.opt.abc -o $MODULE.o.bc
 
-	$CG i_system.abc -o i_system.o.bc
-
 	rm $MODULE.bc 2>/dev/null
-	$LINK $MODULE.o.bc i_system.o.bc "${BCDEPS[@]}" -o $MODULE.bc
+	$LINK $MODULE.o.bc "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc" "${BCDEPS[@]}" -o $MODULE.bc
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 		FAILED=1

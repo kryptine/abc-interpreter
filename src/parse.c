@@ -385,11 +385,20 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
 #ifdef INTERPRETER
-				if (state->program->symbol_table[state->ptr].offset == -1) {
-					if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL"))
-						state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
-					else
-						fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
+				if (!strcmp(state->program->symbol_table[state->ptr].name, "__ARRAY__")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__ARRAY__;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__STRING__;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") || !strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &INT;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &BOOL;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "CHAR")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &CHAR;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
+				} else if (state->program->symbol_table[state->ptr].offset == -1) {
+					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
 				} else {
 # if (WORD_WIDTH == 64)
 					if (state->program->symbol_table[state->ptr].offset & 1) {
