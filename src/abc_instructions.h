@@ -114,7 +114,7 @@ enum {
 	CeqC_b,
 	CeqD_b,
 	Ceq_desc,
-	Ceq_desc_b,
+	Ceq_desc_b0,
 	Ceq_nulldesc,
 	CeqI,
 	CeqI_a,

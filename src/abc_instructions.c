@@ -238,8 +238,8 @@ char *instruction_name(BC_WORD i) {
 			return "eqR";
 		case Ceq_desc:
 			return "eq_desc";
-		case Ceq_desc_b:
-			return "eq_desc_b";
+		case Ceq_desc_b0:
+			return "eq_desc_b0";
 		case Ceq_nulldesc:
 			return "eq_nulldesc";
 		case CexpR:
@@ -1181,7 +1181,7 @@ char *instruction_type (BC_WORD i) {
 		case CeqI_b:                 return "ni";
 		case CeqR:                   return "";
 		case Ceq_desc:               return "nl";
-		case Ceq_desc_b:             return "nl";
+		case Ceq_desc_b0:            return "l";
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
 		case Cfill:                  return "?";

@@ -1012,11 +1012,9 @@ void code_buildAC(char *string,int string_length) {
 	add_instruction_internal_label(CbuildAC,string_label);
 	if (list_code) {
 		printf("\t.data\n");
-//		printf("\t.data4 __STRING__+2\n");
-		printf("\t.data4 2\n");
+		printf("\t.data4 __STRING__+2\n");
 	}
-//	store_data_label_value("__STRING__",2);
-	store_data_l(2);
+	store_data_label_value("__STRING__",2);
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -1494,12 +1492,18 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
 }
 
-void code_eq_desc_b(char descriptor_name[],int b_offset) {
-	add_instruction_w_label(Ceq_desc_b,-b_offset,descriptor_name);
+void code_eq_desc_b(char descriptor_name[],int arity) {
+	if (arity == 0) {
+		add_instruction_label_offset(Ceq_desc_b0,descriptor_name,2);
+		return;
+	}
+
+	fprintf(stderr, "Error: eq_desc_b %d\n", arity);
+	exit(1);
 }
 
 void code_eq_nulldesc(char descriptor_name[], int a_offset) {
-	add_instruction_w_label(Ceq_nulldesc,-a_offset,descriptor_name);
+	add_instruction_w_label_offset(Ceq_nulldesc,-a_offset,descriptor_name,2);
 }
 
 void code_exit_false(char label_name[]) {

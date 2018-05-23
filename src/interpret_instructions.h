@@ -1836,12 +1836,26 @@ case CentierR:
 	pc+=1;
 	continue;
 case Ceq_desc:
-case Ceq_nulldesc:
 {
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	*--bsp = *n==pc[2];
+	pc+=3;
+	continue;
+}
+case Ceq_desc_b0:
+{
+	fprintf(stderr,"\t%p %p\n",(void*)bsp[0],(void*)pc[1]);
+	bsp[0] = bsp[0]==pc[1];
+	pc+=2;
+	continue;
+}
+case Ceq_nulldesc:
+{
+	BC_WORD *n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	int16_t arity=((int16_t*)(n[0]))[-1];
+	*--bsp = *n==pc[2]+arity*IF_INT_64_OR_32(16,8); /* TODO check with John */
 	pc+=3;
 	continue;
 }
@@ -3352,6 +3366,14 @@ case Cprint_symbol_sc:
 	pc+=2;
 	continue;
 }
+case CpushA_a:
+{
+	BC_WORD *n;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	*++asp=n[1];
+	pc+=2;
+	continue;
+}
 case CpushBFALSE:
 	*--bsp=0;
 	pc+=1;
@@ -4521,6 +4543,59 @@ case Crepl_r_argsa0:
 		if (n_a_m_1<30) break; asp[-30] = a[29];
 		if (n_a_m_1<31) break; asp[-31] = a[30];
 	} while (0);
+	continue;
+}
+case Crepl_args_b:
+{
+	BC_WORD *n,*a,n_a_m_1;
+
+	n=(BC_WORD*)asp[0];
+	n_a_m_1=bsp[0];
+	bsp+=2;
+	asp+=n_a_m_1-1;
+	do {
+		asp[0]=n[1];
+		if (n_a_m_1 < 2) break;
+		if (n_a_m_1 == 2) {
+			asp[-1]=n[2];
+		} else {
+			a=(BC_WORD*)n[2];
+			asp[-1]=a[0];
+			asp[-2]=a[1];
+			do {
+				if (n_a_m_1< 4) break; asp[ -3] = a[ 2];
+				if (n_a_m_1< 5) break; asp[ -4] = a[ 3];
+				if (n_a_m_1< 6) break; asp[ -5] = a[ 4];
+				if (n_a_m_1< 7) break; asp[ -6] = a[ 5];
+				if (n_a_m_1< 8) break; asp[ -7] = a[ 6];
+				if (n_a_m_1< 9) break; asp[ -8] = a[ 7];
+				if (n_a_m_1<10) break; asp[ -9] = a[ 8];
+				if (n_a_m_1<11) break; asp[-10] = a[ 9];
+				if (n_a_m_1<12) break; asp[-11] = a[10];
+				if (n_a_m_1<13) break; asp[-12] = a[11];
+				if (n_a_m_1<14) break; asp[-13] = a[12];
+				if (n_a_m_1<15) break; asp[-14] = a[13];
+				if (n_a_m_1<16) break; asp[-15] = a[14];
+				if (n_a_m_1<17) break; asp[-16] = a[15];
+				if (n_a_m_1<18) break; asp[-17] = a[16];
+				if (n_a_m_1<19) break; asp[-18] = a[17];
+				if (n_a_m_1<20) break; asp[-19] = a[18];
+				if (n_a_m_1<21) break; asp[-20] = a[19];
+				if (n_a_m_1<22) break; asp[-21] = a[20];
+				if (n_a_m_1<23) break; asp[-22] = a[21];
+				if (n_a_m_1<24) break; asp[-23] = a[22];
+				if (n_a_m_1<25) break; asp[-24] = a[23];
+				if (n_a_m_1<26) break; asp[-25] = a[24];
+				if (n_a_m_1<27) break; asp[-26] = a[25];
+				if (n_a_m_1<28) break; asp[-27] = a[26];
+				if (n_a_m_1<29) break; asp[-28] = a[27];
+				if (n_a_m_1<30) break; asp[-29] = a[28];
+				if (n_a_m_1<31) break; asp[-30] = a[29];
+				if (n_a_m_1<32) break; asp[-31] = a[30];
+			} while (0);
+		}
+	} while (0);
+	pc+=1;
 	continue;
 }
 case Cswap_a1:
