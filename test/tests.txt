@@ -7,7 +7,7 @@ fsieve		StdEnv:StdReal
 hamming		StdEnv:StdInt,StdEnv:StdList
 #infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 invperm		StdEnv:StdInt
-lqueen		StdEnv:StdList
+lqueen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
 mulmat
 nfib
 pascal		StdEnv:StdChar,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:_SystemArray
@@ -19,7 +19,7 @@ revrec		StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList
 revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 rfib		StdEnv:StdReal
 sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
-squeen		StdEnv:StdList
+squeen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
 sudoku	-h,5m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdTuple,StdEnv:_SystemArray,StdEnv:_SystemEnum,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
 str_arit		StdEnv:StdString
 stwice
