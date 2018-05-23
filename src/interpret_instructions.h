@@ -1836,6 +1836,7 @@ case CentierR:
 	pc+=1;
 	continue;
 case Ceq_desc:
+case Ceq_nulldesc:
 {
 	BC_WORD *n;
 
@@ -3078,7 +3079,7 @@ case CgtI:
 	pc+=1;
 	continue;
 case Chalt:
-	PRINTF("\nhalt at %d\n", (int) (pc-code));
+	PRINTF("halt at %d\n", (int) (pc-code));
 	PRINTF("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
 #ifdef DEBUG_CURSES
 	debugger_graceful_end();

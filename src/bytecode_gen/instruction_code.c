@@ -1494,6 +1494,10 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
 }
 
+void code_eq_nulldesc(char descriptor_name[], int a_offset) {
+	add_instruction_w_label(Ceq_nulldesc,-a_offset,descriptor_name);
+}
+
 void code_exit_false(char label_name[]) {
 	add_instruction_label(Cjmp_false,label_name);
 }
@@ -2044,7 +2048,12 @@ int last_da,last_db;
 void code_jmp(char label_name[]) {
 	last_d=0;
 
-	add_instruction_label(Cjmp,label_name);
+	if (!strcmp(label_name,"__driver")) {
+		add_instruction_label(Cjsr,"__print__graph");
+		add_instruction(Chalt);
+	} else {
+		add_instruction_label(Cjmp,label_name);
+	}
 }
 
 void code_jmp_ap(int n_apply_args) {
@@ -2246,6 +2255,22 @@ void code_print(char *string,int length) {
 	store_string(string,length);
 	if (list_code)
 		printf("\t.text\n");
+}
+
+void code_printD(void) {
+	add_instruction(CprintD);
+}
+
+void code_print_char(void) {
+	add_instruction(Cprint_char);
+}
+
+void code_print_int(void) {
+	add_instruction(Cprint_int);
+}
+
+void code_print_real(void) {
+	add_instruction(Cprint_real);
 }
 
 void code_print_sc(char *string,int length) {
@@ -2504,6 +2529,10 @@ void code_remI(void) {
 	add_instruction(CremI);
 }
 
+void code_push_r_arg_t(void) {
+	add_instruction(Cpush_r_arg_t);
+}
+
 void code_push_r_arg_u(int a_offset,int a_size,int b_size,int a_arg_offset,int a_arg_size,int b_arg_offset,int b_arg_size) {
 	if (b_arg_size==0) {
 		code_push_r_args_a(-a_offset,a_size,b_size,a_arg_offset,a_arg_size);
@@ -2701,6 +2730,10 @@ void code_push_r_args_u(int a_offset,int a_size,int b_size) {
 	code_push_r_args(a_offset,a_size,b_size);
 }
 
+void code_push_t_r_args(void) {
+	add_instruction(Cpush_t_r_args);
+}
+
 void code_replace(char element_descriptor[],int a_size,int b_size) {
 	switch(element_descriptor[0]) {
 		case '_':
@@ -2797,6 +2830,10 @@ void code_repl_args(int arity,int n_arguments) {
 
 	fprintf(stderr, "Error: repl_args %d %d\n",arity,n_arguments);
 	exit(1);
+}
+
+void code_repl_args_b(void) {
+	add_instruction(Crepl_args_b);
 }
 
 void code_repl_r_args(int a_size,int b_size) {

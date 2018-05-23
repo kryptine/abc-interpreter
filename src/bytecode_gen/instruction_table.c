@@ -89,6 +89,7 @@ void load_instruction_table(void) {
 	put_instruction_name("eqI_b",                 parse_instruction_i_n,           code_eqI_b );
 	put_instruction_name("eqR",                   parse_instruction,               code_eqR );
 	put_instruction_name("eq_desc",               parse_instruction_a_n_n,         code_eq_desc );
+	put_instruction_name("eq_nulldesc",           parse_instruction_a_n,           code_eq_nulldesc );
 	put_instruction_name("exit_false",            parse_instruction_a,             code_exit_false );
 	put_instruction_name("expR",                  parse_instruction,               code_expR );
 	put_instruction_name("fill",                  parse_instruction_a_n_a_n,       code_fill );
@@ -139,6 +140,10 @@ void load_instruction_table(void) {
 	put_instruction_name("pop_b",                 parse_instruction_n,             code_pop_b );
 	put_instruction_name("powR",                  parse_instruction,               code_powR );
 	put_instruction_name("print",                 parse_instruction_s,             code_print );
+	put_instruction_name("printD",                parse_instruction,               code_printD );
+	put_instruction_name("print_char",            parse_instruction,               code_print_char );
+	put_instruction_name("print_int",             parse_instruction,               code_print_int );
+	put_instruction_name("print_real",            parse_instruction,               code_print_real );
 	put_instruction_name("print_sc",              parse_instruction_s,             code_print_sc );
 	put_instruction_name("print_symbol_sc",       parse_instruction_n,             code_print_symbol_sc );
 	put_instruction_name("pushB",                 parse_instruction_b,             code_pushB );
@@ -164,16 +169,19 @@ void load_instruction_table(void) {
 	put_instruction_name("push_arg_b",            parse_instruction_n,             code_push_arg_b );
 	put_instruction_name("push_node",             parse_instruction_a_n,           code_push_node );
 	put_instruction_name("push_node_u",           parse_instruction_a_n_n,         code_push_node_u );
+	put_instruction_name("push_r_arg_t",          parse_instruction,               code_push_r_arg_t );
 	put_instruction_name("push_r_arg_u",          parse_instruction_n_n_n_n_n_n_n, code_push_r_arg_u );
 	put_instruction_name("push_r_args",           parse_instruction_n_n_n,         code_push_r_args );
 	put_instruction_name("push_r_args_a",         parse_instruction_n_n_n_n_n,     code_push_r_args_a );
 	put_instruction_name("push_r_args_b",         parse_instruction_n_n_n_n_n,     code_push_r_args_b );
 	put_instruction_name("push_r_args_u",         parse_instruction_n_n_n,         code_push_r_args_u );
+	put_instruction_name("push_t_r_args",         parse_instruction,               code_push_t_r_args );
 	put_instruction_name("release",               parse_instruction,               code_dummy );
 	put_instruction_name("remI",                  parse_instruction,               code_remI );
 	put_instruction_name("replace",               parse_instruction_a_n_n,         code_replace );
 	put_instruction_name("repl_arg",              parse_instruction_n_n,           code_repl_arg );
 	put_instruction_name("repl_args",             parse_instruction_n_n,           code_repl_args );
+	put_instruction_name("repl_args_b",           parse_instruction,               code_repl_args_b );
 	put_instruction_name("repl_r_args",           parse_instruction_n_n,           code_repl_r_args );
 	put_instruction_name("repl_r_args_a",         parse_instruction_n_n_n_n,       code_repl_r_args_a );
 	put_instruction_name("select",                parse_instruction_a_n_n,         code_select );
