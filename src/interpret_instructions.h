@@ -1846,7 +1846,6 @@ case Ceq_desc:
 }
 case Ceq_desc_b0:
 {
-	fprintf(stderr,"\t%p %p\n",(void*)bsp[0],(void*)pc[1]);
 	bsp[0] = bsp[0]==pc[1];
 	pc+=2;
 	continue;
