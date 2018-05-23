@@ -241,6 +241,7 @@ enum {
 	Cpush_args2,
 	Cpush_args3,
 	Cpush_args4,
+	Cpush_args_u,
 	Cpush_array,
 	Cpush_arraysize,
 	Cpush_a_b,

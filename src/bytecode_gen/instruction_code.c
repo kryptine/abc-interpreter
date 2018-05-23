@@ -2445,10 +2445,10 @@ void code_push_args_u(int a_offset,int arity,int n_arguments) {
 	if (arity==n_arguments) {
 		code_push_args(a_offset,arity,n_arguments);
 		return;
+	} else {
+		add_instruction_w_w_w(Cpush_args_u,a_offset,arity,n_arguments);
+		return;
 	}
-
-	fprintf(stderr, "Error: push_args_u %d %d %d\n",a_offset,arity,n_arguments);
-	exit(1);
 }
 
 void code_push_arg_b(int a_offset) {
@@ -2468,6 +2468,9 @@ void code_push_b(int b_offset) {
 }
 
 void code_push_node(char *label_name,int n_arguments) {
+	if (strcmp(label_name,"__cycle__in__spine") && strcmp(label_name,"__reserve"))
+		fprintf(stderr, "Warning: push_node not implemented for '%s'\n", label_name);
+
 	switch(n_arguments) {
 		case 0:
 			add_instruction_label(Cpush_node0,label_name);

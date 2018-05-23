@@ -486,6 +486,8 @@ char *instruction_name(BC_WORD i) {
 			return "push_args3";
 		case Cpush_args4:
 			return "push_args4";
+		case Cpush_args_u:
+			return "push_args_u";
 		case Cpush_arg_b:
 			return "Cpush_arg_b";
 		case Cpush_array:
@@ -1300,12 +1302,13 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_arg2l:            return "n";
 		case Cpush_arg3:             return "n";
 		case Cpush_arg4:             return "?";
-		case Cpush_args:             return "nn";
+		case Cpush_arg_b:            return "n";
 		case Cpush_args1:            return "n";
 		case Cpush_args2:            return "n";
 		case Cpush_args3:            return "n";
 		case Cpush_args4:            return "n";
-		case Cpush_arg_b:            return "n";
+		case Cpush_args:             return "nn";
+		case Cpush_args_u:           return "nnn";
 		case Cpush_array:            return "n";
 		case Cpush_arraysize:        return "";
 		case Cpush_a_b:              return "nn";
