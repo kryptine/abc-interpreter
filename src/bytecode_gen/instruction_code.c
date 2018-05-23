@@ -11,7 +11,7 @@
 #define max_implemented_instruction_n CMAX-1
 
 #define N_ADD_ARG_LABELS 32
-#define MAX_Cadd_arg_INSTRUCTION_N 16
+#define MAX_Cadd_arg_INSTRUCTION_N 32
 
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
@@ -1494,6 +1494,10 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
 }
 
+void code_eq_desc_b(char descriptor_name[],int b_offset) {
+	add_instruction_w_label(Ceq_desc_b,-b_offset,descriptor_name);
+}
+
 void code_eq_nulldesc(char descriptor_name[], int a_offset) {
 	add_instruction_w_label(Ceq_nulldesc,-a_offset,descriptor_name);
 }
@@ -2292,6 +2296,10 @@ void code_print_symbol_sc(int a_offset) {
 	add_instruction_w(Cprint_symbol_sc,-a_offset);
 }
 
+void code_pushA_a(int a_offset) {
+	add_instruction_w(CpushA_a,-a_offset);
+}
+
 void code_pushB(int b) {
 	if (b==0)
 		add_instruction(CpushBFALSE);
@@ -2366,6 +2374,10 @@ void code_pushcaf(char *label_name,int a_size,int b_size) {
 
 void code_push_a(int a_offset) {
 	add_instruction_w(Cpush_a,-a_offset);
+}
+
+void code_push_a_r_args(void) {
+	add_instruction(Cpush_a_r_args);
 }
 
 void code_push_a_b(int a_offset) {
@@ -2527,6 +2539,10 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 
 void code_remI(void) {
 	add_instruction(CremI);
+}
+
+void code_push_r_arg_D(void) {
+	add_instruction(Cpush_r_arg_D);
 }
 
 void code_push_r_arg_t(void) {
@@ -2728,6 +2744,10 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 
 void code_push_r_args_u(int a_offset,int a_size,int b_size) {
 	code_push_r_args(a_offset,a_size,b_size);
+}
+
+void code_push_t_r_a(int a_offset) {
+	add_instruction_w(Cpush_t_r_a,-a_offset);
 }
 
 void code_push_t_r_args(void) {

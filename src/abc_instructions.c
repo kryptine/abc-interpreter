@@ -238,6 +238,8 @@ char *instruction_name(BC_WORD i) {
 			return "eqR";
 		case Ceq_desc:
 			return "eq_desc";
+		case Ceq_desc_b:
+			return "eq_desc_b";
 		case Ceq_nulldesc:
 			return "eq_nulldesc";
 		case CexpR:
@@ -424,6 +426,8 @@ char *instruction_name(BC_WORD i) {
 			return "print_real";
 		case Cprint_symbol_sc:
 			return "print_symbol_sc";
+		case CpushA_a:
+			return "pushA_a";
 		case CpushBFALSE:
 			return "pushBFALSE";
 		case CpushBTRUE:
@@ -458,6 +462,8 @@ char *instruction_name(BC_WORD i) {
 			return "pushcaf31";
 		case Cpush_a:
 			return "push_a";
+		case Cpush_a_r_args:
+			return "push_a_r_args";
 		case Cpush_arg:
 			return "push_arg";
 		case Cpush_arg1:
@@ -524,6 +530,8 @@ char *instruction_name(BC_WORD i) {
 			return "push_node_u22";
 		case Cpush_node_u31:
 			return "push_node_u31";
+		case Cpush_r_arg_D:
+			return "push_r_arg_D";
 		case Cpush_r_arg_t:
 			return "push_r_arg_t";
 		case Cpush_r_args:
@@ -820,6 +828,38 @@ char *instruction_name(BC_WORD i) {
 			return "add_arg15";
 		case Cadd_arg16:
 			return "add_arg16";
+		case Cadd_arg17:
+			return "add_arg17";
+		case Cadd_arg18:
+			return "add_arg18";
+		case Cadd_arg19:
+			return "add_arg19";
+		case Cadd_arg20:
+			return "add_arg20";
+		case Cadd_arg21:
+			return "add_arg21";
+		case Cadd_arg22:
+			return "add_arg22";
+		case Cadd_arg23:
+			return "add_arg23";
+		case Cadd_arg24:
+			return "add_arg24";
+		case Cadd_arg25:
+			return "add_arg25";
+		case Cadd_arg26:
+			return "add_arg26";
+		case Cadd_arg27:
+			return "add_arg27";
+		case Cadd_arg28:
+			return "add_arg28";
+		case Cadd_arg29:
+			return "add_arg29";
+		case Cadd_arg30:
+			return "add_arg30";
+		case Cadd_arg31:
+			return "add_arg31";
+		case Cadd_arg32:
+			return "add_arg32";
 		case Ceval_upd0:
 			return "eval_upd0";
 		case Ceval_upd1:
@@ -1141,6 +1181,7 @@ char *instruction_type (BC_WORD i) {
 		case CeqI_b:                 return "ni";
 		case CeqR:                   return "";
 		case Ceq_desc:               return "nl";
+		case Ceq_desc_b:             return "nl";
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
 		case Cfill:                  return "?";
@@ -1234,6 +1275,7 @@ char *instruction_type (BC_WORD i) {
 		case Cprint_int:             return "";
 		case Cprint_real:            return "";
 		case Cprint_symbol_sc:       return "n";
+		case CpushA_a:               return "n";
 		case CpushBFALSE:            return "";
 		case CpushBTRUE:             return "";
 		case CpushB_a:               return "n";
@@ -1251,6 +1293,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpushcaf20:             return "l";
 		case Cpushcaf31:             return "l";
 		case Cpush_a:                return "n";
+		case Cpush_a_r_args:         return "";
 		case Cpush_arg:              return "nn";
 		case Cpush_arg1:             return "n";
 		case Cpush_arg2:             return "n";
@@ -1284,6 +1327,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node_u21:         return "l";
 		case Cpush_node_u22:         return "l";
 		case Cpush_node_u31:         return "l";
+		case Cpush_r_arg_D:          return "";
 		case Cpush_r_arg_t:          return "";
 		case Cpush_r_args:           return "?";
 		case Cpush_r_argsa0:         return "?";
@@ -1319,6 +1363,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_args_b2:        return "nn";
 		case Cpush_r_args_b1l2:      return "?";
 		case Cpush_r_args_b22:       return "?";
+		case Cpush_t_r_a:            return "n";
 		case Cpush_t_r_args:         return "";
 		case CremI:                  return "";
 		case Creplace:               return "";
@@ -1432,6 +1477,22 @@ char *instruction_type (BC_WORD i) {
 		case Cadd_arg14:             return "";
 		case Cadd_arg15:             return "";
 		case Cadd_arg16:             return "";
+		case Cadd_arg17:             return "";
+		case Cadd_arg18:             return "";
+		case Cadd_arg19:             return "";
+		case Cadd_arg20:             return "";
+		case Cadd_arg21:             return "";
+		case Cadd_arg22:             return "";
+		case Cadd_arg23:             return "";
+		case Cadd_arg24:             return "";
+		case Cadd_arg25:             return "";
+		case Cadd_arg26:             return "";
+		case Cadd_arg27:             return "";
+		case Cadd_arg28:             return "";
+		case Cadd_arg29:             return "";
+		case Cadd_arg30:             return "";
+		case Cadd_arg31:             return "";
+		case Cadd_arg32:             return "";
 		case Ceval_upd0:             return "";
 		case Ceval_upd1:             return "";
 		case Ceval_upd2:             return "";
