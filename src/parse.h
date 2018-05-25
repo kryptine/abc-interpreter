@@ -21,6 +21,13 @@ enum parse_state {
 	PS_end
 };
 
+#ifdef LINK_CLEAN_RUNTIME
+struct host_symbol {
+	void *location;
+	char *name;
+};
+#endif
+
 struct parser {
 	/* State */
 	enum parse_state state;
@@ -52,6 +59,12 @@ struct parser {
 #endif
 
 	uint32_t symbols_ptr;
+
+#ifdef LINK_CLEAN_RUNTIME
+	char *host_symbols_strings;
+	int host_symbols_n;
+	struct host_symbol *host_symbols;
+#endif
 
 #ifdef LINKER
 	uint32_t code_size;

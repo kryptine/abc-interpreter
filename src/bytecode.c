@@ -14,10 +14,6 @@ void free_program(struct program *pgm) {
 		free(pgm->symbol_table);
 	if (pgm->symbols != NULL)
 		free(pgm->symbols);
-#ifdef LINK_CLEAN_RUNTIME
-	free(pgm->host_symbols);
-	free(pgm->host_symbols_strings);
-#endif
 }
 
 #ifdef INTERPRETER
@@ -254,26 +250,5 @@ void print_program(FILE *f, struct program *pgm) {
 	FPRINTF(f, "\n");
 	print_data(f, pgm->data, pgm->data_size, pgm->code, pgm->code_size);
 # endif
-}
-#endif
-
-#ifdef LINK_CLEAN_RUNTIME
-#include <string.h>
-void *find_host_symbol(struct program *pgm, char *name) {
-	int start = 0;
-	int end = pgm->host_symbols_n - 1;
-
-	while (start <= end) {
-		int i = (start + end) / 2;
-		int r = strcmp(pgm->host_symbols[i].name, name);
-		if (r > 0)
-			end = i-1;
-		else if (r < 0)
-			start = i+1;
-		else
-			return pgm->host_symbols[i].location;
-	}
-
-	return NULL;
 }
 #endif
