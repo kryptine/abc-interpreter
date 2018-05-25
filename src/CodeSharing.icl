@@ -20,6 +20,11 @@ import Text
 
 import symbols_in_program
 
+// Example: get a function from a bytecode file and apply it
+Start w
+# (const,w) = get_expression "../test/functions.bc" w
+= const
+
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
 Start w
@@ -87,6 +92,8 @@ where
 		# vala = hyperstrict (coerce` syms int_syms code_segment csize data_segment dsize stack heapp childa)
 		# valb = coerce` syms int_syms code_segment csize data_segment dsize stack heapp childb
 		= cast [vala:valb]
+	| otherwise
+		= abort ("Don't know how to coerce '" +++ name +++ "'\n")
 	where
 		get_offset_symbol :: !Int ![(String,Int)] -> String
 		get_offset_symbol offset [] = abort "symbol not found in table\n"
