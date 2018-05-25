@@ -266,17 +266,14 @@ void *find_host_symbol(struct program *pgm, char *name) {
 	while (start <= end) {
 		int i = (start + end) / 2;
 		int r = strcmp(pgm->host_symbols[i].name, name);
-		if (r > 0) {
+		if (r > 0)
 			end = i-1;
-		} else if (r < 0) {
+		else if (r < 0)
 			start = i+1;
-		} else {
-			fprintf(stderr,"Resolved %s: %p\n",name,pgm->host_symbols[i].location);
+		else
 			return pgm->host_symbols[i].location;
-		}
 	}
 
-	fprintf(stderr,"Didn't find %s\n",name);
 	return NULL;
 }
 #endif

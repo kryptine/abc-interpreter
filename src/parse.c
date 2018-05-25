@@ -420,38 +420,51 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
-				} else {
+				} else if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
+					state->program->symbol_table[state->ptr].offset &= -2;
 # if (WORD_WIDTH == 64)
-					if (state->program->symbol_table[state->ptr].offset & 1) {
-						state->program->symbol_table[state->ptr].offset &= -2;
-						state->program->symbol_table[state->ptr].offset *= 2;
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
-					} else {
-						state->program->symbol_table[state->ptr].offset *= 2;
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
-					}
+					state->program->symbol_table[state->ptr].offset *= 2;
 # else
-					if (state->program->symbol_table[state->ptr].offset & 1) {
-						/* code[elem32] is an offset to the abstract data segment.
-						 * This offset is incorrect, because strings are longer on
-						 * 32-bit. Thus, we add the required offset. This is not
-						 * that efficient, but it's okay since it is only for
-						 * 32-bit and only during parsing. */
-						state->program->symbol_table[state->ptr].offset &= -2;
-						int temp_relocation_offset = 0;
-						for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
-							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-						state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
-
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
-					} else {
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+					/* code[elem32] is an offset to the abstract data segment.
+					 * This offset is incorrect, because strings are longer on
+					 * 32-bit. Thus, we add the required offset. This is not
+					 * that efficient, but it's okay since it is only for
+					 * 32-bit and only during parsing. */
+					state->program->symbol_table[state->ptr].offset &= -2;
+					int temp_relocation_offset = 0;
+					for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
+						temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
+					state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
+# endif
+					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
+# ifdef LINK_CLEAN_RUNTIME
+					if (state->program->symbol_table[state->ptr].name[0]) {
+						int v = ((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2];
+						if (v == 0) {
+							/* Descriptor has a code address that is not _hnf; ignore */
+						} else if (v == -1) {
+							/* Descriptor has a _hnf code address */
+							void *host_sym = find_host_symbol(state->program, state->program->symbol_table[state->ptr].name);
+							if (host_sym == NULL)
+								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
+							else
+								state->program->symbol_table[state->ptr].offset = (BC_WORD) host_sym;
+						} else {
+							/* This shouldn't happen */
+							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
+							exit(1);
+						}
 					}
 # endif
 # ifdef DEBUG_CURSES
 					if (!strcmp(state->program->symbol_table[state->ptr].name, "ARRAY"))
 						ARRAY = (void*) state->program->symbol_table[state->ptr].offset;
 # endif
+				} else /* code symbol */ {
+# if (WORD_WIDTH == 64)
+					state->program->symbol_table[state->ptr].offset *= 2;
+# endif
+					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
 				}
 #endif
 #ifdef LINKER
