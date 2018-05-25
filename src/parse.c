@@ -392,7 +392,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					next_state(state);
 				break;
 			case PS_symbol_table:
-				{
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table[state->ptr].offset = elem32;
@@ -466,7 +465,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
 				break;
-				}
 			case PS_code_reloc:
 				{
 					uint32_t code_i,sym_i;

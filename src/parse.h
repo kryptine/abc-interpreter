@@ -53,12 +53,6 @@ struct parser {
 
 	uint32_t symbols_ptr;
 
-#ifdef LINK_CLEAN_RUNTIME
-	char *host_symbols_strings;
-	int host_symbols_n;
-	struct host_symbol *host_symbols;
-#endif
-
 #ifdef LINKER
 	uint32_t code_size;
 	uint32_t data_size;
