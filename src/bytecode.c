@@ -14,6 +14,10 @@ void free_program(struct program *pgm) {
 		free(pgm->symbol_table);
 	if (pgm->symbols != NULL)
 		free(pgm->symbols);
+#ifdef LINK_CLEAN_RUNTIME
+	free(pgm->host_symbols);
+	free(pgm->host_symbols_strings);
+#endif
 }
 
 #ifdef INTERPRETER

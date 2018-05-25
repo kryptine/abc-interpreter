@@ -43,6 +43,13 @@ struct symbol {
 	char *name;
 };
 
+#ifdef LINK_CLEAN_RUNTIME
+struct host_symbol {
+	void *location;
+	char *name;
+};
+#endif
+
 struct program {
 	uint32_t code_size;
 	uint32_t data_size;
@@ -63,6 +70,11 @@ struct program {
 	uint32_t symbol_table_size;
 	struct symbol *symbol_table;
 	char *symbols;
+#ifdef LINK_CLEAN_RUNTIME
+	char *host_symbols_strings;
+	int host_symbols_n;
+	struct host_symbol *host_symbols;
+#endif
 };
 
 void free_program(struct program *pgm);

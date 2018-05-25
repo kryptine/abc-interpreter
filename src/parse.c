@@ -13,7 +13,11 @@
 # include "bytecode_gen/instruction_code.h"
 #endif
 
-void init_parser(struct parser *state) {
+void init_parser(struct parser *state
+#ifdef LINK_CLEAN_RUNTIME
+		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
+#endif
+		) {
 	state->state = PS_init_code;
 	state->program = safe_calloc(1, sizeof(struct program));
 
@@ -34,6 +38,23 @@ void init_parser(struct parser *state) {
 
 	state->symbols_ptr = 0;
 
+#ifdef LINK_CLEAN_RUNTIME
+	state->program->host_symbols_n = host_symbols_n;
+	state->program->host_symbols = safe_malloc(host_symbols_n * sizeof(struct host_symbol));
+	state->program->host_symbols_strings = safe_malloc(host_symbols_string_length + host_symbols_n);
+
+	char *symbol_strings = state->program->host_symbols_strings;
+	for (int i = 0; i < host_symbols_n; i++) {
+		state->program->host_symbols[i].location = *(void**)host_symbols;
+		host_symbols += IF_INT_64_OR_32(8,4);
+		state->program->host_symbols[i].name = symbol_strings;
+		for (; *host_symbols; host_symbols++)
+			*symbol_strings++ = *host_symbols;
+		*symbol_strings++ = '\0';
+		host_symbols++;
+	}
+#endif
+
 #ifdef LINKER
 	state->code_size = 0;
 	state->data_size = 0;
@@ -48,6 +69,29 @@ void free_parser(struct parser *state) {
 		free(state->strings);
 #endif
 }
+
+#ifdef LINK_CLEAN_RUNTIME
+void *find_host_symbol(struct parser *p, char *name) {
+	int start = 0;
+	int end = p->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		int r = strcmp(p->host_symbols[i].name, name);
+		if (r > 0) {
+			end = i-1;
+		} else if (r < 0) {
+			start = i+1;
+		} else {
+			fprintf(stderr,"Resolved %s: %p\n",name,p->host_symbols[i].location);
+			return p->host_symbols[i].location;
+		}
+	}
+
+	fprintf(stderr,"Didn't find %s\n",name);
+	return NULL;
+}
+#endif
 
 void next_state(struct parser *state) {
 	state->ptr = 0;
@@ -371,6 +415,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					next_state(state);
 				break;
 			case PS_symbol_table:
+				{
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table[state->ptr].offset = elem32;
@@ -444,6 +489,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
 				break;
+				}
 			case PS_code_reloc:
 				{
 					uint32_t code_i,sym_i;
