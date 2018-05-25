@@ -205,17 +205,21 @@ do
 		WALL_TIME=""
 		{
 			/usr/bin/time -f %e $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>/dev/fd/3 >$MODULE.result
-			WALL_TIME="$(cat<&3)"
+			WALL_TIME="$(grep -v Warning <&3)"
 		} 3<<EOF
 EOF
 		WALL_TIME_NATIVE=""
 		{
 			/usr/bin/time -f %e ./a.out $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>/dev/fd/3
-			WALL_TIME_NATIVE="$(cat<&3)"
+			WALL_TIME_NATIVE="$(cat <&3)"
 		} 3<<EOF
 EOF
-		WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)"
-		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO}x)$RESET"
+		if [ "$WALL_TIME_NATIVE" == "0.00" ]; then
+			WALL_TIME_RATIO="ratio not computable"
+		else
+			WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)x"
+		fi
+		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO})$RESET"
 	elif [ $QUIET -gt 0 ]; then
 		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc > $MODULE.result
 	else
