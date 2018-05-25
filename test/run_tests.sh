@@ -147,11 +147,10 @@ do
 	fi
 
 	if [ $BENCHMARK -gt 0 ]; then
-		if [ ! -f "$MODULE.bm.sed" ]; then
-			continue
-		fi
 		cp "$MODULE.icl" /tmp
-		sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+		if [ -f "$MODULE.bm.sed" ]; then
+			sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+		fi
 	fi
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
@@ -224,7 +223,7 @@ EOF
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
 	fi
 
-	if [ $BENCHMARK -gt 0 ]; then
+	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
 		diff $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
 	else
 		diff $MODULE$EXPECTED_PREFIX.expected $MODULE.result
