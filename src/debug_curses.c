@@ -470,7 +470,25 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 	if (is_last)
 		indent_mask ^= 1;
 
-	int arity = 0;
+	int16_t a_arity = 0, b_arity = 0;
+
+	if (node[0] & 2) {
+		a_arity = ((int16_t*)(node[0]))[-1];
+		b_arity = 0;
+		if (a_arity > 256) {
+			a_arity = ((int16_t*)(node[0]))[0];
+			b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+		}
+	} else {
+		int16_t arity = ((int16_t*)(node[0]))[-1];
+		if (arity < 0) {
+			a_arity = 1;
+			b_arity = 0;
+		} else {
+			b_arity = arity >> 8;
+			a_arity = (arity & 0xff) - b_arity;
+		}
+	}
 
 	if (node[0] == (BC_WORD) &INT+2)
 		wprintw(win, " INT %d", node[1]);
@@ -490,37 +508,41 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " __cycle__in__spine");
 	else {
 		char _tmp[256];
-		arity = ((int16_t*)node[0])[-1];
-		int16_t b_arity = arity >> 8;
-		arity = (arity & 0xff) - b_arity;
-		if (arity > 0)
+		if (a_arity + b_arity > 0)
 			waddch(win, ACS_DIAMOND);
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
 		wprintw(win, " %s", _tmp);
 	}
 
 	if (on_heap((BC_WORD) node, hp, heap_size))
-		wprintw(win, "  {%d}\n", node - hp);
-	else
-		waddch(win, '\n');
+		wprintw(win, "  {%d}", node - hp);
+	if (b_arity)
+		wprintw(win, " (%d unboxed values not shown)", b_arity);
+	waddch(win, '\n');
 
-	if (arity <= 0)
+	indent++;
+	indent_mask = (indent_mask << 1) + 1;
+	max_depth--;
+
+	/* TODO unboxed values */
+	if (a_arity == 0) {
 		return;
+	} else if (node[0] & 2) {
+		debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent, indent_mask, max_depth, a_arity == 1);
 
-	/* TODO: unboxed values */
-
-	debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent+1, (indent_mask << 1) + 1, max_depth-1, arity == 1);
-	if (arity <= 1)
-		return;
-
-	BC_WORD **rest = (BC_WORD**) node[2];
-	/* TODO: see issue #32 */
-	if (on_heap((BC_WORD) *rest, hp, heap_size))
-		for (int i = 0; i < arity-1; i++)
-			debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent+1, (indent_mask << 1) + 1, max_depth-1, i == arity-2);
-	else
-		for (int i = 2; i <= arity; i++)
-			debugger_show_node_as_tree_(win, (BC_WORD*) node[i], indent+1, (indent_mask << 1) + 1, max_depth-1, i == arity);
+		if (a_arity == 1)
+			return;
+		else if (a_arity == 2 && b_arity == 0)
+			debugger_show_node_as_tree_(win, (BC_WORD*) node[2], indent, indent_mask, max_depth, 1);
+		else {
+			BC_WORD **rest = (BC_WORD**) node[2];
+			for (int i = 0; i < a_arity-1; i++)
+				debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent, indent_mask, max_depth, i+2 == a_arity);
+		}
+	} else {
+		for (int i = 1; i <= a_arity; i++)
+			debugger_show_node_as_tree_(win, (BC_WORD*) node[i], indent, indent_mask, max_depth, a_arity+b_arity == i);
+	}
 }
 
 void scroll_heap_window(int up, int left) {
