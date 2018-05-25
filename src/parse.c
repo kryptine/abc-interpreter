@@ -70,29 +70,6 @@ void free_parser(struct parser *state) {
 #endif
 }
 
-#ifdef LINK_CLEAN_RUNTIME
-void *find_host_symbol(struct parser *p, char *name) {
-	int start = 0;
-	int end = p->host_symbols_n - 1;
-
-	while (start <= end) {
-		int i = (start + end) / 2;
-		int r = strcmp(p->host_symbols[i].name, name);
-		if (r > 0) {
-			end = i-1;
-		} else if (r < 0) {
-			start = i+1;
-		} else {
-			fprintf(stderr,"Resolved %s: %p\n",name,p->host_symbols[i].location);
-			return p->host_symbols[i].location;
-		}
-	}
-
-	fprintf(stderr,"Didn't find %s\n",name);
-	return NULL;
-}
-#endif
-
 void next_state(struct parser *state) {
 	state->ptr = 0;
 #if defined(INTERPRETER) && WORD_WIDTH == 32

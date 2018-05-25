@@ -89,3 +89,7 @@ void print_program(WINDOW *f, struct program *pgm);
 void print_program(FILE *f, struct program *pgm);
 # endif
 #endif
+
+#ifdef LINK_CLEAN_RUNTIME
+void *find_host_symbol(struct program *pgm, char *name);
+#endif

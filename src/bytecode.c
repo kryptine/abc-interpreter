@@ -256,3 +256,27 @@ void print_program(FILE *f, struct program *pgm) {
 # endif
 }
 #endif
+
+#ifdef LINK_CLEAN_RUNTIME
+#include <string.h>
+void *find_host_symbol(struct program *pgm, char *name) {
+	int start = 0;
+	int end = pgm->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		int r = strcmp(pgm->host_symbols[i].name, name);
+		if (r > 0) {
+			end = i-1;
+		} else if (r < 0) {
+			start = i+1;
+		} else {
+			fprintf(stderr,"Resolved %s: %p\n",name,pgm->host_symbols[i].location);
+			return pgm->host_symbols[i].location;
+		}
+	}
+
+	fprintf(stderr,"Didn't find %s\n",name);
+	return NULL;
+}
+#endif
