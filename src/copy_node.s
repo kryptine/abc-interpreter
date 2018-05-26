@@ -35,6 +35,7 @@ __copy__node__asm:
 	push   r10
 	push   r11
 
+	#mov   rdi,rdi # heap pointer
 	mov    rsi,r15 # free words
 	mov    rdx,rcx # coercion environment
 	mov    rcx,rax # pointer to node
