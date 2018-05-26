@@ -26,7 +26,7 @@ import symbols_in_program
 Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= take 100 primes
+= reverse (take 100 primes)
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -101,7 +101,7 @@ where
 		ccall interpret "pIpIpIpIppppp:I"
 	}
 
-	get_heap_address :: !Pointer -> !Pointer
+	get_heap_address :: !Pointer -> Pointer
 	get_heap_address _ = code {
 		ccall get_heap_address "p:p"
 	}
