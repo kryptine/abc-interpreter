@@ -1,27 +1,20 @@
 #include "gc.h"
-#include "gc/compact.h"
 #include "gc/copy.h"
 
-#undef  GARBAGE_COLLECT_COMPACT
-#define GARBAGE_COLLECT_COPY
+#if (DEBUG_GARBAGE_COLLECTOR > 0)
+# include <stdio.h>
+#endif
 
-BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_size
+BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap,
+		size_t heap_size, BC_WORD_S *heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR
 		, BC_WORD *code, BC_WORD *data
 #endif
 		) {
-#ifdef GARBAGE_COLLECT_COMPACT
-	return collect_compact(stack, asp, *heap, heap_size
-# ifdef DEBUG_GARBAGE_COLLECTOR
-			, code, data
-# endif
-			);
+#if (DEBUG_GARBAGE_COLLECTOR > 0)
+	fprintf(stderr, "Collecting trash... stack @ %p; heap @ %p; code @ %p; data @ %p\n",
+			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
-#ifdef GARBAGE_COLLECT_COPY
-	return collect_copy(stack, asp, heap, heap_size
-# ifdef DEBUG_GARBAGE_COLLECTOR
-			, code, data
-# endif
-			);
-#endif
+
+	return collect_copy(stack, asp, heap, heap_size, heap_free);
 }

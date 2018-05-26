@@ -3093,7 +3093,7 @@ case CgtI:
 	continue;
 case Chalt:
 	PRINTF("halt at %d\n", (int) (pc-code));
-	PRINTF("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
+	PRINTF("%d %d %d\n", (int) (heap_size-heap_free), (int) heap_free, (int) heap_size);
 #ifdef DEBUG_CURSES
 	debugger_graceful_end();
 #endif

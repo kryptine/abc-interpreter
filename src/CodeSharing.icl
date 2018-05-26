@@ -59,22 +59,20 @@ get_expression filename w
 # data_segment = readInt pgm OFFSET_PROGRAM_DATA
 # dsize = readInt4Z pgm OFFSET_PROGRAM_DATA_SIZE
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
-# heapp = malloc (IF_INT_64_OR_32 8 4)
 # asp = stack
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
-# hp = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
-# hp = writeInt hp 0 (code_segment + IF_INT_64_OR_32 8 4 * 12)
+# heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
+# hp = writeInt heap 0 (code_segment + IF_INT_64_OR_32 8 4 * 12)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
-# heapp = writeInt heapp 0 hp
 # ce =
 	{ ce_symbols = syms
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
 	, ce_data_size    = dsize
-	, ce_heapp        = heapp
+	, ce_heap         = heap
 	, ce_hp           = hp
 	, ce_stack        = stack
 	, ce_asp          = asp
@@ -83,30 +81,29 @@ get_expression filename w
 	}
 = (coerce ce start_node, w)
 
-get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
-get_stack_and_heap_addresses _ = code {
-	ccall get_stack_and_heap_addresses "I:Vpppp"
-}
-
 coerce :: !CoercionEnvironment !Pointer -> a
 coerce ce p
 #! ce & ce_asp = writeInt ce.ce_asp 0 p
+#! ce & ce_hp = get_heap_address ce.ce_hp
 #! ok = interpret
 	ce.ce_code_segment ce.ce_code_size
 	ce.ce_data_segment ce.ce_data_size
 	ce.ce_stack STACK_SIZE
-	ce.ce_heapp HEAP_SIZE
+	ce.ce_heap HEAP_SIZE
 	ce.ce_asp ce.ce_bsp ce.ce_csp
 	ce.ce_hp
 	ce.ce_asp
 | ok <> 0 = abort "Failed to interpret\n"
-#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-#! ce = {ce & ce_asp=asp, ce_bsp=bsp, ce_csp=csp, ce_hp=hp}
 = copy_node ce p
 where
 	interpret :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
 	interpret code_segment csize data_segment dsize stack stack_size heap heap_size asp bsp csp hp node = code {
 		ccall interpret "pIpIpIpIppppp:I"
+	}
+
+	get_heap_address :: !Pointer -> !Pointer
+	get_heap_address _ = code {
+		ccall get_heap_address "p:p"
 	}
 
 parse :: !{#Symbol} !String -> Maybe Program

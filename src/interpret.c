@@ -97,7 +97,7 @@ static void* __indirection[9] = { // TODO what does this do?
 	(void*) Cfill_a01_pop_rtn
 };
 
-static BC_WORD *asp, *bsp, *csp, *hp;
+static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 
 #ifdef POSIX
 # include <signal.h>
@@ -118,17 +118,14 @@ void handle_segv(int sig) {
 }
 #endif
 
-void get_stack_and_heap_addresses(int ignored, BC_WORD **_asp, BC_WORD **_bsp, BC_WORD **_csp, BC_WORD **_hp) {
-	*_asp = asp;
-	*_bsp = bsp;
-	*_csp = csp;
-	*_hp = hp;
+BC_WORD *get_heap_address(BC_WORD *if_undefined) {
+	return hp == NULL ? if_undefined : hp;
 }
 
 int interpret(BC_WORD *code, size_t code_size,
 		BC_WORD *data, size_t data_size,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD **heap, size_t heap_size,
+		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *node) {
 	BC_WORD *pc = code;
@@ -136,7 +133,8 @@ int interpret(BC_WORD *code, size_t code_size,
 	bsp = _bsp;
 	csp = _csp;
 	hp = _hp;
-	BC_WORD_S heap_free = heap_size;
+	heap_size /= 2; /* copying garbage collector */
+	BC_WORD_S heap_free = heap + heap_size - hp;
 
 #ifdef POSIX
 	struct sigaction s;
@@ -173,8 +171,8 @@ eval_to_hnf_return:
 #ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
 		struct nodes_set nodes_set;
 		init_nodes_set(&nodes_set, heap_size);
-		mark_a_stack(stack, asp, *heap, heap_size, &nodes_set);
-		evaluate_grey_nodes(*heap, heap_size, &nodes_set);
+		mark_a_stack(stack, asp, heap, heap_size, &nodes_set);
+		evaluate_grey_nodes(heap, heap_size, &nodes_set);
 		free_nodes_set(&nodes_set);
 #endif
 #ifdef DEBUG_ALL_INSTRUCTIONS
@@ -190,8 +188,8 @@ eval_to_hnf_return:
 		switch (*pc) {
 #include "interpret_instructions.h"
 		}
-		size_t old_heap_free = heap_size-(hp-*heap);
-		hp = garbage_collect(stack, asp, heap, heap_size
+		int old_heap_free = heap_free;
+		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, code, data
 #endif
@@ -199,9 +197,8 @@ eval_to_hnf_return:
 #ifdef DEBUG_CURSES
 		debugger_set_heap(hp);
 #endif
-		heap_free = heap_size-(hp-*heap);
 		if (heap_free <= old_heap_free) {
-			fprintf(stderr, "Heap full.\n");
+			fprintf(stderr, "Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
 			exit(1);
 		} else {
 #ifdef DEBUG_GARBAGE_COLLECTOR
@@ -308,6 +305,7 @@ int main(int argc, char **argv) {
 #endif
 
 	heap_size /= sizeof(BC_WORD);
+	heap_size *= 2; /* Copying garbage collector */
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
 	heap = safe_malloc(heap_size * sizeof(BC_WORD));
 
@@ -322,7 +320,7 @@ int main(int argc, char **argv) {
 	interpret(state.program->code, state.program->code_size,
 			state.program->data, state.program->data_size,
 			stack, stack_size,
-			&heap, heap_size,
+			heap, heap_size,
 			asp, bsp, csp,
 			heap,
 			NULL);

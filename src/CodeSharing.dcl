@@ -9,7 +9,7 @@ from symbols_in_program import :: Symbol
 	, ce_code_size    :: !Int
 	, ce_data_segment :: !Pointer
 	, ce_data_size    :: !Int
-	, ce_heapp        :: !Pointer
+	, ce_heap         :: !Pointer
 	, ce_hp           :: !Pointer
 	, ce_stack        :: !Pointer
 	, ce_asp          :: !Pointer

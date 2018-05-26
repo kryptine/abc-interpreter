@@ -1,10 +1,9 @@
 .intel_syntax noprefix
 
 .globl    __copy__node__asm
-.globl    __copy__node__int__asm
 .globl    copy_interpreter_to_host
-.extern   print_reg
 .extern   dINT
+.extern   collect_1
 
 .text
 
@@ -21,8 +20,8 @@
 #       r10: B2
 #       r11: B3
 # (res) r12: B4
-# (res) r13: B4
-# (res) r14: B5
+# (res) r13: B5
+# (res) r14: B6
 # (res) r15: Number of free words on heap
 
 __copy__node__asm:
@@ -40,19 +39,27 @@ __copy__node__asm:
 	mov    rdx,rcx # coercion environment
 	mov    rcx,rax # pointer to node
 	call   copy_interpreter_to_host
+	mov    rbp,rax
 
 	pop    r11
 	pop    r10
 	pop    r9
 	pop    r8
 	pop    rdi
-
-	mov    rcx,rdi
-	sub    r15,rax
-	shl    rax,3
-	add    rdi,rax
-
 	pop    rsi
 	pop    rdx
 	pop    rax
+
+	cmp    rbp,-2 # Out of memory
+	je     __copy__node__asm_gc
+
+	mov    rcx,rdi
+	sub    r15,rbp
+	shl    rbp,3
+	add    rdi,rbp
+
 	ret
+
+__copy__node__asm_gc:
+	call   collect_1
+	jmp    __copy__node__asm

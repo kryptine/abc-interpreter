@@ -6,8 +6,8 @@
 extern void *e__CodeSharing__ncoerce;
 extern void *dINT;
 
-int copy_interpreter_to_host(BC_WORD *host_heap, int host_heap_free, void *coercion_environment, BC_WORD *node) {
-	if (node[0] & 2 == 0) {
+BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
+	if (!(node[0] & 2)) {
 		fprintf(stderr,"Not a HNF\n");
 		return -1;
 	}
@@ -32,8 +32,8 @@ int copy_interpreter_to_host(BC_WORD *host_heap, int host_heap_free, void *coerc
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 	}
 
-	if (host_heap_free < 1 + 4 * a_arity + b_arity) {
-		fprintf(stderr,"Not enough memory\n");
+	if (host_heap_free < 3 + 5 * a_arity) {
+		fprintf(stderr,"Not enough memory (%ld, %d)\n", host_heap_free, a_arity);
 		return -2;
 	}
 
@@ -54,7 +54,7 @@ int copy_interpreter_to_host(BC_WORD *host_heap, int host_heap_free, void *coerc
 		return -5;
 	}
 
-	host_heap[0] = (BC_WORD)(((BC_WORD*)(host_address+2))+a_arity); /* TODO check */
+	host_heap[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+a_arity); /* TODO check */
 
 	if (a_arity >= 1) {
 		host_heap[1] = (BC_WORD) &host_heap[3];
