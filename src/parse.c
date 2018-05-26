@@ -13,7 +13,11 @@
 # include "bytecode_gen/instruction_code.h"
 #endif
 
-void init_parser(struct parser *state) {
+void init_parser(struct parser *state
+#ifdef LINK_CLEAN_RUNTIME
+		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
+#endif
+		) {
 	state->state = PS_init_code;
 	state->program = safe_calloc(1, sizeof(struct program));
 
@@ -34,6 +38,23 @@ void init_parser(struct parser *state) {
 
 	state->symbols_ptr = 0;
 
+#ifdef LINK_CLEAN_RUNTIME
+	state->host_symbols_n = host_symbols_n;
+	state->host_symbols = safe_malloc(host_symbols_n * sizeof(struct host_symbol));
+	state->host_symbols_strings = safe_malloc(host_symbols_string_length + host_symbols_n);
+
+	char *symbol_strings = state->host_symbols_strings;
+	for (int i = 0; i < host_symbols_n; i++) {
+		state->host_symbols[i].location = *(void**)host_symbols;
+		host_symbols += IF_INT_64_OR_32(8,4);
+		state->host_symbols[i].name = symbol_strings;
+		for (; *host_symbols; host_symbols++)
+			*symbol_strings++ = *host_symbols;
+		*symbol_strings++ = '\0';
+		host_symbols++;
+	}
+#endif
+
 #ifdef LINKER
 	state->code_size = 0;
 	state->data_size = 0;
@@ -47,7 +68,33 @@ void free_parser(struct parser *state) {
 	if (state->strings != NULL)
 		free(state->strings);
 #endif
+#ifdef LINK_CLEAN_RUNTIME
+	if (state->host_symbols != NULL)
+		free(state->host_symbols);
+	if (state->host_symbols_strings != NULL)
+		free(state->host_symbols_strings);
+#endif
 }
+
+#ifdef LINK_CLEAN_RUNTIME
+void *find_host_symbol(struct parser *state, char *name) {
+	int start = 0;
+	int end = state->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		int r = strcmp(state->host_symbols[i].name, name);
+		if (r > 0)
+			end = i-1;
+		else if (r < 0)
+			start = i+1;
+		else
+			return state->host_symbols[i].location;
+	}
+
+	return NULL;
+}
+#endif
 
 void next_state(struct parser *state) {
 	state->ptr = 0;
@@ -399,38 +446,51 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
-				} else {
+				} else if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
+					state->program->symbol_table[state->ptr].offset &= -2;
 # if (WORD_WIDTH == 64)
-					if (state->program->symbol_table[state->ptr].offset & 1) {
-						state->program->symbol_table[state->ptr].offset &= -2;
-						state->program->symbol_table[state->ptr].offset *= 2;
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
-					} else {
-						state->program->symbol_table[state->ptr].offset *= 2;
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
-					}
+					state->program->symbol_table[state->ptr].offset *= 2;
 # else
-					if (state->program->symbol_table[state->ptr].offset & 1) {
-						/* code[elem32] is an offset to the abstract data segment.
-						 * This offset is incorrect, because strings are longer on
-						 * 32-bit. Thus, we add the required offset. This is not
-						 * that efficient, but it's okay since it is only for
-						 * 32-bit and only during parsing. */
-						state->program->symbol_table[state->ptr].offset &= -2;
-						int temp_relocation_offset = 0;
-						for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
-							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-						state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
-
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
-					} else {
-						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+					/* code[elem32] is an offset to the abstract data segment.
+					 * This offset is incorrect, because strings are longer on
+					 * 32-bit. Thus, we add the required offset. This is not
+					 * that efficient, but it's okay since it is only for
+					 * 32-bit and only during parsing. */
+					state->program->symbol_table[state->ptr].offset &= -2;
+					int temp_relocation_offset = 0;
+					for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
+						temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
+					state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
+# endif
+					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
+# ifdef LINK_CLEAN_RUNTIME
+					if (state->program->symbol_table[state->ptr].name[0]) {
+						int v = ((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2];
+						if (v == 0) {
+							/* Descriptor has a code address that is not _hnf; ignore */
+						} else if (v == -1) {
+							/* Descriptor has a _hnf code address */
+							void *host_sym = find_host_symbol(state, state->program->symbol_table[state->ptr].name);
+							if (host_sym == NULL)
+								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
+							else
+								state->program->symbol_table[state->ptr].offset = (BC_WORD) host_sym;
+						} else {
+							/* This shouldn't happen */
+							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
+							exit(1);
+						}
 					}
 # endif
 # ifdef DEBUG_CURSES
 					if (!strcmp(state->program->symbol_table[state->ptr].name, "ARRAY"))
 						ARRAY = (void*) state->program->symbol_table[state->ptr].offset;
 # endif
+				} else /* code symbol */ {
+# if (WORD_WIDTH == 64)
+					state->program->symbol_table[state->ptr].offset *= 2;
+# endif
+					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
 				}
 #endif
 #ifdef LINKER

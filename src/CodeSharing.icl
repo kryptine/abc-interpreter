@@ -10,6 +10,7 @@ import StdList
 import StdMisc
 import StdString
 
+import Data._Array
 import Data.Error
 from Data.Func import hyperstrict
 import Data.Maybe
@@ -27,6 +28,11 @@ Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
 = take 100 primes
+
+// Example: get a function from a bytecode file and apply it
+Start w
+# (const,w) = get_expression "../test/functions.bc" w
+= const
 
 :: Program :== Pointer
 
@@ -46,7 +52,7 @@ get_expression filename w
 # (bc,w) = readFile filename w
 | isError bc = abort "Failed to read the file\n"
 # bc = fromOk bc
-# pgm = parse bc
+# pgm = parse syms bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
 # int_syms = get_symbols pgm
@@ -91,6 +97,8 @@ where
 		# vala = hyperstrict (coerce` syms int_syms code_segment csize data_segment dsize stack heapp childa)
 		# valb = coerce` syms int_syms code_segment csize data_segment dsize stack heapp childb
 		= cast [vala:valb]
+	| otherwise
+		= abort ("Don't know how to coerce '" +++ name +++ "'\n")
 	where
 		get_offset_symbol :: !Int ![(String,Int)] -> String
 		get_offset_symbol offset [] = abort "symbol not found in table\n"
@@ -133,10 +141,10 @@ interpret code_segment csize data_segment dsize stack stack_size heap heap_size 
 	ccall interpret "pIpIpIpIppppp:I"
 }
 
-parse :: !String -> Maybe Program
-parse s
+parse :: !{#Symbol} !String -> Maybe Program
+parse syms s
 #! cp = new_string_char_provider s
-#! parser = new_parser
+#! parser = new_parser syms
 #! res = parse_program parser cp
 | free_to_false cp = Nothing
 | res <> 0 = Nothing
@@ -150,22 +158,40 @@ where
 		ccall free_parser "p:V:p"
 	}
 
-new_parser :: Pointer
-new_parser
-#! parser = malloc (IF_INT_64_OR_32 44 64) // size of the parser struct
-#! parser = init parser parser
-= parser
+new_parser :: !{#Symbol} -> Pointer
+new_parser syms
+# parser = malloc 100 // size of the parser struct + some extra to be sure
+= init parser symbol_n symbol_string_length symbol_string parser
 where
-	init :: !Pointer !Pointer -> Pointer
-	init _ _ = code {
-		ccall init_parser "p:V:p"
+	symbol_n = size syms
+	symbol_string_length = sum [size s.symbol_name \\ s <-: syms]
+	symbol_string = build_symbol_string 0 0 (createArrayUnsafe (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
+
+	build_symbol_string :: !Int !Int !*{#Char}-> *{#Char}
+	build_symbol_string i j s
+	| i == symbol_n = s
+	# sym = syms.[i]
+	# (j,s) = int_to_string sym.symbol_value j s
+	# (j,s) = copyString sym.symbol_name (size sym.symbol_name) 0 j s
+	= build_symbol_string (i+1) j s
+	where
+		int_to_string :: !Int !Int !*{#Char} -> *(!Int, !*{#Char})
+		int_to_string val j s = (j+IF_INT_64_OR_32 8 4, {s & [j+k]=toChar (val >> (8*k)) \\ k <- [0..IF_INT_64_OR_32 7 3]})
+
+		copyString :: !String !Int !Int !Int !*{#Char} -> *(!Int, !*{#Char})
+		copyString org orgsize i desti dest
+		| i == orgsize = (desti+1, {dest & [desti]='\0'})
+		| otherwise    = copyString org orgsize (i+1) (desti+1) {dest & [desti]=org.[i]}
+
+	init :: !Pointer !Int !Int !.{#Char} !Pointer -> Pointer
+	init _ _ _ _ _ = code {
+		ccall init_parser "pIIs:V:p"
 	}
 
 new_string_char_provider :: !String -> Pointer
 new_string_char_provider s
-#! cp = malloc 16
-#! cp = init cp s (size s) 1 cp
-= cp
+# cp = malloc 16
+= init cp s (size s) 1 cp
 where
 	init :: !Pointer !String !Int !Int !Pointer -> Pointer
 	init _ _ _ _ _ = code {

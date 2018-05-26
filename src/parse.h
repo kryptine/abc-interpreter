@@ -1,5 +1,4 @@
-#ifndef _H_ABCINT_PARSE
-#define _H_ABCINT_PARSE
+#pragma once
 
 #include "bytecode.h"
 #include "settings.h"
@@ -21,6 +20,13 @@ enum parse_state {
 	PS_data_reloc,
 	PS_end
 };
+
+#ifdef LINK_CLEAN_RUNTIME
+struct host_symbol {
+	void *location;
+	char *name;
+};
+#endif
 
 struct parser {
 	/* State */
@@ -54,6 +60,12 @@ struct parser {
 
 	uint32_t symbols_ptr;
 
+#ifdef LINK_CLEAN_RUNTIME
+	char *host_symbols_strings;
+	int host_symbols_n;
+	struct host_symbol *host_symbols;
+#endif
+
 #ifdef LINKER
 	uint32_t code_size;
 	uint32_t data_size;
@@ -62,8 +74,10 @@ struct parser {
 #endif
 };
 
-void init_parser(struct parser*);
+void init_parser(struct parser*
+#ifdef LINK_CLEAN_RUNTIME
+		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
+#endif
+		);
 void free_parser(struct parser*);
 int parse_program(struct parser*, struct char_provider*);
-
-#endif
