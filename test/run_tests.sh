@@ -1,12 +1,11 @@
 #!/bin/bash
 
 CLM=clm
+CLMFLAGS="-IL Platform"
 CG=../src/bytecode
 LINK=../src/link
 OPT=../src/optimise
 IP=../src/interpret
-
-StdEnv="$CLEAN_HOME/lib/StdEnv"
 
 RED="\033[0;31m"
 GREEN="\033[0;32m"
@@ -17,10 +16,11 @@ RESET="\033[0m"
 FAILED=0
 
 RUNFLAGS=""
+NATIVE_RUNFLAGS=""
 
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
-RUN_ONLY=""
+RUN_ONLY=()
 PROFILE=0
 RECOMPILE=1
 QUIET=0
@@ -34,7 +34,7 @@ print_help () {
 	echo "  -o/--only TEST     Only run test TEST"
 	echo
 	echo "  -b/--benchmark     Run benchmarks"
-	echo "  -f/--fast          Compile the interpreter with -Ofast"
+	echo "  -f/--fast          Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
 	echo "  -h/--heap SIZE     Set heap size to SIZE"
 	echo "  -O/--no-opt        Skip the ABC optimisation step"
 	echo "  -s/--stack SIZE    Set stack size to SIZE"
@@ -54,6 +54,13 @@ print_usage () {
 	exit 1
 }
 
+contains () {
+	local e match="$1"
+	shift
+	for e; do [[ "$e" == "$match" ]] && return 0; done
+	return 1
+}
+
 OPTS=`getopt -n "$0" -l help,only:,benchmark,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:bfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
@@ -63,23 +70,25 @@ while true; do
 			print_help;;
 
 		-o | --only)
-			RUN_ONLY="$2"
+			RUN_ONLY+=("$2")
 			shift 2;;
 
 		-b | --benchmark)
 			BENCHMARK=1
 			shift;;
 		-f | --fast)
-			CFLAGS+=" -Ofast"
+			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations"
 			shift;;
 		-h | --heap)
 			RUNFLAGS+=" -h $2"
+			NATIVE_RUNFLAGS+=" -h $2"
 			shift 2;;
 		-O | --no-opt)
 		    OPT="cat -"
 			shift;;
 		-s | --stack)
 			RUNFLAGS+=" -s $2"
+			NATIVE_RUNFLAGS+=" -s $2"
 			shift 2;;
 		-3 | --32-bit)
 			EXPECTED_PREFIX=".32"
@@ -93,7 +102,7 @@ while true; do
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS"
 			shift;;
 		-l | --list-code)
-			RUNFLAGS+=" -l -H"
+			RUNFLAGS+=" -l"
 			shift;;
 		-p | --profile)
 			CFLAGS+=" -g -lprofiler"
@@ -118,11 +127,13 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	sleep 1
 fi
 
-CFLAGS="$CFLAGS" make -BC ../src || exit 1
+CFLAGS="$CFLAGS" make -BC ../src optimise bytecode link interpret || exit 1
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null
 fi
+
+$CG "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc"
 
 while read line
 do
@@ -134,21 +145,20 @@ do
 
 	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
-	elif [[ "$RUN_ONLY" != "" ]] && [[ "$MODULE" != "$RUN_ONLY" ]]; then
+	elif [[ "${#RUN_ONLY[@]}" -gt 0 ]] && ! contains "$MODULE" "${RUN_ONLY[@]}"; then
 		continue
 	fi
 
 	if [ $BENCHMARK -gt 0 ]; then
-		if [ ! -f "$MODULE.bm.sed" ]; then
-			continue
-		fi
 		cp "$MODULE.icl" /tmp
-		sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+		if [ -f "$MODULE.bm.sed" ]; then
+			sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+		fi
 	fi
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
-	$CLM -d $MODULE
+	$CLM $CLMFLAGS -d $MODULE
 	CLMRESULT=$?
 
 	if [ $CLMRESULT -ne 0 ]; then
@@ -160,30 +170,30 @@ do
 	if [ $RECOMPILE -gt 0 ]; then
 		touch "$MODULE.icl"
 		sleep 1
-		$CLM -d $MODULE
+		$CLM $CLMFLAGS -d $MODULE
 	fi
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
 	BCDEPS=()
 	for dep in ${DEPS[@]}; do
-		$OPT < "$StdEnv/Clean System Files/$dep.abc" > "$StdEnv/Clean System Files/$dep.opt.abc"
-		$CG "$StdEnv/Clean System Files/$dep.opt.abc" -o "$StdEnv/Clean System Files/$dep.o.bc"
+		IFS=':' read -r -a dep <<< "$dep"
+		SYSFILES="$CLEAN_HOME/lib/${dep[0]}/Clean System Files"
+		$OPT < "$SYSFILES/${dep[1]}.abc" > "$SYSFILES/${dep[1]}.opt.abc"
+		$CG "$SYSFILES/${dep[1]}.opt.abc" -o "$SYSFILES/${dep[1]}.o.bc"
 		if [ $? -ne 0 ]; then
 			echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 			FAILED=1
 			continue 2
 		fi
-		BCDEPS+=("$StdEnv/Clean System Files/$dep.o.bc")
+		BCDEPS+=("$SYSFILES/${dep[1]}.o.bc")
 	done
 
 	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
 	$CG $MODULE.opt.abc -o $MODULE.o.bc
 
-	$CG i_system.abc -o i_system.o.bc
-
 	rm $MODULE.bc 2>/dev/null
-	$LINK $MODULE.o.bc i_system.o.bc "${BCDEPS[@]}" -o $MODULE.bc
+	$LINK $MODULE.o.bc "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc" "${BCDEPS[@]}" -o $MODULE.bc
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
 		FAILED=1
@@ -195,17 +205,21 @@ do
 		WALL_TIME=""
 		{
 			/usr/bin/time -f %e $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>/dev/fd/3 >$MODULE.result
-			WALL_TIME="$(cat<&3)"
+			WALL_TIME="$(grep -v Warning <&3)"
 		} 3<<EOF
 EOF
 		WALL_TIME_NATIVE=""
 		{
-			/usr/bin/time -f %e ./a.out -gci 2m -nt -nr 2>/dev/fd/3
-			WALL_TIME_NATIVE="$(cat<&3)"
+			/usr/bin/time -f %e ./a.out $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>/dev/fd/3
+			WALL_TIME_NATIVE="$(cat <&3)"
 		} 3<<EOF
 EOF
-		WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)"
-		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO}x)$RESET"
+		if [ "$WALL_TIME_NATIVE" == "0.00" ]; then
+			WALL_TIME_RATIO="ratio not computable"
+		else
+			WALL_TIME_RATIO="$(echo "scale=3;$WALL_TIME/$WALL_TIME_NATIVE" | bc)x"
+		fi
+		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO})$RESET"
 	elif [ $QUIET -gt 0 ]; then
 		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc > $MODULE.result
 	else
@@ -216,7 +230,7 @@ EOF
 		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
 	fi
 
-	if [ $BENCHMARK -gt 0 ]; then
+	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
 		diff $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
 	else
 		diff $MODULE$EXPECTED_PREFIX.expected $MODULE.result

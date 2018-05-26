@@ -1,25 +1,30 @@
 # vim: ts=12:
 acker
-chars		_SystemArray
-e		StdInt,StdList
-fsieve		StdReal
-hamming		StdInt,StdList
-infprimes		StdChar,StdClass,StdInt,StdList,StdOverloaded,_SystemEnum
-invperm		StdInt
-lqueen		StdList
+brainfuck		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+chars		StdEnv:_SystemArray
+e		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+fsieve		StdEnv:StdReal
+hamming		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+#infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+invperm		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
+lqueen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
 mulmat
 nfib
-pascal		StdChar,StdCharList,StdInt,StdList,_SystemArray
-reals		StdReal
-reverse		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-reverse2		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-revrec		StdFunc,StdInt,StdList
-revtwice	-h,4m	StdChar,StdClass,StdInt,StdOverloaded,_SystemEnum
-rfib		StdReal
-sieve		StdChar,StdClass,StdEnum,StdInt,StdList,StdOverloaded,_SystemEnum
-squeen		StdList
-str_arit		StdString
+pascal		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+reals		StdEnv:StdReal
+reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
+reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
+reverse2		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
+revrec		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+rfib		StdEnv:StdReal
+sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
+squeen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+symsieve	-h,100m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded
+sudoku	-h,5m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:StdTuple,StdEnv:_SystemArray,StdEnv:_SystemEnum,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
+str_arit		StdEnv:StdString
 stwice
 tak
 twice
-war_seq		StdInt
+war_seq		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
+weird_types

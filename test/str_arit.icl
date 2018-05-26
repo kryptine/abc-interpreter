@@ -45,4 +45,4 @@ RemoveFirstChar :: String -> String
 RemoveFirstChar string = string%(1,size string-1)
 
 // The Start rule: sort a large string (30*40 characters).
-Start = [c \\ c <-: MergeSort (mul_S 30 "Sort this garbage properly, please :-). ")]
+Start = MergeSort (mul_S 30 "Sort this garbage properly, please :-). ")

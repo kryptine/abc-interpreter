@@ -11,7 +11,7 @@
 #define max_implemented_instruction_n CMAX-1
 
 #define N_ADD_ARG_LABELS 32
-#define MAX_Cadd_arg_INSTRUCTION_N 16
+#define MAX_Cadd_arg_INSTRUCTION_N 32
 
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
@@ -959,7 +959,7 @@ void add_words_in_strings(uint32_t val) {
 }
 
 void add_string_information(uint32_t data_offset) {
-	if (pgrm.strings_size >= allocated_data_size)
+	if (pgrm.strings_size >= allocated_strings_size)
 		realloc_strings();
 
 	pgrm.strings[pgrm.strings_size++] = data_offset;
@@ -1012,11 +1012,9 @@ void code_buildAC(char *string,int string_length) {
 	add_instruction_internal_label(CbuildAC,string_label);
 	if (list_code) {
 		printf("\t.data\n");
-//		printf("\t.data4 __STRING__+2\n");
-		printf("\t.data4 2\n");
+		printf("\t.data4 __STRING__+2\n");
 	}
-//	store_data_label_value("__STRING__",2);
-	store_data_l(2);
+	store_data_label_value("__STRING__",2);
 	store_string(string,string_length);
 	if (list_code)
 		printf("\t.text\n");
@@ -1492,6 +1490,20 @@ void code_eqR(void) {
 
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
+}
+
+void code_eq_desc_b(char descriptor_name[],int arity) {
+	if (arity == 0) {
+		add_instruction_label_offset(Ceq_desc_b0,descriptor_name,2);
+		return;
+	}
+
+	fprintf(stderr, "Error: eq_desc_b %d\n", arity);
+	exit(1);
+}
+
+void code_eq_nulldesc(char descriptor_name[], int a_offset) {
+	add_instruction_w_label_offset(Ceq_nulldesc,-a_offset,descriptor_name,2);
 }
 
 void code_exit_false(char label_name[]) {
@@ -2044,7 +2056,12 @@ int last_da,last_db;
 void code_jmp(char label_name[]) {
 	last_d=0;
 
-	add_instruction_label(Cjmp,label_name);
+	if (!strcmp(label_name,"__driver")) {
+		add_instruction_label(Cjsr,"__print__graph");
+		add_instruction(Chalt);
+	} else {
+		add_instruction_label(Cjmp,label_name);
+	}
 }
 
 void code_jmp_ap(int n_apply_args) {
@@ -2138,21 +2155,12 @@ void code_jsr(char label_name[]) {
 }
 
 void code_jsr_ap(int n_apply_args) {
-	if (n_apply_args==1) {
-		add_instruction(Cjsr_ap1);
-		return;
-	}
-	if (n_apply_args==2) {
-		add_instruction(Cjsr_ap2);
-		return;
-	}
-	if (n_apply_args==3) {
-		add_instruction(Cjsr_ap3);
-		return;
-	}
-	if (n_apply_args==4) {
-		add_instruction(Cjsr_ap4);
-		return;
+	switch (n_apply_args) {
+		case 1: add_instruction(Cjsr_ap1); return;
+		case 2: add_instruction(Cjsr_ap2); return;
+		case 3: add_instruction(Cjsr_ap3); return;
+		case 4: add_instruction(Cjsr_ap4); return;
+		case 5: add_instruction(Cjsr_ap5); return;
 	}
 
 	fprintf(stderr, "Error: jsr_ap %d\n",n_apply_args);
@@ -2257,6 +2265,22 @@ void code_print(char *string,int length) {
 		printf("\t.text\n");
 }
 
+void code_printD(void) {
+	add_instruction(CprintD);
+}
+
+void code_print_char(void) {
+	add_instruction(Cprint_char);
+}
+
+void code_print_int(void) {
+	add_instruction(Cprint_int);
+}
+
+void code_print_real(void) {
+	add_instruction(Cprint_real);
+}
+
 void code_print_sc(char *string,int length) {
 	struct label *string_label;
 
@@ -2274,6 +2298,10 @@ void code_print_sc(char *string,int length) {
 
 void code_print_symbol_sc(int a_offset) {
 	add_instruction_w(Cprint_symbol_sc,-a_offset);
+}
+
+void code_pushA_a(int a_offset) {
+	add_instruction_w(CpushA_a,-a_offset);
 }
 
 void code_pushB(int b) {
@@ -2352,6 +2380,10 @@ void code_push_a(int a_offset) {
 	add_instruction_w(Cpush_a,-a_offset);
 }
 
+void code_push_a_r_args(void) {
+	add_instruction(Cpush_a_r_args);
+}
+
 void code_push_a_b(int a_offset) {
 	add_instruction_w(Cpush_a_b,-a_offset);
 }
@@ -2413,10 +2445,10 @@ void code_push_args_u(int a_offset,int arity,int n_arguments) {
 	if (arity==n_arguments) {
 		code_push_args(a_offset,arity,n_arguments);
 		return;
+	} else {
+		add_instruction_w_w_w(Cpush_args_u,a_offset,arity,n_arguments);
+		return;
 	}
-
-	fprintf(stderr, "Error: push_args_u %d %d %d\n",a_offset,arity,n_arguments);
-	exit(1);
 }
 
 void code_push_arg_b(int a_offset) {
@@ -2436,6 +2468,9 @@ void code_push_b(int b_offset) {
 }
 
 void code_push_node(char *label_name,int n_arguments) {
+	if (strcmp(label_name,"__cycle__in__spine") && strcmp(label_name,"__reserve"))
+		fprintf(stderr, "Warning: push_node not implemented for '%s'\n", label_name);
+
 	switch(n_arguments) {
 		case 0:
 			add_instruction_label(Cpush_node0,label_name);
@@ -2511,6 +2546,14 @@ void code_push_node_u(char *label_name,int a_size,int b_size) {
 
 void code_remI(void) {
 	add_instruction(CremI);
+}
+
+void code_push_r_arg_D(void) {
+	add_instruction(Cpush_r_arg_D);
+}
+
+void code_push_r_arg_t(void) {
+	add_instruction(Cpush_r_arg_t);
 }
 
 void code_push_r_arg_u(int a_offset,int a_size,int b_size,int a_arg_offset,int a_arg_size,int b_arg_offset,int b_arg_size) {
@@ -2702,12 +2745,20 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 		}
 	}
 
-	fprintf(stderr, "Error: push_r_args_b %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
-	exit(1);
+	add_instruction_w_w_w(Cpush_r_args_b,-a_offset,(a_size+argument_number-1-1)<<2,n_arguments);
+	fprintf(stderr, "Warning: push_r_args_b %d %d %d %d %d was added by Camil\n",a_offset,a_size,b_size,argument_number,n_arguments);
 }
 
 void code_push_r_args_u(int a_offset,int a_size,int b_size) {
 	code_push_r_args(a_offset,a_size,b_size);
+}
+
+void code_push_t_r_a(int a_offset) {
+	add_instruction_w(Cpush_t_r_a,-a_offset);
+}
+
+void code_push_t_r_args(void) {
+	add_instruction(Cpush_t_r_args);
 }
 
 void code_replace(char element_descriptor[],int a_size,int b_size) {
@@ -2806,6 +2857,10 @@ void code_repl_args(int arity,int n_arguments) {
 
 	fprintf(stderr, "Error: repl_args %d %d\n",arity,n_arguments);
 	exit(1);
+}
+
+void code_repl_args_b(void) {
+	add_instruction(Crepl_args_b);
 }
 
 void code_repl_r_args(int a_size,int b_size) {
@@ -4173,6 +4228,9 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 
 	/* TODO: do we need the type string? */
 
+	/* TODO: do we need the record name? */
+	store_string(record_name,record_name_length);
+
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -4190,20 +4248,18 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 	}
 	record_label->label_offset=(pgrm.data_size<<2)+1;
 
-	/* to do record descriptor instead of 0 */
-
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
-	store_data_l(0);
-
-	/* */
+	store_data_l((a_size + b_size + 256) | (a_size << 16));
 }
 
 void code_record_descriptor_label(char descriptor_name[]) {
-
+	store_data_label_value(descriptor_name,0);
 }
 
 void code_record_end(char record_name[],int record_name_length) {
+	/* TODO: do we need the record name? */
+	store_string(record_name,record_name_length);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -4289,6 +4345,9 @@ void write_program(FILE* program_file) {
 	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 
+	fwrite(&label_id, sizeof(label_id), 1, program_file);
+	fwrite(&global_label_string_count, sizeof(global_label_string_count), 1, program_file);
+
 	fwrite(&pgrm.code_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 	fwrite(&pgrm.data_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 
@@ -4296,8 +4355,6 @@ void write_program(FILE* program_file) {
 	print_strings(pgrm.strings_size,pgrm.strings,program_file);
 	print_data(pgrm.data_size,pgrm.data,program_file);
 
-	fwrite(&label_id, sizeof(label_id), 1, program_file);
-	fwrite(&global_label_string_count, sizeof(global_label_string_count), 1, program_file);
 	if (labels != NULL)
 		print_global_labels(label_array, label_id, program_file);
 

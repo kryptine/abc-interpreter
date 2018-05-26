@@ -26,4 +26,16 @@ size_t string_to_size(char*);
 
 char *escape(char);
 
+#ifdef DEBUG_CURSES
+# include <curses.h>
+# include "debug_curses.h"
+# define FPRINTF wprintw
+# define PRINTF debugger_printf
+# define PUTCHAR debugger_putchar
+#else
+# define FPRINTF fprintf
+# define PRINTF printf
+# define PUTCHAR putchar
+#endif
+
 #endif

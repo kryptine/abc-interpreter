@@ -25,7 +25,8 @@ BC_WORD *collect_compact(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t hea
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
 
-	mark_all_nodes(stack, asp, heap, heap_size, &nodes_set);
+	mark_a_stack(stack, asp, heap, heap_size, &nodes_set);
+	evaluate_grey_nodes(heap, heap_size, &nodes_set);
 
 	/* Pass 0: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)

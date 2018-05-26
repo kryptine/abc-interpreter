@@ -136,71 +136,73 @@ BC_WORD *get_grey_node(struct nodes_set *set) {
 	}
 }
 
-void mark_all_nodes(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
+void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *asp_temp;
-	/* Add full A-stack to the grey set */
 	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
 		add_grey_node(set, (BC_WORD*) *asp_temp, heap, heap_size);
 	}
+}
 
-	/* Evaluate full grey set */
+void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *node;
 	while ((node = get_grey_node(set)) != NULL) {
-		int16_t arity = ((int16_t*)(node[0]))[-1];
+		int16_t a_arity, b_arity;
+
+		if (node[0] & 2) {
+			a_arity = ((int16_t*)(node[0]))[-1];
+			b_arity = 0;
+			if (a_arity > 256) {
+				a_arity = ((int16_t*)(node[0]))[0];
+				b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+			}
+		} else {
+			int16_t arity = ((int16_t*)(node[0]))[-1];
+			if (arity < 0) {
+				a_arity = 1;
+				b_arity = 0;
+			} else {
+				b_arity = arity >> 8;
+				a_arity = (arity & 0xff) - b_arity;
+			}
+		}
+
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p -> black: %lx; arity %d\n", (void*) node, node[0], arity);
+		fprintf(stderr, "\t%p -> black: %lx; arity %d/%d\n", (void*) node, node[0], a_arity, b_arity);
 #endif
 
 		if (node[0] & 2) { /* HNF */
-			if (arity > 0)
-				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-			if (arity > 1) {
-				BC_WORD **rest = (BC_WORD**) node[2];
-				if (*rest >= heap && *rest < heap + heap_size) {
-					/* 3-node with pointer to rest */
-					int i;
-					for (i = 0; i < arity-1; i++)
+			if (node[0] == (BC_WORD) &INT + 2 ||
+					node[0] == (BC_WORD) &CHAR + 2 ||
+					node[0] == (BC_WORD) &BOOL + 2 ||
+					node[0] == (BC_WORD) &REAL + 2 ||
+					node[0] == (BC_WORD) &__STRING__ + 2) {
+			} else if (node[0] == (BC_WORD) &__ARRAY__ + 2) {
+				if (node[2] != (BC_WORD) &INT + 2 &&
+						node[2] != (BC_WORD) &REAL + 2 &&
+						node[2] != (BC_WORD) &BOOL + 2) {
+					uint32_t l = node[1];
+					BC_WORD **rest = (BC_WORD**) &node[3];
+					for (int i = 0; i < l; i++) {
 						add_grey_node(set, rest[i], heap, heap_size);
-				} else {
-					/* full arity node */
-					for (; arity; arity--) {
-						add_grey_node(set, (BC_WORD*) node[arity], heap, heap_size);
 					}
+				}
+			} else if (a_arity >= 1) {
+				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
+				if (a_arity == 2 && b_arity == 0) {
+					add_grey_node(set, (BC_WORD*) node[2], heap, heap_size);
+				} else if (a_arity >= 2) {
+					BC_WORD **rest = (BC_WORD**) node[2];
+					int i;
+					for (i = 0; i < a_arity-1; i++)
+						add_grey_node(set, rest[i], heap, heap_size);
 				}
 			}
 		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
 			/* No pointer arguments */
-		} else if (arity < 0) { /* TODO ??? */
-			fprintf(stderr, "Arity < 0 not implemented\n");
-			exit(1);
-		} else if (arity == 0) {
-			/* No children */
-		} else if (arity < 3) { /* Thunk, three places */
-			add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-			if (arity == 2)
-				add_grey_node(set, (BC_WORD*) node[2], heap, heap_size);
-		} else { /* Thunk, pointer to rest of arguments */
-			if (arity > 256) { /* arity = a_size + b_size + (b_size << 8) */
-				arity = (arity & 0xff) - (arity >> 8); /* Only care about A-size */
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-				fprintf(stderr, "\t\tA-arity is %d\n", arity);
-#endif
-			}
-			if (arity > 0) {
-				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);
-				if (arity > 1) {
-					BC_WORD **rest = (BC_WORD**) node[2];
-					if (on_heap((BC_WORD) *rest, heap, heap_size)) {
-						int i;
-						for (i = 0; i < arity-1; i++)
-							add_grey_node(set, rest[i], heap, heap_size);
-					} else {
-						int i;
-						for (i = 2; i <= arity; i++)
-							add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);
-					}
-				}
-			}
+		} else { /* Thunk */
+			int i;
+			for (i = 1; i <= a_arity; i++)
+				add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);
 		}
 	}
 }

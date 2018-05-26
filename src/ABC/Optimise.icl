@@ -370,7 +370,7 @@ opt_abc_new2 [IIns "ltI",Ijmp_false l:is] = [Ijmp_geI l:opt_abc_new2 is]
 
 opt_abc_new2 [i0=:Ipop_a n:is] = case skip_b_instructions is 0 of
 	([jmp=:Ijmp l:is`], n_b) -> case n_b of
-		0 -> [Ipop_a_jmp n l:opt_abc_new2 is]
+		0 -> [Ipop_a_jmp n l:opt_abc_new2 is`]
 		_ -> opt_abc_new2 (take n_b is ++ [Ipop_a_jmp n l:is`])
 	([annot=:Annotation (Ad _ _ _),Irtn:is`], n_b) -> case n_b of
 		0 -> [annot,Ipop_a_rtn n:opt_abc_new2 is`]

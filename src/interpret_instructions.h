@@ -1043,6 +1043,9 @@ case Cbuild_r0b:
 case Cbuild_r10:
 {
 	BC_WORD_S ao;
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT_HEX "\n", (void*)(asp+1), (void*) hp, (BC_WORD) pc[2]);
+#endif
 
 	if ((heap_free-=2)<0)
 		break;
@@ -1837,10 +1840,21 @@ case Ceq_desc:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-#if 0
-	printf ("Ceq_desc %d %d %d\n",(int)n,(int)*n,(int)*n-(int)data);
-#endif
 	*--bsp = *n==pc[2];
+	pc+=3;
+	continue;
+}
+case Ceq_desc_b0:
+{
+	bsp[0] = bsp[0]==pc[1];
+	pc+=2;
+	continue;
+}
+case Ceq_nulldesc:
+{
+	BC_WORD *n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	int16_t arity=((int16_t*)(n[0]))[-1];
+	*--bsp = *n==pc[2]+arity*IF_INT_64_OR_32(16,8); /* TODO check with John */
 	pc+=3;
 	continue;
 }
@@ -2562,9 +2576,6 @@ case CfillI_b:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	i=(BC_WORD_S)bsp[pc[2]];
-#if 0
-	printf ("fillI_b %d\n",i);
-#endif
 	n[0]=(BC_WORD)&INT+2;
 	n[1]=i;
 	pc+=3;
@@ -2590,9 +2601,6 @@ case Cfill_a:
 	ao_d=((BC_WORD_S*)pc)[2];
 	n_s=(BC_WORD*)asp[ao_s];
 	n_d=(BC_WORD*)asp[ao_d];
-#if 0
-	printf ("Cfill_a %d %d\n",(int)n_s,(int)n_d);
-#endif
 	n_d[0]=n_s[0];
 	n_d[1]=n_s[1];
 	n_d[2]=n_s[2];
@@ -2605,9 +2613,6 @@ case Cfill_a01_pop_rtn:
 
 	n_s=(BC_WORD*)asp[0];
 	n_d=(BC_WORD*)asp[-1];
-#if 0
-	printf ("Cfill_a01_pop_rtn %d %d\n",(int)n_s,(int)n_d);
-#endif
 	asp-=1;
 	pc=(BC_WORD*)*csp++;
 	n_d[0]=n_s[0];
@@ -2918,7 +2923,7 @@ case Cfill_r11:
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=bsp[bo];
@@ -2934,7 +2939,7 @@ case Cfill_r12:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -2953,7 +2958,7 @@ case Cfill_r13:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -2986,7 +2991,7 @@ case Cfill_r21:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -3005,7 +3010,7 @@ case Cfill_r22:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -3043,7 +3048,7 @@ case Cfill_r31:
 		break;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
-	bo=((SS*)pc)[3];
+	bo=((BC_WORD_S*)pc)[3];
 	n[0]=*(BC_WORD_S*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
@@ -3087,11 +3092,11 @@ case CgtI:
 	pc+=1;
 	continue;
 case Chalt:
-	printf("\nhalt at %d\n", (int) (pc-code));
-#if 0
-	printf ("pc = %d __indirection = %d __cycle__in__spine = %d\n",(int)pc,(int)&__indirection,(int)&__cycle__in__spine);
+	PRINTF("halt at %d\n", (int) (pc-code));
+	PRINTF("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
+#ifdef DEBUG_CURSES
+	debugger_graceful_end();
 #endif
-	printf("%d %d %d\n", (int) (hp-*heap), (int) heap_free, (int) (hp-*heap+heap_free));
 	return 0;
 /*				exit (1); */
 case CincI:
@@ -3126,9 +3131,6 @@ case Cjmp_eval_upd:
 	BC_WORD *n1,*n2,d;
 	n1=(BC_WORD*)asp[0];
 	d=n1[0];
-#if 0
-	printf ("jmp_eval_upd %d %d\n",(int)n1,(int)d);
-#endif
 	if ((d & 2)!=0){
 		n2=(BC_WORD*)asp[-1];
 		pc=(BC_WORD*)*csp++;
@@ -3138,9 +3140,6 @@ case Cjmp_eval_upd:
 		--asp;
 		continue;
 	}
-#if 0
-	printf ("jmp_eval_upd %d %d\n",(int)d-(int)program,((int)d-(int)program)>>2);
-#endif
 	pc=(BC_WORD*)(d-IF_INT_64_OR_32(40,20));
 	continue;
 }
@@ -3187,16 +3186,9 @@ case Cjsr_eval0:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-#if 0
-	printf ("Cjsr_eval0 %d\n",n);
-	printf ("Cjsr_eval0 %d\n",(int)n[0]);
-#endif
 	pc+=1;
 	if ((n[0] & 2)!=0)
 		continue;
-#if 0
-	printf ("Cjsr_eval0 %d %d\n",n,(int)n[0]);
-#endif
 	*--csp=(BC_WORD)pc;
 	pc=(BC_WORD*)n[0];
 	continue;
@@ -3336,8 +3328,23 @@ case Cprint:
 	length=s[0];
 	cs=(char*)&s[1];
 	for (i=0; i<length; ++i) {
-		putchar(*cs++);
+		PUTCHAR(*cs++);
 	}
+	continue;
+}
+case CprintD:
+{
+	uint32_t *s;
+	int l,i;
+	char *cs;
+
+	s=(uint32_t*)*bsp++;
+	l=s[0];
+	cs=(char*)&s[IF_INT_64_OR_32(2,1)];
+	for (i=0; i<l; ++i) {
+		PUTCHAR(cs[i]);
+	}
+	pc+=1;
 	continue;
 }
 case Cprint_symbol_sc:
@@ -3347,11 +3354,13 @@ case Cprint_symbol_sc:
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
 	if (d==(BC_WORD)&INT+2){
-		printf ("%d",(int)n[1]);
+		PRINTF("%d",(int)n[1]);
+	} else if (d==(BC_WORD)&BOOL+2) {
+		PRINTF("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&CHAR+2){
-		printf ("'%c'",(int)n[1]);
+		PRINTF("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
-		printf ("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
+		PRINTF("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
 	} else {
 		uint32_t *s;
 		int l,i;
@@ -3365,9 +3374,17 @@ case Cprint_symbol_sc:
 		l=s[0];
 		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
 		for (i=0; i<l; ++i) {
-			putchar (cs[i]);
+			PUTCHAR(cs[i]);
 		}
 	}
+	pc+=2;
+	continue;
+}
+case CpushA_a:
+{
+	BC_WORD *n;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	*++asp=n[1];
 	pc+=2;
 	continue;
 }
@@ -3565,9 +3582,6 @@ case Cpush_r_args20:
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-#if 0
-	printf ("Cpush_args2 %d %d %d\n",(int)n,(int)n[1],(int)n[2]);
-#endif
 	asp[2]=n[1];
 	asp[1]=n[2];
 	asp+=2;
@@ -4338,6 +4352,20 @@ case Cpush_r_args_aa1:
 	pc+=3;
 	continue;
 }
+case Cpush_r_args_b:
+{
+	BC_WORD *n,*a;
+	BC_WORD bo=pc[2];
+	int n_args=pc[3];
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	a=(BC_WORD*)n[2];
+	for (int i=0; i<n_args; i++)
+		bsp[0-n_args+i]=a[i+bo-3]; /* TODO why -3? */
+	bsp-=n_args;
+	pc+=4;
+	continue;
+}
 case Cpush_r_args_b2l1:
 {
 	BC_WORD *n,*a;
@@ -4529,6 +4557,59 @@ case Crepl_r_argsa0:
 		if (n_a_m_1<30) break; asp[-30] = a[29];
 		if (n_a_m_1<31) break; asp[-31] = a[30];
 	} while (0);
+	continue;
+}
+case Crepl_args_b:
+{
+	BC_WORD *n,*a,n_a_m_1;
+
+	n=(BC_WORD*)asp[0];
+	n_a_m_1=bsp[0];
+	bsp+=2;
+	asp+=n_a_m_1-1;
+	do {
+		asp[0]=n[1];
+		if (n_a_m_1 < 2) break;
+		if (n_a_m_1 == 2) {
+			asp[-1]=n[2];
+		} else {
+			a=(BC_WORD*)n[2];
+			asp[-1]=a[0];
+			asp[-2]=a[1];
+			do {
+				if (n_a_m_1< 4) break; asp[ -3] = a[ 2];
+				if (n_a_m_1< 5) break; asp[ -4] = a[ 3];
+				if (n_a_m_1< 6) break; asp[ -5] = a[ 4];
+				if (n_a_m_1< 7) break; asp[ -6] = a[ 5];
+				if (n_a_m_1< 8) break; asp[ -7] = a[ 6];
+				if (n_a_m_1< 9) break; asp[ -8] = a[ 7];
+				if (n_a_m_1<10) break; asp[ -9] = a[ 8];
+				if (n_a_m_1<11) break; asp[-10] = a[ 9];
+				if (n_a_m_1<12) break; asp[-11] = a[10];
+				if (n_a_m_1<13) break; asp[-12] = a[11];
+				if (n_a_m_1<14) break; asp[-13] = a[12];
+				if (n_a_m_1<15) break; asp[-14] = a[13];
+				if (n_a_m_1<16) break; asp[-15] = a[14];
+				if (n_a_m_1<17) break; asp[-16] = a[15];
+				if (n_a_m_1<18) break; asp[-17] = a[16];
+				if (n_a_m_1<19) break; asp[-18] = a[17];
+				if (n_a_m_1<20) break; asp[-19] = a[18];
+				if (n_a_m_1<21) break; asp[-20] = a[19];
+				if (n_a_m_1<22) break; asp[-21] = a[20];
+				if (n_a_m_1<23) break; asp[-22] = a[21];
+				if (n_a_m_1<24) break; asp[-23] = a[22];
+				if (n_a_m_1<25) break; asp[-24] = a[23];
+				if (n_a_m_1<26) break; asp[-25] = a[24];
+				if (n_a_m_1<27) break; asp[-26] = a[25];
+				if (n_a_m_1<28) break; asp[-27] = a[26];
+				if (n_a_m_1<29) break; asp[-28] = a[27];
+				if (n_a_m_1<30) break; asp[-29] = a[28];
+				if (n_a_m_1<31) break; asp[-30] = a[29];
+				if (n_a_m_1<32) break; asp[-31] = a[30];
+			} while (0);
+		}
+	} while (0);
+	pc+=1;
 	continue;
 }
 case Cswap_a1:
@@ -6562,6 +6643,60 @@ case Cupdates4_a:
 	continue;
 }
 
+case Cjsr_ap5:
+	*--csp=(BC_WORD)&pc[1];
+case Cjmp_ap5:
+{
+	BC_WORD *n,d;
+
+	n=(BC_WORD*)asp[0];
+	d=n[0];
+#ifdef DEBUG_ALL_INSTRUCTIONS
+	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
+			d-(BC_WORD)data,
+			((uint16_t*)d)[0],
+			((uint16_t*)d)[-1],
+			(*(BC_WORD*)(d+40-6) - (BC_WORD) code) / 8);
+#endif
+	if (((uint16_t*)d)[0]==40){
+		BC_WORD arity;
+
+		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+40+6)) - 24);
+#else
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+40-6)) - 12);
+#endif
+		if (arity<=1){
+			if (arity<1){
+				--asp;
+			} else {
+				asp[0]=n[1];
+			}
+		} else {
+			BC_WORD *args,a1;
+
+			args=(BC_WORD*)n[2];
+			a1=n[1];
+			if (arity==2){
+				asp[0]=(BC_WORD)args;
+			} else {
+				asp[0]=args[arity-2];
+				arity-=3;
+				do {
+					*++asp = args[arity];
+					--arity;
+				} while (arity!=0);
+			}
+			*++asp = a1;
+		}
+		continue;
+	} else {
+		*--csp=(BC_WORD)&Fjmp_ap2;
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
+		continue;
+	}
+}
 case Cjsr_ap4:
 	*--csp=(BC_WORD)&pc[1];
 case Cjmp_ap4:
@@ -6587,7 +6722,7 @@ case Cjmp_ap4:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6641,7 +6776,7 @@ case Cjmp_ap3:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6695,7 +6830,7 @@ case Cjmp_ap2:
 			args=(BC_WORD*)n[2];
 			a1=n[1];
 			if (arity==2){
-				*++asp=(BC_WORD)args;
+				asp[0]=(BC_WORD)args;
 			} else {
 				asp[0]=args[arity-2];
 				arity-=3;
@@ -6741,9 +6876,6 @@ case Cjmp_ap1:
 case Cadd_arg0:
 {
 	BC_WORD *n;
-#if 0
-	printf ("Cadd_arg0 %d %d\n",(int)(pc-program),(int)n);
-#endif
 	if ((heap_free-=2)<0)
 		break;
 	n=(BC_WORD*)asp[0];
@@ -6839,9 +6971,6 @@ case Ceval_upd2:
 	n[0]=(BC_WORD)&__indirection[5];
 	asp[1]=n[1];
 	n[1]=asp[-1];
-#if 0
-	printf ("Ceval_upd2 %d %d\n",(int)n,(int)asp[-1]);
-#endif
 	asp[0]=n[2];
 	pc=*(BC_WORD**)&pc[1];
 	asp+=1;
@@ -6870,13 +6999,13 @@ case Cjsr_stack_check:
 	continue;
 case Cstack_check:
 	if (csp[0]!=(BC_WORD)asp){
-		printf("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	if (csp[1]!=(BC_WORD)bsp){
-		printf("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		printf(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;

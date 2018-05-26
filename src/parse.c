@@ -1,8 +1,13 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "abc_instructions.h"
 #include "parse.h"
 #include "util.h"
+
+#ifdef INTERPRETER
+# include "interpret.h"
+#endif
 
 #ifdef LINKER
 # include "bytecode_gen/instruction_code.h"
@@ -63,6 +68,9 @@ void next_state(struct parser *state) {
 			state->state = PS_init_data;
 			return;
 		case PS_init_data:
+			state->state = PS_init_symbol_table;
+			return;
+		case PS_init_symbol_table:
 			state->state = PS_init_code_reloc;
 			return;
 		case PS_init_code_reloc:
@@ -89,9 +97,6 @@ void next_state(struct parser *state) {
 #endif
 				return;
 		case PS_data:
-			state->state = PS_init_symbol_table;
-			return;
-		case PS_init_symbol_table:
 			state->state = PS_symbol_table;
 			if (state->program->symbol_table_size > 0)
 				return;
@@ -175,6 +180,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
 #endif
+				next_state(state);
+				break;
+			case PS_init_symbol_table:
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbol_table_size = elem32;
+				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
 				next_state(state);
 				break;
 			case PS_init_code_reloc:
@@ -355,16 +370,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 					next_state(state);
 				break;
-			case PS_init_symbol_table:
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->program->symbol_table_size = elem32;
-				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
-				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
-					return 1;
-				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
-				next_state(state);
-				break;
 			case PS_symbol_table:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
@@ -380,8 +385,53 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
 #ifdef INTERPRETER
-				if (state->program->symbol_table[state->ptr].offset == -1)
+				if (!strcmp(state->program->symbol_table[state->ptr].name, "__ARRAY__")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__ARRAY__;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__STRING__;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") || !strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &INT;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &BOOL;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "CHAR")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &CHAR;
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
+				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
+				} else {
+# if (WORD_WIDTH == 64)
+					if (state->program->symbol_table[state->ptr].offset & 1) {
+						state->program->symbol_table[state->ptr].offset &= -2;
+						state->program->symbol_table[state->ptr].offset *= 2;
+						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
+					} else {
+						state->program->symbol_table[state->ptr].offset *= 2;
+						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+					}
+# else
+					if (state->program->symbol_table[state->ptr].offset & 1) {
+						/* code[elem32] is an offset to the abstract data segment.
+						 * This offset is incorrect, because strings are longer on
+						 * 32-bit. Thus, we add the required offset. This is not
+						 * that efficient, but it's okay since it is only for
+						 * 32-bit and only during parsing. */
+						state->program->symbol_table[state->ptr].offset &= -2;
+						int temp_relocation_offset = 0;
+						for (int i = 0; state->program->symbol_table[state->ptr].offset / 4 > state->strings[i] && i < state->strings_size; i++)
+							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
+						state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
+
+						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
+					} else {
+						state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+					}
+# endif
+# ifdef DEBUG_CURSES
+					if (!strcmp(state->program->symbol_table[state->ptr].name, "ARRAY"))
+						ARRAY = (void*) state->program->symbol_table[state->ptr].offset;
+# endif
+				}
 #endif
 #ifdef LINKER
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
@@ -415,24 +465,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # if (WORD_WIDTH == 64)
 					shift_address(&state->program->code[code_i]);
 # endif
-
-					state->program->code[code_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
-
-# if (WORD_WIDTH == 32)
-					if (sym->offset & 1) {
-						/* code[elem32] is an offset to the abstract data segment.
-						 * This offset is incorrect, because strings are longer on
-						 * 32-bit. Thus, we add the required offset. This is not
-						 * that efficient, but it's okay since it is only for
-						 * 32-bit and only during parsing. */
-						int temp_relocation_offset = 0;
-						for (int i = 0; state->program->code[code_i] / 4 > state->strings[i] && i < state->strings_size; i++)
-							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-						state->program->code[code_i] += temp_relocation_offset * 4;
-					}
-# endif
-
-					state->program->code[code_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
+					state->program->code[code_i] += sym->offset;
 #endif
 				}
 
@@ -471,19 +504,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					data_i += state->relocation_offset;
 # endif
 
-					state->program->data[data_i] += IF_INT_64_OR_32(2,1) * (sym->offset & -2);
-
-# if (WORD_WIDTH == 32)
-					/* See comments on PS_code_reloc. */
-					if (sym->offset & 1) {
-						int temp_relocation_offset = 0;
-						for (int i = 0; state->program->data[data_i] / 4 > state->strings[i] && i < state->strings_size; i++)
-							temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
-						state->program->data[data_i] += temp_relocation_offset * 4;
-					}
-# endif
-
-					state->program->data[data_i] += (BC_WORD) (sym->offset & 1 ? state->program->data : state->program->code);
+					state->program->data[data_i] += sym->offset;
 #endif
 				}
 

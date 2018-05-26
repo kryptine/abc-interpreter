@@ -18,7 +18,7 @@ import StdList
 	}
 
 all_records :: [Record]
-all_records = [{field_a=a,field_b=b,int_a=i,int_b=j} \\ a <- all_adts, b <- all_adts, c <- all_adts, i <- [0..4], j <- [0..4]]
+all_records = [{field_a=a,field_b=b,int_a=i,int_b=j} \\ a <- all_adts, b <- all_adts, i <- [0..4], j <- [0..4]]
 
 all_adts :: [ADT]
 all_adts = [A,B,C,D]
