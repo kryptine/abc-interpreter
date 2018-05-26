@@ -474,7 +474,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							if (host_sym == NULL)
 								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
 							else
-								state->program->symbol_table[state->ptr].offset = (BC_WORD) host_sym;
+								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym;
 						} else {
 							/* This shouldn't happen */
 							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);

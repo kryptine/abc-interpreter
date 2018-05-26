@@ -2,6 +2,7 @@
 
 .globl    __copy__node__asm
 .globl    __copy__node__int__asm
+.globl    copy_interpreter_to_host
 .extern   print_reg
 .extern   dINT
 
@@ -24,78 +25,33 @@
 # (res) r14: B5
 # (res) r15: Number of free words on heap
 
-__copy__node__int__asm:
-	call   get_node
-	lea    rbp, [dINT + 2]
-	mov    [rdi], rbp
-	mov    rbp, [rcx + 8]
-	mov    [rdi + 8], rbp
-	mov    rbp, [rcx + 16]
-	mov    [rdi + 16], rbp
-	mov    rcx, rdi
-	sub    r15, 3
-	add    rdi, 24
-	ret
-
 __copy__node__asm:
-	call   get_node
-	# Pointer is now in rxc
-	call   get_arity_asm
-
-	# Jump based on arity
-	cmp    rbp, 2
-	jbe    copy_node_1
-
-copy_node_2:
-	ret
-
-copy_node_1:
-	# Copy node to heap
-	mov    rbp, [rcx]
-	mov    [rdi], rbp
-	mov    rbp, [rcx + 8]
-	mov    [rdi + 8], rbp
-	mov    rbp, [rcx + 16]
-	mov    [rdi + 16], rbp
-	mov    rcx, rdi
-	sub    r15, 3
-	add    rdi, 24
-	ret
-
-print_rbp:
 	push   rax
-	push   rcx
 	push   rdx
 	push   rsi
 	push   rdi
-	push   rsp
 	push   r8
 	push   r9
 	push   r10
 	push   r11
 
-	mov    rdi, rbp
-	call   print_reg
+	mov    rsi,r15 # free words
+	mov    rdx,rcx # coercion environment
+	mov    rcx,rax # pointer to node
+	call   copy_interpreter_to_host
 
 	pop    r11
 	pop    r10
 	pop    r9
 	pop    r8
-	pop    rsp
 	pop    rdi
+
+	mov    rcx,rdi
+	sub    r15,rax
+	shl    rax,3
+	add    rdi,rax
+
 	pop    rsi
 	pop    rdx
-	pop    rcx
 	pop    rax
-	ret
-
-get_arity_asm:
-	mov    rbp, [rcx]
-	mov    rbp, [rbp - 8]
-	and    rbp, 0x000000000000FFFF
-	ret
-
-get_node:
-	# Dereference A0 once (is still pointer)
-	mov    rcx, [rcx + 8]
 	ret

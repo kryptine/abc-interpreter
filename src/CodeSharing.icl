@@ -1,4 +1,4 @@
-module CodeSharing
+implementation module CodeSharing
 
 import StdArray
 import StdBool
@@ -55,7 +55,6 @@ get_expression filename w
 # pgm = parse syms bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
-# int_syms = get_symbols pgm
 # code_segment = readInt pgm OFFSET_PROGRAM_CODE
 # csize = readInt4Z pgm OFFSET_PROGRAM_CODE_SIZE
 # data_segment = readInt pgm OFFSET_PROGRAM_DATA
@@ -70,76 +69,46 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 # heapp = writeInt heapp 0 hp
-= (coerce syms int_syms code_segment csize data_segment dsize stack heapp asp bsp csp hp start_node,w)
-where
-	get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
-	get_stack_and_heap_addresses _ = code {
-		ccall get_stack_and_heap_addresses "I:Vpppp"
+# ce =
+	{ ce_symbols = syms
+	, ce_code_segment = code_segment
+	, ce_code_size    = csize
+	, ce_data_segment = data_segment
+	, ce_data_size    = dsize
+	, ce_heapp        = heapp
+	, ce_hp           = hp
+	, ce_stack        = stack
+	, ce_asp          = asp
+	, ce_bsp          = bsp
+	, ce_csp          = csp
 	}
+= (coerce ce start_node, w)
 
-	coerce :: !{#Symbol} ![(String,Int)] !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer !Pointer -> a
-	coerce syms int_syms code_segment csize data_segment dsize stack heapp asp bsp csp hp p
-	#! asp = writeInt asp 0 p
-	#! ok = interpret code_segment csize data_segment dsize stack STACK_SIZE heapp HEAP_SIZE asp bsp csp hp asp
-	| ok <> 0 = abort "Failed to interpret\n"
-	#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
-	#! (offset,name,arity) = node_descriptor data_segment (readInt asp 0)
-	| name == "INT"
-		#! n = copy_node_int p
-		= cast n
-	| name == "Nil"
-		#! n = copy_node p
-		= cast n
-	| name == "Cons"
-		#! childa = readInt p (IF_INT_64_OR_32  8 4)
-		#! childb = readInt p (IF_INT_64_OR_32 16 8)
-		| childa + childb == 0 = abort "should not happen; just to evaluate both children\n"
-		# vala = hyperstrict (coerce` syms int_syms code_segment csize data_segment dsize stack heapp childa)
-		# valb = coerce` syms int_syms code_segment csize data_segment dsize stack heapp childb
-		= cast [vala:valb]
-	| otherwise
-		= abort ("Don't know how to coerce '" +++ name +++ "'\n")
-	where
-		get_offset_symbol :: !Int ![(String,Int)] -> String
-		get_offset_symbol offset [] = abort "symbol not found in table\n"
-		get_offset_symbol offset [(name,o):rest]
-		| o == offset || o+1 == offset = name
-		| otherwise                    = get_offset_symbol offset rest
-
-		cast :: a -> b
-		cast _ = code {
-			no_op
-		}
-
-		coerce` :: !{#Symbol} ![(String,Int)] !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer -> a
-		coerce` syms int_syms codes csize datas dsize stack heapp p
-		#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses p
-		= coerce syms int_syms codes csize datas dsize stack heapp asp bsp csp hp p
-
-	// Returns offset from data segment, name and arity
-	node_descriptor :: !Pointer !Pointer -> (!Int, !String, !Int)
-	node_descriptor data_segment n
-	#! desc   = readInt n 0
-	#! arity  = readInt2S desc -2
-	#! s      = desc + IF_INT_64_OR_32 (22 + 2 * readInt2Z desc 0) (10 + readInt2Z desc 0)
-	#! name   = derefCharArray (s + IF_INT_64_OR_32 8 4) (readInt s 0)
-	#! offset = (s - data_segment) / IF_INT_64_OR_32 2 1 - 12 - arity * 8 // TODO is this correct?
-	= (offset, name, arity)
-
-	get_symbols :: !Pointer -> [(String,Int)]
-	get_symbols pgm = get_syms (readInt pgm (IF_INT_64_OR_32 24 16)) (readInt pgm (IF_INT_64_OR_32 32 20)) []
-	where
-		get_syms :: !Int !Pointer ![(String,Int)] -> [(String,Int)]
-		get_syms 0 _ syms = syms
-		get_syms n p syms
-		#! offset = readInt p 0
-		#! string = derefString (readInt p (IF_INT_64_OR_32 8 4))
-		= get_syms (n-1) (p + IF_INT_64_OR_32 16 8) [(string,offset):syms]
-
-interpret :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
-interpret code_segment csize data_segment dsize stack stack_size heap heap_size asp bsp csp hp node = code {
-	ccall interpret "pIpIpIpIppppp:I"
+get_stack_and_heap_addresses :: !Int -> (!Pointer, !Pointer, !Pointer, !Pointer)
+get_stack_and_heap_addresses _ = code {
+	ccall get_stack_and_heap_addresses "I:Vpppp"
 }
+
+coerce :: !CoercionEnvironment !Pointer -> a
+coerce ce p
+#! ce & ce_asp = writeInt ce.ce_asp 0 p
+#! ok = interpret
+	ce.ce_code_segment ce.ce_code_size
+	ce.ce_data_segment ce.ce_data_size
+	ce.ce_stack STACK_SIZE
+	ce.ce_heapp HEAP_SIZE
+	ce.ce_asp ce.ce_bsp ce.ce_csp
+	ce.ce_hp
+	ce.ce_asp
+| ok <> 0 = abort "Failed to interpret\n"
+#! (asp,bsp,csp,hp) = get_stack_and_heap_addresses ok
+#! ce = {ce & ce_asp=asp, ce_bsp=bsp, ce_csp=csp, ce_hp=hp}
+= copy_node ce p
+where
+	interpret :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
+	interpret code_segment csize data_segment dsize stack stack_size heap heap_size asp bsp csp hp node = code {
+		ccall interpret "pIpIpIpIppppp:I"
+	}
 
 parse :: !{#Symbol} !String -> Maybe Program
 parse syms s
@@ -208,17 +177,11 @@ free_to_false p
 # n = free p
 = n == 0 && n <> 0
 
-copy_node :: !a -> b
-copy_node x = code {
-	.d 1 0
+// CoercionEnvironment is on purpose lazy; must be passed on A-stack
+copy_node :: CoercionEnvironment !Int -> b
+copy_node _ _ = code {
+	.d 1 1 i
 		jsr _copy_node_asm
-	.o 1 0
-}
-
-copy_node_int :: !a -> b
-copy_node_int x = code {
-	.d 1 0
-		jsr _copy_node_int_asm
 	.o 1 0
 }
 

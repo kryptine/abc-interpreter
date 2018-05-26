@@ -3856,7 +3856,7 @@ struct label *code_descriptor
 	int n;
 
 	/* Resolve descriptor address */
-	store_data_l(strcmp(code_label_name,"__hnf") ? 0 : -1);
+	store_data_l(-1); /* TODO check that this is correct in all cases */
 
 	if (list_code) {
 		printf("\t.data\n");
