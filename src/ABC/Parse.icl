@@ -5,6 +5,7 @@ import StdBool
 from StdFunc import o
 import StdGeneric
 import StdList
+import StdString
 import StdTuple
 
 import Control.Applicative
@@ -147,19 +148,3 @@ where
 	parseAnnot s = case parseLine`{|*|} 0 s of
 		Just (a,_) -> a
 		Nothing    -> OtherAnnotation (s % (1, size s - 1))
-
-import StdFile
-import StdString
-Start :: *World -> *World
-Start w
-# (io,w) = stdio w
-# io = loop io
-# (_,w) = fclose io w
-= w
-where
-	loop :: !*File -> *File
-	loop f
-	# (l,f) = freadline f
-	| l == "" = f
-	# f = f <<< parseLine (l % (0, size l - 2))
-	= loop f
