@@ -1067,7 +1067,7 @@ case Cbuild_r11:
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
-	hp[2]=asp[bo];
+	hp[2]=bsp[bo];
 	*++asp=(BC_WORD)hp;
 	hp+=3;
 	pc+=4;
@@ -1084,8 +1084,8 @@ case Cbuild_r12:
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
 	hp[2]=(BC_WORD)&hp[3];
-	hp[3]=asp[bo];
-	hp[4]=asp[bo+1];
+	hp[3]=bsp[bo];
+	hp[4]=bsp[bo+1];
 	*++asp=(BC_WORD)hp;
 	hp+=5;
 	pc+=4;
@@ -1102,8 +1102,8 @@ case Cbuild_r13:
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
 	hp[2]=(BC_WORD)&hp[3];
-	hp[3]=asp[bo];
-	hp[4]=asp[bo+1];
+	hp[3]=bsp[bo];
+	hp[4]=bsp[bo+1];
 	hp[5]=bsp[bo+2];
 	*++asp=(BC_WORD)hp;
 	hp+=6;
@@ -3356,7 +3356,7 @@ case Cprint_symbol_sc:
 	if (d==(BC_WORD)&INT+2){
 		PRINTF("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&BOOL+2) {
-		PRINTF("%d",(int)n[1]);
+		PRINTF("%s",n[1] ? "True" : "False");
 	} else if (d==(BC_WORD)&CHAR+2){
 		PRINTF("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){
