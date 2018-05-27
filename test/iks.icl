@@ -95,9 +95,9 @@ where
 		ta = toString (typeCodeOfDynamic a)
 		tb = toString (typeCodeOfDynamic b)
 
-Start = interp (App K I)
-//Start = show <$> parse "K I 10 5"
-Start = show <$> parse "K I"
+// S(K(SI))K reverses the following two terms, so we get + 10 5 -> 15.
+// https://en.wikipedia.org/wiki/SKI_combinator_calculus#The_reversal_expression
+Start = show <$> parse "S (K (S I)) K 10 + 5"
 where
 	show :: IKS -> String
 	show iks = showD 0 $ interp iks

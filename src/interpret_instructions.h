@@ -1555,7 +1555,11 @@ case Ccreate_arrayBOOL:
 	BC_WORD s,i,n,sw;
 
 	s=bsp[0];
+#if (WORD_WIDTH == 64)
+	sw=(s+7)>>3;
+#else
 	sw=(s+3)>>2;
+#endif
 	if ((heap_free-=sw+3)<0)
 		break;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
@@ -1563,7 +1567,11 @@ case Ccreate_arrayBOOL:
 	hp[2]=(BC_WORD)&BOOL+2;
 	hp+=3;
 	n=(BC_BOOL)bsp[1];
+#if (WORD_WIDTH == 64)
+	n = (n<<56) | (n<<48) | (n<<40) | (n<<32) | (n<<24) | (n<<16) | (n<<8) | n;
+#else
 	n = (n<<24) | (n<<16) | (n<<8) | n;
+#endif
 	bsp+=2;
 	*++asp=(BC_WORD)hp;
 	for (i=0; i!=sw; ++i)
@@ -1577,7 +1585,11 @@ case Ccreate_arrayCHAR:
 	BC_WORD s,i,n,sw;
 
 	s=bsp[0];
+#if (WORD_WIDTH == 64)
+	sw=(s+7)>>3;
+#else
 	sw=(s+3)>>2;
+#endif
 	if ((heap_free-=sw+2)<0)
 		break;
 	hp[0]=(BC_WORD)&__STRING__+2;
@@ -1585,7 +1597,11 @@ case Ccreate_arrayCHAR:
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	n=(BC_BOOL)bsp[1];
+#if (WORD_WIDTH == 64)
+	n = (n<<56) | (n<<48) | (n<<40) | (n<<32) | (n<<24) | (n<<16) | (n<<8) | n;
+#else
 	n = (n<<24) | (n<<16) | (n<<8) | n;
+#endif
 	bsp+=2;
 	for (i=0; i!=sw; ++i)
 		hp[i]=n;

@@ -178,6 +178,12 @@ void print_code(FILE *f, struct program *pgm) {
 				case 'i': /* Integer constant */
 					FPRINTF(f, " " BC_WORD_S_FMT, (BC_WORD_S) pgm->code[i]);
 					break;
+				case 'c': /* Character constant */
+					if (' ' <= pgm->code[i] && pgm->code[i] <= '~')
+						FPRINTF(f, " '%c'", (char) pgm->code[i]);
+					else
+						FPRINTF(f, " '\\x%02x'", (char) pgm->code[i]);
+					break;
 				case 'n': /* Stack index */
 					FPRINTF(f, " %d", abs((BC_WORD_S) pgm->code[i]));
 					break;
