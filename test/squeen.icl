@@ -57,7 +57,6 @@ where
 /* The Start Rule: Calculate the list of solutions, show the first
    solution and the length of that list. */
 
-Start :: (Int,[Int])
-Start = (length solutions, hd solutions)
+Start = (hd solutions, length solutions)
 where
 	solutions = Queens 1 [] []
