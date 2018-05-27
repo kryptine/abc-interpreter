@@ -1570,7 +1570,7 @@ char *instruction_type (BC_WORD i) {
 		case CselectCHARoo:          return "nn";
 		case Cselectoo:              return "nn";
 		case Cupdate2_a:             return "nn";
-		case Cupdate2_b:             return "?";
+		case Cupdate2_b:             return "nn";
 		case Cupdate2pop_a:          return "nn";
 		case Cupdate2pop_b:          return "nn";
 		case Cupdate3_a:             return "nn";
