@@ -17,7 +17,7 @@ reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdL
 reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
 reverse2		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
 revrec		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-revtwice	-h,4m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+revtwice	-h,4m,-s,2m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 rfib		StdEnv:StdReal
 sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
 squeen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
