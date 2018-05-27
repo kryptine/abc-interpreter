@@ -1067,7 +1067,7 @@ case Cbuild_r11:
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
-	hp[2]=asp[bo];
+	hp[2]=bsp[bo];
 	*++asp=(BC_WORD)hp;
 	hp+=3;
 	pc+=4;
@@ -1084,8 +1084,8 @@ case Cbuild_r12:
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
 	hp[2]=(BC_WORD)&hp[3];
-	hp[3]=asp[bo];
-	hp[4]=asp[bo+1];
+	hp[3]=bsp[bo];
+	hp[4]=bsp[bo+1];
 	*++asp=(BC_WORD)hp;
 	hp+=5;
 	pc+=4;
@@ -1102,8 +1102,8 @@ case Cbuild_r13:
 	hp[0]=*(BC_WORD*)&pc[3];
 	hp[1]=asp[ao];
 	hp[2]=(BC_WORD)&hp[3];
-	hp[3]=asp[bo];
-	hp[4]=asp[bo+1];
+	hp[3]=bsp[bo];
+	hp[4]=bsp[bo+1];
 	hp[5]=bsp[bo+2];
 	*++asp=(BC_WORD)hp;
 	hp+=6;
@@ -1555,7 +1555,11 @@ case Ccreate_arrayBOOL:
 	BC_WORD s,i,n,sw;
 
 	s=bsp[0];
+#if (WORD_WIDTH == 64)
+	sw=(s+7)>>3;
+#else
 	sw=(s+3)>>2;
+#endif
 	if ((heap_free-=sw+3)<0)
 		break;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
@@ -1563,7 +1567,11 @@ case Ccreate_arrayBOOL:
 	hp[2]=(BC_WORD)&BOOL+2;
 	hp+=3;
 	n=(BC_BOOL)bsp[1];
+#if (WORD_WIDTH == 64)
+	n = (n<<56) | (n<<48) | (n<<40) | (n<<32) | (n<<24) | (n<<16) | (n<<8) | n;
+#else
 	n = (n<<24) | (n<<16) | (n<<8) | n;
+#endif
 	bsp+=2;
 	*++asp=(BC_WORD)hp;
 	for (i=0; i!=sw; ++i)
@@ -1577,7 +1585,11 @@ case Ccreate_arrayCHAR:
 	BC_WORD s,i,n,sw;
 
 	s=bsp[0];
+#if (WORD_WIDTH == 64)
+	sw=(s+7)>>3;
+#else
 	sw=(s+3)>>2;
+#endif
 	if ((heap_free-=sw+2)<0)
 		break;
 	hp[0]=(BC_WORD)&__STRING__+2;
@@ -1585,7 +1597,11 @@ case Ccreate_arrayCHAR:
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	n=(BC_BOOL)bsp[1];
+#if (WORD_WIDTH == 64)
+	n = (n<<56) | (n<<48) | (n<<40) | (n<<32) | (n<<24) | (n<<16) | (n<<8) | n;
+#else
 	n = (n<<24) | (n<<16) | (n<<8) | n;
+#endif
 	bsp+=2;
 	for (i=0; i!=sw; ++i)
 		hp[i]=n;
@@ -3356,7 +3372,7 @@ case Cprint_symbol_sc:
 	if (d==(BC_WORD)&INT+2){
 		PRINTF("%d",(int)n[1]);
 	} else if (d==(BC_WORD)&BOOL+2) {
-		PRINTF("%d",(int)n[1]);
+		PRINTF("%s",n[1] ? "True" : "False");
 	} else if (d==(BC_WORD)&CHAR+2){
 		PRINTF("'%c'",(int)n[1]);
 	} else if (d==(BC_WORD)&REAL+2){

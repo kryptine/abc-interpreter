@@ -288,9 +288,25 @@ void debugger_set_pc(BC_WORD *pc) {
 }
 
 void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
-	int16_t arity = ((int16_t*)node[0])[-1];
-	int16_t b_arity = arity >> 8;
-	arity = (arity & 0xff) - b_arity;
+	int16_t a_arity, b_arity;
+
+	if (node[0] & 2) {
+		a_arity = ((int16_t*)(node[0]))[-1];
+		b_arity = 0;
+		if (a_arity > 256) {
+			a_arity = ((int16_t*)(node[0]))[0];
+			b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+		}
+	} else {
+		int16_t arity = ((int16_t*)(node[0]))[-1];
+		if (arity < 0) {
+			a_arity = 1;
+			b_arity = 0;
+		} else {
+			b_arity = arity >> 8;
+			a_arity = (arity & 0xff) - b_arity;
+		}
+	}
 
 	if (node[0] == (BC_WORD) &INT+2)
 		wprintw(win, "INT %d", node[1]);
@@ -310,26 +326,27 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		if (!with_arguments)
 			return;
 
-		if (arity <= 0)
+		if (a_arity <= 0)
 			return;
 
 		/* TODO: unboxed values */
 
 		print_label(_tmp, 256, 0, (BC_WORD*) node[1], program, hp, heap_size);
 		wprintw(win, " %s", _tmp);
-		if (arity <= 1)
+		if (a_arity <= 1)
 			return;
 
-		BC_WORD **rest = (BC_WORD**) node[2];
-		/* TODO: see issue #32 */
-		if (on_heap((BC_WORD) *rest, hp, heap_size)) {
-			wprintw(win, " ->");
-			for (int i = 0; i < arity-1; i++) {
+		if (a_arity == 2 && b_arity == 0) {
+			print_label(_tmp, 256, 0, (BC_WORD*) node[2], program, hp, heap_size);
+			wprintw(win, " %s", _tmp);
+		} else if (node[0] & 2) {
+			BC_WORD **rest = (BC_WORD**) node[2];
+			for (int i = 0; i < a_arity-1; i++) {
 				print_label(_tmp, 256, 0, (BC_WORD*) rest[i], program, hp, heap_size);
 				wprintw(win, " %s", _tmp);
 			}
 		} else {
-			for (int i = 2; i <= arity; i++) {
+			for (int i = 2; i <= a_arity; i++) {
 				print_label(_tmp, 256, 0, (BC_WORD*) node[i], program, hp, heap_size);
 				wprintw(win, " %s", _tmp);
 			}

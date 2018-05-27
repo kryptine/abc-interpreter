@@ -1130,13 +1130,13 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_r03:             return "nl";
 		case Cbuild_r04:             return "nl";
 		case Cbuild_r10:             return "nl";
-		case Cbuild_r11:             return "nl";
-		case Cbuild_r12:             return "nl";
-		case Cbuild_r13:             return "nl";
+		case Cbuild_r11:             return "nnl";
+		case Cbuild_r12:             return "nnl";
+		case Cbuild_r13:             return "nnl";
 		case Cbuild_r20:             return "nl";
-		case Cbuild_r21:             return "nl";
+		case Cbuild_r21:             return "nnl";
 		case Cbuild_r30:             return "nl";
-		case Cbuild_r31:             return "nl";
+		case Cbuild_r31:             return "nnl";
 		case Cbuild_r40:             return "nl";
 		case Cbuild_u:               return "nln";
 		case Cbuild_u01:             return "l";
@@ -1179,7 +1179,7 @@ char *instruction_type (BC_WORD i) {
 		case CeqC:                   return "";
 		case CeqC_a:                 return "nc";
 		case CeqC_b:                 return "nc";
-		case CeqD_b:                 return "?";
+		case CeqD_b:                 return "l";
 		case CeqI:                   return "";
 		case CeqI_a:                 return "ni";
 		case CeqI_b:                 return "ni";
@@ -1355,8 +1355,8 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_args_aa1:       return "?";
 		case Cpush_r_args_a1:        return "n";
 		case Cpush_r_args_a2l:       return "n";
-		case Cpush_r_args_a3:        return "?";
-		case Cpush_r_args_a4:        return "?";
+		case Cpush_r_args_a3:        return "n";
+		case Cpush_r_args_a4:        return "n";
 		case Cpush_r_args_b:         return "nnn";
 		case Cpush_r_args_b0b11:     return "n";
 		case Cpush_r_args_b0221:     return "n";

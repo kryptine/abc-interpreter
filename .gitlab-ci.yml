@@ -3,9 +3,10 @@ test:
   before_script:
     - dpkg --add-architecture i386
     - apt-get update -qq
-    - apt-get install -y -qq --no-install-recommends curl tar build-essential gcc-multilib time bc libncurses5-dev libncurses5-dev:i386
-    - curl ftp://ftp.cs.ru.nl/pub/Clean/builds/linux-x64/clean-base-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
-    - curl ftp://ftp.cs.ru.nl/pub/Clean/builds/linux-x64/clean-lib-platform-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
+    - apt-get install -y -qq --no-install-recommends ca-certificates curl tar build-essential gcc-multilib time bc libncurses5-dev libncurses5-dev:i386
+    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-base-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
+    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-platform-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
+    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-dynamics-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
   script:
     - cd src
     - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B
