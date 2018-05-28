@@ -62,7 +62,7 @@ extern jmp_buf segfault_restore_point;
 int interpret(BC_WORD *code, size_t code_size,
 		BC_WORD *data, size_t data_size,
 		BC_WORD *stack, size_t stack_size,
-		BC_WORD **heap, size_t heap_size,
+		BC_WORD *heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
 		BC_WORD *node);
 

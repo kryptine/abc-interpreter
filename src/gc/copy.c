@@ -8,25 +8,17 @@
 #include "../interpret.h"
 #include "../util.h"
 
-BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_size
-#ifdef DEBUG_GARBAGE_COLLECTOR
-		, BC_WORD *code, BC_WORD *data
-#endif
-		) {
-	BC_WORD *old_heap = *heap;
-	BC_WORD *heap2 = safe_malloc(sizeof(BC_WORD) * heap_size);
-	BC_WORD *new_heap = heap2;
+int in_first_semispace = 1;
 
-#if (DEBUG_GARBAGE_COLLECTOR > 0)
-	fprintf(stderr, "Collecting trash... stack @ %p; heap @ %p; code @ %p; data @ %p\n",
-			(void*) stack, (void*) old_heap, (void*) code, (void*) data);
-#endif
+BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free) {
+	BC_WORD *old_heap = in_first_semispace ? heap : heap + heap_size;
+	BC_WORD *new_heap = in_first_semispace ? heap + heap_size : heap;
 
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
 
-	mark_a_stack(stack, asp, *heap, heap_size, &nodes_set);
-	evaluate_grey_nodes(*heap, heap_size, &nodes_set);
+	mark_a_stack(stack, asp, old_heap, heap_size, &nodes_set);
+	evaluate_grey_nodes(old_heap, heap_size, &nodes_set);
 
 	/* Pass 1: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
@@ -37,7 +29,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 		fprintf(stderr, "\t%p\n", (void*) asp_temp);
 		fprintf(stderr, "\t\t%p -> %p\n", (void*) *asp_temp, (void*) *((BC_WORD*)*asp_temp));
 #endif
-		if (*asp_temp < (BC_WORD) old_heap || *asp_temp > (BC_WORD) (old_heap + heap_size))
+		if (!on_heap(*asp_temp, old_heap, heap_size))
 			continue;
 		BC_WORD *temp = (BC_WORD*) *asp_temp;
 		*asp_temp = *temp;
@@ -296,7 +288,14 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD **heap, size_t heap_
 	}
 
 	free_nodes_set(&nodes_set);
-	free(old_heap);
-	*heap = heap2;
+
+	if (in_first_semispace) {
+		*heap_free = heap + 2 * heap_size - new_heap;
+	} else {
+		*heap_free = heap + heap_size - new_heap;
+	}
+
+	in_first_semispace = 1 - in_first_semispace;
+
 	return new_heap;
 }

@@ -7,10 +7,13 @@ override CFLAGS+=\
 	-Wno-strict-aliasing\
 	-DPOSIX\
 	-lm
+DIR:="Clean System Files"
 
 all: optimise bytecode link interpret debug
 
 CodeSharing: interpret.a .FORCE
+	as $(ASFLAGS) copy_node.s -o $(DIR)/copy_node_asm.o
+	gcc $(CFLAGS) -c copy_node.c -o $(DIR)/copy_node_c.o
 	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns -l $< $@ -o $@
 
 optimise: .FORCE
@@ -44,7 +47,6 @@ SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
 	gc.c\
-	gc/compact.c\
 	gc/copy.c\
 	gc/mark.c\
 	interpret.c\

@@ -3855,6 +3855,9 @@ struct label *code_descriptor
 	struct label *label;
 	int n;
 
+	/* Resolve descriptor address */
+	store_data_l(-1); /* TODO check that this is correct in all cases */
+
 	if (list_code) {
 		printf("\t.data\n");
 		printf("\t.data4 %s+2\n",label_name);
@@ -3911,6 +3914,9 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 	if (list_code)
 		printf("\t.data\n");
 
+	/* Resolve descriptor address */
+	store_data_l(-1);
+
 	if (list_code)
 		printf("%d\t.data4 %d\n",pgrm.data_size<<2,desc0_number);
 	store_data_l(desc0_number);
@@ -3949,6 +3955,10 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 	/* node_entry_label_name not used */
 	struct label *label;
 
+	/* Resolve descriptor address */
+	store_data_l(-1);
+	store_data_l(0);
+
 	if (list_code) {
 		printf("\t.data\n");
 		printf("\t.data4 %s+2\n",label_name);
@@ -3979,6 +3989,9 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 void code_descs(char label_name[],char node_entry_label_name[],char *result_descriptor_name,
 				uint32_t offset1,uint32_t offset2,char descriptor_name[],uint32_t descriptor_name_length) {
 	struct label *label;
+
+	/* Resolve descriptor address */
+	store_data_l(0);
 
 	if (list_code) {
 		printf("\t.data\n");
@@ -4215,6 +4228,10 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 	if (list_code)
 		printf("\t.data\n");
 
+	/* Resolve descriptor address */
+	store_data_l(0);
+	store_data_l(0);
+
 	record_label=enter_label(record_label_name);
 	if (record_label->label_offset!=-1) {
 		fprintf(stderr, "Error: label %s already defined\n",record_label_name);
@@ -4240,6 +4257,10 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 
 	if (list_code)
 		printf("\t.data\n");
+
+	/* Resolve descriptor address */
+	store_data_l(0);
+	store_data_l(0);
 
 	record_label=enter_label(record_label_name);
 	if (record_label->label_offset!=-1) {
