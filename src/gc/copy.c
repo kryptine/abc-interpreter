@@ -184,7 +184,15 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 						*new_heap++ = node[1];
 					}
 
-					if (a_arity == 2 && b_arity == 0) {
+					if (a_arity == 1 && b_arity == 1) {
+						*new_heap++ = node[2];
+					} else if (a_arity == 1 && b_arity > 1) {
+						*new_heap = (BC_WORD) &new_heap[1];
+						new_heap++;
+						BC_WORD *rest = (BC_WORD*) node[2];
+						for (int i = 0; i < b_arity; i++)
+							*new_heap++ = rest[i];
+					} else if (a_arity == 2 && b_arity == 0) {
 						/* full arity node */
 						if (on_heap(node[2], old_heap, heap_size)) {
 							if (node[2] <= (BC_WORD) node) { /* Indirected */
@@ -234,8 +242,24 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 								*new_heap++ = (BC_WORD) rest[i];
 							}
 						}
+
+						for (i = 0; i < b_arity; i++)
+							*new_heap++ = (BC_WORD) rest[i+a_arity];
 					}
+				} else if (b_arity < 3) {
+					*new_heap++ = node[1];
+					*new_heap++ = node[2];
+				} else if (b_arity >= 3) {
+					*new_heap++ = node[1];
+					*new_heap = (BC_WORD) &new_heap[1];
+					new_heap++;
+					BC_WORD *rest = (BC_WORD*) node[2];
+					for (int i = 0; i < b_arity-1; i++)
+						*new_heap++ = rest[i];
 				}
+
+				if (b_arity + a_arity < 2)
+					new_heap += 2 - b_arity - a_arity;
 			}
 		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
