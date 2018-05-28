@@ -21,5 +21,7 @@ Nfib n
 | n < 1.5   = 1.0
 | otherwise = Nfib (n - 1.0) + Nfib (n - 2.0) + 1.0
 
+// NB: on 32-bit, the benchmark has a rounding error
+
 Start :: Real
 Start = Nfib 26.0

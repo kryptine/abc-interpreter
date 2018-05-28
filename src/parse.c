@@ -176,6 +176,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	int32_t elem32;
 	int64_t elem64;
 
+#ifdef COMPUTED_GOTOS
+	/* See rationale in interpret.h */
+	void *instruction_labels[CMAX];
+	interpret((BC_WORD*) instruction_labels, -1, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+
+	Fjmp_ap1 = (BC_WORD) instruction_labels[Cjmp_ap1];
+	Fjmp_ap2 = (BC_WORD) instruction_labels[Cjmp_ap2];
+	Fjmp_ap3 = (BC_WORD) instruction_labels[Cjmp_ap3];
+#endif
+
 	while (state->state != PS_end) {
 		switch (state->state) {
 			case PS_init_code:
@@ -261,7 +271,11 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->ptr++;
 				store_code_elem(2, elem16);
 #else
+# ifdef COMPUTED_GOTOS
+				state->program->code[state->ptr++] = (BC_WORD) instruction_labels[elem16];
+# else
 				state->program->code[state->ptr++] = elem16;
+# endif
 #endif
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
@@ -275,7 +289,11 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #ifdef LINKER
 							store_code_elem(2, elem16);
 #else
+# ifdef COMPUTED_GOTOS
+							state->program->code[state->ptr++] = (BC_WORD) instruction_labels[elem16];
+# else
 							state->program->code[state->ptr++] = elem16;
+# endif
 #endif
 							break;
 						case 'n': /* Stack index */

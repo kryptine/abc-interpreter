@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CLM=clm
-CLMFLAGS="-IL Platform"
+CLMFLAGS="-IL Platform -IL Dynamics -dynamics"
 CG=../src/bytecode
 LINK=../src/link
 OPT=../src/optimise
@@ -77,7 +77,7 @@ while true; do
 			BENCHMARK=1
 			shift;;
 		-f | --fast)
-			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations"
+			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations -DCOMPUTED_GOTOS"
 			shift;;
 		-h | --heap)
 			RUNFLAGS+=" -h $2"

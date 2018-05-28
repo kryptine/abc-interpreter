@@ -48,8 +48,6 @@ where
 	solution and the length of that list.
 */
 
-Start::(Int,[Int])
-Start = (length solutions, hd solutions)
-	where 
-		solutions = Queens 1 [] []
-				
+Start = (hd solutions, length solutions)
+where 
+	solutions = Queens 1 [] []

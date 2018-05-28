@@ -95,46 +95,6 @@ isComment i s
 | isSpace s.[i] = isComment (i+1) s
 | otherwise     = False
 
-reorder_abc :: ![ABCInstruction] -> [ABCInstruction]
-reorder_abc [i:is]
-| isAStackInstruction i = reorder_a i is
-| isBStackInstruction i = reorder_b i is
-| otherwise             = [i:reorder_abc is]
-where
-	reorder_a :: !ABCInstruction ![ABCInstruction] -> [ABCInstruction]
-	reorder_a i is = case findInstr is 0 of
-		Nothing         -> [i:reorder_abc is]
-		Just (n,i2,is2) -> [i,i2:take n is ++ is2]
-	where
-		findInstr [i:is] n
-		| isAStackInstruction i                     = Just (n,i,is)
-		| isBStackInstruction i                     = findInstr is (n+1)
-		| i=:IpushB _ || i=:IpushC _ || i=:IpushI _ = findInstr is (n+1)
-		findInstr _ _ = Nothing
-
-	reorder_b :: !ABCInstruction ![ABCInstruction] -> [ABCInstruction]
-	reorder_b i is = case findInstr is 0 of
-		Nothing         -> [i:reorder_abc is]
-		Just (n,i2,is2) -> [i,i2:take n is ++ is2]
-	where
-		findInstr [i:is] n
-		| isBStackInstruction i             = Just (n,i,is)
-		| isAStackInstruction i             = findInstr is (n+1)
-		| i=:(Ibuildh _ 0) || i=:IbuildAC _ = findInstr is (n+1)
-		findInstr _ _ = Nothing
-reorder_abc [] = []
-
-reorder_a_and_b_stack :: ![ABCInstruction] -> [ABCInstruction]
-reorder_a_and_b_stack [i:is]
-| isAStackInstruction i = case span isAStackInstruction is of
-	([],_) -> [i:reorder_a_and_b_stack is]
-	(ais,rest) -> let ais` = [i:ais] in opt_reorder AStack ais` ++ reorder_a_and_b_stack rest
-| isBStackInstruction i = case span isBStackInstruction is of
-	([],_) -> [i:reorder_a_and_b_stack is]
-	(bis,rest) -> let bis` = [i:bis] in opt_reorder BStack bis` ++ reorder_a_and_b_stack rest
-| otherwise = [i:reorder_a_and_b_stack is]
-reorder_a_and_b_stack [] = []
-
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
 opt_abc1 [Line "":is] = opt_abc1 is
 
@@ -264,7 +224,7 @@ opt_abc_new [] = []
 opt_abc_new2 :: ![ABCInstruction] -> [ABCInstruction]
 opt_abc_new2 [Iupdate_a s0 d0,Iupdate_a s1 d1,Iupdate_a s2 d2,Iupdate_a s3 d3:is]
 | s0==s3+3 && d0==d3+3 && s1==s3+2 && d1==d3+2 && s2==s3+1 && d2==d3+1 = [Iupdate4_a s3 d3:opt_abc_new2 is]
-| s0==d1 && s1==d2 && s2==d3 = [Iupdates4_a s3 s2 s1 s0 d0:is]
+| s0==d1 && s1==d2 && s2==d3 = [Iupdates4_a s3 s2 s1 s0 d0:opt_abc_new2 is]
 opt_abc_new2 [Iupdate_a s0 d0,Iupdate_a s1 d1,Iupdate_a s2 d2:is]
 | s0==s2+2 && d0==d2+2 && s1==s2+1 && d1==d2+1 = [Iupdate3_a s2 d2:opt_abc_new2 is]
 | s0==d1 && s1==d2 = [Iupdates3_a s2 s1 s0 d0:opt_abc_new2 is]
@@ -333,7 +293,7 @@ opt_abc_new2 [i0=:Ipush_a a0,i1=:Iupdates2pop_a 0 a1 a2:rest=:[a=:Annotation (Ad
 
 opt_abc_new2 [Ipush_a n,IeqAC_a s,Ijmp_true l:is] = [Ijmp_eqACio s n l:opt_abc_new2 is]
 
-opt_abc_new2 [Ipush_a n,Ibuild d1 1 d2:is] = [Ibuildo1 d2 n:opt_abc_new2 is]
+opt_abc_new2 [Ipush_a n,Ibuild d1 i d2:is] | i == 1 || (-9 <= i && i <= -1) = [Ibuildo1 d2 n:opt_abc_new2 is]
 opt_abc_new2 [Ipush_a n,Ipush_arraysize t i0 i1:is] = case is of
 	[Ipush_b n2,IIns "ltI",Ijmp_false l:is] | n2 > 0 -> [Ijmp_o_geI_arraysize_a t (n2-1) n l:opt_abc_new2 is]
 	is                                               -> [Ipush_arraysize_a t i0 i1 n:opt_abc_new2 is]
@@ -401,7 +361,7 @@ opt_abc_new2 [i1=:Ibuildh id 0:is] = case opt_abc_new2 is of
 	[Idup2_a n:is] -> [Ibuildh0_dup2_a id n:is]
 	[Idup3_a n:is] -> [Ibuildh0_dup3_a id n:is]
 	is             -> [i1:is]
-opt_abc_new2 [Ifill_a 0 1,Ipop_a 1,annot=:Annotation (Ad _ _ _),IIns "rtn":is] = [annot,Ifill_a01_pop_rtn:opt_abc_new2 is]
+opt_abc_new2 [Ifill_a 0 1,Ipop_a 1,annot=:Annotation (Ad _ _ _),Irtn:is] = [annot,Ifill_a01_pop_rtn:opt_abc_new2 is]
 opt_abc_new2 [i:is] = [i:opt_abc_new2 is]
 opt_abc_new2 [] = []
 

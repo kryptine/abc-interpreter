@@ -4,4 +4,5 @@ import ABC.Instructions
 
 :: StackType = AStack | BStack
 
-opt_reorder :: !StackType ![ABCInstruction] -> [ABCInstruction]
+reorder_abc :: ![ABCInstruction] -> [ABCInstruction]
+reorder_a_and_b_stack :: ![ABCInstruction] -> [ABCInstruction]

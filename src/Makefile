@@ -2,7 +2,7 @@ SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -nr -nt
 override CFLAGS+=\
-	-Wall -pedantic\
+	-Wall\
 	-Wno-misleading-indentation\
 	-Wno-strict-aliasing\
 	-DPOSIX\
@@ -41,7 +41,7 @@ SRC_LINK:=\
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) $(SRC_LINK) -DLINKER -o $@
+	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS $(SRC_LINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -69,7 +69,7 @@ $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
 
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
-	$(CC) $(CFLAGS) -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
+	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
 
 clean:
 	$(RM) -r \

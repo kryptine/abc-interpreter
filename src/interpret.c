@@ -128,6 +128,15 @@ int interpret(BC_WORD *code, size_t code_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *node) {
+#ifdef COMPUTED_GOTOS
+	if (code_size == -1) { /* See rationale in interpret.h */
+# define _COMPUTED_GOTO_LABELS
+# include "abc_instructions.h"
+		memcpy(code, _instruction_labels, sizeof(BC_WORD) * CMAX);
+		return 0;
+	}
+#endif
+
 	BC_WORD *pc = code;
 	asp = _asp;
 	bsp = _bsp;
@@ -154,40 +163,50 @@ int interpret(BC_WORD *code, size_t code_size,
 		BC_WORD *n = (BC_WORD*) *node;
 
 		if (n[0] & 2) { /* HNF */
-			return 0;
-		}
-
-		BC_WORD ret = EVAL_TO_HNF_LABEL;
-		*--csp = (BC_WORD) &ret;
-		pc = (BC_WORD*) n[0];
-
-		if (0) {
 eval_to_hnf_return:
 			return 0;
 		}
+
+#ifdef COMPUTED_GOTOS
+		BC_WORD ret = (BC_WORD) &&eval_to_hnf_return;
+#else
+		BC_WORD ret = EVAL_TO_HNF_LABEL;
+#endif
+		*--csp = (BC_WORD) &ret;
+		pc = (BC_WORD*) n[0];
 	}
 
+#ifdef COMPUTED_GOTOS
+	goto **pc;
+# include "interpret_instructions.h"
+#else
 	for (;;) {
-#ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
+# ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
 		struct nodes_set nodes_set;
 		init_nodes_set(&nodes_set, heap_size);
 		mark_a_stack(stack, asp, heap, heap_size, &nodes_set);
 		evaluate_grey_nodes(heap, heap_size, &nodes_set);
 		free_nodes_set(&nodes_set);
-#endif
-#ifdef DEBUG_ALL_INSTRUCTIONS
+# endif
+# ifdef DEBUG_ALL_INSTRUCTIONS
 		if (data <= pc && pc < data + data_size)
 			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
 		else
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
-#endif
-#ifdef DEBUG_CURSES
+# endif
+# ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);
 		while (debugger_input(asp) != 0);
-#endif
+# endif
 		switch (*pc) {
-#include "interpret_instructions.h"
+# include "interpret_instructions.h"
 		}
+#endif
+
+#ifdef COMPUTED_GOTOS
+	garbage_collect:
+	{
+#endif
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR
@@ -206,6 +225,9 @@ eval_to_hnf_return:
 #endif
 		}
 	}
+#ifdef COMPUTED_GOTOS
+	goto **pc;
+#endif
 }
 
 #ifdef DEBUG_CURSES
