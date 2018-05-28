@@ -475,6 +475,18 @@ INSTRUCTION_BLOCK(buildR):
 	hp+=2;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(buildR_b):
+{
+	BC_WORD_S bo;
+	NEED_HEAP(2);
+	bo=pc[1];
+	hp[0]=(BC_WORD)&REAL+2;
+	hp[1]=bsp[bo];
+	*++asp=(BC_WORD)hp;
+	hp+=2;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(buildhr):
 {
 	BC_WORD n_a,n_b,n_ab;
@@ -5325,12 +5337,12 @@ INSTRUCTION_BLOCK(rtn):
 INSTRUCTION_BLOCK(shiftlI):
 	bsp[1]=bsp[0] << bsp[1];
 	++bsp;
-	pc+=2;
+	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(shiftrI):
 	bsp[1]=(BC_WORD_S)bsp[0] >> (BC_WORD_S)bsp[1];
 	++bsp;
-	pc+=2;
+	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(sinR):
 {
@@ -7031,7 +7043,6 @@ INSTRUCTION_BLOCK(add_arg29):
 INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
-INSTRUCTION_BLOCK(buildR_b):
 INSTRUCTION_BLOCK(eval_upd4):
 INSTRUCTION_BLOCK(print_char):
 INSTRUCTION_BLOCK(print_int):
