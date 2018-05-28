@@ -77,7 +77,7 @@ while true; do
 			BENCHMARK=1
 			shift;;
 		-f | --fast)
-			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations"
+			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations -DCOMPUTED_GOTOS"
 			shift;;
 		-h | --heap)
 			RUNFLAGS+=" -h $2"
