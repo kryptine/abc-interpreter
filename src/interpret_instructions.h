@@ -10,6 +10,8 @@
 # define UNIMPLEMENTED_INSTRUCTION_BLOCK default
 #endif
 
+#define NEED_HEAP(words) {if ((heap_free-=words)<0){ heap_free+=words; GARBAGE_COLLECT;}}
+
 INSTRUCTION_BLOCK(absR):
 {
 	BC_REAL d=fabs(*(BC_REAL*)&bsp[0]);
@@ -38,8 +40,7 @@ INSTRUCTION_BLOCK(addR):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(add_empty_node2):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	pc=*(BC_WORD**)&pc[1];
 	hp[0]=(BC_WORD)&__cycle__in__spine;
 	asp[1]=asp[0];
@@ -49,8 +50,7 @@ INSTRUCTION_BLOCK(add_empty_node2):
 	hp+=3;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(add_empty_node3):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	pc=*(BC_WORD**)&pc[1];
 	hp[0]=(BC_WORD)&__cycle__in__spine;
 	asp[1]=asp[0];
@@ -84,8 +84,7 @@ INSTRUCTION_BLOCK(build):
 	BC_WORD s;
 
 	s=pc[1];
-	if ((heap_free-=s+1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+1);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX "; arity %d)\n", (void*) (asp-s), (void*) hp, pc[1] - (BC_WORD) data, pc[2], (int) pc[1]);
 #endif
@@ -131,8 +130,7 @@ INSTRUCTION_BLOCK(build):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(build0):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
@@ -142,8 +140,7 @@ INSTRUCTION_BLOCK(build0):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build1):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	asp[0]=(BC_WORD)hp;
@@ -153,8 +150,7 @@ INSTRUCTION_BLOCK(build1):
 INSTRUCTION_BLOCK(build2):
 INSTRUCTION_BLOCK(buildh2):
 INSTRUCTION_BLOCK(buildhr20):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
@@ -166,8 +162,7 @@ INSTRUCTION_BLOCK(buildhr20):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build3):
-	if ((heap_free-=4)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(4);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
@@ -181,8 +176,7 @@ INSTRUCTION_BLOCK(build3):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build4):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -207,8 +201,7 @@ INSTRUCTION_BLOCK(buildhra0):
 	BC_WORD s_p_2;
 
 	s_p_2=pc[1]; /* >=5+2 */
-	if ((heap_free-=s_p_2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s_p_2);
 	hp[0]=pc[2];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -253,8 +246,7 @@ INSTRUCTION_BLOCK(buildhra0):
 }
 INSTRUCTION_BLOCK(buildh1):
 INSTRUCTION_BLOCK(buildhr10):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=pc[1];
 	hp[1]=*asp;
 	*asp=(BC_WORD)hp;
@@ -263,8 +255,7 @@ INSTRUCTION_BLOCK(buildhr10):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildh3):
 INSTRUCTION_BLOCK(buildhr30):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -277,8 +268,7 @@ INSTRUCTION_BLOCK(buildhr30):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildh4):
 INSTRUCTION_BLOCK(buildhr40):
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -295,8 +285,7 @@ INSTRUCTION_BLOCK(buildhr0b):
 	BC_WORD n_b;
 
 	n_b=pc[1];
-	if ((heap_free-=n_b+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_b+2);
 	hp[0]=pc[2];
 	hp[1]=bsp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -344,8 +333,7 @@ INSTRUCTION_BLOCK(buildhr1b):
 	BC_WORD n_b;
 
 	n_b=pc[1];
-	if ((heap_free-=n_b+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_b+3);
 	hp[0]=pc[2];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -389,8 +377,7 @@ INSTRUCTION_BLOCK(buildhr1b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildBFALSE):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&BOOL+2;
 	hp[1]=0;
 	*++asp=(BC_WORD)hp;
@@ -398,8 +385,7 @@ INSTRUCTION_BLOCK(buildBFALSE):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildBTRUE):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&BOOL+2;
 	hp[1]=1;
 	*++asp=(BC_WORD)hp;
@@ -410,8 +396,7 @@ INSTRUCTION_BLOCK(buildB_b):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	bo = pc[1];
 	hp[0]=(BC_WORD)&BOOL+2;
 	hp[1]=bsp[bo];
@@ -421,8 +406,7 @@ INSTRUCTION_BLOCK(buildB_b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildC):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&CHAR+2;
 	hp[1]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -433,8 +417,7 @@ INSTRUCTION_BLOCK(buildC_b):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	bo = pc[1];
 	hp[0]=(BC_WORD)&CHAR+2;
 	hp[1]=bsp[bo];
@@ -447,8 +430,7 @@ INSTRUCTION_BLOCK(buildF_b):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	bo = pc[1];
 	hp[0]=(BC_WORD)&dFILE+2;
 	hp[1]=bsp[bo];
@@ -459,8 +441,7 @@ INSTRUCTION_BLOCK(buildF_b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildI):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- INT (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
 #endif
@@ -474,8 +455,7 @@ INSTRUCTION_BLOCK(buildI_b):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- INT (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, (BC_WORD) &INT+2);
 #endif
@@ -488,8 +468,7 @@ INSTRUCTION_BLOCK(buildI_b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildR):
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&REAL+2;
 	hp[1]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -501,8 +480,7 @@ INSTRUCTION_BLOCK(buildhr):
 	BC_WORD n_a,n_b,n_ab;
 
 	n_ab=pc[1];
-	if ((heap_free-=n_ab+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_ab+2);
 	hp[0]=pc[2];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -584,8 +562,7 @@ INSTRUCTION_BLOCK(buildhra1):
 	BC_WORD n_a;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a+3);
 	hp[0]=pc[2];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -630,8 +607,7 @@ INSTRUCTION_BLOCK(buildhra1):
 }
 INSTRUCTION_BLOCK(buildhr01):
 {
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	hp[0]=pc[1];
 	hp[1]=*bsp++;
 	*++asp=(BC_WORD)hp;
@@ -641,8 +617,7 @@ INSTRUCTION_BLOCK(buildhr01):
 }
 INSTRUCTION_BLOCK(buildhr02):
 {
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
 	hp[2]=bsp[1];
@@ -654,8 +629,7 @@ INSTRUCTION_BLOCK(buildhr02):
 }
 INSTRUCTION_BLOCK(buildhr03):
 {
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -668,8 +642,7 @@ INSTRUCTION_BLOCK(buildhr03):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildhr11):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=bsp[0];
@@ -679,8 +652,7 @@ INSTRUCTION_BLOCK(buildhr11):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildhr12):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -692,8 +664,7 @@ INSTRUCTION_BLOCK(buildhr12):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildhr13):
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -706,8 +677,7 @@ INSTRUCTION_BLOCK(buildhr13):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildhr21):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -720,8 +690,7 @@ INSTRUCTION_BLOCK(buildhr21):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildhr22):
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -735,8 +704,7 @@ INSTRUCTION_BLOCK(buildhr22):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildhr31):
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=(BC_WORD)&hp[3];
@@ -755,8 +723,7 @@ INSTRUCTION_BLOCK(build_r):
 	BC_WORD n_a,n_b,n_ab,*ao_p,*bo_p;
 
 	n_ab=pc[1];
-	if ((heap_free-=n_ab+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_ab+2);
 	ao=pc[2];
 	hp[0]=pc[3];
 	hp[1]=asp[ao];
@@ -841,8 +808,7 @@ INSTRUCTION_BLOCK(build_ra1):
 	BC_WORD n_a,*ao_p;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a+3);
 	ao=pc[2];
 	hp[0]=pc[3];
 	hp[1]=asp[ao];
@@ -893,8 +859,7 @@ INSTRUCTION_BLOCK(build_ra0):
 	BC_WORD n_a,*ao_p;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a+2);
 	ao=pc[2];
 	hp[0]=pc[3];
 	hp[1]=asp[ao];
@@ -942,8 +907,7 @@ INSTRUCTION_BLOCK(build_r01):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	bo=pc[1];
 	hp[0]=pc[2];
 	hp[1]=bsp[bo];
@@ -956,8 +920,7 @@ INSTRUCTION_BLOCK(build_r02):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	bo=pc[1];
 	hp[0]=pc[2];
 	hp[1]=bsp[bo];
@@ -971,8 +934,7 @@ INSTRUCTION_BLOCK(build_r03):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	bo=pc[1];
 	hp[0]=pc[2];
 	hp[1]=bsp[bo];
@@ -988,8 +950,7 @@ INSTRUCTION_BLOCK(build_r04):
 {
 	BC_WORD_S bo;
 
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	bo=pc[1];
 	hp[0]=pc[2];
 	hp[1]=bsp[bo];
@@ -1008,8 +969,7 @@ INSTRUCTION_BLOCK(build_r0b):
 	BC_WORD n_b,*bo_p;
 
 	n_b=pc[1];
-	if ((heap_free-=n_b+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_b+2);
 	bo=pc[2];
 	hp[0]=pc[3];
 	hp[1]=bsp[bo];
@@ -1059,8 +1019,7 @@ INSTRUCTION_BLOCK(build_r10):
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT_HEX "\n", (void*)(asp+1), (void*) hp, (BC_WORD) pc[2]);
 #endif
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	ao=pc[1];
 	hp[0]=pc[2];
 	hp[1]=asp[ao];
@@ -1073,8 +1032,7 @@ INSTRUCTION_BLOCK(build_r11):
 {
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	ao=((BC_WORD_S*)pc)[1];
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -1089,8 +1047,7 @@ INSTRUCTION_BLOCK(build_r12):
 {
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	ao=((BC_WORD_S*)pc)[1];
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -1107,8 +1064,7 @@ INSTRUCTION_BLOCK(build_r13):
 {
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	ao=((BC_WORD_S*)pc)[1];
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -1128,8 +1084,7 @@ INSTRUCTION_BLOCK(build_r1b):
 	BC_WORD n_b,*bo_p;
 
 	n_b=pc[1];
-	if ((heap_free-=n_b+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_b+3);
 	ao=pc[2];
 	hp[0]=pc[3];
 	hp[1]=asp[ao];
@@ -1178,8 +1133,7 @@ INSTRUCTION_BLOCK(build_r20):
 {
 	BC_WORD_S ao;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	ao=((BC_WORD_S*)pc)[1];
 	hp[0]=pc[2];
 	hp[1]=asp[ao];
@@ -1193,8 +1147,7 @@ INSTRUCTION_BLOCK(build_r21):
 {
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	ao=((BC_WORD_S*)pc)[1];
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -1211,8 +1164,7 @@ INSTRUCTION_BLOCK(build_r30):
 {
 	BC_WORD_S ao;
 
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	ao=((BC_WORD_S*)pc)[1];
 	hp[0]=*(BC_WORD*)&pc[2];
 	hp[1]=asp[ao];
@@ -1228,8 +1180,7 @@ INSTRUCTION_BLOCK(build_r31):
 {
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	ao=((BC_WORD_S*)pc)[1];
 	bo=((BC_WORD_S*)pc)[2];
 	hp[0]=*(BC_WORD*)&pc[3];
@@ -1247,8 +1198,7 @@ INSTRUCTION_BLOCK(build_r40):
 {
 	BC_WORD_S ao;
 
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
 #endif
@@ -1269,8 +1219,7 @@ INSTRUCTION_BLOCK(build_u):
 	BC_WORD n_a,n_b,n_ab;
 
 	n_ab=pc[1];
-	if ((heap_free-=n_ab+1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_ab+1);
 	hp[0]=*(BC_WORD*)&pc[2];
 	hp[1]=asp[0];
 	n_a=pc[3];
@@ -1347,8 +1296,7 @@ INSTRUCTION_BLOCK(build_u):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(build_u01):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	hp[0]=pc[1];
 	hp[1]=*bsp++;
 	*++asp=(BC_WORD)hp;
@@ -1356,8 +1304,7 @@ INSTRUCTION_BLOCK(build_u01):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u02):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
 #endif
@@ -1370,8 +1317,7 @@ INSTRUCTION_BLOCK(build_u02):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u03):
-	if ((heap_free-=4)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(4);
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
 	hp[2]=bsp[1];
@@ -1382,8 +1328,7 @@ INSTRUCTION_BLOCK(build_u03):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u11):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=*bsp++;
@@ -1392,8 +1337,7 @@ INSTRUCTION_BLOCK(build_u11):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u12):
-	if ((heap_free-=4)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(4);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=bsp[0];
@@ -1404,8 +1348,7 @@ INSTRUCTION_BLOCK(build_u12):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u13):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=bsp[0];
@@ -1417,8 +1360,7 @@ INSTRUCTION_BLOCK(build_u13):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u21):
-	if ((heap_free-=4)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(4);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -1430,8 +1372,7 @@ INSTRUCTION_BLOCK(build_u21):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u22):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -1444,8 +1385,7 @@ INSTRUCTION_BLOCK(build_u22):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(build_u31):
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	hp[0]=pc[1];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -1462,8 +1402,7 @@ INSTRUCTION_BLOCK(build_ua1):
 	BC_WORD n_a;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a+2);
 	hp[0]=*(BC_WORD*)&pc[2];
 	hp[1]=asp[0];
 	hp[2]=asp[-1];
@@ -1513,8 +1452,7 @@ INSTRUCTION_BLOCK(cosR):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create):
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p <- __cycle (" BC_WORD_FMT_HEX ")\n", (void*) hp, (BC_WORD)&__cycle__in__spine);
 #endif
@@ -1528,8 +1466,7 @@ INSTRUCTION_BLOCK(creates):
 	BC_WORD n_a_p_1,i;
 
 	n_a_p_1=pc[1];
-	if ((heap_free-=n_a_p_1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a_p_1);
 	hp[0]=(BC_WORD)&__cycle__in__spine; /* to do */
 	hp[1]=(BC_WORD)hp;
 	hp[2]=(BC_WORD)hp;
@@ -1545,8 +1482,7 @@ INSTRUCTION_BLOCK(create_array):
 	BC_WORD s,n;
 
 	s=bsp[0];
-	if ((heap_free-=s+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+3);
 	++bsp;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
@@ -1572,8 +1508,7 @@ INSTRUCTION_BLOCK(create_arrayBOOL):
 #else
 	sw=(s+3)>>2;
 #endif
-	if ((heap_free-=sw+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(sw+3);
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=(BC_WORD)&BOOL+2;
@@ -1602,8 +1537,7 @@ INSTRUCTION_BLOCK(create_arrayCHAR):
 #else
 	sw=(s+3)>>2;
 #endif
-	if ((heap_free-=sw+2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(sw+2);
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=s;
 	*++asp=(BC_WORD)hp;
@@ -1626,8 +1560,7 @@ INSTRUCTION_BLOCK(create_arrayINT):
 	BC_WORD s,i,n;
 
 	s=bsp[0];
-	if ((heap_free-=s+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+3);
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=(BC_WORD)&INT+2;
@@ -1646,8 +1579,7 @@ INSTRUCTION_BLOCK(create_arrayREAL):
 	BC_WORD s,i,n;
 
 	s=bsp[0];
-	if ((heap_free-=s+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+3);
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=(BC_WORD)&REAL+2;
@@ -1666,8 +1598,7 @@ INSTRUCTION_BLOCK(create_array_):
 	BC_WORD s,i;
 
 	s=bsp[0];
-	if ((heap_free-=s+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+3);
 	++bsp;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
@@ -1686,8 +1617,7 @@ INSTRUCTION_BLOCK(create_array_BOOL):
 
 	s=bsp[0];
 	sw=(s+15)>>2;
-	if ((heap_free-=sw)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(sw);
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=s;
 	hp[2]=(BC_WORD)&BOOL+2;
@@ -1703,8 +1633,7 @@ INSTRUCTION_BLOCK(create_array_CHAR):
 
 	s=bsp[0];
 	sw=(s+11)>>2;
-	if ((heap_free-=sw)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(sw);
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=s;
 	*++asp=(BC_WORD)hp;
@@ -1718,8 +1647,7 @@ INSTRUCTION_BLOCK(create_array_INT):
 	BC_WORD s;
 
 	s=bsp[0];
-	if ((heap_free-=s+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s+3);
 	++bsp;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
@@ -1736,8 +1664,7 @@ INSTRUCTION_BLOCK(create_array_r):
 
 	s=bsp[0];
 	n_ab=pc[1];
-	if ((heap_free-=s*n_ab+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s*n_ab+3);
 	++bsp;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
@@ -1786,8 +1713,7 @@ INSTRUCTION_BLOCK(create_array_r_):
 
 	s=bsp[0];
 	n_ab=pc[1];
-	if ((heap_free-=s*n_ab+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s*n_ab+3);
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=*(BC_WORD*)&pc[3];
@@ -1811,8 +1737,7 @@ INSTRUCTION_BLOCK(create_array_r_a):
 	s=bsp[0];
 	n_a=pc[1];
 	a_n_a=s*n_a;
-	if ((heap_free-=a_n_a+3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(a_n_a+3);
 	++bsp;
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
@@ -1831,8 +1756,7 @@ INSTRUCTION_BLOCK(create_array_r_b):
 
 	s=bsp[0];
 	sw=pc[1]*s+3;
-	if ((heap_free-=sw)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(sw);
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=*(BC_WORD*)&pc[2];
@@ -2141,8 +2065,7 @@ INSTRUCTION_BLOCK(fillh):
 	BC_WORD *n,s_m_1;
 
 	s_m_1=pc[1]; /* >=3 */
-	if ((heap_free-=s_m_1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(s_m_1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
 	n[0]=*(BC_WORD_S*)&pc[3];
 	n[1]=asp[0];
@@ -2529,8 +2452,7 @@ INSTRUCTION_BLOCK(fillh3):
 {
 	BC_WORD *n;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ") with %p\n", (void*) n, pc[2] - (BC_WORD) data, pc[2], (void*)hp);
@@ -2549,8 +2471,7 @@ INSTRUCTION_BLOCK(fillh4):
 {
 	BC_WORD *n;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n[0]=*(BC_WORD_S*)&pc[2];
 	n[1]=asp[0];
@@ -2654,8 +2575,7 @@ INSTRUCTION_BLOCK(fill_r):
 	BC_WORD *n,n_a,n_b,n_ab,*ao_p,*bo_p;
 
 	n_ab=pc[1];
-	if ((heap_free-=n_ab-1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_ab-1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
 	ao=((SS*)pc)[3];
 	n[0]=*(BC_WORD*)&pc[4];
@@ -2740,8 +2660,7 @@ INSTRUCTION_BLOCK(fill_ra0):
 	BC_WORD *n,n_a,*ao_p;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a-1)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a-1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
 	ao=((SS*)pc)[3];
 	n[0]=*(BC_WORD*)&pc[4];
@@ -2791,8 +2710,7 @@ INSTRUCTION_BLOCK(fill_ra1):
 	BC_WORD *n,n_a,*ao_p;
 
 	n_a=pc[1];
-	if ((heap_free-=n_a)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_a);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
 	ao=((SS*)pc)[3];
 	n[0]=*(BC_WORD*)&pc[4];
@@ -2843,8 +2761,7 @@ INSTRUCTION_BLOCK(fill_r1b):
 	BC_WORD *n,n_b,*bo_p;
 
 	n_b=pc[1];
-	if ((heap_free-=n_b)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(n_b);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
 	ao=((SS*)pc)[3];
 	n[0]=*(BC_WORD*)&pc[4];
@@ -2931,8 +2848,7 @@ INSTRUCTION_BLOCK(fill_r03):
 	BC_WORD *n;
 	BC_WORD_S bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	bo=((BC_WORD_S*)pc)[2];
 	n[0]=*(BC_WORD_S*)&pc[3];
@@ -2963,8 +2879,7 @@ INSTRUCTION_BLOCK(fill_r12):
 	BC_WORD *n;
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	bo=((BC_WORD_S*)pc)[3];
@@ -2982,8 +2897,7 @@ INSTRUCTION_BLOCK(fill_r13):
 	BC_WORD *n;
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	bo=((BC_WORD_S*)pc)[3];
@@ -3015,8 +2929,7 @@ INSTRUCTION_BLOCK(fill_r21):
 	BC_WORD *n;
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	bo=((BC_WORD_S*)pc)[3];
@@ -3034,8 +2947,7 @@ INSTRUCTION_BLOCK(fill_r22):
 	BC_WORD *n;
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	bo=((BC_WORD_S*)pc)[3];
@@ -3054,8 +2966,7 @@ INSTRUCTION_BLOCK(fill_r30):
 	BC_WORD *n;
 	BC_WORD_S ao;
 
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	n[0]=*(BC_WORD_S*)&pc[3];
@@ -3072,8 +2983,7 @@ INSTRUCTION_BLOCK(fill_r31):
 	BC_WORD *n;
 	BC_WORD_S ao,bo;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	bo=((BC_WORD_S*)pc)[3];
@@ -3092,8 +3002,7 @@ INSTRUCTION_BLOCK(fill_r40):
 	BC_WORD *n;
 	BC_WORD_S ao;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao=((BC_WORD_S*)pc)[2];
 	n[0]=*(BC_WORD_S*)&pc[3];
@@ -5812,8 +5721,7 @@ INSTRUCTION_BLOCK(CtoAC):
 {
 	BC_WORD c;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	c=(BC_BOOL)bsp[0];
 	hp[0]=(BC_WORD)&__STRING__+2;
 	hp[1]=1;
@@ -5915,8 +5823,7 @@ INSTRUCTION_BLOCK(buildo1):
 {
 	BC_WORD_S ao;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
 #endif
@@ -5933,8 +5840,7 @@ INSTRUCTION_BLOCK(buildo2):
 {
 	BC_WORD_S ao1,ao2;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) data, pc[3]);
 #endif
@@ -6904,8 +6810,7 @@ INSTRUCTION_BLOCK(jmp_ap1):
 INSTRUCTION_BLOCK(add_arg0):
 {
 	BC_WORD *n;
-	if ((heap_free-=2)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(2);
 	n=(BC_WORD*)asp[0];
 	pc=(BC_WORD*)*csp++;
 	hp[1]=asp[-1];
@@ -6919,8 +6824,7 @@ INSTRUCTION_BLOCK(add_arg1):
 {
 	BC_WORD *n;
 
-	if ((heap_free-=3)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(3);
 	n=(BC_WORD*)asp[0];
 	hp[2]=asp[-1];
 	pc=(BC_WORD*)*csp++;
@@ -6935,8 +6839,7 @@ INSTRUCTION_BLOCK(add_arg2):
 {
 	BC_WORD *n;
 
-	if ((heap_free-=5)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(5);
 	n=(BC_WORD*)asp[0];
 	hp[4]=asp[-1];
 	pc=(BC_WORD*)*csp++;
@@ -6953,8 +6856,7 @@ INSTRUCTION_BLOCK(add_arg3):
 {
 	BC_WORD *n,*a;
 
-	if ((heap_free-=6)<0)
-		GARBAGE_COLLECT;
+	NEED_HEAP(6);
 	n=(BC_WORD*)asp[0];
 	hp[5]=asp[-1];
 	pc=(BC_WORD*)*csp++;
