@@ -22,6 +22,7 @@ void clean_catAC (void)
 	lw=(l+3)>>2;
 
 	if ((g_heap_free -= (int)(lw+2)) < 0){
+		g_heap_free += lw+2;
 		trap_needs_gc = 1;
 		return;
 	}
@@ -131,6 +132,7 @@ void clean_sliceAC (void)
 
 	n_words=IF_INT_64_OR_32((l+7)/8, (l+3)/4);
 	if ((g_heap_free -= 2+n_words) < 0){
+		g_heap_free += 2+n_words;
 		trap_needs_gc = 1;
 		return;
 	}

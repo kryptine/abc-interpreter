@@ -1120,7 +1120,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuildhr31:             return "?";
 		case Cbuildhr40:             return "?";
 		case Cbuild_r:               return "?";
-		case Cbuild_ra0:             return "?";
+		case Cbuild_ra0:             return "nnl";
 		case Cbuild_ra1:             return "?";
 		case Cbuild_r0b:             return "?";
 		case Cbuild_r1b:             return "?";
@@ -1232,7 +1232,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill_r03:              return "nnl";
 		case Cfill_r10:              return "nnl";
 		case Cfill_r11:              return "nnnl";
-		case Cfill_r12:              return "?";
+		case Cfill_r12:              return "nnnl";
 		case Cfill_r13:              return "nnnl";
 		case Cfill_r20:              return "nnl";
 		case Cfill_r21:              return "nnnl";
@@ -1334,7 +1334,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_arg_D:          return "";
 		case Cpush_r_arg_t:          return "";
 		case Cpush_r_args:           return "?";
-		case Cpush_r_argsa0:         return "?";
+		case Cpush_r_argsa0:         return "nn";
 		case Cpush_r_argsa1:         return "?";
 		case Cpush_r_args0b:         return "?";
 		case Cpush_r_args1b:         return "?";
@@ -1398,8 +1398,8 @@ char *instruction_type (BC_WORD i) {
 		case Crepl_r_args30:         return "";
 		case Crepl_r_args31:         return "";
 		case Crepl_r_args40:         return "";
-		case Crepl_r_argsa0:         return "?";
-		case Crepl_r_argsa1:         return "?";
+		case Crepl_r_argsa0:         return "n";
+		case Crepl_r_argsa1:         return "n";
 		case Crepl_r_args_aab11:     return "";
 		case Crepl_r_args_a2021:     return "";
 		case Crepl_r_args_a21:       return "";
@@ -1517,7 +1517,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuildo2:               return "?";
 		case Cdup_a:                 return "n";
 		case Cdup2_a:                return "n";
-		case Cdup3_a:                return "?";
+		case Cdup3_a:                return "n";
 		case CneI:                   return "";
 		case Cexchange_a:            return "nn";
 		case CgeC:                   return "";
