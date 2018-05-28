@@ -23,6 +23,10 @@
 - `BCGEN_INSTRUCTION_TABLE_SIZE`:
   The initial size of instruction tables in the bytecode generator.
 
+- `COMPUTED_GOTOS`:
+  Uses computed gotos ('threaded code') for a ~20% speed-up. This makes the
+  code very hard to debug.
+
 - `LINK_CLEAN_RUNTIME`:
   Compile for linking with the Clean run-time system. This means sharing some
   internal descriptors (such as `INT`) and excluding `main`.

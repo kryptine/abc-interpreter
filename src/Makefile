@@ -2,7 +2,7 @@ SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -nr -nt
 override CFLAGS+=\
-	-Wall -pedantic\
+	-Wall\
 	-Wno-misleading-indentation\
 	-Wno-strict-aliasing\
 	-DPOSIX\
@@ -38,7 +38,7 @@ SRC_LINK:=\
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) $(SRC_LINK) -DLINKER -o $@
+	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS $(SRC_LINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
