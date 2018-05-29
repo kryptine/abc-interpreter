@@ -6464,7 +6464,6 @@ INSTRUCTION_BLOCK(updates2_a):
 }
 INSTRUCTION_BLOCK(updates2_a_pop_a):
 {
-	/* TODO: optimise (see issue #4) */
 	BC_WORD_S ao_1,ao_2;
 
 	ao_1=((BC_WORD_S*)pc)[2];
@@ -6472,7 +6471,7 @@ INSTRUCTION_BLOCK(updates2_a_pop_a):
 	asp[ao_2] = asp[ao_1];
 	ao_2=((BC_WORD_S*)pc)[1];
 	asp[ao_1] = asp[ao_2];
-	asp-=pc[4];
+	asp=(BC_WORD*) (((uint8_t*)asp)-pc[4]);
 	pc+=5;
 	END_INSTRUCTION_BLOCK;
 }
