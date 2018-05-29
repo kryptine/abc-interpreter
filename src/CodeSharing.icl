@@ -21,6 +21,9 @@ import Text
 
 import symbols_in_program
 
+import code from "copy_node_c."
+import code from "copy_node_asm."
+
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
 Start :: *World -> [Int]
@@ -66,45 +69,33 @@ get_expression filename w
 # hp = writeInt heap 0 (code_segment + IF_INT_64_OR_32 8 4 * 13)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
-# ce =
+#! ce =
 	{ ce_symbols = syms
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
 	, ce_data_size    = dsize
 	, ce_heap         = heap
-	, ce_hp           = hp
+	, ce_heap_size    = HEAP_SIZE
 	, ce_stack        = stack
+	, ce_stack_size   = STACK_SIZE
 	, ce_asp          = asp
 	, ce_bsp          = bsp
 	, ce_csp          = csp
+	, ce_hp           = hp
 	}
 = (coerce ce start_node, w)
 
-coerce :: !CoercionEnvironment !Pointer -> a
-coerce ce p
-#! ce & ce_asp = writeInt ce.ce_asp 0 p
-#! ce & ce_hp = get_heap_address ce.ce_hp
-#! ok = interpret
-	ce.ce_code_segment ce.ce_code_size
-	ce.ce_data_segment ce.ce_data_size
-	ce.ce_stack STACK_SIZE
-	ce.ce_heap HEAP_SIZE
-	ce.ce_asp ce.ce_bsp ce.ce_csp
-	ce.ce_hp
-	ce.ce_asp
-| ok <> 0 = abort "Failed to interpret\n"
-= copy_node ce p
-where
-	interpret :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Pointer -> Int
-	interpret code_segment csize data_segment dsize stack stack_size heap heap_size asp bsp csp hp node = code {
-		ccall interpret "pIpIpIpIppppp:I"
-	}
-
-	get_heap_address :: !Pointer -> Pointer
-	get_heap_address _ = code {
-		ccall get_heap_address "p:p"
-	}
+// On purpose unique: this ensures there is only one CoercionEnvironment, ever.
+// This is needed to ensure that the heap address gets shared by all coercings.
+// Also on purpose lazy: this ensures it is passed on the A-stack, so that we
+// can easily pass it to C.
+coerce :: *CoercionEnvironment !Pointer -> .a
+coerce ce p = code {
+	.d 1 1 i
+		jsr _copy_node_asm
+	.o 1 0
+}
 
 parse :: !{#Symbol} !String -> Maybe Program
 parse syms s
@@ -172,14 +163,3 @@ free_to_false :: !Pointer -> Bool
 free_to_false p
 # n = free p
 = n == 0 && n <> 0
-
-// CoercionEnvironment is on purpose lazy; must be passed on A-stack
-copy_node :: CoercionEnvironment !Int -> b
-copy_node _ _ = code {
-	.d 1 1 i
-		jsr _copy_node_asm
-	.o 1 0
-}
-
-import code from "copy_node_c."
-import code from "copy_node_asm."

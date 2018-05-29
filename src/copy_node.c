@@ -6,10 +6,42 @@
 extern void *e__CodeSharing__ncoerce;
 extern void *dINT;
 
+/* This does not contain the ce_symbols from the CoercionEnvironment type. This
+ * element is not needed, and like this we can easily dereference the
+ * environment from memory.
+ */
+struct coercion_environment {
+	BC_WORD *code;
+	BC_WORD code_size;
+	BC_WORD *data;
+	BC_WORD data_size;
+	BC_WORD *heap;
+	BC_WORD heap_size;
+	BC_WORD *stack;
+	BC_WORD stack_size;
+	BC_WORD *asp;
+	BC_WORD *bsp;
+	BC_WORD *csp;
+	BC_WORD *hp;
+};
+
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
 	if (!(node[0] & 2)) {
-		fprintf(stderr,"Not a HNF\n");
-		return -1;
+		struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
+		*++ce->asp = (BC_WORD) node;
+		int result = interpret(
+				ce->code, ce->code_size,
+				ce->data, ce->data_size,
+				ce->stack, ce->stack_size,
+				ce->heap, ce->heap_size,
+				ce->asp, ce->bsp, ce->csp, ce->hp,
+				ce->asp);
+		if (result != 0) {
+			fprintf(stderr,"Failed to interpret\n");
+			return -1;
+		}
+		ce->asp--;
+		ce->hp = get_heap_address();
 	}
 
 	if (node[0] == (BC_WORD) &INT+2) {
