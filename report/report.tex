@@ -1,0 +1,137 @@
+\documentclass[a4paper]{article}
+
+\usepackage{geometry}
+
+\usepackage[backend=biber,natbib]{biblatex}
+\bibliography{library}
+
+\title{Cross-Platform Communication of Lazy Expression\\\Large{Report for Compiler Construction}}
+\author{Camil Staps \and Erin van der Veen}
+
+\begin{document}
+
+\maketitle
+
+This is an overview of changes we made to the original framework provided by John.
+It is not chronological.
+For an overview of the binaries used in the project, see \texttt{doc/tools.md};
+see \texttt{doc/preprocessor.md} for an overview of useful preprocessor defines.
+This document is meant to give an overview of the work that has been done, not to describe all the implementation details.
+
+\section*{Ecosystem}
+\begin{itemize}
+	\item
+		We started rewriting the ABC optimiser, bytecode generator and interpreter,
+			going through all code at least once to understand the setup.
+		This was not strictly necessary except for us to better understand the system.
+		The bytecode generator and interpreter share more code now, making modifications easier
+			(of course, this was more difficult when the interpreter was generated in John's setup).
+		The ABC optimiser now uses constructors for almost all ABC instructions, instead of plain strings,
+			making the code more readable and extensible.
+
+	\item
+		We added test scripts and used GitLab's continuous integration tools to make sure commits do not break stuff.
+		All `small examples' except \texttt{copyfile} are included (and working).
+		Additionally, we added several small tests with special kinds of data types to test these (and their garbage collection) properly.
+		We also added some larger test programs:
+			an IKS interpreter which uses polymorphic functions in dynamics;
+			a brainfuck interpreter (running a brainfuck interpreter in brainfuck);
+			a sudoku solver;
+			a test with the generic compression function in \texttt{Data.GenCompress} and special data types.
+
+	\item
+		We created a graphical debugger \`a la \texttt{gdb}, with which you can step through ABC code and see the effect on the stacks and heap.
+		Several improvements can be made to this (stepping back, breakpoints) --- it was only a side project.
+		The debugger has helped resolve several bugs quickly.
+\end{itemize}
+
+\section*{Bytecode}
+\begin{itemize}
+	\item
+		We created a binary bytecode format.
+		In the original setup, a bytecode file was an ASCII file with decimal integers separated by whitespace.
+		We now have a binary format.
+		The format is optimised for space, such that instructions, literals, stack offsets etc. only take as much bytes as needed.
+		(During interpretation however, every instruction and argument comprises a full word, so that everything is well-aligned.)
+
+	\item
+		A symbol table was added to the bytecode format.
+		This is required to resolve descriptors with a Clean host program.
+
+		Along with this, we changed the way relocations are stored.
+		Initially, there were four sets of relocations (code-code, code-data, data-code, data-data).
+		Now, there are two sets of relocations (code, data), and a relocation contains an index to the code/data segment and an index to the symbol table.
+
+		The symbol table also made a linker possible.
+		The linker uses a minimal amount of new code:
+			it reuses the parser in the interpreter and the label tree of the code generator.
+		Thus, we can now generate bytecode for module one at a time and then link them together.
+
+	\item
+		We added record descriptors.
+\end{itemize}
+
+\section*{Interpreter}
+\begin{itemize}
+	\item
+		We added many instructions for reals, and many specialized instructions for \texttt{\_system.abc}.
+		The interpreter can now use the real StdEnv (the original used a custom, stripped down StdEnv), although not all printing functionality has been implemented yet.
+
+	\item
+		We added a copying garbage collector.
+		The earlier compacting garbage collector is broken; we decided it was better to implement something crude but working,
+			as an efficient garbage collector is not at the core of the project.
+		For this reason, the copying collector can also still be made more efficient.
+
+	\item
+		We made it possible to run the interpreter with 64-bit integers and reals.
+		This involved changing offsets for curried functions, arrays, and perhaps more.
+		In the bytecode, labels, integers and reals take up 64 bits.
+		On the 32-bit version, the upper half is discarded.
+		(Thus, a real takes up one B-stack element, so we assume the 64-bit version of the compiler.)
+\end{itemize}
+
+\section*{Optimisations}
+\begin{itemize}
+	\item
+		The ABC optimiser now removes jumps to labels immediately following the jump.
+
+	\item
+		The interpreter can now use computed goto's (`threaded code').
+		This gives a speed-up of around 25\% on nfib (for which it has the highest speed-up).
+		Because threaded code is impossible to debug, it is also still possible to build an interpreter without.
+		This is done using preprocessor directives, so that we need only maintain one code base.
+\end{itemize}
+
+\section*{Node copying}
+\begin{itemize}
+	\item
+		We copy HNFs from the interpreter to the host.
+		This is currently only possible for descriptors that exist in the host.
+		We need to add descriptors that do not exist in the host to the host to fix this.
+
+	\item
+		Because we copy lazily, the host may have many references to the interpreter at some moment.
+		Consider for instance \texttt{reverse (take 100 (interpret primes))}.
+		We interpret a list of primes, take 100 elements and reverse them.
+		The actual integers are not copied from the interpreter until they need to be printed,
+			so there are at some point 100 references to the interpreter.
+
+		Unimplemented:
+		we keep a list of references from the host in the interpreter,
+			so that the references can be updated upon garbage collection.
+		In the host, we use finalizers to be notified when a reference is removed from the garbage collector.
+		If this happens, we remove it from the reference list in the interpreter.
+
+	\item
+		For thunks, there is a special node entry in the host (from a Clean library), which holds the address to start the interpreter.
+		However, it is not yet possible to apply interpreted functions to native arguments, because this involves copying from the host to the interpreter which has not been implemented yet.
+
+	\item
+		The most advanced case is a higher-order function in the interpreter, applied to a native function.
+		For this case, we must do something similar as in the host:
+			add a special kind of node entry point which invokes the host to apply the function.
+		This has not been implemented yet.
+\end{itemize}
+
+\end{document}
