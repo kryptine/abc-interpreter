@@ -7115,12 +7115,14 @@ INSTRUCTION_BLOCK(eval_upd4):
 INSTRUCTION_BLOCK(print_char):
 INSTRUCTION_BLOCK(print_int):
 INSTRUCTION_BLOCK(print_real):
-INSTRUCTION_BLOCK(push_a_r_args):
-INSTRUCTION_BLOCK(push_args_u):
-INSTRUCTION_BLOCK(push_r_arg_D):
-INSTRUCTION_BLOCK(push_r_arg_t):
-INSTRUCTION_BLOCK(push_t_r_a):
-INSTRUCTION_BLOCK(push_t_r_args):
+
+INSTRUCTION_BLOCK(push_a_r_args): // voor unboxed array van records. Op A-stack array, op B-stack elementnummer, maak een kopie op de stack
+INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
+INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
+INSTRUCTION_BLOCK(push_r_arg_t):  // type string op B-stack, haal een karakter eruit
+INSTRUCTION_BLOCK(push_t_r_a):    // push de type string
+INSTRUCTION_BLOCK(push_t_r_args): // push de argumenten van een unboxed record
+
 INSTRUCTION_BLOCK(pushcaf11):
 INSTRUCTION_BLOCK(pushcaf20):
 INSTRUCTION_BLOCK(A_data_IIIla):
