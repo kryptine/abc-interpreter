@@ -6,7 +6,7 @@
   32 for 32-bit systems; 64 for 64-bit systems
 
 - `POSIX`:
-  for POSIX-compatible systems.
+  For POSIX-compatible systems.
 
 ## Debugging
 
@@ -18,6 +18,20 @@
   debugging code available. This preprocessor macro can be set to any integer
   from 0 to 4 to make the debugging increasingly verbose.
 
+- `DEBUG_GARBAGE_COLLECTOR_MARKING`:
+  Try the garbage collector marking phase after each instruction cycle, to test
+  that it can deal (does not crash) with many different kinds of types. This is
+  very slow.
+
+## Tools
+
+Some defines are used to indicate what tool is being built:
+
+- `BC_GEN`: the bytecode generator
+- `DEBUG_CURSES`: the debugger
+- `INTERPRETER`: the interpreter
+- `LINKER`: the linker
+
 ## Miscellaneous
 
 - `BCGEN_INSTRUCTION_TABLE_SIZE`:
@@ -25,7 +39,7 @@
 
 - `COMPUTED_GOTOS`:
   Uses computed gotos ('threaded code') for a ~20% speed-up. This makes the
-  code very hard to debug.
+  code very hard to debug. Internally, this uses `_COMPUTED_GOTO_LABELS`
 
 - `LINK_CLEAN_RUNTIME`:
   Compile for linking with the Clean run-time system. This means sharing some
