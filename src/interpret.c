@@ -118,8 +118,8 @@ void handle_segv(int sig) {
 }
 #endif
 
-BC_WORD *get_heap_address(BC_WORD *if_undefined) {
-	return hp == NULL ? if_undefined : hp;
+BC_WORD *get_heap_address(void) {
+	return hp;
 }
 
 int interpret(BC_WORD *code, size_t code_size,

@@ -30,6 +30,8 @@ extern BC_WORD Fjmp_ap3;
 extern jmp_buf segfault_restore_point;
 #endif
 
+BC_WORD *get_heap_address(void);
+
 /**
  * code: code segment
  * data: data segment
