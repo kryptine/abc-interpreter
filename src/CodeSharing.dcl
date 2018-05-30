@@ -3,8 +3,8 @@ definition module CodeSharing
 from System._Pointer import :: Pointer
 from symbols_in_program import :: Symbol
 
-:: *CoercionEnvironment =
-	{ ce_symbols      :: !{#Symbol}
+:: *CoercionEnvironment = E.host_reference:
+	{ ce_references   :: ![host_reference]
 	, ce_code_segment :: !Pointer
 	, ce_code_size    :: !Int
 	, ce_data_segment :: !Pointer

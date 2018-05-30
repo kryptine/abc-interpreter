@@ -1619,7 +1619,7 @@ INSTRUCTION_BLOCK(create_array_):
 	hp+=3;
 	pc+=1;
 	for (i=0; i!=s; ++i)
-		hp[i]=((BC_WORD)&__Nil)-4;
+		hp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
 	hp+=s;
 	END_INSTRUCTION_BLOCK;
 }
@@ -1736,7 +1736,7 @@ INSTRUCTION_BLOCK(create_array_r_):
 	pc+=4;
 	while (s!=0){
 		for (i=0; i!=n_a; ++i)
-			hp[i] = ((BC_WORD)&__Nil)-4;
+			hp[i] = ((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
 		hp+=n_ab;
 		--s;
 	}
@@ -1758,7 +1758,7 @@ INSTRUCTION_BLOCK(create_array_r_a):
 	*++asp=(BC_WORD)hp;
 	pc+=3;
 	for (i=0; i!=a_n_a; ++i)
-		hp[i] = ((BC_WORD)&__Nil)-4;
+		hp[i] = ((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
 	hp+=a_n_a;
 	END_INSTRUCTION_BLOCK;
 }

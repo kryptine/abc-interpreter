@@ -4,9 +4,13 @@
 
 #include "mark.h"
 #include "util.h"
-
+#include "../gc.h"
 #include "../interpret.h"
 #include "../util.h"
+
+#ifdef LINK_CLEAN_RUNTIME
+# include "../copy_node.h"
+#endif
 
 int in_first_semispace = 1;
 
@@ -18,6 +22,9 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 	init_nodes_set(&nodes_set, heap_size);
 
 	mark_a_stack(stack, asp, old_heap, heap_size, &nodes_set);
+#ifdef LINK_CLEAN_RUNTIME
+	mark_host_references(old_heap, heap_size, &nodes_set);
+#endif
 	evaluate_grey_nodes(old_heap, heap_size, &nodes_set);
 
 	/* Pass 1: reverse pointers on the A-stack */
@@ -38,6 +45,23 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 		fprintf(stderr, "\t\t%p -> %p -> %p\n", (void*) *asp_temp, (void*) *temp, (void*) *(BC_WORD*)(*temp ^ 1));
 #endif
 	}
+
+#ifdef LINK_CLEAN_RUNTIME
+	/* Pass 1b: reverse pointers on the A-stack */
+# if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
+# endif
+	struct host_references *hrs = host_references;
+	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
+# if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t%p -> %p\n", (void*)hrs->hr_reference[1], (void*)*hrs->hr_reference[1]);
+# endif
+		BC_WORD *temp = (BC_WORD*) hrs->hr_reference[1];
+		hrs->hr_reference[1] = (BC_WORD*) *temp;
+		*temp = (BC_WORD) (&hrs->hr_reference[1]) | 1;
+		hrs = hrs->hr_rest;
+	}
+#endif
 
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 2: copy nodes\n");

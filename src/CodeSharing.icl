@@ -21,15 +21,14 @@ import Text
 
 import symbols_in_program
 
-import code from "copy_node_c."
-import code from "copy_node_asm."
+import code from "interpret.a"
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
 Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= reverse (take 100 primes)
+= reverse (take 5000 primes) ++ reverse (take 5000 primes)
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -70,7 +69,7 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce =
-	{ ce_symbols = syms
+	{ ce_references   = [start_node]
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
