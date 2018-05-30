@@ -17,6 +17,7 @@ from symbols_in_program import :: Symbol
 	, ce_bsp          :: !Pointer
 	, ce_csp          :: !Pointer
 	, ce_hp           :: !Pointer
+	, ce_references   :: !Pointer
 	}
 
 coerce :: *CoercionEnvironment !Pointer -> .a

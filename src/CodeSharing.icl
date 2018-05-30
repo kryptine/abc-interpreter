@@ -29,7 +29,7 @@ import code from "copy_node_asm."
 Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= reverse (take 100 primes)
+= reverse (take 10000 primes)
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -70,7 +70,7 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce =
-	{ ce_symbols = syms
+	{ ce_symbols      = syms
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
@@ -83,6 +83,7 @@ get_expression filename w
 	, ce_bsp          = bsp
 	, ce_csp          = csp
 	, ce_hp           = hp
+	, ce_references   = 0
 	}
 = (coerce ce start_node, w)
 

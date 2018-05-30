@@ -5,6 +5,10 @@
 # include <stdio.h>
 #endif
 
+#ifdef LINK_CLEAN_RUNTIME
+struct host_references *host_references = NULL;
+#endif
+
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap,
 		size_t heap_size, BC_WORD_S *heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR

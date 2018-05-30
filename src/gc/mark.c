@@ -2,6 +2,7 @@
 
 #include "mark.h"
 #include "util.h"
+#include "../gc.h"
 #include "../interpret.h"
 #include "../util.h"
 
@@ -142,6 +143,15 @@ void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size,
 		add_grey_node(set, (BC_WORD*) *asp_temp, heap, heap_size);
 	}
 }
+
+#ifdef LINK_CLEAN_RUNTIME
+void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
+	if (host_references == NULL)
+		return;
+	for (int i = 0; i < host_references->count; i++)
+		add_grey_node(set, (BC_WORD*) host_references->nodes[i].node, heap, heap_size);
+}
+#endif
 
 void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *node;
