@@ -11,6 +11,8 @@
 #include "util.h"
 
 extern void *e__CodeSharing__ncoerce;
+extern void *e____system__kFinalizer;
+extern BC_WORD *finalizer_list;
 extern void *dINT;
 
 /* This does not contain the ce_symbols from the CoercionEnvironment type. This
@@ -34,16 +36,16 @@ struct coercion_environment {
 
 struct host_references *host_references = NULL;
 
-int add_host_reference(BC_WORD *host_heap, BC_WORD *reference) {
+BC_WORD *add_host_reference(BC_WORD *heap, BC_WORD *reference) {
 	/* TODO check if we need garbage collection */
-	host_heap[0] = (BC_WORD) &__Cons+2+IF_INT_64_OR_32(16,8);
-	host_heap[1] = (BC_WORD) reference;
-	host_heap[2] = (BC_WORD) host_references;
-	host_references = (struct host_references*) host_heap;
+	heap[0] = (BC_WORD) &__Cons+2+IF_INT_64_OR_32(16,8);
+	heap[1] = (BC_WORD) reference;
+	heap[2] = (BC_WORD) host_references;
+	host_references = (struct host_references*) heap;
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tAdded host reference: %p -> %p\n", reference, (void*)reference[1]);
 #endif
-	return 3;
+	return heap + 3;
 }
 
 void remove_one_host_reference(BC_WORD *node) {
@@ -62,9 +64,34 @@ void remove_one_host_reference(BC_WORD *node) {
 	}
 }
 
+void interpreter_finalizer(void *coerce_node) {
+	fprintf(stderr,"Finalizing %p\n",coerce_node); /* TODO */
+}
+
+BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD node) {
+	heap[ 0] = (BC_WORD) &e__CodeSharing__ncoerce;
+	heap[ 1] = (BC_WORD) coercion_environment;
+	heap[ 2] = (BC_WORD) &heap[4];
+	heap[ 3] = (BC_WORD) &heap[9];
+
+	heap[ 4] = (BC_WORD) &e____system__kFinalizer+2;
+	heap[ 5] = (BC_WORD) finalizer_list;
+	heap[ 6] = (BC_WORD) &heap[7];
+	heap[ 7] = (BC_WORD) &interpreter_finalizer;
+	heap[ 8] = (BC_WORD) heap;
+	finalizer_list = &heap[4];
+
+	heap[ 9] = (BC_WORD) &dINT+2;
+	heap[10] = node;
+
+	return add_host_reference(heap+11, &heap[9]);
+}
+
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
 	struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
 	host_references = ((struct host_references**)coercion_environment)[1];
+
+	BC_WORD *org_host_heap = host_heap;
 
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Copying %p -> %p...\n", node, (void*)*node);
@@ -118,7 +145,8 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	fprintf(stderr, "\tcoercing (arities %d / %d)...\n", a_arity, b_arity);
 #endif
 
-	if (host_heap_free < 3 + 5 * a_arity) {
+	if ((a_arity < 3 && host_heap_free < 3 + 14 * a_arity)
+			|| (a_arity >= 3 && host_heap_free < a_arity + 2 + 14 * a_arity)) {
 		fprintf(stderr,"Not enough memory (%ld, %d)\n", host_heap_free, a_arity);
 		return -2;
 	}
@@ -135,39 +163,43 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	if (b_arity) {
 		fprintf(stderr,"TODO: copy unboxed nodes\n"); /* TODO */
 		return -5;
-	} else if (a_arity > 2) {
-		fprintf(stderr,"TODO: copy large nodes\n"); /* TODO */
-		return -5;
 	}
 
 	remove_one_host_reference(node);
 	((struct host_references**)coercion_environment)[1] = host_references;
-	host_heap[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+a_arity); /* TODO check */
+	BC_WORD *host_node = host_heap;
+	host_node[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+a_arity); /* TODO check */
 
-	int added_host_references = 0;
+	/* TODO: pointers to outside the heap (e.g. Nil) can be translated directly here */
+	if (a_arity < 3) {
+		host_heap += 3;
 
-	/* TODO: pointers to outside the heap (e.g. Nil) can be translated directly */
-	if (a_arity >= 1) {
-		host_heap[1] = (BC_WORD) &host_heap[3];
-		host_heap[3] = (BC_WORD) &e__CodeSharing__ncoerce;
-		host_heap[4] = (BC_WORD) coercion_environment;
-		host_heap[5] = (BC_WORD) &host_heap[6];
-		host_heap[6] = (BC_WORD) &dINT+2;
-		host_heap[7] = node[1];
-		added_host_references += add_host_reference(&host_heap[8], &host_heap[6]);
+		if (a_arity >= 1) {
+			host_node[1] = (BC_WORD) host_heap;
+			host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
 
-		if (a_arity >= 2) {
-			host_heap[2] = (BC_WORD) &host_heap[8+added_host_references];
-			host_heap[ 8+added_host_references] = (BC_WORD) &e__CodeSharing__ncoerce;
-			host_heap[ 9+added_host_references] = (BC_WORD) coercion_environment;
-			host_heap[10+added_host_references] = (BC_WORD) &host_heap[11+added_host_references];
-			host_heap[11+added_host_references] = (BC_WORD) &dINT+2;
-			host_heap[12+added_host_references] = node[2];
-			added_host_references += add_host_reference(&host_heap[13+added_host_references], &host_heap[11+added_host_references]);
+			if (a_arity == 2) {
+				host_node[2] = (BC_WORD) host_heap;
+				host_heap = make_coerce_node(host_heap, coercion_environment, node[2]);
+			}
+		}
+	} else if (a_arity >= 3) {
+		host_heap += a_arity + 2;
+		host_node[1] = (BC_WORD) host_heap;
+		host_node[2] = (BC_WORD) &host_node[3];
+		host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
+		BC_WORD *rest = (BC_WORD*) node[2];
+		for (int i = 0; i < a_arity - 1; i++) {
+			host_node[3+i] = (BC_WORD) host_heap;
+			host_heap = make_coerce_node(host_heap, coercion_environment, rest[i]);
 		}
 	}
 
 	((struct host_references**)coercion_environment)[1] = host_references;
 
-	return 5 * a_arity + 3 + added_host_references;
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr, "\tReturning\n");
+#endif
+
+	return host_heap - org_host_heap;
 }

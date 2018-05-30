@@ -23,12 +23,19 @@ import symbols_in_program
 
 import code from "interpret.a"
 
+// The arguments are:
+// - Pointer to C function;
+// - Argument for function (in our case, pointer to the coerce node)
+// - Pointer to rest of the finalizers (dealt with in the RTS)
+:: Finalizer = Finalizer !Int !Int !Int
+
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
 Start :: *World -> [Int]
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= reverse (take 5000 primes) ++ reverse (take 5000 primes)
+= /*reverse*/ (take 5000 primes)
+//= sum (reverse (take 5000 primes) ++ reverse (take 5000 primes)) // 228910518
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -83,14 +90,15 @@ get_expression filename w
 	, ce_csp          = csp
 	, ce_hp           = hp
 	}
-= (coerce ce start_node, w)
+= (coerce ce (Finalizer 0 0 0) start_node, w)
 
 // On purpose unique: this ensures there is only one CoercionEnvironment, ever.
 // This is needed to ensure that the heap address gets shared by all coercings.
 // Also on purpose lazy: this ensures it is passed on the A-stack, so that we
 // can easily pass it to C.
-coerce :: *CoercionEnvironment !Pointer -> .a
-coerce ce p = code {
+coerce :: *CoercionEnvironment !Finalizer !Pointer -> .a
+coerce ce _ p = code {
+	updatepop_a 0 1
 	.d 1 1 i
 		jsr _copy_node_asm
 	.o 1 0
