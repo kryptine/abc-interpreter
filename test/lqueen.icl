@@ -7,7 +7,7 @@ import StdClass
 import StdInt
 import StdList
 
-BoardSize :== 13 // The size of the chessboard.
+BoardSize :== 8 // The size of the chessboard.
 
 //	Finding all solutions for the queens problem.
 	

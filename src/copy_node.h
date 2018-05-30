@@ -8,4 +8,7 @@ struct host_references {
 	struct host_references *hr_rest;
 };
 
+extern void *__Cons;
+extern void *__Nil;
+
 extern struct host_references *host_references;

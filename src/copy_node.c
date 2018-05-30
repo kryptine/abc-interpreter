@@ -12,7 +12,6 @@
 
 extern void *e__CodeSharing__ncoerce;
 extern void *dINT;
-extern void *__Cons;
 
 /* This does not contain the ce_symbols from the CoercionEnvironment type. This
  * element is not needed, and like this we can easily dereference the
