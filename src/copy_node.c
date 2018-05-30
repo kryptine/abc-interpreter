@@ -65,7 +65,13 @@ void remove_one_host_reference(BC_WORD *node) {
 }
 
 void interpreter_finalizer(void *coerce_node) {
-	fprintf(stderr,"Finalizing %p\n",coerce_node); /* TODO */
+	fprintf(stderr,"\t\tFinalizing %p\n",coerce_node);
+	fprintf(stderr,"\t\t\t%p %p\n",&e__CodeSharing__ncoerce,((BC_WORD*)coerce_node)[0]);
+	struct coercion_environment *ce = ((struct coercion_environment**)coerce_node)[1];
+	host_references = ((struct host_references**)ce)[1];
+	BC_WORD **node = ((BC_WORD***)coerce_node)[3];
+	remove_one_host_reference(node[1]);
+	((struct host_references**)ce)[1] = host_references;
 }
 
 BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD node) {
@@ -80,6 +86,8 @@ BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD nod
 	heap[ 7] = (BC_WORD) &interpreter_finalizer;
 	heap[ 8] = (BC_WORD) heap;
 	finalizer_list = &heap[4];
+
+	fprintf(stderr,"\t\tFinalizer %p %p\n",heap,(void*)heap[0]);
 
 	heap[ 9] = (BC_WORD) &dINT+2;
 	heap[10] = node;
