@@ -11,10 +11,8 @@ DIR:="Clean System Files"
 
 all: optimise bytecode link interpret debug
 
-CodeSharing: interpret.a .FORCE
-	as $(ASFLAGS) copy_node.s -o $(DIR)/copy_node_asm.o
-	gcc $(CFLAGS) -DLINK_CLEAN_RUNTIME -c copy_node.c -o $(DIR)/copy_node_c.o
-	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns -l $< $@ -o $@
+CodeSharing: Clean\ System\ Files/interpret.a .FORCE
+	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
 
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
@@ -53,8 +51,9 @@ SRC_INTERPRET:=\
 	parse.c\
 	traps.c\
 	util.c
-OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET))
+OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET)) copy_node.o
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
+	copy_node.h\
 	gc/util.h\
 	interpret_instructions.h\
 	settings.h
@@ -62,8 +61,11 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
-interpret.a: $(OBJ_INTERPRET)
-	ar cr $@ $^
+copy_node_asm.o: copy_node.s
+	$(AS) $(ASFLAGS) $< -o $@
+
+Clean\ System\ Files/interpret.a: $(OBJ_INTERPRET) copy_node_asm.o
+	ar cr '$@' $^
 
 $(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@

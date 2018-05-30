@@ -21,8 +21,7 @@ import Text
 
 import symbols_in_program
 
-import code from "copy_node_c."
-import code from "copy_node_asm."
+import code from "interpret.a"
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
@@ -70,7 +69,7 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce =
-	{ ce_symbols      = syms
+	{ ce_references   = []
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
@@ -83,7 +82,6 @@ get_expression filename w
 	, ce_bsp          = bsp
 	, ce_csp          = csp
 	, ce_hp           = hp
-	, ce_references   = 0
 	}
 = (coerce ce start_node, w)
 

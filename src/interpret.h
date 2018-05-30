@@ -8,8 +8,7 @@ extern void* __ARRAY__[];
 #ifdef DEBUG_CURSES
 extern void** ARRAY;
 #endif
-extern void* d___Nil[];
-#define __Nil (d___Nil[1])
+extern void* __Nil[];
 extern void* INT[];
 extern void* BOOL[];
 extern void* CHAR[];

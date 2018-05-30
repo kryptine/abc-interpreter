@@ -1,12 +1,18 @@
 #include <stdint.h>
 
+#ifndef LINK_CLEAN_RUNTIME
+# define LINK_CLEAN_RUNTIME
+#endif
+
 #include "bytecode.h"
+#include "copy_node.h"
 #include "gc.h"
 #include "interpret.h"
 #include "util.h"
 
 extern void *e__CodeSharing__ncoerce;
 extern void *dINT;
+extern void *__Cons;
 
 /* This does not contain the ce_symbols from the CoercionEnvironment type. This
  * element is not needed, and like this we can easily dereference the
@@ -25,41 +31,41 @@ struct coercion_environment {
 	BC_WORD *bsp;
 	BC_WORD *csp;
 	BC_WORD *hp;
-	struct host_references *host_references;
 };
 
-void add_host_reference(struct host_references *refs, BC_WORD *reference, BC_WORD *node) {
-	if (++refs->count >= refs->size) {
-		refs->size += 100;
-		refs = safe_realloc(refs,
-				sizeof(struct host_references) + refs->size * sizeof(struct host_reference));
-	}
+struct host_references *host_references = NULL;
 
-	refs->nodes[refs->count-1].reference = reference;
-	refs->nodes[refs->count-1].node = node;
-
+int add_host_reference(BC_WORD *host_heap, BC_WORD *reference) {
+	/* TODO check if we need garbage collection */
+	host_heap[0] = (BC_WORD) &__Cons+2+IF_INT_64_OR_32(16,8);
+	host_heap[1] = (BC_WORD) reference;
+	host_heap[2] = (BC_WORD) host_references;
+	host_references = (struct host_references*) host_heap;
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"added host reference: %p -> %p\n", reference, (void*) node);
+	fprintf(stderr,"\tAdded host reference: %p -> %p\n", reference, (void*)reference[1]);
 #endif
+	return 3;
 }
 
-void remove_one_host_reference(struct host_references *refs, BC_WORD *node) {
-	for (int i = 0; i < refs->count; i++) {
-		if (refs->nodes[i].node == node) {
-			refs->nodes[i] = refs->nodes[--refs->count];
+void remove_one_host_reference(BC_WORD *node) {
+	struct host_references *prev = NULL;
+	struct host_references *hrs = host_references;
+	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
+		if (hrs->hr_reference[1] == node) {
+			if (prev == NULL)
+				host_references = hrs->hr_rest;
+			else
+				prev->hr_rest = hrs->hr_rest;
 			return;
 		}
+		prev = hrs;
+		hrs = hrs->hr_rest;
 	}
 }
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
 	struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
-
-	if (!ce->host_references) {
-		ce->host_references = safe_malloc(sizeof(struct host_references) + sizeof(struct host_reference) * 99);
-		ce->host_references->count = 0;
-		ce->host_references->size = 100;
-	}
+	host_references = ((struct host_references**)coercion_environment)[1];
 
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Copying %p -> %p...\n", node, (void*)*node);
@@ -70,7 +76,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 		fprintf(stderr,"\tInterpreting...\n");
 #endif
 		*++ce->asp = (BC_WORD) node;
-		host_references = ce->host_references;
 		int result = interpret(
 				ce->code, ce->code_size,
 				ce->data, ce->data_size,
@@ -87,12 +92,16 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	}
 
 	if (node[0] == (BC_WORD) &INT+2) {
+		if (host_heap_free < 2)
+			return -2;
 		host_heap[0] = (BC_WORD) &dINT+2;
 		host_heap[1] = node[1];
 		return 2;
 	} else if (node[0] == (BC_WORD) &CHAR+2 ||
 			node[0] == (BC_WORD) &BOOL+2 ||
 			node[0] == (BC_WORD) &REAL+2) {
+		if (host_heap_free < 2)
+			return -2;
 		host_heap[0] = node[0];
 		host_heap[1] = node[1];
 		return 2;
@@ -132,8 +141,11 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 		return -5;
 	}
 
-	remove_one_host_reference(ce->host_references, node);
+	remove_one_host_reference(node);
+	((struct host_references**)coercion_environment)[1] = host_references;
 	host_heap[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+a_arity); /* TODO check */
+
+	int added_host_references = 0;
 
 	/* TODO: pointers to outside the heap (e.g. Nil) can be translated directly */
 	if (a_arity >= 1) {
@@ -143,18 +155,20 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 		host_heap[5] = (BC_WORD) &host_heap[6];
 		host_heap[6] = (BC_WORD) &dINT+2;
 		host_heap[7] = node[1];
-		add_host_reference(ce->host_references, &host_heap[7], (BC_WORD*) node[1]);
+		added_host_references += add_host_reference(&host_heap[8], &host_heap[6]);
 
 		if (a_arity >= 2) {
-			host_heap[ 2] = (BC_WORD) &host_heap[8];
-			host_heap[ 8] = (BC_WORD) &e__CodeSharing__ncoerce;
-			host_heap[ 9] = (BC_WORD) coercion_environment;
-			host_heap[10] = (BC_WORD) &host_heap[11];
-			host_heap[11] = (BC_WORD) &dINT+2;
-			host_heap[12] = node[2];
-			add_host_reference(ce->host_references, &host_heap[12], (BC_WORD*) node[2]);
+			host_heap[2] = (BC_WORD) &host_heap[8+added_host_references];
+			host_heap[ 8+added_host_references] = (BC_WORD) &e__CodeSharing__ncoerce;
+			host_heap[ 9+added_host_references] = (BC_WORD) coercion_environment;
+			host_heap[10+added_host_references] = (BC_WORD) &host_heap[11+added_host_references];
+			host_heap[11+added_host_references] = (BC_WORD) &dINT+2;
+			host_heap[12+added_host_references] = node[2];
+			added_host_references += add_host_reference(&host_heap[13+added_host_references], &host_heap[11+added_host_references]);
 		}
 	}
 
-	return 5 * a_arity + 3;
+	((struct host_references**)coercion_environment)[1] = host_references;
+
+	return 5 * a_arity + 3 + added_host_references;
 }

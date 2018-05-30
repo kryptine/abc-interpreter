@@ -2,9 +2,12 @@
 
 #include "mark.h"
 #include "util.h"
-#include "../gc.h"
 #include "../interpret.h"
 #include "../util.h"
+
+#ifdef LINK_CLEAN_RUNTIME
+# include "../copy_node.h"
+#endif
 
 #define GREY_NODES_INITIAL 100
 #define GREY_NODES_ENLARGE 2
@@ -146,10 +149,11 @@ void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size,
 
 #ifdef LINK_CLEAN_RUNTIME
 void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
-	if (host_references == NULL)
-		return;
-	for (int i = 0; i < host_references->count; i++)
-		add_grey_node(set, (BC_WORD*) host_references->nodes[i].node, heap, heap_size);
+	struct host_references *hrs = host_references;
+	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
+		add_grey_node(set, (BC_WORD*) hrs->hr_reference[1], heap, heap_size);
+		hrs = hrs->hr_rest;
+	}
 }
 #endif
 

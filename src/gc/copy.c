@@ -8,6 +8,10 @@
 #include "../interpret.h"
 #include "../util.h"
 
+#ifdef LINK_CLEAN_RUNTIME
+# include "../copy_node.h"
+#endif
+
 int in_first_semispace = 1;
 
 BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free) {
@@ -47,12 +51,15 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 # if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
 # endif
-	if (host_references != NULL) {
-		for (int i = 0; i < host_references->count; i++) {
-			*host_references->nodes[i].reference = *host_references->nodes[i].node;
-			*host_references->nodes[i].node = (BC_WORD) &host_references->nodes[i].node | 1;
-			host_references->nodes[i].node = (BC_WORD*) ((BC_WORD) host_references->nodes[i].reference | 1);
-		}
+	struct host_references *hrs = host_references;
+	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
+# if (DEBUG_GARBAGE_COLLECTOR > 2)
+		fprintf(stderr, "\t%p -> %p\n", (void*)hrs->hr_reference[1], (void*)*hrs->hr_reference[1]);
+# endif
+		BC_WORD *temp = (BC_WORD*) hrs->hr_reference[1];
+		hrs->hr_reference[1] = (BC_WORD*) *temp;
+		*temp = (BC_WORD) (&hrs->hr_reference[1]) | 1;
+		hrs = hrs->hr_rest;
 	}
 #endif
 
