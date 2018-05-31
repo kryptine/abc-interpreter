@@ -43,8 +43,10 @@ BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD nod
 	return build_finalizer(heap+3, interpreter_finalizer, node);
 }
 
-BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
+BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, struct finalizers *finalizer) {
 	struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
+
+	BC_WORD *node = (BC_WORD*) finalizer->cur->arg;
 
 	BC_WORD *org_host_heap = host_heap;
 
@@ -154,5 +156,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	fprintf(stderr, "\tReturning\n");
 #endif
 
+	finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
 }

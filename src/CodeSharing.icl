@@ -101,11 +101,7 @@ get_expression filename w
 // can easily pass it to C.
 coerce :: *CoercionEnvironment !Finalizer -> .a
 coerce ce fin = code {
-	push_a 1        | Get finalizer
-	repl_r_args 0 3 | Get arguments from finalizer
-	updatepop_a 0 1 | Remove finalizer
-	pop_b 2         | Keep only node argument in finalizer
-	.d 1 1 i
+	.d 2 0
 		jsr _copy_node_asm
 	.o 1 0
 }
