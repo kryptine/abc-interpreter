@@ -133,7 +133,11 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
+	int host_address_offset = -2 - 2*a_arity;
+	int add_to_host_address = a_arity;
 	if (a_arity > 256) { /* record */
+		host_address_offset = -2;
+		add_to_host_address = 0;
 		a_arity = ((int16_t*)(node[0]))[0];
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 	}
@@ -150,7 +154,7 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		return -2;
 	}
 
-	void *host_address = ((void**)(node[0]-2))[-2-2*a_arity]; /* TODO check */
+	void *host_address = ((void**)(node[0]-2))[host_address_offset];
 	if (host_address == (void*) 0) {
 		fprintf(stderr,"Not a HNF\n");
 		return -3;
@@ -158,17 +162,15 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		fprintf(stderr,"Unresolvable descriptor\n");
 		return -4;
 	}
-
-	if (b_arity) {
-		fprintf(stderr,"TODO: copy unboxed nodes\n"); /* TODO */
-		return -5;
-	}
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\thost address is %p (from %p with %d; %p)\n",host_address,(void*)(node[0]-2),host_address_offset,&((void**)(node[0]-2))[host_address_offset]);
+#endif
 
 	BC_WORD *host_node = host_heap;
-	host_node[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+a_arity); /* TODO check */
+	host_node[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+add_to_host_address); /* TODO check */
 
 	/* TODO: pointers to outside the heap (e.g. Nil) can be translated directly here */
-	if (a_arity < 3) {
+	if (a_arity + b_arity < 3) {
 		host_heap += 3;
 
 		if (a_arity >= 1) {
@@ -178,18 +180,30 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
 				host_heap = make_coerce_node(host_heap, ce_finalizer, node[2]);
+			} else if (b_arity == 1) {
+				host_node[2] = node[2];
 			}
+		} else if (b_arity >= 1) {
+			host_node[1] = node[1];
+			if (b_arity == 2)
+				host_node[2] = node[2];
 		}
-	} else if (a_arity >= 3) {
-		host_heap += a_arity + 2;
-		host_node[1] = (BC_WORD) host_heap;
+	} else if (a_arity + b_arity >= 3) {
+		host_heap += a_arity + b_arity + 2;
+		if (a_arity >= 1) {
+			host_node[1] = (BC_WORD) host_heap;
+			host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
+		} else {
+			host_node[1] = node[1];
+		}
 		host_node[2] = (BC_WORD) &host_node[3];
-		host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
 			host_heap = make_coerce_node(host_heap, ce_finalizer, rest[i]);
 		}
+		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
+			host_node[3+i] = (BC_WORD) rest[i];
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
