@@ -19,6 +19,7 @@ struct char_provider {
 
 void new_file_char_provider(struct char_provider *cp, FILE *f);
 void new_string_char_provider(struct char_provider *cp, char *s, size_t size, int copy);
+void free_char_provider(struct char_provider *cp);
 int provide_chars(void*, size_t, size_t, struct char_provider*);
 
 int starts_with(const char* prefix, char* str);

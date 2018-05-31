@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
 	new_file_char_provider(&cp, input);
 	int res = parse_program(&state, &cp);
 	free_parser(&state);
-	fclose(input);
+	free_char_provider(&cp);
 	if (res) {
 		fprintf(stderr, "Parsing failed (%d)\n", res);
 		exit(res);

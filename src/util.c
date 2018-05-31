@@ -69,6 +69,21 @@ void new_string_char_provider(struct char_provider *cp, char *s, size_t size, in
 	cp->arg = scp;
 }
 
+void free_char_provider(struct char_provider *cp) {
+	switch (cp->type) {
+		case CPT_STRING:
+		{
+			struct string_char_provider *scp = (struct string_char_provider*) cp->arg;
+			free(scp->s);
+			free(scp);
+			break;
+		}
+		case CPT_FILE:
+			fclose((FILE*)cp->arg);
+			break;
+	}
+}
+
 int provide_chars(void *ptr, size_t size, size_t nmemb, struct char_provider *stream) {
 	switch (stream->type) {
 		case CPT_FILE:

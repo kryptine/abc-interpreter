@@ -49,9 +49,6 @@ HEAP_SIZE :== 2 << 20
 
 OFFSET_PARSER_PROGRAM    :== 8 // Offset to the program field in the parser struct (parse.h)
 OFFSET_PROGRAM_CODE      :== 8 // Offset to the code field in the program struct (bytecode.h)
-OFFSET_PROGRAM_CODE_SIZE :== 0
-OFFSET_PROGRAM_DATA      :== 16 // Offset to the data field in the program struct (bytecode.h)
-OFFSET_PROGRAM_DATA_SIZE :== 4
 
 get_expression :: !String !*World -> *(a, *World)
 get_expression filename w
@@ -63,20 +60,17 @@ get_expression filename w
 # pgm = parse syms bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
-# code_segment = readInt pgm OFFSET_PROGRAM_CODE
-# csize = readInt4Z pgm OFFSET_PROGRAM_CODE_SIZE
-# data_segment = readInt pgm OFFSET_PROGRAM_DATA
-# dsize = readInt4Z pgm OFFSET_PROGRAM_DATA_SIZE
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
 # asp = stack
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
 # heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
 # hp = writeInt heap 0 (code_segment + IF_INT_64_OR_32 8 4 * 13)
+	with code_segment = readInt pgm OFFSET_PROGRAM_CODE
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce_settings = build_coercion_environment
-	code_segment csize data_segment dsize
+	pgm
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp hp
 #! (ce,_) = make_finalizer ce_settings
@@ -86,9 +80,9 @@ get_expression filename w
 	// it to the finalizer_list anyway. This is just to ensure that the first
 	// call to `coerce` gets the right argument.
 where
-	build_coercion_environment :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
-	build_coercion_environment cseg csize dseg dsize heap hsize stack ssize asp bsp csp hp = code {
-		ccall build_coercion_environment "pIpIpIpIpppp:p"
+	build_coercion_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
+	build_coercion_environment pgm heap hsize stack ssize asp bsp csp hp = code {
+		ccall build_coercion_environment "ppIpIpppp:p"
 	}
 
 	make_finalizer :: !Int -> (!.Finalizer,!Int)
@@ -119,7 +113,7 @@ parse syms s
 #! cp = new_string_char_provider s
 #! parser = new_parser syms
 #! res = parse_program parser cp
-| free_to_false cp = Nothing
+| free_char_provider_to_false cp || free_to_false cp = Nothing
 | res <> 0 = Nothing
 #! pgm = readInt parser OFFSET_PARSER_PROGRAM // TODO 32-bit offset?
 #! parser = free_parser parser parser
@@ -170,6 +164,15 @@ where
 	init _ _ _ _ _ = code {
 		ccall new_string_char_provider "IsII:V:I"
 	}
+
+free_char_provider_to_false :: !Pointer -> Bool
+free_char_provider_to_false cp = code {
+	push_b 0
+	pushB FALSE
+	update_b 0 2
+	pop_b 1
+	ccall free_char_provider "p:V:I"
+}
 
 parse_program :: !Pointer !Pointer -> Int
 parse_program parser char_provider = code {
