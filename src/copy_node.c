@@ -21,10 +21,7 @@ extern void *dINT;
  * environment from memory.
  */
 struct coercion_environment {
-	BC_WORD *code;
-	BC_WORD code_size;
-	BC_WORD *data;
-	BC_WORD data_size;
+	struct program *program;
 	BC_WORD *heap;
 	BC_WORD heap_size;
 	BC_WORD *stack;
@@ -42,14 +39,11 @@ struct CoercionEnvironment {
 };
 
 struct coercion_environment *build_coercion_environment(
-		BC_WORD *code, BC_WORD code_size, BC_WORD *data, BC_WORD data_size,
+		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
 	struct coercion_environment *ce = safe_malloc(sizeof(struct coercion_environment));
-	ce->code = code;
-	ce->code_size = code_size;
-	ce->data = data;
-	ce->data_size = data_size;
+	ce->program = program;
 	ce->heap = heap;
 	ce->heap_size = heap_size;
 	ce->stack = stack;
@@ -68,8 +62,8 @@ void coercion_environment_finalizer(struct coercion_environment *ce) {
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Freeing coercion_environment %p\n",ce);
 #endif
-	free(ce->code);
-	free(ce->data);
+	free_program(ce->program);
+	free(ce->program);
 	free(ce->heap);
 	free(ce->stack);
 	free(ce);
@@ -106,8 +100,8 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #endif
 		*++ce->asp = (BC_WORD) node;
 		int result = interpret(
-				ce->code, ce->code_size,
-				ce->data, ce->data_size,
+				ce->program->code, ce->program->code_size,
+				ce->program->data, ce->program->data_size,
 				ce->stack, ce->stack_size,
 				ce->heap, ce->heap_size,
 				ce->asp, ce->bsp, ce->csp, ce->hp,
