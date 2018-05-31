@@ -51,9 +51,10 @@ SRC_INTERPRET:=\
 	parse.c\
 	traps.c\
 	util.c
-OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET)) copy_node.o
+OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET)) copy_node.o finalizers.o
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	copy_node.h\
+	finalizers.h\
 	gc/util.h\
 	interpret_instructions.h\
 	settings.h

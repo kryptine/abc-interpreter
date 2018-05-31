@@ -7,6 +7,7 @@
 
 #ifdef LINK_CLEAN_RUNTIME
 # include "../copy_node.h"
+# include "../finalizers.h"
 #endif
 
 #define GREY_NODES_INITIAL 100
@@ -149,11 +150,9 @@ void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size,
 
 #ifdef LINK_CLEAN_RUNTIME
 void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
-	struct host_references *hrs = host_references;
-	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
-		add_grey_node(set, (BC_WORD*) hrs->hr_reference[1], heap, heap_size);
-		hrs = hrs->hr_rest;
-	}
+	struct finalizers *finalizers = NULL;
+	while ((finalizers = next_interpreter_finalizer(finalizers)) != NULL)
+		add_grey_node(set, (BC_WORD*) finalizers->cur->arg, heap, heap_size);
 }
 #endif
 

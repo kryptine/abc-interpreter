@@ -1,8 +1,7 @@
 .intel_syntax noprefix
 
 .globl    __copy__node__asm
-.globl    copy_interpreter_to_host
-.extern   dINT
+.extern   copy_interpreter_to_host
 .extern   collect_1
 
 .text
@@ -25,8 +24,8 @@
 # (res) r15: Number of free words on heap
 
 __copy__node__asm:
+	push   rcx
 	push   rax
-	push   rdx
 	push   rsi
 	push   rdi
 	push   r8
@@ -47,8 +46,8 @@ __copy__node__asm:
 	pop    r8
 	pop    rdi
 	pop    rsi
-	pop    rdx
 	pop    rax
+	pop    rcx
 
 	cmp    rbp,-2 # Out of memory
 	je     __copy__node__asm_gc
