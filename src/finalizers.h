@@ -15,5 +15,5 @@ struct finalizers {
 	struct finalizer *cur;
 };
 
-struct finalizers *next_finalizer(struct finalizers *);
+struct finalizers *next_interpreter_finalizer(struct finalizers *);
 BC_WORD *build_finalizer(BC_WORD *heap, void (*fun)(BC_WORD), BC_WORD arg);

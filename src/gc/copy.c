@@ -53,7 +53,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
 # endif
 	struct finalizers *finalizers = NULL;
-	while ((finalizers = next_finalizer(finalizers)) != NULL) {
+	while ((finalizers = next_interpreter_finalizer(finalizers)) != NULL) {
 # if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\t%p -> %p\n", (void*)finalizers->cur->arg, ((void**)finalizers->cur->arg)[1]);
 # endif
