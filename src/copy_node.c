@@ -82,17 +82,17 @@ void *get_coercion_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD coerce_node) {
 }
 
-BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD node) {
+BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node) {
 	heap[ 0] = (BC_WORD) &e__CodeSharing__ncoerce;
-	heap[ 1] = (BC_WORD) coercion_environment;
+	heap[ 1] = (BC_WORD) ce_finalizer;
 	heap[ 2] = (BC_WORD) &heap[3];
 	return build_finalizer(heap+3, interpreter_finalizer, node);
 }
 
-BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, struct finalizers *finalizer) {
-	struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
-
-	BC_WORD *node = (BC_WORD*) finalizer->cur->arg;
+BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
+		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
+	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
+	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 	BC_WORD *org_host_heap = host_heap;
 
@@ -179,22 +179,22 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
+			host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_coerce_node(host_heap, coercion_environment, node[2]);
+				host_heap = make_coerce_node(host_heap, ce_finalizer, node[2]);
 			}
 		}
 	} else if (a_arity >= 3) {
 		host_heap += a_arity + 2;
 		host_node[1] = (BC_WORD) host_heap;
 		host_node[2] = (BC_WORD) &host_node[3];
-		host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
+		host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, coercion_environment, rest[i]);
+			host_heap = make_coerce_node(host_heap, ce_finalizer, rest[i]);
 		}
 	}
 
@@ -202,6 +202,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	fprintf(stderr, "\tReturning\n");
 #endif
 
-	finalizer->cur->arg = 0;
+	node_finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
 }

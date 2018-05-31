@@ -28,6 +28,7 @@ import code from "interpret.a"
 // - Argument for function (in our case, pointer to the coerce node)
 // - Pointer to rest of the finalizers (dealt with in the RTS)
 :: Finalizer = Finalizer !Int !Int !Int
+:: *CoercionEnvironment :== Finalizer
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
@@ -78,11 +79,7 @@ get_expression filename w
 	code_segment csize data_segment dsize
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp hp
-#! (fin,_) = make_finalizer ce_settings
-#! ce =
-	{ ce_finalizer = fin
-	, ce_settings  = ce_settings
-	}
+#! (ce,_) = make_finalizer ce_settings
 = (coerce ce (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
@@ -94,7 +91,7 @@ where
 		ccall build_coercion_environment "pIpIpIpIpppp:p"
 	}
 
-	make_finalizer :: !Int -> (!Finalizer,!Int)
+	make_finalizer :: !Int -> (!.Finalizer,!Int)
 	make_finalizer ce_settings = code {
 		push_finalizers
 		ccall get_coercion_environment_finalizer ":p"

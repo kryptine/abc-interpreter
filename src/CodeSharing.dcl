@@ -4,10 +4,6 @@ from System._Pointer import :: Pointer
 from symbols_in_program import :: Symbol
 
 :: Finalizer
-
-:: *CoercionEnvironment =
-	{ ce_finalizer    :: !Finalizer
-	, ce_settings     :: !Pointer
-	}
+:: *CoercionEnvironment
 
 coerce :: *CoercionEnvironment !Finalizer -> .a
