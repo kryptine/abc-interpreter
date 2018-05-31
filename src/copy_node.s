@@ -24,6 +24,7 @@
 # (res) r15: Number of free words on heap
 
 __copy__node__asm:
+	push   rdx
 	push   rcx
 	push   rax
 	push   rsi
@@ -35,8 +36,8 @@ __copy__node__asm:
 
 	#mov   rdi,rdi # heap pointer
 	mov    rsi,r15 # free words
-	mov    rdx,rcx # coercion environment
-	mov    rcx,rax # pointer to node
+	#mov   rdx,rdx # coercion environment
+	#mov   rcx,rcx # finalizer of node
 	call   copy_interpreter_to_host
 	mov    rbp,rax
 
@@ -48,6 +49,7 @@ __copy__node__asm:
 	pop    rsi
 	pop    rax
 	pop    rcx
+	pop    rdx
 
 	cmp    rbp,-2 # Out of memory
 	je     __copy__node__asm_gc
@@ -60,5 +62,5 @@ __copy__node__asm:
 	ret
 
 __copy__node__asm_gc:
-	call   collect_1
+	call   collect_2
 	jmp    __copy__node__asm

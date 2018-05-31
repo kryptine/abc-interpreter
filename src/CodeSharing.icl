@@ -28,13 +28,14 @@ import code from "interpret.a"
 // - Argument for function (in our case, pointer to the coerce node)
 // - Pointer to rest of the finalizers (dealt with in the RTS)
 :: Finalizer = Finalizer !Int !Int !Int
+:: *CoercionEnvironment :== Finalizer
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
-Start :: *World -> Int
+import StdEnum,StdFunc
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= last (reverse (take 15000 primes))
+= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -74,26 +75,33 @@ get_expression filename w
 # hp = writeInt heap 0 (code_segment + IF_INT_64_OR_32 8 4 * 13)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
-#! ce =
-	{ ce_dummy        = ()
-	, ce_code_segment = code_segment
-	, ce_code_size    = csize
-	, ce_data_segment = data_segment
-	, ce_data_size    = dsize
-	, ce_heap         = heap
-	, ce_heap_size    = HEAP_SIZE
-	, ce_stack        = stack
-	, ce_stack_size   = STACK_SIZE
-	, ce_asp          = asp
-	, ce_bsp          = bsp
-	, ce_csp          = csp
-	, ce_hp           = hp
-	}
+#! ce_settings = build_coercion_environment
+	code_segment csize data_segment dsize
+	heap HEAP_SIZE stack STACK_SIZE
+	asp bsp csp hp
+#! (ce,_) = make_finalizer ce_settings
 = (coerce ce (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
 	// it to the finalizer_list anyway. This is just to ensure that the first
 	// call to `coerce` gets the right argument.
+where
+	build_coercion_environment :: !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
+	build_coercion_environment cseg csize dseg dsize heap hsize stack ssize asp bsp csp hp = code {
+		ccall build_coercion_environment "pIpIpIpIpppp:p"
+	}
+
+	make_finalizer :: !Int -> (!.Finalizer,!Int)
+	make_finalizer ce_settings = code {
+		push_finalizers
+		ccall get_coercion_environment_finalizer ":p"
+		push_a_b 0
+		pop_a 1
+		build_r e__system_kFinalizer 0 3 0 0
+		pop_b 3
+		set_finalizers
+		pushI 0
+	}
 
 // On purpose unique: this ensures there is only one CoercionEnvironment, ever.
 // This is needed to ensure that the heap address gets shared by all coercings.
@@ -101,11 +109,7 @@ get_expression filename w
 // can easily pass it to C.
 coerce :: *CoercionEnvironment !Finalizer -> .a
 coerce ce fin = code {
-	push_a 1        | Get finalizer
-	repl_r_args 0 3 | Get arguments from finalizer
-	updatepop_a 0 1 | Remove finalizer
-	pop_b 2         | Keep only node argument in finalizer
-	.d 1 1 i
+	.d 2 0
 		jsr _copy_node_asm
 	.o 1 0
 }

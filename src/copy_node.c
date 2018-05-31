@@ -4,6 +4,8 @@
 # define LINK_CLEAN_RUNTIME
 #endif
 
+#include <stdlib.h>
+
 #include "bytecode.h"
 #include "copy_node.h"
 #include "finalizers.h"
@@ -33,18 +35,64 @@ struct coercion_environment {
 	BC_WORD *hp;
 };
 
+struct CoercionEnvironment {
+	void *descriptor;
+	struct finalizers *finalizer;
+	struct coercion_environment *ptrs;
+};
+
+struct coercion_environment *build_coercion_environment(
+		BC_WORD *code, BC_WORD code_size, BC_WORD *data, BC_WORD data_size,
+		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
+	struct coercion_environment *ce = safe_malloc(sizeof(struct coercion_environment));
+	ce->code = code;
+	ce->code_size = code_size;
+	ce->data = data;
+	ce->data_size = data_size;
+	ce->heap = heap;
+	ce->heap_size = heap_size;
+	ce->stack = stack;
+	ce->stack_size = stack_size;
+	ce->asp = asp;
+	ce->bsp = bsp;
+	ce->csp = csp;
+	ce->hp = hp;
+#if DEBUG_CLEAN_LINKS > 0
+	fprintf(stderr,"Building coercion_environment %p\n",ce);
+#endif
+	return ce;
+}
+
+void coercion_environment_finalizer(struct coercion_environment *ce) {
+#if DEBUG_CLEAN_LINKS > 0
+	fprintf(stderr,"Freeing coercion_environment %p\n",ce);
+#endif
+	free(ce->code);
+	free(ce->data);
+	free(ce->heap);
+	free(ce->stack);
+	free(ce);
+}
+
+void *get_coercion_environment_finalizer(void) {
+	return coercion_environment_finalizer;
+}
+
 void interpreter_finalizer(BC_WORD coerce_node) {
 }
 
-BC_WORD *make_coerce_node(BC_WORD *heap, void *coercion_environment, BC_WORD node) {
+BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node) {
 	heap[ 0] = (BC_WORD) &e__CodeSharing__ncoerce;
-	heap[ 1] = (BC_WORD) coercion_environment;
+	heap[ 1] = (BC_WORD) ce_finalizer;
 	heap[ 2] = (BC_WORD) &heap[3];
 	return build_finalizer(heap+3, interpreter_finalizer, node);
 }
 
-BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void *coercion_environment, BC_WORD *node) {
-	struct coercion_environment *ce = (struct coercion_environment*)(((BC_WORD**)coercion_environment)[2]);
+BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
+		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
+	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
+	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 	BC_WORD *org_host_heap = host_heap;
 
@@ -131,22 +179,22 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
+			host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_coerce_node(host_heap, coercion_environment, node[2]);
+				host_heap = make_coerce_node(host_heap, ce_finalizer, node[2]);
 			}
 		}
 	} else if (a_arity >= 3) {
 		host_heap += a_arity + 2;
 		host_node[1] = (BC_WORD) host_heap;
 		host_node[2] = (BC_WORD) &host_node[3];
-		host_heap = make_coerce_node(host_heap, coercion_environment, node[1]);
+		host_heap = make_coerce_node(host_heap, ce_finalizer, node[1]);
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, coercion_environment, rest[i]);
+			host_heap = make_coerce_node(host_heap, ce_finalizer, rest[i]);
 		}
 	}
 
@@ -154,5 +202,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free, void
 	fprintf(stderr, "\tReturning\n");
 #endif
 
+	node_finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
 }
