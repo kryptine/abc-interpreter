@@ -5,8 +5,8 @@ from symbols_in_program import :: Symbol
 
 :: Finalizer
 
-:: *CoercionEnvironment = E.host_reference:
-	{ ce_references   :: ![host_reference]
+:: *CoercionEnvironment =
+	{ ce_dummy        :: !() //* Ensures that the rest of the record is in one memory block
 	, ce_code_segment :: !Pointer
 	, ce_code_size    :: !Int
 	, ce_data_segment :: !Pointer
@@ -21,4 +21,4 @@ from symbols_in_program import :: Symbol
 	, ce_hp           :: !Pointer
 	}
 
-coerce :: *CoercionEnvironment !Finalizer !Pointer -> .a
+coerce :: *CoercionEnvironment !Finalizer -> .a

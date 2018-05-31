@@ -31,11 +31,10 @@ import code from "interpret.a"
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
-Start :: *World -> [Int]
+Start :: *World -> Int
 Start w
 # (primes,w) = get_expression "../test/infprimes.bc" w
-= /*reverse*/ (take 5000 primes)
-//= sum (reverse (take 5000 primes) ++ reverse (take 5000 primes)) // 228910518
+= last (reverse (take 15000 primes))
 
 // Example: get a function from a bytecode file and apply it
 Start w
@@ -76,7 +75,7 @@ get_expression filename w
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce =
-	{ ce_references   = [start_node]
+	{ ce_dummy        = ()
 	, ce_code_segment = code_segment
 	, ce_code_size    = csize
 	, ce_data_segment = data_segment
@@ -90,15 +89,22 @@ get_expression filename w
 	, ce_csp          = csp
 	, ce_hp           = hp
 	}
-= (coerce ce (Finalizer 0 0 0) start_node, w)
+= (coerce ce (Finalizer 0 0 start_node), w)
+	// Obviously, this is not a "valid" finalizer in the sense that it can be
+	// called from the garbage collector. But that's okay, because we don't add
+	// it to the finalizer_list anyway. This is just to ensure that the first
+	// call to `coerce` gets the right argument.
 
 // On purpose unique: this ensures there is only one CoercionEnvironment, ever.
 // This is needed to ensure that the heap address gets shared by all coercings.
 // Also on purpose lazy: this ensures it is passed on the A-stack, so that we
 // can easily pass it to C.
-coerce :: *CoercionEnvironment !Finalizer !Pointer -> .a
-coerce ce _ p = code {
-	updatepop_a 0 1
+coerce :: *CoercionEnvironment !Finalizer -> .a
+coerce ce fin = code {
+	push_a 1        | Get finalizer
+	repl_r_args 0 3 | Get arguments from finalizer
+	updatepop_a 0 1 | Remove finalizer
+	pop_b 2         | Keep only node argument in finalizer
 	.d 1 1 i
 		jsr _copy_node_asm
 	.o 1 0

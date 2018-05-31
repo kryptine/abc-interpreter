@@ -10,6 +10,7 @@
 
 #ifdef LINK_CLEAN_RUNTIME
 # include "../copy_node.h"
+# include "../finalizers.h"
 #endif
 
 int in_first_semispace = 1;
@@ -51,15 +52,14 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 # if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
 # endif
-	struct host_references *hrs = host_references;
-	while (hrs->hr_descriptor != (void*)((BC_WORD)&__Nil+2)) {
+	struct finalizers *finalizers = NULL;
+	while ((finalizers = next_finalizer(finalizers)) != NULL) {
 # if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p -> %p\n", (void*)hrs->hr_reference[1], (void*)*hrs->hr_reference[1]);
+		fprintf(stderr, "\t%p -> %p\n", (void*)finalizers->cur->arg, ((void**)finalizers->cur->arg)[1]);
 # endif
-		BC_WORD *temp = (BC_WORD*) hrs->hr_reference[1];
-		hrs->hr_reference[1] = (BC_WORD*) *temp;
-		*temp = (BC_WORD) (&hrs->hr_reference[1]) | 1;
-		hrs = hrs->hr_rest;
+		BC_WORD *temp = (BC_WORD*) finalizers->cur->arg;
+		finalizers->cur->arg = *temp;
+		*temp = (BC_WORD) (&finalizers->cur->arg) | 1;
 	}
 #endif
 
