@@ -65,8 +65,11 @@ get_expression filename w
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
 # heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
-# hp = writeInt heap 0 (code_segment + IF_INT_64_OR_32 8 4 * 13)
-	with code_segment = readInt pgm OFFSET_PROGRAM_CODE
+# hp = writeInt heap 0 start_node
+	with
+		code_segment = readInt pgm OFFSET_PROGRAM_CODE
+		start_label = readInt code_segment (IF_INT_64_OR_32 8 4)
+		start_node = readInt start_label (IF_INT_64_OR_32 8 4)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
 #! ce_settings = build_coercion_environment
