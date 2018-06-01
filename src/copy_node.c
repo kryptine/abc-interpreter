@@ -142,14 +142,17 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 	}
 
+	int words_needed = 3 + a_arity * (3+FINALIZER_SIZE_ON_HEAP);
+	if (a_arity + b_arity >= 3)
+		words_needed += a_arity + b_arity - 1;
+
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr, "\tcoercing (arities %d / %d)...\n", a_arity, b_arity);
+	fprintf(stderr, "\tcoercing (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
 #endif
 
-	if ((a_arity < 3 && host_heap_free < 3 + (3+FINALIZER_SIZE_ON_HEAP) * a_arity)
-			|| (a_arity >= 3 && host_heap_free < a_arity + 2 + (3+FINALIZER_SIZE_ON_HEAP) * a_arity)) {
+	if (host_heap_free < words_needed) {
 #if DEBUG_CLEAN_LINKS > 1
-		fprintf(stderr,"\tnot enough memory (%ld, %d)\n", host_heap_free, a_arity);
+		fprintf(stderr,"\tnot enough memory (%ld, %d)\n", host_heap_free, words_needed);
 #endif
 		return -2;
 	}
@@ -209,6 +212,10 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr, "\tReturning\n");
 #endif
+
+	if (host_heap - org_host_heap != words_needed)
+		fprintf(stderr,"words_needed was incorrect (arities %d/%d, was %d, should be %d)\n",
+				a_arity, b_arity, words_needed, (int) (host_heap - org_host_heap));
 
 	node_finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
