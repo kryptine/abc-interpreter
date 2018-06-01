@@ -668,6 +668,18 @@ void add_instruction_w_w_label_w_label(SS i,SI n1,SI n2,char *label_name1,SI n3,
 	store_code_label_value(label_name2,0);
 }
 
+void add_instruction_w_i_label_i_label(SS i,SI n1,SI n2,char *label_name1,SI n3,char *label_name2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d %s %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name1,(int)n3,label_name2);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n1);
+	store_code_elem(8, n2);
+	store_code_label_value(label_name1,0);
+	store_code_elem(8, n3);
+	store_code_label_value(label_name2,0);
+}
+
 void add_instruction_w_w_label_offset_w(SS i,SI n1,SI n2,char *label_name,uint32_t offset,SI n3) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s+%d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name,offset,(int)n3);
@@ -3386,7 +3398,7 @@ void code_jmp_eqI_b(int value,int b_offset,char label_name[]) {
 }
 
 void code_jmp_eqI_b2(int value1,int value2,int b_offset,char label_name1[],char label_name2[]) {
-	add_instruction_w_w_label_w_label(Cjmp_eqI_b2,b_offset,value1,label_name1,value2,label_name2);
+	add_instruction_w_i_label_i_label(Cjmp_eqI_b2,b_offset,value1,label_name1,value2,label_name2);
 }
 
 void code_jmp_eq_desc(char descriptor_name[],int arity,int a_offset,char label_name[]) {

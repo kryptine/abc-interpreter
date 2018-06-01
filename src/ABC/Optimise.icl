@@ -317,8 +317,8 @@ opt_abc_new2 [Ieq_desc d i0 i1,Ijmp_false l:is] = [Ijmp_ne_desc d i0 i1 l:opt_ab
 
 opt_abc_new2 [IpushD_a i0,Ijmp_eqD_b d0 b0 d0`,Ijmp_eqD_b d1 b1 d1`:is] = [IpushD_a_jmp_eqD_b2 i0 d0 b0 d0` d1 b1 d1`:opt_abc_new2 is]
 opt_abc_new2 [Ijmp_eqD_b d0 b0 d0`,Ijmp_eqD_b d1 b1 d1`:is] = [Ijmp_eqD_b2 d0 b0 d0` d1 b1 d1`:opt_abc_new2 is]
-opt_abc_new2 [Ijmp_eqC_b c0 b0 d0, Ijmp_eqC_b c1 b1 d1 :is] = [Ijmp_eqC_b2 c0 b0 d0  c1 b1 d1 :opt_abc_new2 is]
-opt_abc_new2 [Ijmp_eqI_b i0 b0 d0, Ijmp_eqI_b i1 b1 d1 :is] = [Ijmp_eqI_b2 i0 b0 d0  i1 b1 d1 :opt_abc_new2 is]
+opt_abc_new2 [Ijmp_eqC_b c0 b0 d0, Ijmp_eqC_b c1 b1 d1 :is] | b0 == b1 = [Ijmp_eqC_b2 c0 c1 b0 d0 d1 :opt_abc_new2 is]
+opt_abc_new2 [Ijmp_eqI_b i0 b0 d0, Ijmp_eqI_b i1 b1 d1 :is] | b0 == b1 = [Ijmp_eqI_b2 i0 i1 b0 d0 d1 :opt_abc_new2 is]
 
 opt_abc_new2 [IIns "eqI",Ijmp_true  l:is] = [Ijmp_eqI l:opt_abc_new2 is]
 opt_abc_new2 [IIns "eqI",Ijmp_false l:is] = [Ijmp_neI l:opt_abc_new2 is]

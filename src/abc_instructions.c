@@ -1524,12 +1524,12 @@ char *instruction_type (BC_WORD i) {
 		case Cjmp_b_false:           return "nl";
 		case Cjmp_eqACio:            return "?";
 		case Cjmp_eqC_b:             return "ncl";
-		case Cjmp_eqC_b2:            return "?";
+		case Cjmp_eqC_b2:            return "nclcl";
 		case Cjmp_eqD_b:             return "ll";
 		case Cjmp_eqD_b2:            return "llll";
 		case Cjmp_eqI:               return "l";
 		case Cjmp_eqI_b:             return "nil";
-		case Cjmp_eqI_b2:            return "?";
+		case Cjmp_eqI_b2:            return "nilil";
 		case Cjmp_eq_desc:           return "nll";
 		case Cjmp_geI:               return "l";
 		case Cjmp_ltI:               return "l";
