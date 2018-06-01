@@ -31,12 +31,12 @@ from StdFile import class <<<
 	| Ijmp_b_false !Int !String
 	| Ijmp_eqACio !StringLiteral !Int !String
 	| Ijmp_eqC_b !Char !Int !String
-	| Ijmp_eqC_b2 !Char !Int !String !Char !Int !String
+	| Ijmp_eqC_b2 !Char !Char !Int !String !String
 	| Ijmp_eqD_b !String !Int !String
 	| Ijmp_eqD_b2 !String !Int !String !String !Int !String
 	| Ijmp_eqI !String
 	| Ijmp_eqI_b !Int !Int !String
-	| Ijmp_eqI_b2 !Int !Int !String !Int !Int !String
+	| Ijmp_eqI_b2 !Int !Int !Int !String !String
 	| Ijmp_eq_desc !String !Int !Int !String
 	| Ijmp_false !String
 	| Ijmp_geI !String
