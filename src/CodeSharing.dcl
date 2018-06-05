@@ -6,4 +6,5 @@ from symbols_in_program import :: Symbol
 :: Finalizer
 :: *CoercionEnvironment
 
-coerce :: *CoercionEnvironment !Finalizer -> .a
+coerce   :: *CoercionEnvironment !Finalizer -> .a
+coerce_1 :: *CoercionEnvironment !Finalizer .a1 -> .a
