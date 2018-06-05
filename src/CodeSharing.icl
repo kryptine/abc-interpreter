@@ -39,8 +39,8 @@ import StdEnum,StdFunc
 
 // Example: get a function from a bytecode file and apply it
 Start w
-# (const5,w) = get_expression "../test/functions.bc" w
-= const5 37
+# (const,w) = get_expression "../test/functions.bc" w
+= const 37 42
 
 :: Program :== Pointer
 
@@ -109,20 +109,13 @@ coerce ce fin = code {
 	.d 2 0
 		jsr _copy_node_asm
 	.o 1 0
-	jsr_eval 0
 }
 
 coerce_1 :: *CoercionEnvironment !Finalizer .a1 -> .a
 coerce_1 ce fin arg = code {
-	|print "evaluating coerce_1 with argument: "
-	|push_a 2
-	|.d 1 0
-	|jsr _print_graph
-	|.o 0 0
 	.d 3 0
 		jsr _copy_node_asm_1
 	.o 1 0
-	jsr_eval 0
 }
 
 parse :: !{#Symbol} !String -> Maybe Program

@@ -78,13 +78,9 @@ void interpreter_finalizer(BC_WORD coerce_node) {
 }
 
 BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node, int args_needed) {
-	switch (args_needed) {
-		case 0: heap[0] = (BC_WORD) &e__CodeSharing__ncoerce; break;
-		case 1: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__1+(2<<3)+2; break; /* TODO check 32-bit */
-		default:
-			fprintf(stderr,"Error in make_coerce_node: %d\n",args_needed);
-			exit(1);
-	}
+	heap[0] = args_needed == 0
+		? (BC_WORD) &e__CodeSharing__ncoerce
+		: (BC_WORD) &e__CodeSharing__dcoerce__1+(2<<3)+2; /* TODO check 32-bit */
 	heap[ 1] = (BC_WORD) ce_finalizer;
 	heap[ 2] = (BC_WORD) &heap[3+args_needed];
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
@@ -92,9 +88,6 @@ BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WOR
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
-	fprintf(stderr,"copy_interpreter_to_host\n");
-	fprintf(stderr,"\tcoercion_environment %p\n",ce_finalizer);
-	fprintf(stderr,"\tnode_finalizer %p\n",node_finalizer);
 	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
@@ -157,7 +150,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		args_needed = args_needed / 2;
 
 		if (args_needed != 0) {
-			fprintf(stderr,"Not enough arguments (%d more needed)\n",args_needed);
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
 			host_heap = make_coerce_node(host_heap, ce_finalizer, (BC_WORD) node, args_needed);
@@ -248,7 +240,7 @@ BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node
 	/* TODO: for now we are assuming the interpreter has enough memory */
 	BC_WORD *org_hp = ce->hp;
 	if (node[0] == (BC_WORD)&dINT+2) {
-		ce->hp[0] = (BC_WORD) &dINT+2;
+		ce->hp[0] = (BC_WORD) &INT+2;
 		ce->hp[1] = node[1];
 		ce->hp += 2;
 	} else {
@@ -260,17 +252,14 @@ BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node
 
 BC_WORD copy_interpreter_to_host_1(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *node_finalizer, BC_WORD *argument, struct finalizers *ce_finalizer) {
-	fprintf(stderr,"copy_interpreter_to_host_1\n");
-	fprintf(stderr,"\tcoercion_environment %p\n",ce_finalizer);
-	fprintf(stderr,"\tnode_finalizer %p\n",node_finalizer);
-	fprintf(stderr,"\tadding argument %p %p %ld\n",&dINT,(void*)argument[0],argument[1]);
 	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
 	BC_WORD *copied_arg = copy_host_to_interpreter(ce, argument);
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	fprintf(stderr,"\tto node %p -> %p (%d)\n",node,(void*)node[0],node[0]-(BC_WORD)ce->program->data);
 	node_finalizer->cur->arg = (BC_WORD) ce->hp;
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	ce->hp[0] = node[0]+16; /* TODO 32-bit? */
+	if (*(BC_WORD*)(ce->hp[0]-2) >> 16 == 0)
+		ce->hp[0] = *(BC_WORD*)(ce->hp[0]-10); /* TODO 32-bit? */
 	for (int i = 1; i <= a_arity; i++)
 		ce->hp[i] = node[i];
 	ce->hp[1+a_arity] = (BC_WORD) copied_arg;
