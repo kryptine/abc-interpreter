@@ -75,37 +75,46 @@ __copy__node__asm_gc:
 __copy__node__asm__1:
 	save_registers
 	mov	rsi,r15 # free words
-	call	copy_interpreter_to_host_1
+	mov	r9,0
+	mov	rax,0
+	call	copy_interpreter_to_host_n
 	jmp	__copy__node__asm__finish
 
 .globl	__copy__node__asm__2
 __copy__node__asm__2:
 	sub	rsi,8
 	save_registers
-	mov	r9,[rsi]
+	push	[rsi]
+	mov	r9,1
 	mov	rsi,r15
-	call	copy_interpreter_to_host_2
+	mov	rax,0
+	call	copy_interpreter_to_host_n
+	add	rsp,8
 	jmp	__copy__node__asm__finish
 
 .globl	__copy__node__asm__3
 __copy__node__asm__3:
 	sub	rsi,16
 	save_registers
+	push	[rsi+8]
 	push	[rsi]
-	mov	r9,[rsi+8]
+	mov	r9,2
 	mov	rsi,r15
-	call	copy_interpreter_to_host_3
-	add	rsp,8
+	mov	rax,0
+	call	copy_interpreter_to_host_n
+	add	rsp,16
 	jmp	__copy__node__asm__finish
 
 .globl	__copy__node__asm__4
 __copy__node__asm__4:
 	sub	rsi,24
 	save_registers
-	push	[rsi]
+	push	[rsi+16]
 	push	[rsi+8]
-	mov	r9,[rsi+16]
+	push	[rsi]
+	mov	r9,3
 	mov	rsi,r15
-	call	copy_interpreter_to_host_4
-	add	rsp,16
+	mov	rax,0
+	call	copy_interpreter_to_host_n
+	add	rsp,24
 	jmp	__copy__node__asm__finish

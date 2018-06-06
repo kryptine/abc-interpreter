@@ -4,6 +4,7 @@
 # define LINK_CLEAN_RUNTIME
 #endif
 
+#include <stdarg.h>
 #include <stdlib.h>
 
 #include "bytecode.h"
@@ -330,72 +331,29 @@ BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node
 	return org_hp;
 }
 
-BC_WORD copy_interpreter_to_host_1(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *node_finalizer, BC_WORD *argument, struct finalizers *ce_finalizer) {
-	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
-	BC_WORD *copied_arg = copy_host_to_interpreter(ce, argument);
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	node_finalizer->cur->arg = (BC_WORD) ce->hp;
-	int16_t a_arity = ((int16_t*)(node[0]))[-1];
-	ce->hp[0] = node[0]+16; /* TODO 32-bit? */
-	if (*(BC_WORD*)(ce->hp[0]-2) >> 16 == 0)
-		ce->hp[0] = *(BC_WORD*)(ce->hp[0]-10); /* TODO 32-bit? */
-	for (int i = 1; i <= a_arity; i++)
-		ce->hp[i] = node[i];
-	ce->hp[1+a_arity] = (BC_WORD) copied_arg;
-	ce->hp += a_arity + 2;
-	return copy_interpreter_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
-}
-
-BC_WORD copy_interpreter_to_host_2(BC_WORD *host_heap, size_t host_heap_free,
+/**
+ * The first argument is passed before the ce_finalizer to make calling from
+ * Clean lightweight on x64. The rest of the arguments is passed variadically.
+ */
+BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
-		BC_WORD *arg2) {
+		int n_args, ...) {
 	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg2);
+	va_list arguments;
+
+	va_start(arguments,n_args);
+	for (int i = 0; i < n_args; i++)
+		*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, va_arg(arguments, BC_WORD*));
 	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg1);
+	va_end(arguments);
+
 	/* TODO: assuming the interpreter node does not contain arguments */
-	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[3]-IF_INT_64_OR_32(16,8))) != 0) {
+	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
 		fprintf(stderr,"Failed to interpret\n");
 		return -1;
 	}
-	node_finalizer->cur->arg = *--ce->asp;
-	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
-}
-
-BC_WORD copy_interpreter_to_host_3(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
-		BC_WORD *arg2, BC_WORD *arg3) {
-	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg3);
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg2);
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg1);
-	/* TODO: assuming the interpreter node does not contain arguments */
-	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[5]-IF_INT_64_OR_32(16,8))) != 0) {
-		fprintf(stderr,"Failed to interpret\n");
-		return -1;
-	}
-	ce->asp -= 2;
-	node_finalizer->cur->arg = *ce->asp;
-	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
-}
-
-BC_WORD copy_interpreter_to_host_4(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
-		BC_WORD *arg2, BC_WORD *arg3, BC_WORD *arg4) {
-	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg4);
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg3);
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg2);
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg1);
-	/* TODO: assuming the interpreter node does not contain arguments */
-	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[7]-IF_INT_64_OR_32(16,8))) != 0) {
-		fprintf(stderr,"Failed to interpret\n");
-		return -1;
-	}
-	ce->asp -= 3;
+	ce->asp -= n_args;
 	node_finalizer->cur->arg = *ce->asp;
 	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
 }
