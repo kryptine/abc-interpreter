@@ -146,14 +146,7 @@ int interpret(BC_WORD *code, size_t code_size,
 	BC_WORD_S heap_free = heap + heap_size - hp;
 
 #ifdef POSIX
-	struct sigaction s;
-	sigset_t sst;
-
-	sigemptyset(&sst);
-	s.sa_handler = handle_segv;
-	s.sa_mask = sst;
-	s.sa_flags = 0;
-	if (sigaction(SIGSEGV, &s, NULL)) {
+	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
 		perror("sigaction");
 		return 1;
 	}
