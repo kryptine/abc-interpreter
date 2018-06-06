@@ -28,7 +28,7 @@ import code from "interpret.a"
 // - Argument for function (in our case, pointer to the coerce node)
 // - Pointer to rest of the finalizers (dealt with in the RTS)
 :: Finalizer = Finalizer !Int !Int !Int
-:: *CoercionEnvironment :== Finalizer
+:: CoercionEnvironment :== Finalizer
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
@@ -110,118 +110,257 @@ where
 coerce :: !CoercionEnvironment !Finalizer -> .a
 coerce ce fin = code {
 	.d 2 0
-		jsr _copy_node_asm
+	jsr _copy_node_asm
 	.o 1 0
 }
 
 coerce_1 :: !CoercionEnvironment !Finalizer b -> .a
 coerce_1 ce fin arg = code {
-	.d 3 0
-		jsr _copy_node_asm_1
+	pushI 0
+	.d 3 1 i
+	jsr _copy_node_asm_n
 	.o 1 0
 }
 
 coerce_2  :: !CoercionEnvironment !Finalizer b b -> .a
 coerce_2  _ _ _ _ = code {
-	.d 4 0
-		jsr _copy_node_asm_2
+	pushI 1
+	.d 4 1 i
+	jsr _copy_node_asm_n
 	.o 1 0
 }
 
 coerce_3  :: !CoercionEnvironment !Finalizer b b b -> .a
 coerce_3  _ _ _ _ _ = code {
-	.d 5 0
-		jsr _copy_node_asm_3
+	pushI 2
+	.d 5 1 i
+	jsr _copy_node_asm_n
 	.o 1 0
 }
 
 coerce_4  :: !CoercionEnvironment !Finalizer b b b b -> .a
 coerce_4  _ _ _ _ _ _ = code {
-	.d 6 0
-		jsr _copy_node_asm_4
+	pushI 3
+	.d 6 1 i
+	jsr _copy_node_asm_n
 	.o 1 0
 }
 
 coerce_5  :: !CoercionEnvironment !Finalizer b b b b b -> .a
-coerce_5  _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_5  _ _ _ _ _ _ _ = code {
+	pushI 4
+	.d 6 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_6  :: !CoercionEnvironment !Finalizer b b b b b b -> .a
-coerce_6  _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_6  _ _ _ _ _ _ _ _ = code {
+	pushI 5
+	.d 7 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_7  :: !CoercionEnvironment !Finalizer b b b b b b b -> .a
-coerce_7  _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_7  _ _ _ _ _ _ _ _ _ = code {
+	pushI 6
+	.d 8 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_8  :: !CoercionEnvironment !Finalizer b b b b b b b b -> .a
-coerce_8  _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_8  _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 7
+	.d 9 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_9  :: !CoercionEnvironment !Finalizer b b b b b b b b b -> .a
-coerce_9  _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_9  _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 8
+	.d 10 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_10 :: !CoercionEnvironment !Finalizer b b b b b b b b b b -> .a
-coerce_10 _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_10 _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 9
+	.d 11 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_11 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b -> .a
-coerce_11 _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_11 _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 10
+	.d 12 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_12 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b -> .a
-coerce_12 _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_12 _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 11
+	.d 13 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_13 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b -> .a
-coerce_13 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_13 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 12
+	.d 14 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_14 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b -> .a
-coerce_14 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_14 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 13
+	.d 15 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_15 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b -> .a
-coerce_15 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_15 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 14
+	.d 16 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_16 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b -> .a
-coerce_16 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_16 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 15
+	.d 17 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_17 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b -> .a
-coerce_17 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_17 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 16
+	.d 18 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_18 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b -> .a
-coerce_18 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_18 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 17
+	.d 19 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_19 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b -> .a
-coerce_19 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_19 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 18
+	.d 20 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_20 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_20 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_20 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 19
+	.d 21 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_21 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_21 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_21 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 20
+	.d 22 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_22 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_22 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_22 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 21
+	.d 23 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_23 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_23 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_23 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 22
+	.d 24 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_24 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_24 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_24 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 23
+	.d 25 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_25 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_25 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_25 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 24
+	.d 26 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_26 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_26 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_26 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 25
+	.d 27 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_27 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_27 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_27 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 26
+	.d 28 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_28 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_28 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_28 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 27
+	.d 29 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_29 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_29 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_29 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 28
+	.d 30 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_30 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_30 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_30 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 29
+	.d 31 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 coerce_31 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_31 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+coerce_31 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+	pushI 30
+	.d 32 1 i
+	jsr _copy_node_asm_n
+	.o 1 0
+}
 
 parse :: !{#Symbol} !String -> Maybe Program
 parse syms s

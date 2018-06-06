@@ -68,53 +68,25 @@ __copy__node__asm__finish:
 	ret
 
 __copy__node__asm_gc:
-	call	collect_2
+	call	collect_3
 	jmp	__copy__node__asm
 
-.globl	__copy__node__asm__1
-__copy__node__asm__1:
+.global __copy__node__asm__n
+__copy__node__asm__n:
+	mov	r9,rax
+	shl	r9,3
+	sub	rsi,r9
 	save_registers
-	mov	rsi,r15 # free words
-	mov	r9,0
-	mov	rax,0
+	mov	r9,rax
+	shl	rax,3
+	mov	rbx,rax
+	cmp	rax,0
+__copy__node__asm__n_args:
+	je	__copy__node__asm__n_has_all_args
+	push	[rsi+rax-8]
+	sub	rax,8
+	jmp	__copy__node__asm__n_args
+__copy__node__asm__n_has_all_args:
 	call	copy_interpreter_to_host_n
-	jmp	__copy__node__asm__finish
-
-.globl	__copy__node__asm__2
-__copy__node__asm__2:
-	sub	rsi,8
-	save_registers
-	push	[rsi]
-	mov	r9,1
-	mov	rsi,r15
-	mov	rax,0
-	call	copy_interpreter_to_host_n
-	add	rsp,8
-	jmp	__copy__node__asm__finish
-
-.globl	__copy__node__asm__3
-__copy__node__asm__3:
-	sub	rsi,16
-	save_registers
-	push	[rsi+8]
-	push	[rsi]
-	mov	r9,2
-	mov	rsi,r15
-	mov	rax,0
-	call	copy_interpreter_to_host_n
-	add	rsp,16
-	jmp	__copy__node__asm__finish
-
-.globl	__copy__node__asm__4
-__copy__node__asm__4:
-	sub	rsi,24
-	save_registers
-	push	[rsi+16]
-	push	[rsi+8]
-	push	[rsi]
-	mov	r9,3
-	mov	rsi,r15
-	mov	rax,0
-	call	copy_interpreter_to_host_n
-	add	rsp,24
+	add	rsp,rbx
 	jmp	__copy__node__asm__finish
