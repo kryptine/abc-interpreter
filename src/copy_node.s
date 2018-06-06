@@ -74,11 +74,9 @@ __copy__node__asm_gc:
 .global __copy__node__asm__n
 __copy__node__asm__n:
 	mov	r9,rax
-	shl	r9,3
-	sub	rsi,r9
-	save_registers
-	mov	r9,rax
 	shl	rax,3
+	sub	rsi,rax
+	save_registers
 	mov	rbx,rax
 	cmp	rax,0
 __copy__node__asm__n_args:

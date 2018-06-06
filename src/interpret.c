@@ -145,6 +145,8 @@ int interpret(BC_WORD *code, size_t code_size,
 	heap_size /= 2; /* copying garbage collector */
 	BC_WORD_S heap_free = heap + heap_size - hp;
 
+	BC_WORD ret = EVAL_TO_HNF_LABEL;
+
 #ifdef POSIX
 	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
 		perror("sigaction");
@@ -154,9 +156,7 @@ int interpret(BC_WORD *code, size_t code_size,
 
 	if (_pc != NULL) {
 #ifdef COMPUTED_GOTOS
-		BC_WORD ret = (BC_WORD) &&eval_to_hnf_return;
-#else
-		BC_WORD ret = EVAL_TO_HNF_LABEL;
+		ret = (BC_WORD) &&eval_to_hnf_return;
 #endif
 		*--csp = (BC_WORD) &ret;
 		pc = _pc;
