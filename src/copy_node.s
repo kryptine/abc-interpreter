@@ -1,8 +1,6 @@
 # vim: ts=8:
 .intel_syntax noprefix
 
-.globl	__copy__node__asm
-.globl	__copy__node__asm__1
 .extern	copy_interpreter_to_host
 .extern	copy_interpreter_to_host_1
 .extern	collect_1
@@ -13,12 +11,12 @@
 # (res) rbx: B1
 #       rcx: A0
 #       rdx: A1
-# (res) rbp: N/A
+# (res) rbp: scratch
 #       rsi: A_p
 #       rdi: Heap_p
 #       rsp: B_p
 #       r8:  A2
-#       r9:  A3
+#       r9:  scratch(?)
 #       r10: B2
 #       r11: B3
 # (res) r12: B4
@@ -33,7 +31,6 @@
 	push	rsi
 	push	rdi
 	push	r8
-	push	r9
 	push	r10
 	push	r11
 .endm
@@ -41,7 +38,6 @@
 .macro restore_registers
 	pop	r11
 	pop	r10
-	pop	r9
 	pop	r8
 	pop	rdi
 	pop	rsi
@@ -50,6 +46,7 @@
 	pop	rdx
 .endm
 
+.globl	__copy__node__asm
 __copy__node__asm:
 	save_registers
 	#mov	rdi,rdi # heap pointer
@@ -57,9 +54,9 @@ __copy__node__asm:
 	#mov	rdx,rdx # coercion environment
 	#mov	rcx,rcx # finalizer of node
 	call	copy_interpreter_to_host
+__copy__node__asm__finish:
 	mov	rbp,rax
 	restore_registers
-
 	cmp	rbp,-2 # Out of memory
 	je	__copy__node__asm_gc
 
@@ -74,23 +71,41 @@ __copy__node__asm_gc:
 	call	collect_2
 	jmp	__copy__node__asm
 
+.globl	__copy__node__asm__1
 __copy__node__asm__1:
 	save_registers
-	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
-	#mov	rdx,rdx # coercion environment
-	#mov	rcx,rcx # finalizer of node
-	#mov	r8,r8   # argument
 	call	copy_interpreter_to_host_1
-	mov	rbp,rax
-	restore_registers
+	jmp	__copy__node__asm__finish
 
-	cmp	rbp,-2 # Out of memory
-	je 	__copy__node__asm_gc
+.globl	__copy__node__asm__2
+__copy__node__asm__2:
+	sub	rsi,8
+	save_registers
+	mov	r9,[rsi]
+	mov	rsi,r15
+	call	copy_interpreter_to_host_2
+	jmp	__copy__node__asm__finish
 
-	mov	rcx,rdi
-	sub	r15,rbp
-	shl	rbp,3
-	add	rdi,rbp
+.globl	__copy__node__asm__3
+__copy__node__asm__3:
+	sub	rsi,16
+	save_registers
+	push	[rsi]
+	mov	r9,[rsi+8]
+	mov	rsi,r15
+	call	copy_interpreter_to_host_3
+	add	rsp,8
+	jmp	__copy__node__asm__finish
 
-	ret
+.globl	__copy__node__asm__4
+__copy__node__asm__4:
+	sub	rsi,24
+	save_registers
+	push	[rsi]
+	push	[rsi+8]
+	mov	r9,[rsi+16]
+	mov	rsi,r15
+	call	copy_interpreter_to_host_4
+	add	rsp,16
+	jmp	__copy__node__asm__finish

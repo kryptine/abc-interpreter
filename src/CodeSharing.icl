@@ -38,9 +38,12 @@ import StdEnum,StdFunc
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
+//Start w
+//# (const,w) = get_expression "../test/functions.bc" w
+//= const 37 42
 Start w
-# (const,w) = get_expression "../test/functions.bc" w
-= const 37 42
+# ((sum2, sum3, sum4),w) = get_expression "../test/functions.bc" w
+= [1, sum2 1 2, sum3 1 2 3, sum4 1 2 3 4]
 
 :: Program :== Pointer
 
@@ -104,19 +107,121 @@ where
 // This is needed to ensure that the heap address gets shared by all coercings.
 // Also on purpose lazy: this ensures it is passed on the A-stack, so that we
 // can easily pass it to C.
-coerce :: *CoercionEnvironment !Finalizer -> .a
+coerce :: !CoercionEnvironment !Finalizer -> .a
 coerce ce fin = code {
 	.d 2 0
 		jsr _copy_node_asm
 	.o 1 0
 }
 
-coerce_1 :: *CoercionEnvironment !Finalizer .a1 -> .a
+coerce_1 :: !CoercionEnvironment !Finalizer b -> .a
 coerce_1 ce fin arg = code {
 	.d 3 0
 		jsr _copy_node_asm_1
 	.o 1 0
 }
+
+coerce_2  :: !CoercionEnvironment !Finalizer b b -> .a
+coerce_2  _ _ _ _ = code {
+	.d 4 0
+		jsr _copy_node_asm_2
+	.o 1 0
+}
+
+coerce_3  :: !CoercionEnvironment !Finalizer b b b -> .a
+coerce_3  _ _ _ _ _ = code {
+	.d 5 0
+		jsr _copy_node_asm_3
+	.o 1 0
+}
+
+coerce_4  :: !CoercionEnvironment !Finalizer b b b b -> .a
+coerce_4  _ _ _ _ _ _ = code {
+	.d 6 0
+		jsr _copy_node_asm_4
+	.o 1 0
+}
+
+coerce_5  :: !CoercionEnvironment !Finalizer b b b b b -> .a
+coerce_5  _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_6  :: !CoercionEnvironment !Finalizer b b b b b b -> .a
+coerce_6  _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_7  :: !CoercionEnvironment !Finalizer b b b b b b b -> .a
+coerce_7  _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_8  :: !CoercionEnvironment !Finalizer b b b b b b b b -> .a
+coerce_8  _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_9  :: !CoercionEnvironment !Finalizer b b b b b b b b b -> .a
+coerce_9  _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_10 :: !CoercionEnvironment !Finalizer b b b b b b b b b b -> .a
+coerce_10 _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_11 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b -> .a
+coerce_11 _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_12 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b -> .a
+coerce_12 _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_13 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b -> .a
+coerce_13 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_14 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b -> .a
+coerce_14 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_15 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b -> .a
+coerce_15 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_16 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b -> .a
+coerce_16 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_17 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b -> .a
+coerce_17 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_18 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b -> .a
+coerce_18 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_19 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b -> .a
+coerce_19 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_20 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_20 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_21 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_21 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_22 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_22 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_23 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_23 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_24 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_24 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_25 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_25 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_26 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_26 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_27 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_27 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_28 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_28 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_29 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_29 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_30 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_30 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
+
+coerce_31 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+coerce_31 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = abort "missing coerce case\n"
 
 parse :: !{#Symbol} !String -> Maybe Program
 parse syms s
