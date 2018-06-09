@@ -8,14 +8,15 @@
 \title{Cross-Platform Communication of Lazy Expression\\\Large{Report for Compiler Construction}}
 \author{Camil Staps \and Erin van der Veen}
 
+\newcommand{\abcstar}{\raisebox{1pt}{$\star$}}
+\newcommand{\abcs}{ABC\kern .1em\abcstar}
+
 \begin{document}
 
 \maketitle
 
 This is an overview of changes we made to the original framework provided by John.
 It is not chronological.
-For an overview of the binaries used in the project, see \texttt{doc/tools.md};
-see \texttt{doc/preprocessor.md} for an overview of useful preprocessor defines.
 This document is meant to give an overview of the work that has been done, not to describe all the implementation details.
 
 \section*{Ecosystem}
@@ -25,7 +26,7 @@ This document is meant to give an overview of the work that has been done, not t
 			going through all code at least once to understand the setup.
 		This was not strictly necessary except for us to better understand the system.
 		The bytecode generator and interpreter share more code now, making modifications easier
-			(of course, this was more difficult when the interpreter was generated in John's setup).
+			(of course, sharing code was more difficult when the interpreter was still generated).
 		The ABC optimiser now uses constructors for almost all ABC instructions, instead of plain strings,
 			making the code more readable and extensible.
 
@@ -40,9 +41,21 @@ This document is meant to give an overview of the work that has been done, not t
 			a test with the generic compression function in \texttt{Data.GenCompress} and special data types.
 
 	\item
-		We created a graphical debugger \`a la \texttt{gdb}, with which you can step through ABC code and see the effect on the stacks and heap.
-		Several improvements can be made to this (stepping back, breakpoints) --- it was only a side project.
+		We created a graphical debugger \`a la \texttt{gdb}, with which you can step through ABC(\abcstar) code and see the effect on the stacks and heap.
+		Several improvements can be made to this (rewinding, breakpoints) --- it was only a side project.
 		The debugger has helped resolve several bugs quickly.
+
+	\item
+		All this leads to the following tools:
+		\texttt{optimise} to optimise ABC code (ABC $\to$ \abcs);
+		\texttt{bytecode} to generate bytecode (ABC/\abcs\ $\to$ obc);
+		\texttt{link} to link bytecode (obc $\to$ bc)%
+			\footnote{Alternatively, use \texttt{bytecode} on all \abcs\ files required by a module to create a bc file directly.};
+		\texttt{interpret} to interpret bytecode (bc);
+		\texttt{debug} to debug bytecode (bc).
+		We used a bash script to chain these tools together and run tests.
+
+		The tools are documented with a help text (run with \texttt{-h}) and in \texttt{doc/tools.md}.
 \end{itemize}
 
 \section*{Bytecode}
@@ -52,7 +65,7 @@ This document is meant to give an overview of the work that has been done, not t
 		In the original setup, a bytecode file was an ASCII file with decimal integers separated by whitespace.
 		We now have a binary format.
 		The format is optimised for space, such that instructions, literals, stack offsets etc. only take as much bytes as needed.
-		(During interpretation however, every instruction and argument comprises a full word, so that everything is well-aligned.)
+		(During interpretation, every instruction and argument comprises a full word, so that everything is well-aligned.)
 
 	\item
 		A symbol table was added to the bytecode format.
@@ -79,7 +92,7 @@ This document is meant to give an overview of the work that has been done, not t
 
 	\item
 		We added a copying garbage collector.
-		The earlier compacting garbage collector is broken; we decided it was better to implement something crude but working,
+		The earlier compacting garbage collector has been removed; we decided it was better to implement something crude but working,
 			as an efficient garbage collector is not at the core of the project.
 		For this reason, the copying collector can also still be made more efficient.
 
@@ -109,29 +122,77 @@ This document is meant to give an overview of the work that has been done, not t
 		We copy HNFs from the interpreter to the host.
 		This is currently only possible for descriptors that exist in the host.
 		We need to add descriptors that do not exist in the host to the host to fix this.
+		Doing this requires some work, but the implementation is straightforward.
+		We therefore decided to focus on more interesting aspects.
 
 	\item
 		Because we copy lazily, the host may have many references to the interpreter at some moment.
 		Consider for instance \texttt{reverse (take 100 (interpret primes))}.
 		We interpret a list of primes, take 100 elements and reverse them.
-		The actual integers are not copied from the interpreter until they need to be printed,
-			so there are at some point 100 references to the interpreter.
+		The actual integers are not copied from the interpreter until they need to be printed.
+		This is after reversal of the list, so there are at some point 100 references to the interpreter.
 
-		Unimplemented:
-		we keep a list of references from the host in the interpreter,
-			so that the references can be updated upon garbage collection.
-		In the host, we use finalizers to be notified when a reference is removed from the garbage collector.
-		If this happens, we remove it from the reference list in the interpreter.
+		A reference from the host to the interpreter is a finalizer%
+			\footnote{A finalizer contains a (C) function pointer, an integer argument.
+				All finalizers on the heap are stored in a linked list.
+				When a finalizer is garbage collected, the C function is called with the argument.}.
+		The integer is a pointer to the node on the interpreter heap.
+		When the interpreter performs garbage collection, it
+			(1) marks all relevant\footnotemark\ finalizers so that these nodes are not removed, and
+			(2) updates all the references in the finalizers.
+		\footnotetext{%
+			We only consider finalizers that point to the interpreter heap.
+			This is required when other parts of a program use finalizers, or when multiple interpreters run alongside each other.}
+
+		The reference to the interpreter itself (code, data, heap, etc.) is a finalizer as well.
+		That way, when the host does not requires the interpreter any more, its memory is freed as well.
 
 	\item
-		For thunks, there is a special node entry in the host (from a Clean library), which holds the address to start the interpreter.
-		However, it is not yet possible to apply interpreted functions to native arguments, because this involves copying from the host to the interpreter which has not been implemented yet.
+		Applying interpreted functions to native data (e.g. \texttt{(interpret sum) [0..10]}) is currently only possible in very limited circumstances.
+		What still has to be done:
 
-	\item
-		The most advanced case is a higher-order function in the interpreter, applied to a native function.
-		For this case, we must do something similar as in the host:
-			add a special kind of node entry point which invokes the host to apply the function.
-		This has not been implemented yet.
+		\begin{itemize}
+			\item
+				Make this copying lazy.
+			\item
+				Ensure that nodes referenced from the interpreter are not garbage collected.
+			\item
+				Allow functions partially applied in the interpreter.\\
+				For instance: \texttt{(interpret (map square)) [0..10]}.
+			\item
+				Allow higher order functions applied to host functions.\\
+				For instance: \texttt{(interpreter map) square [0..10]}.
+		\end{itemize}
 \end{itemize}
+
+\section*{Demo projects}
+For any meaningful application we need to be able to apply interpreted functions to native data.
+Since this is not fully implemented yet, we do not have demo projects using the interpreter from a Clean host program.
+However, we have thought about possible applications.
+
+\begin{itemize}
+	\item
+		A compiler with language extensions.
+		Create a compiler which accepts a list of plugins (given from the command line).
+		A plugin is a bytecode file containing a collection of functions.
+		For instance, it can supply a function with type \texttt{AST -> Either Error AST} to apply a transformation,
+			or a function with type \texttt{ABC -> Either Error ABC} to optimise generated code.
+
+	\item
+		A bot contest runner.
+		Define a game that can be played by bots.
+		Create a program that takes a number of bots supplied on the command line.
+		A bot is a bytecode file containing a function to perform moves.
+		The host program runs a game or competition between these bots.
+\end{itemize}
+
+\section*{Further work \& way ahead}
+\begin{itemize}
+	\item
+		We'd like to adapt \texttt{clm} and/or \texttt{cpm} to be able to generate bytecode files.
+	\item
+		Ideally, we extend the Clean runtime system with an exception mechanism to be able to catch errors in the interpreter and not crash the host.
+\end{itemize}
+
 
 \end{document}
