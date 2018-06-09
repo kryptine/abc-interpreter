@@ -42,8 +42,16 @@ import StdEnum,StdFunc
 //# (const,w) = get_expression "../test/functions.bc" w
 //= const 37 42
 Start w
-# ((sum2, sum3, sum4),w) = get_expression "../test/functions.bc" w
-= [1, sum2 1 2, sum3 1 2 3, sum4 1 2 3 4]
+# ((sumodd2,sumodd3,sumodd4,sumodd5,sumodd26,sumodd30,sumodd31),w) = get_expression "../test/functions.bc" w
+=
+	[ sumodd2 37 -10
+	, sumodd3 17 -100 20
+	, sumodd4 42 -10 -5 -10
+	, sumodd5 100 1 -65 -18 2
+	, sumodd26 3 100 3 100 3 100 3 100 3 100 3 100 3 100 3 100 3 100 3 100 3 100 2 100 2 100
+	, sumodd30 3 100 3 100 3 100 3 100 3 100 3 100 3 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100
+	, sumodd31 3 100 3 100 3 100 3 100 3 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2
+	]
 
 :: Program :== Pointer
 

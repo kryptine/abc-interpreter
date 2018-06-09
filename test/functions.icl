@@ -2,17 +2,22 @@ module functions
 
 import StdInt
 
-//Start = const
-Start = (sum2,sum3,sum4)
+Start = (sumodd2,sumodd3,sumodd4,sumodd5,sumodd30 0 0 0 0,sumodd30,sumodd31)
 
-const :: !a b -> a
-const x _ = x
+sumodd2 :: Int Int -> Int
+sumodd2 a _ = a
 
-sum2 :: !Int !Int -> Int
-sum2 x y = x + y
+sumodd3 :: Int Int Int -> Int
+sumodd3 a _ b = a + b
 
-sum3 :: Int Int !Int -> Int
-sum3 x y z = x + y + z
+sumodd4 :: Int Int Int Int -> Int
+sumodd4 a _ b _ = a + b
 
-sum4 :: Int !Int Int !Int -> Int
-sum4 p q r s = p + q + r + s
+sumodd5 :: Int Int Int Int Int -> Int
+sumodd5 a _ b _ c = a + b + c
+
+sumodd30 :: Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int -> Int
+sumodd30 a _ b _ c _ d _ e _ f _ g _ h _ i _ j _ k _ l _ m _ n _ o _ = a + b + c + d + e + f + g + h + i + j + k + l + m + n + o
+
+sumodd31 :: Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int -> Int
+sumodd31 a _ b _ c _ d _ e _ f _ g _ h _ i _ j _ k _ l _ m _ n _ o _ p = a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p
