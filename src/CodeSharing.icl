@@ -25,10 +25,11 @@ import code from "interpret.a"
 
 // The arguments are:
 // - Pointer to C function;
-// - Argument for function (in our case, pointer to the coerce node)
+// - Argument for function (in our case, pointer to the interpret node)
 // - Pointer to rest of the finalizers (dealt with in the RTS)
 :: Finalizer = Finalizer !Int !Int !Int
-:: CoercionEnvironment :== Finalizer
+:: InterpretedExpression :== Finalizer
+:: InterpretEnvironment :== Finalizer
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
@@ -80,26 +81,26 @@ get_expression filename w
 		start_node = readInt start_label (IF_INT_64_OR_32 8 4)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
-#! ce_settings = build_coercion_environment
+#! ce_settings = build_interpret_environment
 	pgm
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp hp
 #! (ce,_) = make_finalizer ce_settings
-= (coerce ce (Finalizer 0 0 start_node), w)
+= (interpret ce (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
 	// it to the finalizer_list anyway. This is just to ensure that the first
-	// call to `coerce` gets the right argument.
+	// call to `interpret gets the right argument.
 where
-	build_coercion_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
-	build_coercion_environment pgm heap hsize stack ssize asp bsp csp hp = code {
-		ccall build_coercion_environment "ppIpIpppp:p"
+	build_interpret_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
+	build_interpret_environment pgm heap hsize stack ssize asp bsp csp hp = code {
+		ccall build_interpret_environment "ppIpIpppp:p"
 	}
 
 	make_finalizer :: !Int -> (!.Finalizer,!Int)
 	make_finalizer ce_settings = code {
 		push_finalizers
-		ccall get_coercion_environment_finalizer ":p"
+		ccall get_interpret_environment_finalizer ":p"
 		push_a_b 0
 		pop_a 1
 		build_r e__system_kFinalizer 0 3 0 0
@@ -108,262 +109,262 @@ where
 		pushI 0
 	}
 
-// On purpose unique: this ensures there is only one CoercionEnvironment, ever.
-// This is needed to ensure that the heap address gets shared by all coercings.
-// Also on purpose lazy: this ensures it is passed on the A-stack, so that we
-// can easily pass it to C.
-coerce :: !CoercionEnvironment !Finalizer -> .a
-coerce ce fin = code {
+// On purpose unique: this ensures there is only one InterpretEnvironment,
+// ever. This is needed to ensure that the heap address gets shared by all
+// interpretations. Also on purpose lazy: this ensures it is passed on the
+// A-stack, so that we can easily pass it to C.
+interpret :: !InterpretEnvironment !InterpretedExpression -> .a
+interpret ce fin = code {
 	.d 2 0
-	jsr _copy_node_asm
+	jsr _interpret_copy_node_asm
 	.o 1 0
 }
 
-coerce_1 :: !CoercionEnvironment !Finalizer b -> .a
-coerce_1 ce fin arg = code {
+interpret_1 :: !InterpretEnvironment !InterpretedExpression b -> .a
+interpret_1 ce fin arg = code {
 	pushI 0
 	.d 3 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_2  :: !CoercionEnvironment !Finalizer b b -> .a
-coerce_2  _ _ _ _ = code {
+interpret_2  :: !InterpretEnvironment !InterpretedExpression b b -> .a
+interpret_2  _ _ _ _ = code {
 	pushI 1
 	.d 4 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_3  :: !CoercionEnvironment !Finalizer b b b -> .a
-coerce_3  _ _ _ _ _ = code {
+interpret_3  :: !InterpretEnvironment !InterpretedExpression b b b -> .a
+interpret_3  _ _ _ _ _ = code {
 	pushI 2
 	.d 5 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_4  :: !CoercionEnvironment !Finalizer b b b b -> .a
-coerce_4  _ _ _ _ _ _ = code {
+interpret_4  :: !InterpretEnvironment !InterpretedExpression b b b b -> .a
+interpret_4  _ _ _ _ _ _ = code {
 	pushI 3
 	.d 6 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_5  :: !CoercionEnvironment !Finalizer b b b b b -> .a
-coerce_5  _ _ _ _ _ _ _ = code {
+interpret_5  :: !InterpretEnvironment !InterpretedExpression b b b b b -> .a
+interpret_5  _ _ _ _ _ _ _ = code {
 	pushI 4
 	.d 6 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_6  :: !CoercionEnvironment !Finalizer b b b b b b -> .a
-coerce_6  _ _ _ _ _ _ _ _ = code {
+interpret_6  :: !InterpretEnvironment !InterpretedExpression b b b b b b -> .a
+interpret_6  _ _ _ _ _ _ _ _ = code {
 	pushI 5
 	.d 7 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_7  :: !CoercionEnvironment !Finalizer b b b b b b b -> .a
-coerce_7  _ _ _ _ _ _ _ _ _ = code {
+interpret_7  :: !InterpretEnvironment !InterpretedExpression b b b b b b b -> .a
+interpret_7  _ _ _ _ _ _ _ _ _ = code {
 	pushI 6
 	.d 8 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_8  :: !CoercionEnvironment !Finalizer b b b b b b b b -> .a
-coerce_8  _ _ _ _ _ _ _ _ _ _ = code {
+interpret_8  :: !InterpretEnvironment !InterpretedExpression b b b b b b b b -> .a
+interpret_8  _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 7
 	.d 9 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_9  :: !CoercionEnvironment !Finalizer b b b b b b b b b -> .a
-coerce_9  _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_9  :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b -> .a
+interpret_9  _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 8
 	.d 10 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_10 :: !CoercionEnvironment !Finalizer b b b b b b b b b b -> .a
-coerce_10 _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_10 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b -> .a
+interpret_10 _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 9
 	.d 11 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_11 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b -> .a
-coerce_11 _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_11 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b -> .a
+interpret_11 _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 10
 	.d 12 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_12 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b -> .a
-coerce_12 _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_12 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b -> .a
+interpret_12 _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 11
 	.d 13 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_13 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b -> .a
-coerce_13 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_13 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b -> .a
+interpret_13 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 12
 	.d 14 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_14 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b -> .a
-coerce_14 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_14 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b -> .a
+interpret_14 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 13
 	.d 15 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_15 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b -> .a
-coerce_15 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_15 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b -> .a
+interpret_15 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 14
 	.d 16 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_16 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b -> .a
-coerce_16 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_16 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b -> .a
+interpret_16 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 15
 	.d 17 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_17 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b -> .a
-coerce_17 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_17 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b -> .a
+interpret_17 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 16
 	.d 18 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_18 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b -> .a
-coerce_18 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_18 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b -> .a
+interpret_18 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 17
 	.d 19 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_19 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b -> .a
-coerce_19 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_19 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b -> .a
+interpret_19 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 18
 	.d 20 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_20 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_20 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_20 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_20 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 19
 	.d 21 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_21 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_21 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_21 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_21 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 20
 	.d 22 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_22 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_22 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_22 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_22 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 21
 	.d 23 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_23 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_23 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_23 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_23 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 22
 	.d 24 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_24 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_24 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_24 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_24 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 23
 	.d 25 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_25 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_25 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_25 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_25 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 24
 	.d 26 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_26 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_26 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_26 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_26 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 25
 	.d 27 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_27 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_27 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_27 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_27 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 26
 	.d 28 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_28 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_28 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_28 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_28 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 27
 	.d 29 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_29 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_29 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_29 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_29 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 28
 	.d 30 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_30 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_30 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_30 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_30 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 29
 	.d 31 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
-coerce_31 :: !CoercionEnvironment !Finalizer b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
-coerce_31 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
+interpret_31 :: !InterpretEnvironment !InterpretedExpression b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b b -> .a
+interpret_31 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = code {
 	pushI 30
 	.d 32 1 i
-	jsr _copy_node_asm_n
+	jsr _interpret_copy_node_asm_n
 	.o 1 0
 }
 
