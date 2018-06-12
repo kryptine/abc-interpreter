@@ -319,6 +319,9 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node) {
 	/* TODO: for now we are assuming the interpreter has enough memory */
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ce->hp);
+#endif
 	BC_WORD *org_hp = ce->hp;
 	if (node[0] == (BC_WORD)&dINT+2) {
 		ce->hp[0] = (BC_WORD) &INT+2;
@@ -348,12 +351,28 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg1);
 	va_end(arguments);
 
+	int16_t a_arity = ((int16_t*)(node[0]))[-1];
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\tarity is %d\n",a_arity);
+#endif
+	if (a_arity > 0) {
+		*++ce->asp = node[1];
+
+		if (a_arity == 2) {
+			*++ce->asp = node[2];
+		} else if (a_arity > 2) {
+			BC_WORD *rest = (BC_WORD*)node[2];
+			for (int i = 0; i < a_arity-1; i++)
+				*++ce->asp = rest[i];
+		}
+	}
+
 	/* TODO: assuming the interpreter node does not contain arguments */
 	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
 		fprintf(stderr,"Failed to interpret\n");
 		return -1;
 	}
-	ce->asp -= n_args;
+	ce->asp -= n_args + a_arity;
 	node_finalizer->cur->arg = *ce->asp;
 	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
 }

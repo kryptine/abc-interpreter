@@ -38,9 +38,6 @@ import StdEnum,StdFunc
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
-//Start w
-//# (const,w) = get_expression "../test/functions.bc" w
-//= const 37 42
 Start w
 # ((sumodd2,sumodd3,sumodd4,sumodd5,sumodd26,sumodd30,sumodd31),w) = get_expression "../test/functions.bc" w
 =
