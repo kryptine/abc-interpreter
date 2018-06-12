@@ -14,46 +14,46 @@
 #include "interpret.h"
 #include "util.h"
 
-extern void *e__CodeSharing__ncoerce;
-extern void *e__CodeSharing__dcoerce__1;
-extern void *e__CodeSharing__dcoerce__2;
-extern void *e__CodeSharing__dcoerce__3;
-extern void *e__CodeSharing__dcoerce__4;
-extern void *e__CodeSharing__dcoerce__5;
-extern void *e__CodeSharing__dcoerce__6;
-extern void *e__CodeSharing__dcoerce__7;
-extern void *e__CodeSharing__dcoerce__8;
-extern void *e__CodeSharing__dcoerce__9;
-extern void *e__CodeSharing__dcoerce__10;
-extern void *e__CodeSharing__dcoerce__11;
-extern void *e__CodeSharing__dcoerce__12;
-extern void *e__CodeSharing__dcoerce__13;
-extern void *e__CodeSharing__dcoerce__14;
-extern void *e__CodeSharing__dcoerce__15;
-extern void *e__CodeSharing__dcoerce__16;
-extern void *e__CodeSharing__dcoerce__17;
-extern void *e__CodeSharing__dcoerce__18;
-extern void *e__CodeSharing__dcoerce__19;
-extern void *e__CodeSharing__dcoerce__20;
-extern void *e__CodeSharing__dcoerce__21;
-extern void *e__CodeSharing__dcoerce__22;
-extern void *e__CodeSharing__dcoerce__23;
-extern void *e__CodeSharing__dcoerce__24;
-extern void *e__CodeSharing__dcoerce__25;
-extern void *e__CodeSharing__dcoerce__26;
-extern void *e__CodeSharing__dcoerce__27;
-extern void *e__CodeSharing__dcoerce__28;
-extern void *e__CodeSharing__dcoerce__29;
-extern void *e__CodeSharing__dcoerce__30;
-extern void *e__CodeSharing__dcoerce__31;
+extern void *e__CodeSharing__ninterpret;
+extern void *e__CodeSharing__dinterpret__1;
+extern void *e__CodeSharing__dinterpret__2;
+extern void *e__CodeSharing__dinterpret__3;
+extern void *e__CodeSharing__dinterpret__4;
+extern void *e__CodeSharing__dinterpret__5;
+extern void *e__CodeSharing__dinterpret__6;
+extern void *e__CodeSharing__dinterpret__7;
+extern void *e__CodeSharing__dinterpret__8;
+extern void *e__CodeSharing__dinterpret__9;
+extern void *e__CodeSharing__dinterpret__10;
+extern void *e__CodeSharing__dinterpret__11;
+extern void *e__CodeSharing__dinterpret__12;
+extern void *e__CodeSharing__dinterpret__13;
+extern void *e__CodeSharing__dinterpret__14;
+extern void *e__CodeSharing__dinterpret__15;
+extern void *e__CodeSharing__dinterpret__16;
+extern void *e__CodeSharing__dinterpret__17;
+extern void *e__CodeSharing__dinterpret__18;
+extern void *e__CodeSharing__dinterpret__19;
+extern void *e__CodeSharing__dinterpret__20;
+extern void *e__CodeSharing__dinterpret__21;
+extern void *e__CodeSharing__dinterpret__22;
+extern void *e__CodeSharing__dinterpret__23;
+extern void *e__CodeSharing__dinterpret__24;
+extern void *e__CodeSharing__dinterpret__25;
+extern void *e__CodeSharing__dinterpret__26;
+extern void *e__CodeSharing__dinterpret__27;
+extern void *e__CodeSharing__dinterpret__28;
+extern void *e__CodeSharing__dinterpret__29;
+extern void *e__CodeSharing__dinterpret__30;
+extern void *e__CodeSharing__dinterpret__31;
 extern void *dINT;
 extern void *__Tuple;
 
-/* This does not contain the ce_symbols from the CoercionEnvironment type. This
- * element is not needed, and like this we can easily dereference the
+/* This does not contain the ce_symbols from the InterpretEnvironment type.
+ * This element is not needed, and like this we can easily dereference the
  * environment from memory.
  */
-struct coercion_environment {
+struct interpret_environment {
 	struct program *program;
 	BC_WORD *heap;
 	BC_WORD heap_size;
@@ -65,17 +65,17 @@ struct coercion_environment {
 	BC_WORD *hp;
 };
 
-struct CoercionEnvironment {
+struct InterpretEnvironment {
 	void *descriptor;
 	struct finalizers *finalizer;
-	struct coercion_environment *ptrs;
+	struct interpret_environment *ptrs;
 };
 
-struct coercion_environment *build_coercion_environment(
+struct interpret_environment *build_interpret_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
-	struct coercion_environment *ce = safe_malloc(sizeof(struct coercion_environment));
+	struct interpret_environment *ce = safe_malloc(sizeof(struct interpret_environment));
 	ce->program = program;
 	ce->heap = heap;
 	ce->heap_size = heap_size;
@@ -86,14 +86,14 @@ struct coercion_environment *build_coercion_environment(
 	ce->csp = csp;
 	ce->hp = hp;
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Building coercion_environment %p\n",ce);
+	fprintf(stderr,"Building interpret_environment %p\n",ce);
 #endif
 	return ce;
 }
 
-void coercion_environment_finalizer(struct coercion_environment *ce) {
+void interpret_environment_finalizer(struct interpret_environment *ce) {
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Freeing coercion_environment %p\n",ce);
+	fprintf(stderr,"Freeing interpret_environment %p\n",ce);
 #endif
 	free_program(ce->program);
 	free(ce->program);
@@ -102,49 +102,49 @@ void coercion_environment_finalizer(struct coercion_environment *ce) {
 	free(ce);
 }
 
-void *get_coercion_environment_finalizer(void) {
-	return coercion_environment_finalizer;
+void *get_interpret_environment_finalizer(void) {
+	return interpret_environment_finalizer;
 }
 
-void interpreter_finalizer(BC_WORD coerce_node) {
+void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node, int args_needed) {
+BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node, int args_needed) {
 	switch (args_needed) {
-		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ncoerce; break;
-		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__1+(2<<3)+2; break; /* TODO check 32-bit */
-		case 2:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__2+(2<<3)+2; break;
-		case 3:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__3+(2<<3)+2; break;
-		case 4:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__4+(2<<3)+2; break;
-		case 5:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__5+(2<<3)+2; break;
-		case 6:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__6+(2<<3)+2; break;
-		case 7:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__7+(2<<3)+2; break;
-		case 8:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__8+(2<<3)+2; break;
-		case 9:  heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__9+(2<<3)+2; break;
-		case 10: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__10+(2<<3)+2; break;
-		case 11: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__11+(2<<3)+2; break;
-		case 12: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__12+(2<<3)+2; break;
-		case 13: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__13+(2<<3)+2; break;
-		case 14: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__14+(2<<3)+2; break;
-		case 15: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__15+(2<<3)+2; break;
-		case 16: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__16+(2<<3)+2; break;
-		case 17: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__17+(2<<3)+2; break;
-		case 18: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__18+(2<<3)+2; break;
-		case 19: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__19+(2<<3)+2; break;
-		case 20: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__20+(2<<3)+2; break;
-		case 21: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__21+(2<<3)+2; break;
-		case 22: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__22+(2<<3)+2; break;
-		case 23: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__23+(2<<3)+2; break;
-		case 24: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__24+(2<<3)+2; break;
-		case 25: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__25+(2<<3)+2; break;
-		case 26: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__26+(2<<3)+2; break;
-		case 27: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__27+(2<<3)+2; break;
-		case 28: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__28+(2<<3)+2; break;
-		case 29: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__29+(2<<3)+2; break;
-		case 30: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__30+(2<<3)+2; break;
-		case 31: heap[0] = (BC_WORD) &e__CodeSharing__dcoerce__31+(2<<3)+2; break;
+		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ninterpret; break;
+		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
+		case 2:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__2+(2<<3)+2; break;
+		case 3:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__3+(2<<3)+2; break;
+		case 4:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__4+(2<<3)+2; break;
+		case 5:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__5+(2<<3)+2; break;
+		case 6:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__6+(2<<3)+2; break;
+		case 7:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__7+(2<<3)+2; break;
+		case 8:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__8+(2<<3)+2; break;
+		case 9:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__9+(2<<3)+2; break;
+		case 10: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__10+(2<<3)+2; break;
+		case 11: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__11+(2<<3)+2; break;
+		case 12: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__12+(2<<3)+2; break;
+		case 13: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__13+(2<<3)+2; break;
+		case 14: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__14+(2<<3)+2; break;
+		case 15: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__15+(2<<3)+2; break;
+		case 16: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__16+(2<<3)+2; break;
+		case 17: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__17+(2<<3)+2; break;
+		case 18: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__18+(2<<3)+2; break;
+		case 19: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__19+(2<<3)+2; break;
+		case 20: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__20+(2<<3)+2; break;
+		case 21: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__21+(2<<3)+2; break;
+		case 22: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__22+(2<<3)+2; break;
+		case 23: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__23+(2<<3)+2; break;
+		case 24: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__24+(2<<3)+2; break;
+		case 25: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__25+(2<<3)+2; break;
+		case 26: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__26+(2<<3)+2; break;
+		case 27: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__27+(2<<3)+2; break;
+		case 28: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__28+(2<<3)+2; break;
+		case 29: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__29+(2<<3)+2; break;
+		case 30: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__30+(2<<3)+2; break;
+		case 31: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__31+(2<<3)+2; break;
 		default:
-			fprintf(stderr,"Missing case in make_coerce_node\n");
+			fprintf(stderr,"Missing case in make_interpret_node\n");
 			exit(1);
 	}
 	heap[1] = (BC_WORD) ce_finalizer;
@@ -152,7 +152,7 @@ BC_WORD *make_coerce_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WOR
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
 
-int interpret_ce(struct coercion_environment *ce, BC_WORD *pc) {
+int interpret_ce(struct interpret_environment *ce, BC_WORD *pc) {
 	int result = interpret(
 			ce->program->code, ce->program->code_size,
 			ce->program->data, ce->program->data_size,
@@ -207,7 +207,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
-			host_heap = make_coerce_node(host_heap, ce_finalizer, (BC_WORD) node, args_needed);
+			host_heap = make_interpret_node(host_heap, ce_finalizer, (BC_WORD) node, args_needed);
 			return host_heap - org_host_heap;
 		}
 	}
@@ -217,7 +217,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		words_needed += a_arity + b_arity - 1;
 
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr, "\tcoercing (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
+	fprintf(stderr, "\tcopying (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
 #endif
 
 	if (host_heap_free < words_needed) {
@@ -250,11 +250,11 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, ce_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, ce_finalizer, node[1], 0);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_coerce_node(host_heap, ce_finalizer, node[2], 0);
+				host_heap = make_interpret_node(host_heap, ce_finalizer, node[2], 0);
 			} else if (b_arity == 1) {
 				host_node[2] = node[2];
 			}
@@ -267,7 +267,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		host_heap += a_arity + b_arity + 2;
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, ce_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, ce_finalizer, node[1], 0);
 		} else {
 			host_node[1] = node[1];
 		}
@@ -275,7 +275,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_coerce_node(host_heap, ce_finalizer, rest[i], 0);
+			host_heap = make_interpret_node(host_heap, ce_finalizer, rest[i], 0);
 		}
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[3+i] = (BC_WORD) rest[i];
@@ -295,7 +295,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
-	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
+	struct interpret_environment *ce = (struct interpret_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -317,7 +317,7 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
 }
 
-BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node) {
+BC_WORD *copy_host_to_interpreter(struct interpret_environment *ce, BC_WORD *node) {
 	/* TODO: for now we are assuming the interpreter has enough memory */
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ce->hp);
@@ -341,7 +341,7 @@ BC_WORD *copy_host_to_interpreter(struct coercion_environment *ce, BC_WORD *node
 BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
 		int n_args, ...) {
-	struct coercion_environment *ce = (struct coercion_environment*) ce_finalizer->cur->arg;
+	struct interpret_environment *ce = (struct interpret_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 

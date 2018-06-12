@@ -46,19 +46,19 @@
 	pop	rdx
 .endm
 
-.globl	__copy__node__asm
-__copy__node__asm:
+.globl	__interpret__copy__node__asm
+__interpret__copy__node__asm:
 	save_registers
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
-	#mov	rdx,rdx # coercion environment
+	#mov	rdx,rdx # interpret environment
 	#mov	rcx,rcx # finalizer of node
 	call	copy_interpreter_to_host
-__copy__node__asm__finish:
+__interpret__copy__node__asm__finish:
 	mov	rbp,rax
 	restore_registers
 	cmp	rbp,-2 # Out of memory
-	je	__copy__node__asm_gc
+	je	__interpret__copy__node__asm_gc
 
 	mov	rcx,rdi
 	sub	r15,rbp
@@ -67,24 +67,24 @@ __copy__node__asm__finish:
 
 	ret
 
-__copy__node__asm_gc:
+__interpret__copy__node__asm_gc:
 	call	collect_3
-	jmp	__copy__node__asm
+	jmp	__interpret__copy__node__asm
 
-.global __copy__node__asm__n
-__copy__node__asm__n:
+.global __interpret__copy__node__asm__n
+__interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
 	save_registers
 	mov	rbx,rax
 	cmp	rax,0
-__copy__node__asm__n_args:
-	je	__copy__node__asm__n_has_all_args
+__interpret__copy__node__asm__n_args:
+	je	__interpret__copy__node__asm__n_has_all_args
 	push	[rsi+rax-8]
 	sub	rax,8
-	jmp	__copy__node__asm__n_args
-__copy__node__asm__n_has_all_args:
+	jmp	__interpret__copy__node__asm__n_args
+__interpret__copy__node__asm__n_has_all_args:
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
-	jmp	__copy__node__asm__finish
+	jmp	__interpret__copy__node__asm__finish
