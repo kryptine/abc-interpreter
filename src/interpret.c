@@ -127,7 +127,7 @@ int interpret(BC_WORD *code, size_t code_size,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
-		BC_WORD *node) {
+		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
 	if (code_size == -1) { /* See rationale in interpret.h */
 # define _COMPUTED_GOTO_LABELS
@@ -145,35 +145,25 @@ int interpret(BC_WORD *code, size_t code_size,
 	heap_size /= 2; /* copying garbage collector */
 	BC_WORD_S heap_free = heap + heap_size - hp;
 
-#ifdef POSIX
-	struct sigaction s;
-	sigset_t sst;
+	BC_WORD ret = EVAL_TO_HNF_LABEL;
 
-	sigemptyset(&sst);
-	s.sa_handler = handle_segv;
-	s.sa_mask = sst;
-	s.sa_flags = 0;
-	if (sigaction(SIGSEGV, &s, NULL)) {
+#ifdef POSIX
+	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
 		perror("sigaction");
 		return 1;
 	}
 #endif
 
-	if (node != NULL) {
-		BC_WORD *n = (BC_WORD*) *node;
-
-		if (n[0] & 2) { /* HNF */
-eval_to_hnf_return:
-			return 0;
-		}
-
+	if (_pc != NULL) {
 #ifdef COMPUTED_GOTOS
-		BC_WORD ret = (BC_WORD) &&eval_to_hnf_return;
-#else
-		BC_WORD ret = EVAL_TO_HNF_LABEL;
+		ret = (BC_WORD) &&eval_to_hnf_return;
 #endif
 		*--csp = (BC_WORD) &ret;
-		pc = (BC_WORD*) n[0];
+		pc = _pc;
+
+		if (0)
+eval_to_hnf_return:
+			return 0;
 	}
 
 #ifdef COMPUTED_GOTOS
