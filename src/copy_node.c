@@ -355,16 +355,15 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tarity is %d\n",a_arity);
 #endif
-	if (a_arity > 0) {
-		*++ie->asp = node[1];
-
+	if (a_arity >= 1) {
 		if (a_arity == 2) {
 			*++ie->asp = node[2];
 		} else if (a_arity > 2) {
 			BC_WORD *rest = (BC_WORD*)node[2];
-			for (int i = 0; i < a_arity-1; i++)
+			for (int i = a_arity-2; i >= 0; i--)
 				*++ie->asp = rest[i];
 		}
+		*++ie->asp = node[1];
 	}
 
 	/* TODO: assuming the interpreter node does not contain arguments */

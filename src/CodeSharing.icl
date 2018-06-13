@@ -40,15 +40,11 @@ import StdEnum,StdFunc
 
 // Example: get a function from a bytecode file and apply it
 Start w
-# ((sumodd2,sumodd3,sumodd4,sumodd5,sumodd26,sumodd30,sumodd31),w) = get_expression "../test/functions.bc" w
+# ((sub5,sub3_10,sumints),w) = get_expression "../test/functions.bc" w
 =
-	[ sumodd2 37 -10
-	, sumodd3 17 -100 20
-	, sumodd4 42 -10 -5 -10
-	, sumodd5 100 1 -65 -18 2
-	, sumodd26 1 100 3 100 1 100 3 100 (square 3) 100 1 100 3 100 1 100 3 100 3 100 3 100 2 100 2 100
-	, sumodd30 3 100 3 100 3 100 3 100 3 100 3 100 3 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100
-	, sumodd31 3 100 3 100 3 100 3 100 3 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2 100 2
+	[ sub5    47 1 2 3 (square 2)
+	, sub3_10 -20 -30 3
+	//, sumints [1,1,2,3,4,5,6,7,8]
 	]
 
 square :: Int -> Int
