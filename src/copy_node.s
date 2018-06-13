@@ -24,25 +24,21 @@
 # (res) r14: B6
 # (res) r15: Number of free words on heap
 
-.macro save_registers_rdx # rdx is the interpretation environment
+.macro save_registers_rdx # rdx is the interpretation environment finalizer
 	push	rcx
 	push	rax
 	push	r8
 	push	r10
 	push	r11
+	push	rdi
+	push	rsi
 	push	rdx
-	mov	rbp,[rdx] # host_status
-	mov	[rbp],rsi
-	mov	[rbp+8],rdi
-	mov	[rbp+16],r15
 .endm
 
 .macro restore_registers_rdx
-	mov	rdx,[rsp]
-	mov	rdx,[rdx] # host_status
-	mov	rsi,[rdx]
-	mov	rdi,[rdx+8]
 	pop	rdx
+	pop	rsi
+	pop	rdi
 	pop	r11
 	pop	r10
 	pop	r8
@@ -53,9 +49,17 @@
 .globl	__interpret__copy__node__asm
 __interpret__copy__node__asm:
 	save_registers_rdx
+
+	# TODO: get host_status from environment finalizer and update values
+	# Something like (but rbp is wrong):
+	#mov	rbp,[rdx] # host_status
+	#mov	[rbp],rsi
+	#mov	[rbp+8],rdi
+	#mov	[rbp+16],r15
+
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
-	#mov	rdx,rdx # interpret environment
+	#mov	rdx,rdx # finalizer of interpretation environment
 	#mov	rcx,rcx # finalizer of node
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm__finish:

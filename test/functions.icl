@@ -2,7 +2,10 @@ module functions
 
 import StdInt
 
-Start = (sub5, sub5 0 10, sumints)
+Start = (square, sub5, sub5 0 10, sumints)
+
+square :: Int -> Int
+square x = x * x
 
 sub5 :: Int Int Int Int Int -> Int
 sub5 a b c d e = a - b - c - d - e

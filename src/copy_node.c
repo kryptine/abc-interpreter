@@ -163,9 +163,8 @@ int interpret_ie(struct interpret_environment *ie, BC_WORD *pc) {
 }
 
 BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
+		struct finalizers *ie_finalizer, BC_WORD *node) {
 	BC_WORD *org_host_heap = host_heap;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 	if (node[0] == (BC_WORD) &INT+2) {
 		if (host_heap_free < 2)
@@ -288,7 +287,6 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		fprintf(stderr,"words_needed was incorrect (arities %d/%d, was %d, should be %d)\n",
 				a_arity, b_arity, words_needed, (int) (host_heap - org_host_heap));
 
-	node_finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
 }
 
@@ -313,7 +311,7 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		node = (BC_WORD*)*ie->asp--;
 	}
 
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node_finalizer);
+	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
 
 BC_WORD *copy_host_to_interpreter(struct interpret_environment *ie, BC_WORD *node) {
@@ -366,11 +364,26 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 		*++ie->asp = node[1];
 	}
 
-	if (interpret_ie(ie, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
+	BC_WORD *lazy_entry = ((BC_WORD**)(node[0]-2))[n_args*2+1];
+	BC_WORD *pc;
+	int pop_args = n_args + a_arity;
+
+	if (pop_args == 0) {
+		/* Function with arity 1; this do not have an apply entry point */
+		*++ie->asp = (BC_WORD) node;
+		pop_args++;
+		pc = lazy_entry;
+	} else {
+		pc = (BC_WORD*) lazy_entry[-2];
+	}
+
+	if (interpret_ie(ie, pc) != 0) {
 		fprintf(stderr,"Failed to interpret\n");
 		return -1;
 	}
-	ie->asp -= n_args + a_arity;
-	node_finalizer->cur->arg = *ie->asp;
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node_finalizer);
+
+	ie->asp -= pop_args;
+	node = (BC_WORD*) *ie->asp--;
+
+	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
