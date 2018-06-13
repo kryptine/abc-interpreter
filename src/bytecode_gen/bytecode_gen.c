@@ -72,7 +72,6 @@ int main (int argc, char *argv[]) {
 	parse_files(input_files, nr_abc_files);
 
 	add_add_arg_labels();
-	make_undefined_labels_global();
 	write_program(output_file);
 
 	return 0;
