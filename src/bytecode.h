@@ -47,6 +47,7 @@ struct symbol {
 struct host_symbol {
 	void *location;
 	char *name;
+	BC_WORD *interpreter_location;
 };
 #endif
 
@@ -81,7 +82,8 @@ void free_program(struct program *pgm);
 
 #ifdef INTERPRETER
 # ifdef LINK_CLEAN_RUNTIME
-void *find_host_symbol(struct program *pgm, char *name);
+struct host_symbol *find_host_symbol(struct program *pgm, char *name);
+void sort_host_symbols_by_location(struct program *pgm);
 # endif
 
 int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,

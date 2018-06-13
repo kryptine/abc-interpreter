@@ -26,7 +26,7 @@ void free_program(struct program *pgm) {
 
 # ifdef LINK_CLEAN_RUNTIME
 # include <string.h>
-void *find_host_symbol(struct program *pgm, char *name) {
+struct host_symbol *find_host_symbol(struct program *pgm, char *name) {
 	int start = 0;
 	int end = pgm->host_symbols_n - 1;
 
@@ -38,10 +38,41 @@ void *find_host_symbol(struct program *pgm, char *name) {
 		else if (r < 0)
 			start = i+1;
 		else
-			return pgm->host_symbols[i].location;
+			return &pgm->host_symbols[i];
 	}
 
 	return NULL;
+}
+
+/* https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme */
+static int host_symbols_partition(struct host_symbol *arr, int lo, int hi) {
+	struct host_symbol temp;
+	void *pivot = arr[hi].location;
+	int i = lo - 1;
+	for (int j = lo; j < hi; j++) {
+		if (arr[j].location < pivot) {
+			i++;
+			temp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = temp;
+		}
+	}
+	temp = arr[i+1];
+	arr[i+1] = arr[hi];
+	arr[hi] = temp;
+	return i+1;
+}
+
+static void host_symbols_quicksort(struct host_symbol *arr, int lo, int hi) {
+	if (lo >= hi)
+		return;
+	int pivot = host_symbols_partition(arr, lo, hi);
+	host_symbols_quicksort(arr, lo, pivot-1);
+	host_symbols_quicksort(arr, pivot+1, hi);
+}
+
+void sort_host_symbols_by_location(struct program *pgm) {
+	host_symbols_quicksort(pgm->host_symbols, 0, pgm->host_symbols_n-1);
 }
 # endif
 

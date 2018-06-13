@@ -45,6 +45,7 @@ void init_parser(struct parser *state
 
 	char *symbol_strings = state->program->host_symbols_strings;
 	for (int i = 0; i < host_symbols_n; i++) {
+		state->program->host_symbols[i].interpreter_location = NULL;
 		state->program->host_symbols[i].location = *(void**)host_symbols;
 		host_symbols += IF_INT_64_OR_32(8,4);
 		state->program->host_symbols[i].name = symbol_strings;
@@ -462,11 +463,13 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							/* Descriptor has a code address that is not _hnf; ignore */
 						} else if (v == -1) {
 							/* Descriptor has a _hnf code address */
-							void *host_sym = find_host_symbol(state->program, state->program->symbol_table[state->ptr].name);
-							if (host_sym == NULL)
+							struct host_symbol *host_sym = find_host_symbol(state->program, state->program->symbol_table[state->ptr].name);
+							if (host_sym == NULL) {
 								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
-							else
-								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym;
+							} else {
+								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym->location;
+								host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
+							}
 						} else {
 							/* This shouldn't happen */
 							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
@@ -567,5 +570,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				return 3;
 		}
 	}
+
+#ifdef LINK_CLEAN_RUNTIME
+	sort_host_symbols_by_location(state->program);
+#endif
 	return 0;
 }
