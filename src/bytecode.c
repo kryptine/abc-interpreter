@@ -26,7 +26,7 @@ void free_program(struct program *pgm) {
 
 # ifdef LINK_CLEAN_RUNTIME
 # include <string.h>
-struct host_symbol *find_host_symbol(struct program *pgm, char *name) {
+struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name) {
 	int start = 0;
 	int end = pgm->host_symbols_n - 1;
 
@@ -37,6 +37,23 @@ struct host_symbol *find_host_symbol(struct program *pgm, char *name) {
 			end = i-1;
 		else if (r < 0)
 			start = i+1;
+		else
+			return &pgm->host_symbols[i];
+	}
+
+	return NULL;
+}
+
+struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr) {
+	int start = 0;
+	int end = pgm->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		if (pgm->host_symbols[i].location < addr)
+			start = i+1;
+		else if (pgm->host_symbols[i].location > addr)
+			end = i-1;
 		else
 			return &pgm->host_symbols[i];
 	}

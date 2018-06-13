@@ -7034,7 +7034,8 @@ INSTRUCTION_BLOCK(host_node):
 		n[0]=(BC_WORD)&INT+2;
 		n[1]=host_node[1];
 	} else {
-		fprintf(stderr,"\tNot sure how to copy this node: %p -> %p\n",host_node,(void*)*host_node);
+		struct host_symbol *host_symbol = find_host_symbol_by_address(program, (void*)host_node[0]);
+		fprintf(stderr,"\tNot sure how to copy this node: %p -> %p (%p: %p)\n",host_node,(void*)*host_node,host_symbol,NULL);//host_symbol->interpreter_location);
 		exit(1);
 	}
 

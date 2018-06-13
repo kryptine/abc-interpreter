@@ -463,7 +463,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							/* Descriptor has a code address that is not _hnf; ignore */
 						} else if (v == -1) {
 							/* Descriptor has a _hnf code address */
-							struct host_symbol *host_sym = find_host_symbol(state->program, state->program->symbol_table[state->ptr].name);
+							struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
 							if (host_sym == NULL) {
 								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
 							} else {

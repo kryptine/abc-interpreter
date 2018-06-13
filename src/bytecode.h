@@ -82,7 +82,8 @@ void free_program(struct program *pgm);
 
 #ifdef INTERPRETER
 # ifdef LINK_CLEAN_RUNTIME
-struct host_symbol *find_host_symbol(struct program *pgm, char *name);
+struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name);
+struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr);
 void sort_host_symbols_by_location(struct program *pgm);
 # endif
 
