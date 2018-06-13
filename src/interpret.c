@@ -75,6 +75,11 @@ extern BC_WORD __cycle__in__spine;
 BC_WORD __cycle__in__spine = Chalt;
 #endif
 
+#ifdef LINK_CLEAN_RUNTIME
+# include "copy_node.h"
+void* HOST_NODE[]         = { (void*) Chost_node, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') };
+#endif
+
 BC_WORD Fjmp_ap1 = Cjmp_ap1;
 BC_WORD Fjmp_ap2 = Cjmp_ap2;
 BC_WORD Fjmp_ap3 = Cjmp_ap3;

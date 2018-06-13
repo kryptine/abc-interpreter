@@ -16,6 +16,10 @@ extern void* REAL[];
 
 extern BC_WORD __cycle__in__spine;
 
+#ifdef LINK_CLEAN_RUNTIME
+extern void* HOST_NODE[];
+#endif
+
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
 extern BC_WORD_S g_heap_free;
 extern int trap_needs_gc;

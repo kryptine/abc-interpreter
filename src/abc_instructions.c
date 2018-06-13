@@ -1061,6 +1061,11 @@ char *instruction_name(BC_WORD i) {
 		case CA_data_a:
 			return "CA_data_a";
 
+#ifdef LINK_CLEAN_RUNTIME
+		case Chost_node:
+			return "host_node";
+#endif
+
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
 			return "";

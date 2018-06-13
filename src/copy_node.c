@@ -46,14 +46,10 @@ extern void *e__CodeSharing__dinterpret__28;
 extern void *e__CodeSharing__dinterpret__29;
 extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
-extern void *dINT;
 extern void *__Tuple;
 
-/* This does not contain the ce_symbols from the InterpretEnvironment type.
- * This element is not needed, and like this we can easily dereference the
- * environment from memory.
- */
 struct interpret_environment {
+	struct host_status *host;
 	struct program *program;
 	BC_WORD *heap;
 	BC_WORD heap_size;
@@ -75,31 +71,33 @@ struct interpret_environment *build_interpret_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
-	struct interpret_environment *ce = safe_malloc(sizeof(struct interpret_environment));
-	ce->program = program;
-	ce->heap = heap;
-	ce->heap_size = heap_size;
-	ce->stack = stack;
-	ce->stack_size = stack_size;
-	ce->asp = asp;
-	ce->bsp = bsp;
-	ce->csp = csp;
-	ce->hp = hp;
+	struct interpret_environment *ie = safe_malloc(sizeof(struct interpret_environment));
+	ie->host = safe_malloc(sizeof(struct host_status));
+	ie->program = program;
+	ie->heap = heap;
+	ie->heap_size = heap_size;
+	ie->stack = stack;
+	ie->stack_size = stack_size;
+	ie->asp = asp;
+	ie->bsp = bsp;
+	ie->csp = csp;
+	ie->hp = hp;
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Building interpret_environment %p\n",ce);
+	fprintf(stderr,"Building interpret_environment %p\n",ie);
 #endif
-	return ce;
+	return ie;
 }
 
-void interpret_environment_finalizer(struct interpret_environment *ce) {
+void interpret_environment_finalizer(struct interpret_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Freeing interpret_environment %p\n",ce);
+	fprintf(stderr,"Freeing interpret_environment %p\n",ie);
 #endif
-	free_program(ce->program);
-	free(ce->program);
-	free(ce->heap);
-	free(ce->stack);
-	free(ce);
+	free(ie->host);
+	free_program(ie->program);
+	free(ie->program);
+	free(ie->heap);
+	free(ie->stack);
+	free(ie);
 }
 
 void *get_interpret_environment_finalizer(void) {
@@ -152,15 +150,15 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
 
-int interpret_ce(struct interpret_environment *ce, BC_WORD *pc) {
+int interpret_ce(struct interpret_environment *ie, BC_WORD *pc) {
 	int result = interpret(
-			ce->program->code, ce->program->code_size,
-			ce->program->data, ce->program->data_size,
-			ce->stack, ce->stack_size,
-			ce->heap, ce->heap_size,
-			ce->asp, ce->bsp, ce->csp, ce->hp,
+			ie->program->code, ie->program->code_size,
+			ie->program->data, ie->program->data_size,
+			ie->stack, ie->stack_size,
+			ie->heap, ie->heap_size,
+			ie->asp, ie->bsp, ie->csp, ie->hp,
 			pc);
-	ce->hp = get_heap_address();
+	ie->hp = get_heap_address();
 	return result;
 }
 
@@ -184,7 +182,8 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		host_heap[1] = node[1];
 		return 2;
 	}
-	/* TODO: more basic types, strings, arrays */
+	/* TODO: probably we get CHAR, BOOL and REAL for free? */
+	/* TODO: we do need to add strings, arrays etc. here though */
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
@@ -295,7 +294,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
-	struct interpret_environment *ce = (struct interpret_environment*) ce_finalizer->cur->arg;
+	struct interpret_environment *ie = (struct interpret_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -306,31 +305,32 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #if DEBUG_CLEAN_LINKS > 1
 		fprintf(stderr,"\tInterpreting...\n");
 #endif
-		*++ce->asp = (BC_WORD) node;
-		if (interpret_ce(ce, (BC_WORD*) node[0]) != 0) {
+		*++ie->asp = (BC_WORD) node;
+		if (interpret_ce(ie, (BC_WORD*) node[0]) != 0) {
 			fprintf(stderr,"Failed to interpret\n");
 			return -1;
 		}
-		node = (BC_WORD*)*ce->asp--;
+		node = (BC_WORD*)*ie->asp--;
 	}
 
 	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
 }
 
-BC_WORD *copy_host_to_interpreter(struct interpret_environment *ce, BC_WORD *node) {
+BC_WORD *copy_host_to_interpreter(struct interpret_environment *ie, BC_WORD *node) {
 	/* TODO: for now we are assuming the interpreter has enough memory */
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ce->hp);
+	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ie->hp);
+	fprintf(stderr,"\t[1]=%p; [2]=%p\n",ie->host,node);
 #endif
-	BC_WORD *org_hp = ce->hp;
-	if (node[0] == (BC_WORD)&dINT+2) {
-		ce->hp[0] = (BC_WORD) &INT+2;
-		ce->hp[1] = node[1];
-		ce->hp += 2;
-	} else {
-		fprintf(stderr,"unsure what to do with this node: %p -> %p\n",node,(void*)node[0]);
-		exit(1);
-	}
+	BC_WORD *org_hp = ie->hp;
+	ie->hp[0] = (BC_WORD) &HOST_NODE;
+	ie->hp[1] = (BC_WORD) ie->host;
+		/* TODO: since there is only one host environment, we do not need to
+		 * store it in every node but can store it in the program struct or so.
+		 * This saves some memory.
+		 */
+	ie->hp[2] = (BC_WORD) node;
+	ie->hp += 3;
 	return org_hp;
 }
 
@@ -341,14 +341,14 @@ BC_WORD *copy_host_to_interpreter(struct interpret_environment *ce, BC_WORD *nod
 BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
 		int n_args, ...) {
-	struct interpret_environment *ce = (struct interpret_environment*) ce_finalizer->cur->arg;
+	struct interpret_environment *ie = (struct interpret_environment*) ce_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 
 	va_start(arguments,n_args);
 	for (int i = 0; i < n_args; i++)
-		*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, va_arg(arguments, BC_WORD*));
-	*++ce->asp = (BC_WORD) copy_host_to_interpreter(ce, arg1);
+		*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, va_arg(arguments, BC_WORD*));
+	*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, arg1);
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
@@ -356,23 +356,23 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	fprintf(stderr,"\tarity is %d\n",a_arity);
 #endif
 	if (a_arity > 0) {
-		*++ce->asp = node[1];
+		*++ie->asp = node[1];
 
 		if (a_arity == 2) {
-			*++ce->asp = node[2];
+			*++ie->asp = node[2];
 		} else if (a_arity > 2) {
 			BC_WORD *rest = (BC_WORD*)node[2];
 			for (int i = 0; i < a_arity-1; i++)
-				*++ce->asp = rest[i];
+				*++ie->asp = rest[i];
 		}
 	}
 
 	/* TODO: assuming the interpreter node does not contain arguments */
-	if (interpret_ce(ce, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
+	if (interpret_ce(ie, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
 		fprintf(stderr,"Failed to interpret\n");
 		return -1;
 	}
-	ce->asp -= n_args + a_arity;
-	node_finalizer->cur->arg = *ce->asp;
+	ie->asp -= n_args + a_arity;
+	node_finalizer->cur->arg = *ie->asp;
 	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
 }

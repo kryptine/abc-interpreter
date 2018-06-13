@@ -7008,11 +7008,40 @@ INSTRUCTION_BLOCK(jesr):
 	}
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+
 #ifndef COMPUTED_GOTOS
 case EVAL_TO_HNF_LABEL:
 	goto eval_to_hnf_return;
 	break;
 #endif
+
+#ifdef LINK_CLEAN_RUNTIME
+INSTRUCTION_BLOCK(host_node):
+{
+	BC_WORD *n=(BC_WORD*)asp[0];
+	struct host_status *host = (struct host_status*) n[1];
+	BC_WORD *host_node = (void*) n[2];
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
+#endif
+	host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
+#endif
+
+	if (host_node[0] == (BC_WORD)&dINT+2) {
+		n[0]=(BC_WORD)&INT+2;
+		n[1]=host_node[1];
+	} else {
+		fprintf(stderr,"\tNot sure how to copy this node: %p -> %p\n",host_node,(void*)*host_node);
+		exit(1);
+	}
+
+	pc=(BC_WORD*)*csp++;
+	END_INSTRUCTION_BLOCK;
+}
+#endif
+
 INSTRUCTION_BLOCK(add_arg4):
 INSTRUCTION_BLOCK(add_arg5):
 INSTRUCTION_BLOCK(add_arg6):
