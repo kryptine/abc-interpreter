@@ -542,10 +542,12 @@ enum {
 	INSTRUCTION(A_data_la),
 	INSTRUCTION(A_data_a),
 
+#ifdef LINK_CLEAN_RUNTIME
 /* This instruction evaluates a node on the native Clean heap, then copies its
  * head normal form back to the interpreter. This is needed for lazily applying
  * interpreted functions to native arguments. */
 	INSTRUCTION(host_node),
+#endif
 
 /* Unused; use this for the maximum integer value of an instruction, the number
  * of instructions, an instruction that does not exist, etc. */
