@@ -127,22 +127,21 @@ BC_WORD *get_heap_address(void) {
 	return hp;
 }
 
-int interpret(BC_WORD *code, size_t code_size,
-		BC_WORD *data, size_t data_size,
+int interpret(struct program *program,
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
-	if (code_size == -1) { /* See rationale in interpret.h */
+	if (stack == NULL) { /* See rationale in interpret.h */
 # define _COMPUTED_GOTO_LABELS
 # include "abc_instructions.h"
-		memcpy(code, _instruction_labels, sizeof(BC_WORD) * CMAX);
+		memcpy(program, _instruction_labels, sizeof(BC_WORD) * CMAX);
 		return 0;
 	}
 #endif
 
-	BC_WORD *pc = code;
+	BC_WORD *pc = program->code;
 	asp = _asp;
 	bsp = _bsp;
 	csp = _csp;
@@ -184,10 +183,10 @@ eval_to_hnf_return:
 		free_nodes_set(&nodes_set);
 # endif
 # ifdef DEBUG_ALL_INSTRUCTIONS
-		if (data <= pc && pc < data + data_size)
-			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
+		if (program->data <= pc && pc < program->data + program->data_size)
+			fprintf(stderr, "D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
 		else
-			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+			fprintf(stderr, ":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
 # endif
 # ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);
@@ -205,7 +204,7 @@ eval_to_hnf_return:
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR
-				, code, data
+				, program->code, program->data
 #endif
 				);
 #ifdef DEBUG_CURSES
@@ -334,8 +333,7 @@ int main(int argc, char **argv) {
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
 #endif
 
-	interpret(state.program->code, state.program->code_size,
-			state.program->data, state.program->data_size,
+	interpret(state.program,
 			stack, stack_size,
 			heap, heap_size,
 			asp, bsp, csp,

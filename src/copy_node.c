@@ -151,9 +151,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 }
 
 int interpret_ie(struct interpret_environment *ie, BC_WORD *pc) {
-	int result = interpret(
-			ie->program->code, ie->program->code_size,
-			ie->program->data, ie->program->data_size,
+	int result = interpret(ie->program,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
