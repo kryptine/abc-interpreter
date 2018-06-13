@@ -7024,7 +7024,8 @@ INSTRUCTION_BLOCK(host_node):
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
-	host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
+	if (!(host_node[0] & 2))
+		host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif

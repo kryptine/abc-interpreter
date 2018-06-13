@@ -97,11 +97,6 @@ __interpret__copy__node__asm__n_has_all_args:
 	# Call as __interpret__evaluate__host(hp_ptr, a_ptr, host_free, a0)
 __interpret__evaluate__host:
 	push	rbx
-
-	mov	rbx,[rcx]
-	test	rbx,2
-	jne	__interpret__evaluate__host__hnf
-
 	push	rbp
 	push	r12
 	push	r13
@@ -109,15 +104,14 @@ __interpret__evaluate__host:
 	push	r15
 
 	mov	r15,rdx
-	call	rbx
+	call	[rcx]
 
 	pop	r15
 	pop	r14
 	pop	r13
 	pop	r12
 	pop	rbp
-
-__interpret__evaluate__host__hnf:
 	pop	rbx
+
 	mov	rax,rcx
 	ret
