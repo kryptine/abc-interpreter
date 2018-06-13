@@ -1061,6 +1061,9 @@ char *instruction_name(BC_WORD i) {
 		case CA_data_a:
 			return "CA_data_a";
 
+		case Chost_node:
+			return "host_node";
+
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
 			return "";

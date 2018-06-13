@@ -46,14 +46,10 @@ extern void *e__CodeSharing__dinterpret__28;
 extern void *e__CodeSharing__dinterpret__29;
 extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
-extern void *dINT;
 extern void *__Tuple;
 
-/* This does not contain the ce_symbols from the InterpretEnvironment type.
- * This element is not needed, and like this we can easily dereference the
- * environment from memory.
- */
 struct interpret_environment {
+	struct host_status *host;
 	struct program *program;
 	BC_WORD *heap;
 	BC_WORD heap_size;
@@ -76,6 +72,7 @@ struct interpret_environment *build_interpret_environment(
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
 	struct interpret_environment *ie = safe_malloc(sizeof(struct interpret_environment));
+	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
 	ie->heap = heap;
 	ie->heap_size = heap_size;
@@ -95,6 +92,7 @@ void interpret_environment_finalizer(struct interpret_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Freeing interpret_environment %p\n",ie);
 #endif
+	free(ie->host);
 	free_program(ie->program);
 	free(ie->program);
 	free(ie->heap);
@@ -184,7 +182,8 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		host_heap[1] = node[1];
 		return 2;
 	}
-	/* TODO: more basic types, strings, arrays */
+	/* TODO: probably we get CHAR, BOOL and REAL for free? */
+	/* TODO: we do need to add strings, arrays etc. here though */
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
@@ -321,16 +320,17 @@ BC_WORD *copy_host_to_interpreter(struct interpret_environment *ie, BC_WORD *nod
 	/* TODO: for now we are assuming the interpreter has enough memory */
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ie->hp);
+	fprintf(stderr,"\t[1]=%p; [2]=%p\n",ie->host,node);
 #endif
 	BC_WORD *org_hp = ie->hp;
-	if (node[0] == (BC_WORD)&dINT+2) {
-		ie->hp[0] = (BC_WORD) &INT+2;
-		ie->hp[1] = node[1];
-		ie->hp += 2;
-	} else {
-		fprintf(stderr,"unsure what to do with this node: %p -> %p\n",node,(void*)node[0]);
-		exit(1);
-	}
+	ie->hp[0] = (BC_WORD) &HOST_NODE;
+	ie->hp[1] = (BC_WORD) ie->host;
+		/* TODO: since there is only one host environment, we do not need to
+		 * store it in every node but can store it in the program struct or so.
+		 * This saves some memory.
+		 */
+	ie->hp[2] = (BC_WORD) node;
+	ie->hp += 3;
 	return org_hp;
 }
 

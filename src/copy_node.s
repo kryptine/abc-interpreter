@@ -24,31 +24,35 @@
 # (res) r14: B6
 # (res) r15: Number of free words on heap
 
-.macro save_registers
-	push	rdx
+.macro save_registers_rdx # rdx is the interpretation environment
 	push	rcx
 	push	rax
-	push	rsi
-	push	rdi
 	push	r8
 	push	r10
 	push	r11
+	push	rdx
+	mov	rbp,[rdx] # host_status
+	mov	[rbp],rsi
+	mov	[rbp+8],rdi
+	mov	[rbp+16],r15
 .endm
 
-.macro restore_registers
+.macro restore_registers_rdx
+	mov	rdx,[rsp]
+	mov	rdx,[rdx] # host_status
+	mov	rsi,[rdx]
+	mov	rdi,[rdx+8]
+	pop	rdx
 	pop	r11
 	pop	r10
 	pop	r8
-	pop	rdi
-	pop	rsi
 	pop	rax
 	pop	rcx
-	pop	rdx
 .endm
 
 .globl	__interpret__copy__node__asm
 __interpret__copy__node__asm:
-	save_registers
+	save_registers_rdx
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
 	#mov	rdx,rdx # interpret environment
@@ -56,7 +60,7 @@ __interpret__copy__node__asm:
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm__finish:
 	mov	rbp,rax
-	restore_registers
+	restore_registers_rdx
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
 
@@ -76,7 +80,7 @@ __interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
-	save_registers
+	save_registers_rdx
 	mov	rbx,rax
 	cmp	rax,0
 __interpret__copy__node__asm__n_args:
@@ -88,3 +92,32 @@ __interpret__copy__node__asm__n_has_all_args:
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
 	jmp	__interpret__copy__node__asm__finish
+
+.global __interpret__evaluate__host
+	# Call as __interpret__evaluate__host(hp_ptr, a_ptr, host_free, a0)
+__interpret__evaluate__host:
+	push	rbx
+
+	mov	rbx,[rcx]
+	test	rbx,2
+	jne	__interpret__evaluate__host__hnf
+
+	push	rbp
+	push	r12
+	push	r13
+	push	r14
+	push	r15
+
+	mov	r15,rdx
+	call	rbx
+
+	pop	r15
+	pop	r14
+	pop	r13
+	pop	r12
+	pop	rbp
+
+__interpret__evaluate__host__hnf:
+	pop	rbx
+	mov	rax,rcx
+	ret

@@ -542,6 +542,11 @@ enum {
 	INSTRUCTION(A_data_la),
 	INSTRUCTION(A_data_a),
 
+/* This instruction evaluates a node on the native Clean heap, then copies its
+ * head normal form back to the interpreter. This is needed for lazily applying
+ * interpreted functions to native arguments. */
+	INSTRUCTION(host_node),
+
 /* Unused; use this for the maximum integer value of an instruction, the number
  * of instructions, an instruction that does not exist, etc. */
 #ifndef _COMPUTED_GOTO_LABELS
