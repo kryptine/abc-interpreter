@@ -159,6 +159,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	Fjmp_ap1 = (BC_WORD) instruction_labels[Cjmp_ap1];
 	Fjmp_ap2 = (BC_WORD) instruction_labels[Cjmp_ap2];
 	Fjmp_ap3 = (BC_WORD) instruction_labels[Cjmp_ap3];
+
+# ifdef LINK_CLEAN_RUNTIME
+	HOST_NODE[0] = instruction_labels[Cjsr_eval_host_node];
+# endif
 #endif
 
 	while (state->state != PS_end) {
