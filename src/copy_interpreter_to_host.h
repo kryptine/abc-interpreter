@@ -11,7 +11,7 @@ struct host_status {
 	size_t host_hp_free;
 };
 
-struct interpret_environment {
+struct interpretation_environment {
 	struct host_status *host;
 	struct program *program;
 	BC_WORD *heap;
@@ -22,12 +22,6 @@ struct interpret_environment {
 	BC_WORD *bsp;
 	BC_WORD *csp;
 	BC_WORD *hp;
-};
-
-struct InterpretEnvironment {
-	void *descriptor;
-	struct finalizers *finalizer;
-	struct interpret_environment *ptrs;
 };
 
 void interpreter_finalizer(BC_WORD interpret_node);

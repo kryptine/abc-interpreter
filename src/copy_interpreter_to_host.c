@@ -47,11 +47,11 @@ extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
 extern void *__Tuple;
 
-struct interpret_environment *build_interpret_environment(
+struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
-	struct interpret_environment *ie = safe_malloc(sizeof(struct interpret_environment));
+	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
 	ie->heap = heap;
@@ -63,14 +63,14 @@ struct interpret_environment *build_interpret_environment(
 	ie->csp = csp;
 	ie->hp = hp;
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Building interpret_environment %p\n",ie);
+	fprintf(stderr,"Building interpretation_environment %p\n",ie);
 #endif
 	return ie;
 }
 
-void interpret_environment_finalizer(struct interpret_environment *ie) {
+void interpretation_environment_finalizer(struct interpretation_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Freeing interpret_environment %p\n",ie);
+	fprintf(stderr,"Freeing interpretation_environment %p\n",ie);
 #endif
 	free(ie->host);
 	free_program(ie->program);
@@ -80,8 +80,8 @@ void interpret_environment_finalizer(struct interpret_environment *ie) {
 	free(ie);
 }
 
-void *get_interpret_environment_finalizer(void) {
-	return interpret_environment_finalizer;
+void *get_interpretation_environment_finalizer(void) {
+	return interpretation_environment_finalizer;
 }
 
 void interpreter_finalizer(BC_WORD interpret_node) {
@@ -130,7 +130,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
 
-int interpret_ie(struct interpret_environment *ie, BC_WORD *pc) {
+int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	int result = interpret(ie,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
@@ -270,7 +270,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
-	struct interpret_environment *ie = (struct interpret_environment*) ie_finalizer->cur->arg;
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -299,7 +299,7 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
 		int n_args, ...) {
-	struct interpret_environment *ie = (struct interpret_environment*) ie_finalizer->cur->arg;
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 

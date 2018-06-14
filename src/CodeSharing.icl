@@ -82,7 +82,7 @@ get_expression filename w
 		start_node = readInt start_label (IF_INT_64_OR_32 8 4)
 # start_node = hp
 # hp = hp + IF_INT_64_OR_32 24 12
-#! ce_settings = build_interpret_environment
+#! ce_settings = build_interpretation_environment
 	pgm
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp hp
@@ -93,15 +93,15 @@ get_expression filename w
 	// it to the finalizer_list anyway. This is just to ensure that the first
 	// call to `interpret gets the right argument.
 where
-	build_interpret_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
-	build_interpret_environment pgm heap hsize stack ssize asp bsp csp hp = code {
-		ccall build_interpret_environment "ppIpIpppp:p"
+	build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
+	build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp = code {
+		ccall build_interpretation_environment "ppIpIpppp:p"
 	}
 
 	make_finalizer :: !Int -> (!.Finalizer,!Int)
 	make_finalizer ce_settings = code {
 		push_finalizers
-		ccall get_interpret_environment_finalizer ":p"
+		ccall get_interpretation_environment_finalizer ":p"
 		push_a_b 0
 		pop_a 1
 		build_r e__system_kFinalizer 0 3 0 0

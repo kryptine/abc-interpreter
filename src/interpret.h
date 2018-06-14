@@ -66,7 +66,7 @@ BC_WORD *get_heap_address(void);
  */
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
-		struct interpret_environment *ie,
+		struct interpretation_environment *ie,
 #else
 		struct program *program,
 #endif
