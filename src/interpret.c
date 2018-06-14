@@ -142,7 +142,11 @@ int interpret(
 	if (stack == NULL) { /* See rationale in interpret.h */
 # define _COMPUTED_GOTO_LABELS
 # include "abc_instructions.h"
+#  ifdef LINK_CLEAN_RUNTIME
+		memcpy(ie, _instruction_labels, sizeof(BC_WORD) * CMAX);
+#  else
 		memcpy(program, _instruction_labels, sizeof(BC_WORD) * CMAX);
+#  endif
 		return 0;
 	}
 #endif
