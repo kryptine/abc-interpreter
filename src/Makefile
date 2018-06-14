@@ -5,6 +5,7 @@ override CFLAGS+=\
 	-Wall\
 	-Wno-misleading-indentation\
 	-Wno-strict-aliasing\
+	-Werror\
 	-DPOSIX\
 	-lm
 DIR:="Clean System Files"
@@ -51,10 +52,17 @@ SRC_INTERPRET:=\
 	parse.c\
 	traps.c\
 	util.c
-OBJ_INTERPRET:=$(subst .c,.o,$(SRC_INTERPRET)) copy_node.o finalizers.o
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
-	copy_node.h\
-	finalizers.h\
+	gc/util.h\
+	interpret_instructions.h\
+	settings.h
+
+SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
+	copy_host_to_interpreter.c\
+	copy_interpreter_to_host.c\
+	finalizers.c
+OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
+DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	gc/util.h\
 	interpret_instructions.h\
 	settings.h
@@ -62,26 +70,28 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
-copy_node_asm.o: copy_node.s
+interface.o: interface.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-Clean\ System\ Files/interpret.a: $(OBJ_INTERPRET) copy_node_asm.o
+Clean\ System\ Files/interpret.a: $(OBJ_INTERPRET_LIB) interface.o
+	mkdir -p Clean\ System\ Files
 	ar cr '$@' $^
 
-$(OBJ_INTERPRET): %.o: %.c $(DEP_INTERPRET) $(DEP_BYTECODE)
+$(OBJ_INTERPRET_LIB): %.o: %.c $(DEP_INTERPRET_LIB) $(DEP_BYTECODE)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
 
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
 
 clean:
-	$(RM) -r \
+	shopt -s globstar; $(RM) -r \
 		bytecode\
 		debug\
 		interpret\
 		link\
 		optimise\
-		**/Clean\ System\ Files
+		**/Clean\ System\ Files\
+		$(OBJ_INTERPRET_LIB)
 
 .FORCE:
 .PHONY: all clean
