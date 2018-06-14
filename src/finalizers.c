@@ -1,4 +1,4 @@
-#include "copy_node.h"
+#include "copy_interpreter_to_host.h"
 #include "finalizers.h"
 
 extern struct finalizers *finalizer_list;

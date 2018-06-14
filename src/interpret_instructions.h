@@ -7016,11 +7016,11 @@ case EVAL_TO_HNF_LABEL:
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
-INSTRUCTION_BLOCK(host_node):
+INSTRUCTION_BLOCK(jsr_eval_host_node):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	struct host_status *host = (struct host_status*) n[1];
-	BC_WORD *host_node = (void*) n[2];
+	struct host_status *host = ie->host;
+	BC_WORD *host_node = (void*) n[1];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
@@ -7030,14 +7030,12 @@ INSTRUCTION_BLOCK(host_node):
 	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
 
-	if (host_node[0] == (BC_WORD)&dINT+2) {
-		n[0]=(BC_WORD)&INT+2;
-		n[1]=host_node[1];
-	} else {
-		struct host_symbol *host_symbol = find_host_symbol_by_address(program, (void*)host_node[0]);
-		fprintf(stderr,"\tNot sure how to copy this node: %p -> %p (%p: %p)\n",host_node,(void*)*host_node,host_symbol,NULL);//host_symbol->interpreter_location);
-		exit(1);
-	}
+	/* TODO: if possible, it is more efficient to overwrite the old node
+	 * instead of creating a new node.
+	 */
+	BC_WORD words_used = copy_to_interpreter(program, hp, heap_free, host_node);
+	asp[0] = (BC_WORD) hp;
+	hp += words_used;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;

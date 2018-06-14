@@ -76,8 +76,9 @@ BC_WORD __cycle__in__spine = Chalt;
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
-# include "copy_node.h"
-void* HOST_NODE[]         = { (void*) Chost_node, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') };
+# include "copy_interpreter_to_host.h"
+# include "copy_host_to_interpreter.h"
+void* HOST_NODE[]         = { (void*) Cjsr_eval_host_node, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') };
 #endif
 
 BC_WORD Fjmp_ap1 = Cjmp_ap1;
@@ -127,7 +128,12 @@ BC_WORD *get_heap_address(void) {
 	return hp;
 }
 
-int interpret(struct program *program,
+int interpret(
+#ifdef LINK_CLEAN_RUNTIME
+		struct interpret_environment *ie,
+#else
+		struct program *program,
+#endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
@@ -139,6 +145,10 @@ int interpret(struct program *program,
 		memcpy(program, _instruction_labels, sizeof(BC_WORD) * CMAX);
 		return 0;
 	}
+#endif
+
+#ifdef LINK_CLEAN_RUNTIME
+	struct program *program = ie->program;
 #endif
 
 	BC_WORD *pc = program->code;

@@ -99,6 +99,7 @@ __interpret__copy__node__asm__n_has_all_args:
 
 .global __interpret__evaluate__host
 	# Call as __interpret__evaluate__host(hp_ptr, a_ptr, host_free, a0)
+	# TODO: update the host status (heap pointer etc.)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp

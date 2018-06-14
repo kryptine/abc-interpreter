@@ -546,7 +546,7 @@ enum {
 /* This instruction evaluates a node on the native Clean heap, then copies its
  * head normal form back to the interpreter. This is needed for lazily applying
  * interpreted functions to native arguments. */
-	INSTRUCTION(host_node),
+	INSTRUCTION(jsr_eval_host_node),
 #endif
 
 /* Unused; use this for the maximum integer value of an instruction, the number

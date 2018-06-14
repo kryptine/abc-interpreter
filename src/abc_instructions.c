@@ -1062,8 +1062,8 @@ char *instruction_name(BC_WORD i) {
 			return "CA_data_a";
 
 #ifdef LINK_CLEAN_RUNTIME
-		case Chost_node:
-			return "host_node";
+		case Cjsr_eval_host_node:
+			return "jsr_eval_host_node";
 #endif
 
 		default:

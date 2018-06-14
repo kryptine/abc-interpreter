@@ -7,9 +7,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include "bytecode.h"
-#include "copy_node.h"
-#include "finalizers.h"
+#include "copy_host_to_interpreter.h"
+#include "copy_interpreter_to_host.h"
 #include "gc.h"
 #include "interpret.h"
 #include "util.h"
@@ -47,25 +46,6 @@ extern void *e__CodeSharing__dinterpret__29;
 extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
 extern void *__Tuple;
-
-struct interpret_environment {
-	struct host_status *host;
-	struct program *program;
-	BC_WORD *heap;
-	BC_WORD heap_size;
-	BC_WORD *stack;
-	BC_WORD stack_size;
-	BC_WORD *asp;
-	BC_WORD *bsp;
-	BC_WORD *csp;
-	BC_WORD *hp;
-};
-
-struct InterpretEnvironment {
-	void *descriptor;
-	struct finalizers *finalizer;
-	struct interpret_environment *ptrs;
-};
 
 struct interpret_environment *build_interpret_environment(
 		struct program *program,
@@ -151,7 +131,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 }
 
 int interpret_ie(struct interpret_environment *ie, BC_WORD *pc) {
-	int result = interpret(ie->program,
+	int result = interpret(ie,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
@@ -312,24 +292,6 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
 
-BC_WORD *copy_host_to_interpreter(struct interpret_environment *ie, BC_WORD *node) {
-	/* TODO: for now we are assuming the interpreter has enough memory */
-#if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ie->hp);
-	fprintf(stderr,"\t[1]=%p; [2]=%p\n",ie->host,node);
-#endif
-	BC_WORD *org_hp = ie->hp;
-	ie->hp[0] = (BC_WORD) &HOST_NODE;
-	ie->hp[1] = (BC_WORD) ie->host;
-		/* TODO: since there is only one host environment, we do not need to
-		 * store it in every node but can store it in the program struct or so.
-		 * This saves some memory.
-		 */
-	ie->hp[2] = (BC_WORD) node;
-	ie->hp += 3;
-	return org_hp;
-}
-
 /**
  * The first argument is passed before the ie_finalizer to make calling from
  * Clean lightweight on x64. The rest of the arguments is passed variadically.
@@ -342,9 +304,12 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	va_list arguments;
 
 	va_start(arguments,n_args);
-	for (int i = 0; i < n_args; i++)
-		*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, va_arg(arguments, BC_WORD*));
-	*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, arg1);
+	for (int i = 0; i < n_args; i++) {
+		*++ie->asp = (BC_WORD) ie->hp;
+		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*));
+	}
+	*++ie->asp = (BC_WORD) ie->hp;
+	ie->hp += make_host_node(ie->hp, arg1);
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];

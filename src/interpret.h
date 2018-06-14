@@ -17,6 +17,7 @@ extern void* REAL[];
 extern BC_WORD __cycle__in__spine;
 
 #ifdef LINK_CLEAN_RUNTIME
+#include "copy_interpreter_to_host.h"
 extern void* HOST_NODE[];
 #endif
 
@@ -63,7 +64,12 @@ BC_WORD *get_heap_address(void);
  * or without computed gotos. Also, this implementation is faster, which is
  * important for efficient lazy interpretation.
  */
-int interpret(struct program *program,
+int interpret(
+#ifdef LINK_CLEAN_RUNTIME
+		struct interpret_environment *ie,
+#else
+		struct program *program,
+#endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
