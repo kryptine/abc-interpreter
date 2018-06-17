@@ -160,13 +160,13 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	Fjmp_ap2 = (BC_WORD) instruction_labels[Fjmp_ap2];
 	Fjmp_ap3 = (BC_WORD) instruction_labels[Fjmp_ap3];
 
-	__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__indirection[0]];
-	__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__indirection[1]];
-	__interpreter_indirection[2] = (void*) instruction_labels[(BC_WORD)__indirection[2]];
-	__interpreter_indirection[3] = (void*) instruction_labels[(BC_WORD)__indirection[3]];
-	__interpreter_indirection[5] = (void*) instruction_labels[(BC_WORD)__indirection[5]];
-	__interpreter_indirection[7] = (void*) instruction_labels[(BC_WORD)__indirection[7]];
-	__interpreter_indirection[8] = (void*) instruction_labels[(BC_WORD)__indirection[8]];
+	__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[0]];
+	__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[1]];
+	__interpreter_indirection[2] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[2]];
+	__interpreter_indirection[3] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[3]];
+	__interpreter_indirection[5] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[5]];
+	__interpreter_indirection[7] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[7]];
+	__interpreter_indirection[8] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[8]];
 
 # ifdef LINK_CLEAN_RUNTIME
 	HOST_NODE[0] = instruction_labels[Cjsr_eval_host_node];
