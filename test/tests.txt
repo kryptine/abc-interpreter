@@ -11,6 +11,8 @@ iks		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,
 #infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 invperm		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
 lqueen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+match		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray,StdEnv:_SystemEnum
+matchlarge		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
 mulmat
 nfib
 parser	-h,48m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray
