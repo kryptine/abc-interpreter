@@ -90,7 +90,7 @@ int trap_needs_gc = 0;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
-static void* __indirection[9] = { // TODO what does this do?
+void* __indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
 	(void*) Chalt,
@@ -225,13 +225,14 @@ eval_to_hnf_return:
 #endif
 }
 
-#ifdef DEBUG_CURSES
-const char usage[] = "Usage: %s [-h SIZE] [-s SIZE] FILE\n";
-#else
-const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
-#endif
-
 #ifndef LINK_CLEAN_RUNTIME
+
+# if defined(DEBUG_CURSES) || defined(COMPUTED_GOTOS)
+const char usage[] = "Usage: %s [-h SIZE] [-s SIZE] FILE\n";
+# else
+const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
+# endif
+
 int main(int argc, char **argv) {
 	int opt;
 
@@ -249,7 +250,7 @@ int main(int argc, char **argv) {
 	struct parser state;
 	init_parser(&state);
 
-#ifdef DEBUG_CURSES
+#if defined(DEBUG_CURSES) || defined(COMPUTED_GOTOS)
 	char *optstring = "s:h:";
 #else
 	char *optstring = "lRs:h:";
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
 
 	while ((opt = getopt(argc, argv, optstring)) != -1) {
 		switch (opt) {
-#ifndef DEBUG_CURSES
+#if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)
 			case 'l':
 				list_program = 1;
 				break;

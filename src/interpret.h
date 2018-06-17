@@ -28,6 +28,8 @@ extern BC_WORD Fjmp_ap1;
 extern BC_WORD Fjmp_ap2;
 extern BC_WORD Fjmp_ap3;
 
+extern void* __indirection[9];
+
 #if defined(POSIX) && defined(DEBUG_CURSES)
 # include <setjmp.h>
 extern jmp_buf segfault_restore_point;
