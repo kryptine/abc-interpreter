@@ -91,7 +91,7 @@ int trap_needs_gc = 0;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
-void* __indirection[9] = {
+void* __interpreter_indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
 	(void*) Chalt,

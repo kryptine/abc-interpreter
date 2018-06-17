@@ -6887,7 +6887,7 @@ INSTRUCTION_BLOCK(eval_upd0):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	n[1]=asp[-1];
 	--asp;
 	pc=*(BC_WORD**)&pc[1];
@@ -6898,7 +6898,7 @@ INSTRUCTION_BLOCK(eval_upd1):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[0]=n[1];
 	n[1]=asp[-1];
 	pc=*(BC_WORD**)&pc[1];
@@ -6909,7 +6909,7 @@ INSTRUCTION_BLOCK(eval_upd2):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[1]=n[1];
 	n[1]=asp[-1];
 	asp[0]=n[2];
@@ -6922,7 +6922,7 @@ INSTRUCTION_BLOCK(eval_upd3):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[2]=n[1];
 	n[1]=asp[-1];
 	asp[1]=n[2];
