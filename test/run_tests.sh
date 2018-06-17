@@ -171,6 +171,7 @@ do
 		touch "$MODULE.icl"
 		sleep 1
 		$CLM $CLMFLAGS -d $MODULE
+		$CLM $CLMFLAGS -d $MODULE
 	fi
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .

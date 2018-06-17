@@ -76,7 +76,7 @@ where
 	ff :: (Maybe [ProTup Int Term]) Term [Rule] [Term] Int Rule -> [Maybe [ProTup Int Term]]
 	ff e t rules ts n (Rule c cs) = fh rules ts n cs (unify (t,c) e)
 
-	fh :: ![Rule] [Term] !Int ![Term] !(Maybe [ProTup Int Term]) -> [Maybe [ProTup Int Term]]
+	fh :: ![Rule] ![Term] !Int ![Term] !(Maybe [ProTup Int Term]) -> [Maybe [ProTup Int Term]]
 	fh rules ts n cs newenv = case newenv of
 		Just p40 -> solve rules (cs ++ ts) newenv (n+1)
 		Nothing  -> []
