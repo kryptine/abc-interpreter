@@ -20,7 +20,6 @@ extern uint32_t list_code;
 void initialize_code(void);
 void code_next_module(void);
 struct word *add_add_arg_labels(void);
-void make_undefined_labels_global(void);
 void write_program(FILE*);
 void add_code_and_data_offsets(void);
 

@@ -13,7 +13,9 @@ invperm		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
 lqueen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
 mulmat
 nfib
+parser	-h,48m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray
 pascal		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
+prolog	-h,48m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunc,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray
 reals		StdEnv:StdReal
 reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
 reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
