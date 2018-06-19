@@ -29,7 +29,8 @@ optimise =
 	opt_abc1 o
 	reorder_a_and_b_stack o
 	reorder_abc o
-	opt_abc
+	opt_abc o
+	remove_comments
 
 isCommutativeBStackInstruction :: !ABCInstruction -> Bool
 isCommutativeBStackInstruction (IIns s) = isMember s
@@ -41,6 +42,19 @@ isCommutativeBStackInstruction (IIns s) = isMember s
 	, "or%"
 	]
 isCommutativeBStackInstruction _ = False
+
+remove_comments :: ([ABCInstruction] -> [ABCInstruction])
+remove_comments = filter \i -> not case i of
+	IIns s -> isComment 0 s
+	Line s -> isComment 0 s
+	_      -> False
+where
+	isComment :: !Int !String -> Bool
+	isComment i s
+	| i >= size s   = True
+	| s.[i] == '|'  = True
+	| isSpace s.[i] = isComment (i+1) s
+	| otherwise     = False
 
 opt_abc :: [ABCInstruction] -> [ABCInstruction]
 opt_abc [Ipop_a 0:is] = opt_abc is
@@ -82,18 +96,8 @@ opt_abc [IIns "no_op":is] = opt_abc is
 
 opt_abc [Ipush_a n1,Ieq_desc d n2 0,Ipop_a n3:is] = opt_abc [Ieq_desc d n2 n1,Ipop_a (n3-1):opt_abc is]
 
-opt_abc [IIns s:is] | isComment 0 s = opt_abc is
-opt_abc [Line s:is] | isComment 0 s = opt_abc is
-
 opt_abc [i:is] = [i:opt_abc is]
 opt_abc [] = []
-
-isComment :: !Int !String -> Bool
-isComment i s
-| i >= size s   = True
-| s.[i] == '|'  = True
-| isSpace s.[i] = isComment (i+1) s
-| otherwise     = False
 
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
 opt_abc1 [Line "":is] = opt_abc1 is
