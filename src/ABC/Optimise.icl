@@ -92,6 +92,8 @@ opt_abc [Ipush_r_args _ i0 i1,Ipop_a n_a,Ipop_b n_b:is] | i0 == n_a && i1 == n_b
 opt_abc [IpushI 1,Ipush_b n,IIns "addI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "incI":is]
 opt_abc [IpushI 1,Ipush_b n,IIns "subI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "decI":is]
 
+opt_abc [IpushI 0,IIns "subI":is] = [IIns "negI":opt_abc is]
+
 opt_abc [IIns "no_op":is] = opt_abc is
 
 opt_abc [Ipush_a n1,Ieq_desc d n2 0,Ipop_a n3:is] = opt_abc [Ieq_desc d n2 n1,Ipop_a (n3-1):opt_abc is]
