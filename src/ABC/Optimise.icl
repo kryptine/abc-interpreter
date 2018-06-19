@@ -29,7 +29,8 @@ optimise =
 	opt_abc1 o
 	reorder_a_and_b_stack o
 	reorder_abc o
-	opt_abc
+	opt_abc o
+	remove_comments
 
 isCommutativeBStackInstruction :: !ABCInstruction -> Bool
 isCommutativeBStackInstruction (IIns s) = isMember s
@@ -41,6 +42,19 @@ isCommutativeBStackInstruction (IIns s) = isMember s
 	, "or%"
 	]
 isCommutativeBStackInstruction _ = False
+
+remove_comments :: ([ABCInstruction] -> [ABCInstruction])
+remove_comments = filter \i -> not case i of
+	IIns s -> isComment 0 s
+	Line s -> isComment 0 s
+	_      -> False
+where
+	isComment :: !Int !String -> Bool
+	isComment i s
+	| i >= size s   = True
+	| s.[i] == '|'  = True
+	| isSpace s.[i] = isComment (i+1) s
+	| otherwise     = False
 
 opt_abc :: [ABCInstruction] -> [ABCInstruction]
 opt_abc [Ipop_a 0:is] = opt_abc is
@@ -78,22 +92,14 @@ opt_abc [Ipush_r_args _ i0 i1,Ipop_a n_a,Ipop_b n_b:is] | i0 == n_a && i1 == n_b
 opt_abc [IpushI 1,Ipush_b n,IIns "addI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "incI":is]
 opt_abc [IpushI 1,Ipush_b n,IIns "subI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "decI":is]
 
+opt_abc [IpushI 0,IIns "subI":is] = [IIns "negI":opt_abc is]
+
 opt_abc [IIns "no_op":is] = opt_abc is
 
 opt_abc [Ipush_a n1,Ieq_desc d n2 0,Ipop_a n3:is] = opt_abc [Ieq_desc d n2 n1,Ipop_a (n3-1):opt_abc is]
 
-opt_abc [IIns s:is] | isComment 0 s = opt_abc is
-opt_abc [Line s:is] | isComment 0 s = opt_abc is
-
 opt_abc [i:is] = [i:opt_abc is]
 opt_abc [] = []
-
-isComment :: !Int !String -> Bool
-isComment i s
-| i >= size s   = True
-| s.[i] == '|'  = True
-| isSpace s.[i] = isComment (i+1) s
-| otherwise     = False
 
 opt_abc1 :: [ABCInstruction] -> [ABCInstruction]
 opt_abc1 [Line "":is] = opt_abc1 is
@@ -217,6 +223,10 @@ opt_abc_new [IeqI_b i n,Ijmp_false l:is] = [Ijmp_neI_b i n l:opt_abc_new is]
 opt_abc_new [Ipush_b n,IpushI i,IIns "and%":is]         = [IandIio i n:opt_abc_new is]
 opt_abc_new [IpushI i,IIns "and%":is]                   = [IandIi i:opt_abc_new is]
 opt_abc_new [IpushI i,Ipush_b n,IIns "and%":is] | n > 0 = [IandIio i (n-1):opt_abc_new is]
+
+opt_abc_new [IpushB_a 0,Ipop_a 1:is] = [IpushB0_pop_a1:opt_abc_new is]
+opt_abc_new [IpushC_a 0,Ipop_a 1:is] = [IpushC0_pop_a1:opt_abc_new is]
+opt_abc_new [IpushI_a 0,Ipop_a 1:is] = [IpushI0_pop_a1:opt_abc_new is]
 
 opt_abc_new [i:is] = [i:opt_abc_new is]
 opt_abc_new [] = []
