@@ -222,6 +222,10 @@ opt_abc_new [Ipush_b n,IpushI i,IIns "and%":is]         = [IandIio i n:opt_abc_n
 opt_abc_new [IpushI i,IIns "and%":is]                   = [IandIi i:opt_abc_new is]
 opt_abc_new [IpushI i,Ipush_b n,IIns "and%":is] | n > 0 = [IandIio i (n-1):opt_abc_new is]
 
+opt_abc_new [IpushB_a 0,Ipop_a 1:is] = [IpushB0_pop_a1:opt_abc_new is]
+opt_abc_new [IpushC_a 0,Ipop_a 1:is] = [IpushC0_pop_a1:opt_abc_new is]
+opt_abc_new [IpushI_a 0,Ipop_a 1:is] = [IpushI0_pop_a1:opt_abc_new is]
+
 opt_abc_new [i:is] = [i:opt_abc_new is]
 opt_abc_new [] = []
 

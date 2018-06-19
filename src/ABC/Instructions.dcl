@@ -66,13 +66,16 @@ from StdFile import class <<<
 	| Ipush3_b !Int
 	| IpushB !Bool
 	| IpushB_a !Int
+	| IpushB0_pop_a1
 	| IpushC !Char
 	| IpushC_a !Int
+	| IpushC0_pop_a1
 	| IpushD !String
 	| IpushD_a !Int
 	| IpushD_a_jmp_eqD_b2 !Int !String !Int !String !String !Int !String
 	| IpushI !Int
 	| IpushI_a !Int
+	| IpushI0_pop_a1
 	| Ipush_a !Int
 	| Ipush_a2 !Int !Int
 	| Ipush_a_jsr !Int !String

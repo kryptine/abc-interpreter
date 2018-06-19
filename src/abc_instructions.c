@@ -433,10 +433,14 @@ char *instruction_name(BC_WORD i) {
 			return "pushBTRUE";
 		case CpushB_a:
 			return "pushB_a";
+		case CpushB0_pop_a1:
+			return "pushB0_pop_a1";
 		case CpushC:
 			return "pushC";
 		case CpushC_a:
 			return "pushC_a";
+		case CpushC0_pop_a1:
+			return "pushC0_pop_a1";
 		case CpushD:
 			return "pushD";
 		case CpushD_a:
@@ -447,6 +451,8 @@ char *instruction_name(BC_WORD i) {
 			return "pushI";
 		case CpushI_a:
 			return "pushI_a";
+		case CpushI0_pop_a1:
+			return "pushI0_pop_a1";
 		case CpushR:
 			return "pushR";
 		case CpushR_a:
@@ -1287,13 +1293,16 @@ char *instruction_type (BC_WORD i) {
 		case CpushBFALSE:            return "";
 		case CpushBTRUE:             return "";
 		case CpushB_a:               return "n";
+		case CpushB0_pop_a1:         return "";
 		case CpushC:                 return "c";
 		case CpushC_a:               return "n";
+		case CpushC0_pop_a1:         return "";
 		case CpushD:                 return "l";
 		case CpushD_a:               return "n";
 		case CpushF_a:               return "?";
 		case CpushI:                 return "i";
 		case CpushI_a:               return "n";
+		case CpushI0_pop_a1:         return "";
 		case CpushR:                 return "r";
 		case CpushR_a:               return "n";
 		case Cpushcaf10:             return "l";

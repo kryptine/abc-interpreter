@@ -2264,12 +2264,20 @@ void code_pushB_a(int a_offset) {
 	add_instruction_w(CpushB_a,-a_offset);
 }
 
+void code_pushB0_pop_a1() {
+	add_instruction(CpushB0_pop_a1);
+}
+
 void code_pushC(int c) {
 	add_instruction_c(CpushC,c);
 }
 
 void code_pushC_a(int a_offset) {
 	add_instruction_w(CpushC_a,-a_offset);
+}
+
+void code_pushC0_pop_a1() {
+	add_instruction(CpushC0_pop_a1);
 }
 
 void code_pushD(char *descriptor) {
@@ -2290,6 +2298,10 @@ void code_pushI(CleanInt i) {
 
 void code_pushI_a(int a_offset) {
 	add_instruction_w(CpushI_a,-a_offset);
+}
+
+void code_pushI0_pop_a1() {
+	add_instruction(CpushI0_pop_a1);
 }
 
 void code_pushR(double r) {
