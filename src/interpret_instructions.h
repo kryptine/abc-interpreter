@@ -3367,6 +3367,16 @@ INSTRUCTION_BLOCK(push_arraysize_a):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(pushB0_pop_a1):
+INSTRUCTION_BLOCK(pushC0_pop_a1):
+INSTRUCTION_BLOCK(pushI0_pop_a1):
+{
+	BC_WORD *n=(BC_WORD*)asp[0];
+	asp--;
+	*--bsp=n[1];
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(pushD_a):
 {
 	BC_WORD *n;

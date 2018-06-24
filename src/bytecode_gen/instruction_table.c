@@ -149,14 +149,17 @@ void load_instruction_table(void) {
 	put_instruction_name("print_symbol_sc",       parse_instruction_n,             code_print_symbol_sc );
 	put_instruction_name("pushA_a",               parse_instruction_n,             code_pushA_a );
 	put_instruction_name("pushB",                 parse_instruction_b,             code_pushB );
-	put_instruction_name("pushC",                 parse_instruction_c,             code_pushC );
 	put_instruction_name("pushB_a",               parse_instruction_n,             code_pushB_a );
+	put_instruction_name("pushB0_pop_a1",         parse_instruction,               code_pushB0_pop_a1 );
+	put_instruction_name("pushC",                 parse_instruction_c,             code_pushC );
 	put_instruction_name("pushC_a",               parse_instruction_n,             code_pushC_a );
+	put_instruction_name("pushC0_pop_a1",         parse_instruction,               code_pushC0_pop_a1 );
 	put_instruction_name("pushD",                 parse_instruction_a,             code_pushD );
 	put_instruction_name("pushD_a",               parse_instruction_n,             code_pushD_a );
 	put_instruction_name("pushF_a",               parse_instruction_n,             code_pushF_a );
 	put_instruction_name("pushI",                 parse_instruction_i,             code_pushI );
 	put_instruction_name("pushI_a",               parse_instruction_n,             code_pushI_a );
+	put_instruction_name("pushI0_pop_a1",         parse_instruction,               code_pushI0_pop_a1 );
 	put_instruction_name("pushR",                 parse_instruction_r,             code_pushR );
 	put_instruction_name("pushR_a",               parse_instruction_n,             code_pushR_a );
 	put_instruction_name("pushcaf",               parse_instruction_a_n_n,         code_pushcaf );
