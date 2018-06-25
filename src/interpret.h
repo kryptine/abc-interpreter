@@ -17,7 +17,8 @@ extern void* REAL[];
 extern BC_WORD __cycle__in__spine;
 
 #ifdef LINK_CLEAN_RUNTIME
-extern void* HOST_NODE[];
+#include "copy_interpreter_to_host.h"
+extern void* HOST_NODES[][6];
 #endif
 
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
@@ -28,7 +29,7 @@ extern BC_WORD Fjmp_ap1;
 extern BC_WORD Fjmp_ap2;
 extern BC_WORD Fjmp_ap3;
 
-extern void* __indirection[9];
+extern void* __interpreter_indirection[9];
 
 #if defined(POSIX) && defined(DEBUG_CURSES)
 # include <setjmp.h>
@@ -38,8 +39,7 @@ extern jmp_buf segfault_restore_point;
 BC_WORD *get_heap_address(void);
 
 /**
- * code: code segment
- * data: data segment
+ * program: the program to run
  * stack: stack block
  * stack_size: size of stack in words
  * heap: heap block
@@ -52,8 +52,8 @@ BC_WORD *get_heap_address(void);
  *  - Pointer to a node to evaluate to HNF;
  *  - NULL if we should just start running at code[0].
  *
- * HOWEVER, when compiled with COMPUTED_GOTOS defined and code_size=-1, do not
- * interpret at all but instead copy an array with label addresses to code.
+ * HOWEVER, when compiled with COMPUTED_GOTOS defined and stack=NULL, do not
+ * interpret at all but instead copy an array with label addresses to program.
  * If anybody other than John (who, we're sure, will immediately understand)
  * ever reads this, here is the rationale: with computed gotos, we want to
  * store pointers to the label addresses in interpret_instructions.h instead of
@@ -66,8 +66,12 @@ BC_WORD *get_heap_address(void);
  * or without computed gotos. Also, this implementation is faster, which is
  * important for efficient lazy interpretation.
  */
-int interpret(BC_WORD *code, size_t code_size,
-		BC_WORD *data, size_t data_size,
+int interpret(
+#ifdef LINK_CLEAN_RUNTIME
+		struct interpretation_environment *ie,
+#else
+		struct program *program,
+#endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,

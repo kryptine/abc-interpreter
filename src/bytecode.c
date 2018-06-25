@@ -14,9 +14,85 @@ void free_program(struct program *pgm) {
 		free(pgm->symbol_table);
 	if (pgm->symbols != NULL)
 		free(pgm->symbols);
+#ifdef LINK_CLEAN_RUNTIME
+	if (pgm->host_symbols != NULL)
+		free(pgm->host_symbols);
+	if (pgm->host_symbols_strings != NULL)
+		free(pgm->host_symbols_strings);
+#endif
 }
 
 #ifdef INTERPRETER
+
+# ifdef LINK_CLEAN_RUNTIME
+# include <string.h>
+struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name) {
+	int start = 0;
+	int end = pgm->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		int r = strcmp(pgm->host_symbols[i].name, name);
+		if (r > 0)
+			end = i-1;
+		else if (r < 0)
+			start = i+1;
+		else
+			return &pgm->host_symbols[i];
+	}
+
+	return NULL;
+}
+
+struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr) {
+	int start = 0;
+	int end = pgm->host_symbols_n - 1;
+
+	while (start <= end) {
+		int i = (start + end) / 2;
+		if (pgm->host_symbols[i].location < addr)
+			start = i+1;
+		else if (pgm->host_symbols[i].location > addr)
+			end = i-1;
+		else
+			return &pgm->host_symbols[i];
+	}
+
+	return NULL;
+}
+
+/* https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme */
+static int host_symbols_partition(struct host_symbol *arr, int lo, int hi) {
+	struct host_symbol temp;
+	void *pivot = arr[hi].location;
+	int i = lo - 1;
+	for (int j = lo; j < hi; j++) {
+		if (arr[j].location < pivot) {
+			i++;
+			temp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = temp;
+		}
+	}
+	temp = arr[i+1];
+	arr[i+1] = arr[hi];
+	arr[hi] = temp;
+	return i+1;
+}
+
+static void host_symbols_quicksort(struct host_symbol *arr, int lo, int hi) {
+	if (lo >= hi)
+		return;
+	int pivot = host_symbols_partition(arr, lo, hi);
+	host_symbols_quicksort(arr, lo, pivot-1);
+	host_symbols_quicksort(arr, pivot+1, hi);
+}
+
+void sort_host_symbols_by_location(struct program *pgm) {
+	host_symbols_quicksort(pgm->host_symbols, 0, pgm->host_symbols_n-1);
+}
+# endif
+
 int print_plain_label(char *s, size_t size, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
 	if (pgm->code <= label && label < pgm->code + pgm->code_size)

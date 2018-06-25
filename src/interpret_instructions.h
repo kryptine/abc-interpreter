@@ -86,7 +86,7 @@ INSTRUCTION_BLOCK(build):
 	s=pc[1];
 	NEED_HEAP(s+1);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX "; arity %d)\n", (void*) (asp-s), (void*) hp, pc[1] - (BC_WORD) data, pc[2], (int) pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX "; arity %d)\n", (void*) (asp-s), (void*) hp, pc[1] - (BC_WORD) program->data, pc[2], (int) pc[1]);
 #endif
 	hp[0]=pc[2];
 	hp[1]=asp[0];
@@ -132,7 +132,7 @@ INSTRUCTION_BLOCK(build):
 INSTRUCTION_BLOCK(build0):
 	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	*++asp=(BC_WORD)hp;
@@ -152,7 +152,7 @@ INSTRUCTION_BLOCK(buildh2):
 INSTRUCTION_BLOCK(buildhr20):
 	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
@@ -164,7 +164,7 @@ INSTRUCTION_BLOCK(buildhr20):
 INSTRUCTION_BLOCK(build3):
 	NEED_HEAP(4);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp-1), (void*) hp, pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=asp[0];
@@ -190,7 +190,7 @@ INSTRUCTION_BLOCK(build4):
 INSTRUCTION_BLOCK(buildh0):
 INSTRUCTION_BLOCK(buildAC):
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	*++asp=pc[1];
 	pc+=2;
@@ -1212,7 +1212,7 @@ INSTRUCTION_BLOCK(build_r40):
 
 	NEED_HEAP(6);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) program->data, pc[2]);
 #endif
 	ao=((BC_WORD_S*)pc)[1];
 	hp[0]=*(BC_WORD*)&pc[2];
@@ -1318,7 +1318,7 @@ INSTRUCTION_BLOCK(build_u01):
 INSTRUCTION_BLOCK(build_u02):
 	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	hp[0]=pc[1];
 	hp[1]=bsp[0];
@@ -2126,7 +2126,7 @@ INSTRUCTION_BLOCK(fillh0):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) program->data, pc[2]);
 #endif
 	n[0]=pc[2];
 	pc+=3;
@@ -2151,7 +2151,7 @@ INSTRUCTION_BLOCK(fillh2):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*) n, pc[2] - (BC_WORD) program->data, pc[2]);
 #endif
 	n[0]=pc[2];
 	n[1]=asp[0];
@@ -2467,7 +2467,7 @@ INSTRUCTION_BLOCK(fillh3):
 	NEED_HEAP(2);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ") with %p\n", (void*) n, pc[2] - (BC_WORD) data, pc[2], (void*)hp);
+	fprintf(stderr, "\t%p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ") with %p\n", (void*) n, pc[2] - (BC_WORD) program->data, pc[2], (void*)hp);
 #endif
 	n[0]=*(BC_WORD_S*)&pc[2];
 	n[1]=asp[0];
@@ -3041,7 +3041,7 @@ INSTRUCTION_BLOCK(gtI):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(halt):
-	PRINTF("halt at %d\n", (int) (pc-code));
+	PRINTF("halt at %d\n", (int) (pc-program->code));
 	PRINTF("%d %d %d\n", (int) (heap_size-heap_free), (int) heap_free, (int) heap_size);
 #ifdef DEBUG_CURSES
 	debugger_graceful_end();
@@ -3870,7 +3870,7 @@ INSTRUCTION_BLOCK(push_node_u02):
 
 	n=(BC_WORD*)*asp;
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)asp, (void*)n, pc[1] - (BC_WORD) data, pc[1]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)asp, (void*)n, pc[1] - (BC_WORD) program->data, pc[1]);
 #endif
 	n[0]=pc[1];
 	bsp[-2]=n[1];
@@ -5847,7 +5847,7 @@ INSTRUCTION_BLOCK(buildo1):
 
 	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) data, pc[2]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[2] - (BC_WORD) program->data, pc[2]);
 #endif
 	ao=pc[1];
 	hp[0]=pc[2];
@@ -5864,7 +5864,7 @@ INSTRUCTION_BLOCK(buildo2):
 
 	NEED_HEAP(3);
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) data, pc[3]);
+	fprintf(stderr, "\t%p / %p <- " BC_WORD_FMT " (" BC_WORD_FMT_HEX ")\n", (void*)(asp+1), (void*) hp, pc[3] - (BC_WORD) program->data, pc[3]);
 #endif
 	ao1=((BC_WORD_S*)pc)[1];
 	ao2=((BC_WORD_S*)pc)[2];
@@ -6608,10 +6608,10 @@ INSTRUCTION_BLOCK(jmp_ap5):
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
-			d-(BC_WORD)data,
+			d-(BC_WORD)program->data,
 			((uint16_t*)d)[0],
 			((uint16_t*)d)[-1],
-			(*(BC_WORD*)(d+40-6) - (BC_WORD) code) / 8);
+			(*(BC_WORD*)(d+40-6) - (BC_WORD) program->code) / 8);
 #endif
 	if (((uint16_t*)d)[0]==40){
 		BC_WORD arity;
@@ -6705,10 +6705,10 @@ INSTRUCTION_BLOCK(jmp_ap3):
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t" BC_WORD_FMT ": %d/%d -> " BC_WORD_FMT "\n",
-			d-(BC_WORD)data,
+			d-(BC_WORD)program->data,
 			((uint16_t*)d)[0],
 			((uint16_t*)d)[-1],
-			(*(BC_WORD*)(d+24-6) - (BC_WORD) code) / 8);
+			(*(BC_WORD*)(d+24-6) - (BC_WORD) program->code) / 8);
 #endif
 	if (((uint16_t*)d)[0]==24){
 		BC_WORD arity;
@@ -6759,10 +6759,10 @@ INSTRUCTION_BLOCK(jmp_ap2):
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	fprintf(stderr, "\t" BC_WORD_FMT ": %u/%d -> " BC_WORD_FMT "\n",
-			d-(BC_WORD)data,
+			d-(BC_WORD)program->data,
 			((uint16_t*)d)[0],
 			((int16_t*)d)[-1],
-			(*(BC_WORD*)(d+16+6) - (BC_WORD) code) / 8);
+			(*(BC_WORD*)(d+16+6) - (BC_WORD) program->code) / 8);
 #endif
 	if (((uint16_t*)d)[0]==16){
 		int16_t arity;
@@ -6811,7 +6811,7 @@ INSTRUCTION_BLOCK(jsr_ap1):
 	*--csp=(BC_WORD)&pc[1];
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p: " BC_WORD_FMT "; " BC_WORD_FMT "\n", (void*) d, *(BC_WORD*)(d+IF_INT_64_OR_32(6,2)) - (BC_WORD)code, d-(BC_WORD)data);
+	fprintf(stderr, "\t%p: " BC_WORD_FMT "; " BC_WORD_FMT "\n", (void*) d, *(BC_WORD*)(d+IF_INT_64_OR_32(6,2)) - (BC_WORD)program->code, d-(BC_WORD)program->data);
 #endif
 	pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 	END_INSTRUCTION_BLOCK;
@@ -6823,7 +6823,7 @@ INSTRUCTION_BLOCK(jmp_ap1):
 	n=(BC_WORD*)asp[0];
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
-	fprintf(stderr, "\t%p: " BC_WORD_FMT "; " BC_WORD_FMT "\n", (void*) d, *(BC_WORD*)(d+IF_INT_64_OR_32(6,2)) - (BC_WORD)code, d-(BC_WORD)data);
+	fprintf(stderr, "\t%p: " BC_WORD_FMT "; " BC_WORD_FMT "\n", (void*) d, *(BC_WORD*)(d+IF_INT_64_OR_32(6,2)) - (BC_WORD)program->code, d-(BC_WORD)program->data);
 #endif
 	pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 	END_INSTRUCTION_BLOCK;
@@ -6897,7 +6897,7 @@ INSTRUCTION_BLOCK(eval_upd0):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	n[1]=asp[-1];
 	--asp;
 	pc=*(BC_WORD**)&pc[1];
@@ -6908,7 +6908,7 @@ INSTRUCTION_BLOCK(eval_upd1):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[0]=n[1];
 	n[1]=asp[-1];
 	pc=*(BC_WORD**)&pc[1];
@@ -6919,7 +6919,7 @@ INSTRUCTION_BLOCK(eval_upd2):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[1]=n[1];
 	n[1]=asp[-1];
 	asp[0]=n[2];
@@ -6932,7 +6932,7 @@ INSTRUCTION_BLOCK(eval_upd3):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[0];
-	n[0]=(BC_WORD)&__indirection[5];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
 	asp[2]=n[1];
 	n[1]=asp[-1];
 	asp[1]=n[2];
@@ -6951,12 +6951,12 @@ INSTRUCTION_BLOCK(jsr_stack_check):
 INSTRUCTION_BLOCK(stack_check):
 	if (csp[0]!=(BC_WORD)asp){
 		PRINTF("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	if (csp[1]!=(BC_WORD)bsp){
 		PRINTF("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
+		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
 		exit (1);
 	}
 	csp+=2;
@@ -7026,26 +7026,56 @@ case EVAL_TO_HNF_LABEL:
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
-INSTRUCTION_BLOCK(host_node):
+INSTRUCTION_BLOCK(jsr_eval_host_node):
+INSTRUCTION_BLOCK(jsr_eval_host_node_1):
+INSTRUCTION_BLOCK(jsr_eval_host_node_2):
+INSTRUCTION_BLOCK(jsr_eval_host_node_3):
+INSTRUCTION_BLOCK(jsr_eval_host_node_4):
+INSTRUCTION_BLOCK(jsr_eval_host_node_5):
+INSTRUCTION_BLOCK(jsr_eval_host_node_6):
+INSTRUCTION_BLOCK(jsr_eval_host_node_7):
+INSTRUCTION_BLOCK(jsr_eval_host_node_8):
+INSTRUCTION_BLOCK(jsr_eval_host_node_9):
+INSTRUCTION_BLOCK(jsr_eval_host_node_10):
+INSTRUCTION_BLOCK(jsr_eval_host_node_11):
+INSTRUCTION_BLOCK(jsr_eval_host_node_12):
+INSTRUCTION_BLOCK(jsr_eval_host_node_13):
+INSTRUCTION_BLOCK(jsr_eval_host_node_14):
+INSTRUCTION_BLOCK(jsr_eval_host_node_15):
+INSTRUCTION_BLOCK(jsr_eval_host_node_16):
+INSTRUCTION_BLOCK(jsr_eval_host_node_17):
+INSTRUCTION_BLOCK(jsr_eval_host_node_18):
+INSTRUCTION_BLOCK(jsr_eval_host_node_19):
+INSTRUCTION_BLOCK(jsr_eval_host_node_20):
+INSTRUCTION_BLOCK(jsr_eval_host_node_21):
+INSTRUCTION_BLOCK(jsr_eval_host_node_22):
+INSTRUCTION_BLOCK(jsr_eval_host_node_23):
+INSTRUCTION_BLOCK(jsr_eval_host_node_24):
+INSTRUCTION_BLOCK(jsr_eval_host_node_25):
+INSTRUCTION_BLOCK(jsr_eval_host_node_26):
+INSTRUCTION_BLOCK(jsr_eval_host_node_27):
+INSTRUCTION_BLOCK(jsr_eval_host_node_28):
+INSTRUCTION_BLOCK(jsr_eval_host_node_29):
+INSTRUCTION_BLOCK(jsr_eval_host_node_30):
+INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	struct host_status *host = (struct host_status*) n[1];
-	BC_WORD *host_node = (void*) n[2];
+	BC_WORD *host_node = (void*) n[1];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
-	host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
+	if (!(host_node[0] & 2))
+		host_node = __interpret__evaluate__host(ie, host_node);
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
 
-	if (host_node[0] == (BC_WORD)&dINT+2) {
-		n[0]=(BC_WORD)&INT+2;
-		n[1]=host_node[1];
-	} else {
-		fprintf(stderr,"\tNot sure how to copy this node: %p -> %p\n",host_node,(void*)*host_node);
-		exit(1);
-	}
+	/* TODO: if possible, it is more efficient to overwrite the old node
+	 * instead of creating a new node.
+	 */
+	BC_WORD words_used = copy_to_interpreter(program, hp, heap_free, host_node);
+	asp[0] = (BC_WORD) hp;
+	hp += words_used;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -7103,7 +7133,7 @@ INSTRUCTION_BLOCK(A_data_la):
 	goto instr_unimplemented; /* Just to stop gcc complaining about an unused label */
 #endif
 UNIMPLEMENTED_INSTRUCTION_BLOCK:
-	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-code));
+	fprintf(stderr, "Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-program->code));
 	if (asp + 10 > csp)
 		fprintf(stderr, "A and C stack pointers are dangerously close; perhaps try with a larger stack.\n");
 	return 1;

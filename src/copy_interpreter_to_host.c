@@ -7,9 +7,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include "bytecode.h"
-#include "copy_node.h"
-#include "finalizers.h"
+#include "copy_host_to_interpreter.h"
+#include "copy_interpreter_to_host.h"
 #include "gc.h"
 #include "interpret.h"
 #include "util.h"
@@ -48,30 +47,11 @@ extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
 extern void *__Tuple;
 
-struct interpret_environment {
-	struct host_status *host;
-	struct program *program;
-	BC_WORD *heap;
-	BC_WORD heap_size;
-	BC_WORD *stack;
-	BC_WORD stack_size;
-	BC_WORD *asp;
-	BC_WORD *bsp;
-	BC_WORD *csp;
-	BC_WORD *hp;
-};
-
-struct InterpretEnvironment {
-	void *descriptor;
-	struct finalizers *finalizer;
-	struct interpret_environment *ptrs;
-};
-
-struct interpret_environment *build_interpret_environment(
+struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
-	struct interpret_environment *ie = safe_malloc(sizeof(struct interpret_environment));
+	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
 	ie->heap = heap;
@@ -83,14 +63,14 @@ struct interpret_environment *build_interpret_environment(
 	ie->csp = csp;
 	ie->hp = hp;
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Building interpret_environment %p\n",ie);
+	fprintf(stderr,"Building interpretation_environment %p\n",ie);
 #endif
 	return ie;
 }
 
-void interpret_environment_finalizer(struct interpret_environment *ie) {
+void interpretation_environment_finalizer(struct interpretation_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Freeing interpret_environment %p\n",ie);
+	fprintf(stderr,"Freeing interpretation_environment %p\n",ie);
 #endif
 	free(ie->host);
 	free_program(ie->program);
@@ -100,14 +80,14 @@ void interpret_environment_finalizer(struct interpret_environment *ie) {
 	free(ie);
 }
 
-void *get_interpret_environment_finalizer(void) {
-	return interpret_environment_finalizer;
+void *get_interpretation_environment_finalizer(void) {
+	return interpretation_environment_finalizer;
 }
 
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_WORD node, int args_needed) {
+BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_WORD node, int args_needed) {
 	switch (args_needed) {
 		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ninterpret; break;
 		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
@@ -145,15 +125,13 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ce_finalizer, BC_
 			fprintf(stderr,"Missing case in make_interpret_node\n");
 			exit(1);
 	}
-	heap[1] = (BC_WORD) ce_finalizer;
+	heap[1] = (BC_WORD) ie_finalizer;
 	heap[2] = (BC_WORD) &heap[3+args_needed];
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
 
-int interpret_ce(struct interpret_environment *ie, BC_WORD *pc) {
-	int result = interpret(
-			ie->program->code, ie->program->code_size,
-			ie->program->data, ie->program->data_size,
+int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
+	int result = interpret(ie,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
@@ -163,9 +141,8 @@ int interpret_ce(struct interpret_environment *ie, BC_WORD *pc) {
 }
 
 BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
+		struct finalizers *ie_finalizer, BC_WORD *node) {
 	BC_WORD *org_host_heap = host_heap;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 	if (node[0] == (BC_WORD) &INT+2) {
 		if (host_heap_free < 2)
@@ -206,7 +183,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
-			host_heap = make_interpret_node(host_heap, ce_finalizer, (BC_WORD) node, args_needed);
+			host_heap = make_interpret_node(host_heap, ie_finalizer, (BC_WORD) node, args_needed);
 			return host_heap - org_host_heap;
 		}
 	}
@@ -249,11 +226,11 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ce_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_interpret_node(host_heap, ce_finalizer, node[2], 0);
+				host_heap = make_interpret_node(host_heap, ie_finalizer, node[2], 0);
 			} else if (b_arity == 1) {
 				host_node[2] = node[2];
 			}
@@ -266,7 +243,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		host_heap += a_arity + b_arity + 2;
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ce_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
 		} else {
 			host_node[1] = node[1];
 		}
@@ -274,7 +251,7 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ce_finalizer, rest[i], 0);
+			host_heap = make_interpret_node(host_heap, ie_finalizer, rest[i], 0);
 		}
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[3+i] = (BC_WORD) rest[i];
@@ -288,13 +265,12 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		fprintf(stderr,"words_needed was incorrect (arities %d/%d, was %d, should be %d)\n",
 				a_arity, b_arity, words_needed, (int) (host_heap - org_host_heap));
 
-	node_finalizer->cur->arg = 0;
 	return host_heap - org_host_heap;
 }
 
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *ce_finalizer, struct finalizers *node_finalizer) {
-	struct interpret_environment *ie = (struct interpret_environment*) ce_finalizer->cur->arg;
+		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -306,73 +282,71 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		fprintf(stderr,"\tInterpreting...\n");
 #endif
 		*++ie->asp = (BC_WORD) node;
-		if (interpret_ce(ie, (BC_WORD*) node[0]) != 0) {
+		if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
 			fprintf(stderr,"Failed to interpret\n");
 			return -1;
 		}
 		node = (BC_WORD*)*ie->asp--;
 	}
 
-	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
-}
-
-BC_WORD *copy_host_to_interpreter(struct interpret_environment *ie, BC_WORD *node) {
-	/* TODO: for now we are assuming the interpreter has enough memory */
-#if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,ie->hp);
-	fprintf(stderr,"\t[1]=%p; [2]=%p\n",ie->host,node);
-#endif
-	BC_WORD *org_hp = ie->hp;
-	ie->hp[0] = (BC_WORD) &HOST_NODE;
-	ie->hp[1] = (BC_WORD) ie->host;
-		/* TODO: since there is only one host environment, we do not need to
-		 * store it in every node but can store it in the program struct or so.
-		 * This saves some memory.
-		 */
-	ie->hp[2] = (BC_WORD) node;
-	ie->hp += 3;
-	return org_hp;
+	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
 
 /**
- * The first argument is passed before the ce_finalizer to make calling from
+ * The first argument is passed before the ie_finalizer to make calling from
  * Clean lightweight on x64. The rest of the arguments is passed variadically.
  */
 BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ce_finalizer,
+		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
 		int n_args, ...) {
-	struct interpret_environment *ie = (struct interpret_environment*) ce_finalizer->cur->arg;
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 
 	va_start(arguments,n_args);
-	for (int i = 0; i < n_args; i++)
-		*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, va_arg(arguments, BC_WORD*));
-	*++ie->asp = (BC_WORD) copy_host_to_interpreter(ie, arg1);
+	for (int i = 0; i < n_args; i++) {
+		*++ie->asp = (BC_WORD) ie->hp;
+		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*), 0);
+	}
+	*++ie->asp = (BC_WORD) ie->hp;
+	ie->hp += make_host_node(ie->hp, arg1, 0);
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tarity is %d\n",a_arity);
 #endif
-	if (a_arity > 0) {
-		*++ie->asp = node[1];
-
+	if (a_arity >= 1) {
 		if (a_arity == 2) {
 			*++ie->asp = node[2];
 		} else if (a_arity > 2) {
 			BC_WORD *rest = (BC_WORD*)node[2];
-			for (int i = 0; i < a_arity-1; i++)
+			for (int i = a_arity-2; i >= 0; i--)
 				*++ie->asp = rest[i];
 		}
+		*++ie->asp = node[1];
 	}
 
-	/* TODO: assuming the interpreter node does not contain arguments */
-	if (interpret_ce(ie, *(BC_WORD**)(((BC_WORD*)(node[0]-2))[n_args*2+1]-IF_INT_64_OR_32(16,8))) != 0) {
+	BC_WORD *lazy_entry = ((BC_WORD**)(node[0]-2))[n_args*2+1];
+	BC_WORD *pc;
+	int pop_args = n_args + a_arity;
+
+	if (pop_args == 0) {
+		/* Function with arity 1; this do not have an apply entry point */
+		*++ie->asp = (BC_WORD) node;
+		pop_args++;
+		pc = lazy_entry;
+	} else {
+		pc = (BC_WORD*) lazy_entry[-2];
+	}
+
+	if (interpret_ie(ie, pc) != 0) {
 		fprintf(stderr,"Failed to interpret\n");
 		return -1;
 	}
-	ie->asp -= n_args + a_arity;
-	node_finalizer->cur->arg = *ie->asp;
-	return copy_to_host(host_heap, host_heap_free, ce_finalizer, node_finalizer);
+
+	ie->asp -= pop_args;
+	node = (BC_WORD*) *ie->asp--;
+
+	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }

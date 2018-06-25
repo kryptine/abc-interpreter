@@ -6,7 +6,7 @@
 #include "../util.h"
 
 #ifdef LINK_CLEAN_RUNTIME
-# include "../copy_node.h"
+# include "../copy_interpreter_to_host.h"
 # include "../finalizers.h"
 #endif
 

@@ -76,8 +76,42 @@ BC_WORD __cycle__in__spine = Chalt;
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
-# include "copy_node.h"
-void* HOST_NODE[]         = { (void*) Chost_node, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') };
+# include "copy_interpreter_to_host.h"
+# include "copy_host_to_interpreter.h"
+void* HOST_NODES[][6] = /* TODO curry tables are missing; presumably it's easier to include these from ABC code in every bytecode file */
+	{ { (void*) 0,  (void*) Cjsr_eval_host_node,    0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 1,  (void*) Cjsr_eval_host_node_1,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 2,  (void*) Cjsr_eval_host_node_2,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 3,  (void*) Cjsr_eval_host_node_3,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 4,  (void*) Cjsr_eval_host_node_4,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 5,  (void*) Cjsr_eval_host_node_5,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 6,  (void*) Cjsr_eval_host_node_6,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 7,  (void*) Cjsr_eval_host_node_7,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 8,  (void*) Cjsr_eval_host_node_8,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 9,  (void*) Cjsr_eval_host_node_9,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 10, (void*) Cjsr_eval_host_node_10, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 11, (void*) Cjsr_eval_host_node_11, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 12, (void*) Cjsr_eval_host_node_12, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 13, (void*) Cjsr_eval_host_node_13, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 14, (void*) Cjsr_eval_host_node_14, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 15, (void*) Cjsr_eval_host_node_15, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 16, (void*) Cjsr_eval_host_node_16, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 17, (void*) Cjsr_eval_host_node_17, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 18, (void*) Cjsr_eval_host_node_18, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 19, (void*) Cjsr_eval_host_node_19, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 20, (void*) Cjsr_eval_host_node_20, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 21, (void*) Cjsr_eval_host_node_21, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 22, (void*) Cjsr_eval_host_node_22, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 23, (void*) Cjsr_eval_host_node_23, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 24, (void*) Cjsr_eval_host_node_24, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 25, (void*) Cjsr_eval_host_node_25, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 26, (void*) Cjsr_eval_host_node_26, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 27, (void*) Cjsr_eval_host_node_27, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 28, (void*) Cjsr_eval_host_node_28, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 29, (void*) Cjsr_eval_host_node_29, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 30, (void*) Cjsr_eval_host_node_30, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 31, (void*) Cjsr_eval_host_node_31, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	};
 #endif
 
 BC_WORD Fjmp_ap1 = Cjmp_ap1;
@@ -90,7 +124,7 @@ int trap_needs_gc = 0;
 
 static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
 
-void* __indirection[9] = {
+void* __interpreter_indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
 	(void*) Chalt,
@@ -127,22 +161,34 @@ BC_WORD *get_heap_address(void) {
 	return hp;
 }
 
-int interpret(BC_WORD *code, size_t code_size,
-		BC_WORD *data, size_t data_size,
+int interpret(
+#ifdef LINK_CLEAN_RUNTIME
+		struct interpretation_environment *ie,
+#else
+		struct program *program,
+#endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
-	if (code_size == -1) { /* See rationale in interpret.h */
+	if (stack == NULL) { /* See rationale in interpret.h */
 # define _COMPUTED_GOTO_LABELS
 # include "abc_instructions.h"
-		memcpy(code, _instruction_labels, sizeof(BC_WORD) * CMAX);
+#  ifdef LINK_CLEAN_RUNTIME
+		memcpy(ie, _instruction_labels, sizeof(BC_WORD) * CMAX);
+#  else
+		memcpy(program, _instruction_labels, sizeof(BC_WORD) * CMAX);
+#  endif
 		return 0;
 	}
 #endif
 
-	BC_WORD *pc = code;
+#ifdef LINK_CLEAN_RUNTIME
+	struct program *program = ie->program;
+#endif
+
+	BC_WORD *pc = program->code;
 	asp = _asp;
 	bsp = _bsp;
 	csp = _csp;
@@ -184,10 +230,10 @@ eval_to_hnf_return:
 		free_nodes_set(&nodes_set);
 # endif
 # ifdef DEBUG_ALL_INSTRUCTIONS
-		if (data <= pc && pc < data + data_size)
-			fprintf(stderr, "D:%d\t%s\n", (int) (pc-data), instruction_name(*pc));
+		if (program->data <= pc && pc < program->data + program->data_size)
+			fprintf(stderr, "D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
 		else
-			fprintf(stderr, ":%d\t%s\n", (int) (pc-code), instruction_name(*pc));
+			fprintf(stderr, ":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
 # endif
 # ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);
@@ -205,7 +251,7 @@ eval_to_hnf_return:
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free
 #ifdef DEBUG_GARBAGE_COLLECTOR
-				, code, data
+				, program->code, program->data
 #endif
 				);
 #ifdef DEBUG_CURSES
@@ -335,8 +381,7 @@ int main(int argc, char **argv) {
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
 #endif
 
-	interpret(state.program->code, state.program->code_size,
-			state.program->data, state.program->data_size,
+	interpret(state.program,
 			stack, stack_size,
 			heap, heap_size,
 			asp, bsp, csp,

@@ -1,4 +1,4 @@
-#include "copy_node.h"
+#include "copy_interpreter_to_host.h"
 #include "finalizers.h"
 
 extern struct finalizers *finalizer_list;
@@ -7,8 +7,7 @@ extern void *e____system__kFinalizer;
 
 struct finalizers *next_interpreter_finalizer(struct finalizers *now) {
 	now = now == NULL ? finalizer_list : now->next;
-	while (((BC_WORD) now != (BC_WORD) &__Nil-8)
-			&& (now->cur->fun != interpreter_finalizer || now->cur->arg == 0))
+	while (((BC_WORD) now != (BC_WORD) &__Nil-8) && now->cur->fun != interpreter_finalizer)
 		now = now->next;
 	return ((BC_WORD) now == (BC_WORD) &__Nil-8) ? NULL : now;
 }

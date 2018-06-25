@@ -24,25 +24,21 @@
 # (res) r14: B6
 # (res) r15: Number of free words on heap
 
-.macro save_registers_rdx # rdx is the interpretation environment
+.macro save_registers
 	push	rcx
 	push	rax
 	push	r8
 	push	r10
 	push	r11
+	push	rdi
+	push	rsi
 	push	rdx
-	mov	rbp,[rdx] # host_status
-	mov	[rbp],rsi
-	mov	[rbp+8],rdi
-	mov	[rbp+16],r15
 .endm
 
-.macro restore_registers_rdx
-	mov	rdx,[rsp]
-	mov	rdx,[rdx] # host_status
-	mov	rsi,[rdx]
-	mov	rdi,[rdx+8]
+.macro restore_registers
 	pop	rdx
+	pop	rsi
+	pop	rdi
 	pop	r11
 	pop	r10
 	pop	r8
@@ -50,17 +46,37 @@
 	pop	rcx
 .endm
 
+.macro save_host_status_via_rbp # rbp is the interpretation_environment
+	mov	rbp,[rbp]    # first member of ie: host_status
+	mov	[rbp],rsi    # set astack pointer
+	mov	[rbp+8],rdi  # set heap pointer
+	mov	[rbp+16],r15 # set nr. of free words
+.endm
+
+.macro restore_host_status_via_rdi # rdi is the interpretation_environment
+	mov	rbp,[rdi]
+	mov	rsi,[rbp]
+	mov	rdi,[rbp+8]
+	mov	r15,[rbp+16]
+.endm
+
 .globl	__interpret__copy__node__asm
 __interpret__copy__node__asm:
-	save_registers_rdx
+	save_registers
+
+	# Get interpretation_environment from finalizer
+	mov	rbp,[rdx+16]
+	mov	rbp,[rbp+8]
+	save_host_status_via_rbp
+
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
-	#mov	rdx,rdx # interpret environment
+	#mov	rdx,rdx # finalizer of interpretation environment
 	#mov	rcx,rcx # finalizer of node
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm__finish:
 	mov	rbp,rax
-	restore_registers_rdx
+	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
 
@@ -80,7 +96,7 @@ __interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
-	save_registers_rdx
+	save_registers
 	mov	rbx,rax
 	cmp	rax,0
 __interpret__copy__node__asm__n_args:
@@ -94,30 +110,29 @@ __interpret__copy__node__asm__n_has_all_args:
 	jmp	__interpret__copy__node__asm__finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(hp_ptr, a_ptr, host_free, a0)
+	# Call as __interpret__evaluate__host(ie_finalizer, a0)
 __interpret__evaluate__host:
 	push	rbx
-
-	mov	rbx,[rcx]
-	test	rbx,2
-	jne	__interpret__evaluate__host__hnf
-
 	push	rbp
 	push	r12
 	push	r13
 	push	r14
 	push	r15
 
-	mov	r15,rdx
-	call	rbx
+	push	rdi
+	mov	rcx,rsi
+	restore_host_status_via_rdi
+	call	[rcx]
+
+	pop	rbp
+	save_host_status_via_rbp
 
 	pop	r15
 	pop	r14
 	pop	r13
 	pop	r12
 	pop	rbp
-
-__interpret__evaluate__host__hnf:
 	pop	rbx
+
 	mov	rax,rcx
 	ret

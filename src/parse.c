@@ -39,15 +39,16 @@ void init_parser(struct parser *state
 	state->symbols_ptr = 0;
 
 #ifdef LINK_CLEAN_RUNTIME
-	state->host_symbols_n = host_symbols_n;
-	state->host_symbols = safe_malloc(host_symbols_n * sizeof(struct host_symbol));
-	state->host_symbols_strings = safe_malloc(host_symbols_string_length + host_symbols_n);
+	state->program->host_symbols_n = host_symbols_n;
+	state->program->host_symbols = safe_malloc(host_symbols_n * sizeof(struct host_symbol));
+	state->program->host_symbols_strings = safe_malloc(host_symbols_string_length + host_symbols_n);
 
-	char *symbol_strings = state->host_symbols_strings;
+	char *symbol_strings = state->program->host_symbols_strings;
 	for (int i = 0; i < host_symbols_n; i++) {
-		state->host_symbols[i].location = *(void**)host_symbols;
+		state->program->host_symbols[i].interpreter_location = NULL;
+		state->program->host_symbols[i].location = *(void**)host_symbols;
 		host_symbols += IF_INT_64_OR_32(8,4);
-		state->host_symbols[i].name = symbol_strings;
+		state->program->host_symbols[i].name = symbol_strings;
 		for (; *host_symbols; host_symbols++)
 			*symbol_strings++ = *host_symbols;
 		*symbol_strings++ = '\0';
@@ -68,33 +69,7 @@ void free_parser(struct parser *state) {
 	if (state->strings != NULL)
 		free(state->strings);
 #endif
-#ifdef LINK_CLEAN_RUNTIME
-	if (state->host_symbols != NULL)
-		free(state->host_symbols);
-	if (state->host_symbols_strings != NULL)
-		free(state->host_symbols_strings);
-#endif
 }
-
-#ifdef LINK_CLEAN_RUNTIME
-void *find_host_symbol(struct parser *state, char *name) {
-	int start = 0;
-	int end = state->host_symbols_n - 1;
-
-	while (start <= end) {
-		int i = (start + end) / 2;
-		int r = strcmp(state->host_symbols[i].name, name);
-		if (r > 0)
-			end = i-1;
-		else if (r < 0)
-			start = i+1;
-		else
-			return state->host_symbols[i].location;
-	}
-
-	return NULL;
-}
-#endif
 
 void next_state(struct parser *state) {
 	state->ptr = 0;
@@ -179,19 +154,24 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #ifdef COMPUTED_GOTOS
 	/* See rationale in interpret.h */
 	void *instruction_labels[CMAX];
-	interpret((BC_WORD*) instruction_labels, -1, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	interpret((void*) instruction_labels, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
 	Fjmp_ap1 = (BC_WORD) instruction_labels[Fjmp_ap1];
 	Fjmp_ap2 = (BC_WORD) instruction_labels[Fjmp_ap2];
 	Fjmp_ap3 = (BC_WORD) instruction_labels[Fjmp_ap3];
 
-	__indirection[0] = (void*) instruction_labels[(BC_WORD)__indirection[0]];
-	__indirection[1] = (void*) instruction_labels[(BC_WORD)__indirection[1]];
-	__indirection[2] = (void*) instruction_labels[(BC_WORD)__indirection[2]];
-	__indirection[3] = (void*) instruction_labels[(BC_WORD)__indirection[3]];
-	__indirection[5] = (void*) instruction_labels[(BC_WORD)__indirection[5]];
-	__indirection[7] = (void*) instruction_labels[(BC_WORD)__indirection[7]];
-	__indirection[8] = (void*) instruction_labels[(BC_WORD)__indirection[8]];
+	__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[0]];
+	__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[1]];
+	__interpreter_indirection[2] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[2]];
+	__interpreter_indirection[3] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[3]];
+	__interpreter_indirection[5] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[5]];
+	__interpreter_indirection[7] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[7]];
+	__interpreter_indirection[8] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[8]];
+
+# ifdef LINK_CLEAN_RUNTIME
+	for (int i = 0; i < 32; i++)
+		HOST_NODES[i][1] = instruction_labels[Cjsr_eval_host_node+i];
+# endif
 #endif
 
 	while (state->state != PS_end) {
@@ -496,11 +476,13 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							/* Descriptor has a code address that is not _hnf; ignore */
 						} else if (v == -1) {
 							/* Descriptor has a _hnf code address */
-							void *host_sym = find_host_symbol(state, state->program->symbol_table[state->ptr].name);
-							if (host_sym == NULL)
+							struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
+							if (host_sym == NULL) {
 								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
-							else
-								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym;
+							} else {
+								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym->location;
+								host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
+							}
 						} else {
 							/* This shouldn't happen */
 							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
@@ -601,5 +583,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				return 3;
 		}
 	}
+
+#ifdef LINK_CLEAN_RUNTIME
+	sort_host_symbols_by_location(state->program);
+#endif
 	return 0;
 }
