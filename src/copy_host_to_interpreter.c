@@ -34,7 +34,7 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 		fprintf(stderr,"Cannot copy records to interpreter yet\n");
 		exit(1);
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[-1];
+		int args_needed = ((int16_t*)(node[0]))[0];
 		if (args_needed != 0) { /* TODO: special case for tuples */
 			return make_host_node(heap, node, args_needed);
 		}

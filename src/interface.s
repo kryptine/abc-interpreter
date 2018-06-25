@@ -24,7 +24,7 @@
 # (res) r14: B6
 # (res) r15: Number of free words on heap
 
-.macro save_registers_rdx # rdx is the interpretation environment finalizer
+.macro save_registers # rdx is the interpretation environment finalizer
 	push	rcx
 	push	rax
 	push	r8
@@ -35,7 +35,7 @@
 	push	rdx
 .endm
 
-.macro restore_registers_rdx
+.macro restore_registers
 	pop	rdx
 	pop	rsi
 	pop	rdi
@@ -48,14 +48,16 @@
 
 .globl	__interpret__copy__node__asm
 __interpret__copy__node__asm:
-	save_registers_rdx
+	save_registers
 
-	# TODO: get host_status from environment finalizer and update values
-	# Something like (but rbp is wrong):
-	#mov	rbp,[rdx] # host_status
-	#mov	[rbp],rsi
-	#mov	[rbp+8],rdi
-	#mov	[rbp+16],r15
+	# Update host_status in interpretation_environment
+	mov	rbp,rdx      # finalizer on heap
+	mov	rbp,[rbp+16] # second block of finalizer
+	mov	rbp,[rbp+8]  # finalizer arg, i.e. *interpretation_environment
+	mov	rbp,[rbp]    # first member of ie: host_status
+	mov	[rbp],rsi    # set astack pointer
+	mov	[rbp+8],rdi  # set heap pointer
+	mov	[rbp+16],r15 # set nr. of free words
 
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
@@ -64,7 +66,7 @@ __interpret__copy__node__asm:
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm__finish:
 	mov	rbp,rax
-	restore_registers_rdx
+	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
 
@@ -84,7 +86,7 @@ __interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
-	save_registers_rdx
+	save_registers
 	mov	rbx,rax
 	cmp	rax,0
 __interpret__copy__node__asm__n_args:
