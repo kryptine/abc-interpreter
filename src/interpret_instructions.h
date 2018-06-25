@@ -7060,14 +7060,12 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_30):
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	struct host_status *host = ie->host;
 	BC_WORD *host_node = (void*) n[1];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
 	if (!(host_node[0] & 2))
-		/* TODO: copy arguments to the host first */
-		host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
+		host_node = __interpret__evaluate__host(ie, host_node);
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif

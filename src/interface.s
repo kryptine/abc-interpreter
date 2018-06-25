@@ -24,7 +24,7 @@
 # (res) r14: B6
 # (res) r15: Number of free words on heap
 
-.macro save_registers # rdx is the interpretation environment finalizer
+.macro save_registers
 	push	rcx
 	push	rax
 	push	r8
@@ -46,18 +46,28 @@
 	pop	rcx
 .endm
 
-.globl	__interpret__copy__node__asm
-__interpret__copy__node__asm:
-	save_registers
-
-	# Update host_status in interpretation_environment
-	mov	rbp,rdx      # finalizer on heap
-	mov	rbp,[rbp+16] # second block of finalizer
-	mov	rbp,[rbp+8]  # finalizer arg, i.e. *interpretation_environment
+.macro save_host_status_via_rbp # rbp is the interpretation_environment
 	mov	rbp,[rbp]    # first member of ie: host_status
 	mov	[rbp],rsi    # set astack pointer
 	mov	[rbp+8],rdi  # set heap pointer
 	mov	[rbp+16],r15 # set nr. of free words
+.endm
+
+.macro restore_host_status_via_rdi # rdi is the interpretation_environment
+	mov	rbp,[rdi]
+	mov	rsi,[rbp]
+	mov	rdi,[rbp+8]
+	mov	r15,[rbp+16]
+.endm
+
+.globl	__interpret__copy__node__asm
+__interpret__copy__node__asm:
+	save_registers
+
+	# Get interpretation_environment from finalizer
+	mov	rbp,[rdx+16]
+	mov	rbp,[rbp+8]
+	save_host_status_via_rbp
 
 	#mov	rdi,rdi # heap pointer
 	mov	rsi,r15 # free words
@@ -100,8 +110,7 @@ __interpret__copy__node__asm__n_has_all_args:
 	jmp	__interpret__copy__node__asm__finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(hp_ptr, a_ptr, host_free, a0)
-	# TODO: update the host status (heap pointer etc.)
+	# Call as __interpret__evaluate__host(ie_finalizer, a0)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp
@@ -110,8 +119,13 @@ __interpret__evaluate__host:
 	push	r14
 	push	r15
 
-	mov	r15,rdx
+	push	rdi
+	mov	rcx,rsi
+	restore_host_status_via_rdi
 	call	[rcx]
+
+	pop	rbp
+	save_host_status_via_rbp
 
 	pop	r15
 	pop	r14

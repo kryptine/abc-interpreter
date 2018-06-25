@@ -41,12 +41,13 @@ import StdEnum,StdFunc
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints),w) = get_expression "../test/functions.bc" w
+# ((intsquare,sub5,sub3_10,sumints,rev),w) = get_expression "../test/functions.bc" w
 =
 	[ intsquare 6 + intsquare 1
-	, sub5 47 1 2 3 (square 2)
+	, sub5 (last [1..47]) 1 2 3 (square 2)
 	, sub3_10 -20 -30 3
 	, sumints [1,1,2,3,4,5,6,7,8]
+	, last (rev [37,36..0])
 	]
 
 square :: Int -> Int
