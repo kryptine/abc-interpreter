@@ -2,7 +2,7 @@ module functions
 
 import StdInt
 
-Start = (square, sub5, sub5 0 10, sumints, reverse)
+Start = (square, sub5, sub5 0 10, sumints, reverse, foldr)
 
 square :: Int -> Int
 square x = x * x
@@ -19,3 +19,7 @@ reverse xs = rev [] xs
 where
 	rev new []     = new
 	rev new [x:xs] = rev [x:new] xs
+
+foldr :: (a b -> b) b [a] -> b
+foldr op e []     = e
+foldr op e [x:xs] = op x (foldr op e xs)
