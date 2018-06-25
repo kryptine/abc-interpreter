@@ -58,6 +58,7 @@ void init_program_lines(struct program *program) {
 #define WIN_A_TOP         1
 #define WIN_A_RGT         (WIN_A_LFT + WIN_A_WIDTH - 1)
 #define WIN_A_BOT         (WIN_A_TOP + WIN_A_HEIGHT - 1)
+#define CLEAR_A()         for (int clri=WIN_A_TOP; clri < WIN_A_BOT; clri++) wprintw(win_a,"\n")
 #define REFRESH_A(l,c)    prefresh(win_a, l, c, WIN_A_TOP, WIN_A_LFT, WIN_A_BOT, WIN_A_RGT)
 
 #define WIN_B_WIDTH       (COLWIDTH(2))
@@ -73,6 +74,7 @@ void init_program_lines(struct program *program) {
 #define WIN_HEAP_TOP      (WIN_A_BOT + 2)
 #define WIN_HEAP_RGT      (WIN_HEAP_LFT + WIN_HEAP_WIDTH - 1)
 #define WIN_HEAP_BOT      (WIN_HEAP_TOP + WIN_HEAP_HEIGHT - 1)
+#define CLEAR_HEAP()      for (int clri=WIN_HEAP_TOP; clri < WIN_HEAP_BOT; clri++) wprintw(win_heap,"\n")
 #define REFRESH_HEAP(l,c) prefresh(win_heap, l, c, WIN_HEAP_TOP, WIN_HEAP_LFT, WIN_HEAP_BOT, WIN_HEAP_RGT)
 
 #define WIN_C_WIDTH       WIN_B_WIDTH
@@ -229,7 +231,7 @@ void debugger_help(void) {
 	WINDOW *border, *content;
 	int c, r;
 
-	int width, height;
+	int width = 0, height = 0;
 	text_dimensions(help_text, &width, &height);
 
 	border  = newwin(height+4, width+4, (LINES-height)/2-2, (COLS-width)/2-2);
@@ -357,8 +359,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 void debugger_update_a_stack(BC_WORD *ptr) {
 	char _tmp[256];
 	BC_WORD *start = asp + 1;
-	mvwprintw(winh_a, 0, 0, "A-stack  (%d)", ptr-start+1);
-	wclrtobot(winh_a);
+	mvwprintw(winh_a, 0, 0, "A-stack  (%d)\n", ptr-start+1);
 	wrefresh(winh_a);
 
 	wmove(win_a, 0, 0);
@@ -372,7 +373,7 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 		wprintw(win_a, "\n");
 		start++;
 	}
-	wclrtobot(win_a);
+	CLEAR_A();
 	REFRESH_A(ptr-asp-(WIN_A_BOT-WIN_A_TOP), 0);
 }
 
@@ -384,8 +385,7 @@ void debugger_update_a_stack(BC_WORD *ptr) {
 
 void debugger_update_b_stack(BC_WORD *ptr) {
 	BC_WORD *start = bsp - 1;
-	mvwprintw(winh_b, 0, 0, "B-stack  (%d)", start-ptr+1);
-	wclrtobot(winh_b);
+	mvwprintw(winh_b, 0, 0, "B-stack  (%d)\n", start-ptr+1);
 	wrefresh(winh_b);
 
 	wmove(win_b, 0, 0);
@@ -409,8 +409,7 @@ void debugger_update_b_stack(BC_WORD *ptr) {
 void debugger_update_c_stack(BC_WORD *ptr) {
 	char _tmp[256];
 	BC_WORD **start = (BC_WORD**) csp - 1;
-	mvwprintw(winh_c, 0, 0, "C-stack  (%d)", start-(BC_WORD**)ptr+1);
-	wclrtobot(winh_c);
+	mvwprintw(winh_c, 0, 0, "C-stack  (%d)\n", start-(BC_WORD**)ptr+1);
 	wrefresh(winh_c);
 
 	wmove(win_c, 0, 0);
@@ -449,7 +448,7 @@ void debugger_update_heap(BC_WORD *asp) {
 	heap_line = i - WIN_HEAP_HEIGHT + 1;
 
 	free_nodes_set(&nodes_set);
-	wclrtobot(win_heap);
+	CLEAR_HEAP();
 	REFRESH_HEAP(heap_line, heap_col);
 	wrefresh(winh_heap);
 }
@@ -579,7 +578,7 @@ void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 	} else {
 		mvwprintw(win_heap, 0, 0, "\n  Failed to read graph -\n  perhaps the node is a string?");
 	}
-	wclrtobot(win_heap);
+	CLEAR_HEAP();
 	REFRESH_HEAP(heap_line, heap_col);
 }
 
@@ -648,7 +647,7 @@ int debugger_input(BC_WORD *_asp) {
 			running = 1;
 			nodelay(win_listing, TRUE);
 			mvwprintw(win_heap, 0, 0, "\n  (disabled while running)");
-			wclrtobot(win_heap);
+			CLEAR_HEAP();
 			REFRESH_HEAP(0, 0);
 			return 0;
 		case 'A':
