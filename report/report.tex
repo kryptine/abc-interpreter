@@ -1,6 +1,7 @@
 \documentclass[a4paper]{article}
 
 \usepackage{geometry}
+\usepackage[hidelinks]{hyperref}
 
 \usepackage[backend=biber,natbib]{biblatex}
 \bibliography{library}
@@ -41,7 +42,8 @@ This document is meant to give an overview of the work that has been done, not t
 			a test with the generic compression function in \texttt{Data.GenCompress} and special data types.
 
 	\item
-		We created a graphical debugger \`a la \texttt{gdb}, with which you can step through ABC(\abcstar) code and see the effect on the stacks and heap.
+		We created a graphical debugger \`a la \texttt{gdb}, with which you can step through ABC(\abcstar) code and see the effect on the stacks and heap%
+			\footnote{For a short demo of the debugger, see \url{https://cloo.gl/NTU0}.}.
 		Several improvements can be made to this (rewinding, breakpoints) --- it was only a side project.
 		The debugger has helped resolve several bugs quickly.
 
