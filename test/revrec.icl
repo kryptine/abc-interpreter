@@ -15,12 +15,11 @@ import StdList
 	, field_b :: !ADT
 	, int_a   :: Int
 	, int_b   :: !Int
+	, char    :: !Char
+	, real    :: !Real
 	}
 
-all_records :: [Record]
-all_records = [{field_a=a,field_b=b,int_a=i,int_b=j} \\ a <- all_adts, b <- all_adts, i <- [0..4], j <- [0..4]]
+records :: [Record]
+records = [{field_a=a,field_b=b,int_a=i,int_b=j,char=c,real=r} \\ a <- [A,B], b <- [C,D], i <- [0,1], j <- [37,42], c <- ['~%'], r <- [3.7,4.2]]
 
-all_adts :: [ADT]
-all_adts = [A,B,C,D]
-
-Start = [r.field_b \\ r <- iter 20000 reverse all_records]
+Start = iter 20000 reverse records

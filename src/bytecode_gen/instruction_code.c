@@ -914,12 +914,12 @@ void add_string_information(uint32_t data_offset) {
 	pgrm.strings[pgrm.strings_size++] = data_offset;
 }
 
-void store_string(char *string,int string_length) {
+void store_string(char *string,int string_length,int include_terminator) {
 	add_string_information(pgrm.data_size);
 
 	if (list_code)
 		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
-	store_data_l(string_length);
+	store_data_l(string_length+include_terminator);
 
 	if (list_code)
 		print_string_directive(string,string_length);
@@ -947,6 +947,8 @@ void store_string(char *string,int string_length) {
 			++i;
 		}
 		store_data_l(n);
+	} else if (include_terminator) {
+		store_data_l(0);
 	}
 
 	pgrm.words_in_strings += string_length / 8 + (string_length % 8 == 0 ? 0 : 1);
@@ -964,7 +966,7 @@ void code_buildAC(char *string,int string_length) {
 		printf("\t.data4 __STRING__+2\n");
 	}
 	store_data_label_value("__STRING__",2);
-	store_string(string,string_length);
+	store_string(string,string_length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -1382,7 +1384,7 @@ void code_eqAC_a(char *string,int string_length) {
 
 	if (list_code)
 		printf("\t.data\n");
-	store_string(string,string_length);
+	store_string(string,string_length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -2209,7 +2211,7 @@ void code_print(char *string,int length) {
 
 	if (list_code)
 		printf("\t.data\n");
-	store_string(string,length);
+	store_string(string,length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -2240,7 +2242,7 @@ void code_print_sc(char *string,int length) {
 
 	if (list_code)
 		printf("\t.data\n");
-	store_string(string,length);
+	store_string(string,length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -3316,7 +3318,7 @@ void code_jmp_eqACio(char *string,int string_length,int a_offset,char label_name
 
 	if (list_code)
 		printf("\t.data\n");
-	store_string(string,string_length);
+	store_string(string,string_length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -3859,7 +3861,7 @@ struct label *code_descriptor
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	store_string(descriptor_name,descriptor_name_length);
+	store_string(descriptor_name,descriptor_name_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -3908,7 +3910,7 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	store_string(descriptor_name,descriptor_name_length);
+	store_string(descriptor_name,descriptor_name_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -3944,7 +3946,7 @@ void code_descn(char label_name[],char node_entry_label_name[],int arity,int laz
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	store_string(descriptor_name,descriptor_name_length);
+	store_string(descriptor_name,descriptor_name_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -3988,7 +3990,7 @@ void code_descs(char label_name[],char node_entry_label_name[],char *result_desc
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l(0);
-	store_string(descriptor_name,descriptor_name_length);
+	store_string(descriptor_name,descriptor_name_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -4052,7 +4054,7 @@ void code_module(char label_name[],char string[],uint32_t string_length) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	store_string(string,string_length);
+	store_string(string,string_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -4207,10 +4209,9 @@ void code_record(char record_label_name[],char type[],int a_size,int b_size,char
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l((a_size + b_size + 256) | (a_size << 16));
 
-	/* TODO: do we need the type string? */
+	store_string(type,strlen(type),1);
 
-	/* TODO: do we need the record name? */
-	store_string(record_name,record_name_length);
+	store_string(record_name,record_name_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
@@ -4243,8 +4244,7 @@ void code_record_descriptor_label(char descriptor_name[]) {
 }
 
 void code_record_end(char record_name[],int record_name_length) {
-	/* TODO: do we need the record name? */
-	store_string(record_name,record_name_length);
+	store_string(record_name,record_name_length,0);
 	if (list_code)
 		printf("\t.text\n");
 }
@@ -4264,7 +4264,7 @@ void code_string(char label_name[],char string[],int string_length) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	store_string(string,string_length);
+	store_string(string,string_length,0);
 
 	if (list_code)
 		printf("\t.text\n");
