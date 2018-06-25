@@ -7027,6 +7027,37 @@ case EVAL_TO_HNF_LABEL:
 
 #ifdef LINK_CLEAN_RUNTIME
 INSTRUCTION_BLOCK(jsr_eval_host_node):
+INSTRUCTION_BLOCK(jsr_eval_host_node_1):
+INSTRUCTION_BLOCK(jsr_eval_host_node_2):
+INSTRUCTION_BLOCK(jsr_eval_host_node_3):
+INSTRUCTION_BLOCK(jsr_eval_host_node_4):
+INSTRUCTION_BLOCK(jsr_eval_host_node_5):
+INSTRUCTION_BLOCK(jsr_eval_host_node_6):
+INSTRUCTION_BLOCK(jsr_eval_host_node_7):
+INSTRUCTION_BLOCK(jsr_eval_host_node_8):
+INSTRUCTION_BLOCK(jsr_eval_host_node_9):
+INSTRUCTION_BLOCK(jsr_eval_host_node_10):
+INSTRUCTION_BLOCK(jsr_eval_host_node_11):
+INSTRUCTION_BLOCK(jsr_eval_host_node_12):
+INSTRUCTION_BLOCK(jsr_eval_host_node_13):
+INSTRUCTION_BLOCK(jsr_eval_host_node_14):
+INSTRUCTION_BLOCK(jsr_eval_host_node_15):
+INSTRUCTION_BLOCK(jsr_eval_host_node_16):
+INSTRUCTION_BLOCK(jsr_eval_host_node_17):
+INSTRUCTION_BLOCK(jsr_eval_host_node_18):
+INSTRUCTION_BLOCK(jsr_eval_host_node_19):
+INSTRUCTION_BLOCK(jsr_eval_host_node_20):
+INSTRUCTION_BLOCK(jsr_eval_host_node_21):
+INSTRUCTION_BLOCK(jsr_eval_host_node_22):
+INSTRUCTION_BLOCK(jsr_eval_host_node_23):
+INSTRUCTION_BLOCK(jsr_eval_host_node_24):
+INSTRUCTION_BLOCK(jsr_eval_host_node_25):
+INSTRUCTION_BLOCK(jsr_eval_host_node_26):
+INSTRUCTION_BLOCK(jsr_eval_host_node_27):
+INSTRUCTION_BLOCK(jsr_eval_host_node_28):
+INSTRUCTION_BLOCK(jsr_eval_host_node_29):
+INSTRUCTION_BLOCK(jsr_eval_host_node_30):
+INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
 	struct host_status *host = ie->host;
@@ -7035,6 +7066,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
 	if (!(host_node[0] & 2))
+		/* TODO: copy arguments to the host first */
 		host_node = __interpret__evaluate__host(host->host_hp_ptr, host->host_a_ptr, host->host_hp_free, host_node);
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);

@@ -3,13 +3,14 @@
 #include "copy_host_to_interpreter.h"
 #include "interpret.h"
 
-int make_host_node(BC_WORD *heap, BC_WORD *node) {
+int make_host_node(BC_WORD *heap, BC_WORD *node, int args_needed) {
 	/* TODO: for now we are assuming the interpreter has enough memory */
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,heap);
-	fprintf(stderr,"\t[1]=%p\n",node);
+	fprintf(stderr,"\t[1]=%p; still %d args needed\n",node,args_needed);
+	fprintf(stderr,"\t%ld, %ld, %ld\n",(BC_WORD)HOST_NODES[args_needed][0],(BC_WORD)HOST_NODES[args_needed][1],(BC_WORD)HOST_NODES[args_needed][2]);
 #endif
-	heap[0] = (BC_WORD) &HOST_NODE;
+	heap[0] = (BC_WORD) (&HOST_NODES[args_needed][1]);
 	heap[1] = (BC_WORD) node;
 	return 2;
 }
@@ -33,10 +34,9 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 		fprintf(stderr,"Cannot copy records to interpreter yet\n");
 		exit(1);
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0];
-		if (args_needed != 0) { /* TODO */
-			fprintf(stderr,"Cannot copy tuples and closures to interpreter yet; %d argument(s) needed\n",args_needed);
-			exit(1);
+		int args_needed = ((int16_t*)(node[0]))[-1];
+		if (args_needed != 0) { /* TODO: special case for tuples */
+			return make_host_node(heap, node, args_needed);
 		}
 	}
 
@@ -50,6 +50,7 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,heap);
 	fprintf(stderr,"\ttranslating %p (%s) to %p\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location);
 #endif
 
@@ -61,11 +62,11 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 
 		if (a_arity >= 1) {
 			org_heap[1] = (BC_WORD) heap;
-			heap += make_host_node(heap, (BC_WORD*) node[1]);
+			heap += make_host_node(heap, (BC_WORD*) node[1], 0);
 
 			if (a_arity == 2) {
 				org_heap[2] = (BC_WORD) heap;
-				heap += make_host_node(heap, (BC_WORD*) node[2]);
+				heap += make_host_node(heap, (BC_WORD*) node[2], 0);
 			} else if (b_arity == 1) {
 				org_heap[2] = node[2];
 			}

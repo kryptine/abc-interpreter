@@ -306,10 +306,10 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	va_start(arguments,n_args);
 	for (int i = 0; i < n_args; i++) {
 		*++ie->asp = (BC_WORD) ie->hp;
-		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*));
+		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*), 0);
 	}
 	*++ie->asp = (BC_WORD) ie->hp;
-	ie->hp += make_host_node(ie->hp, arg1);
+	ie->hp += make_host_node(ie->hp, arg1, 0);
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];

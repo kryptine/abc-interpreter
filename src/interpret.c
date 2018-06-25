@@ -78,7 +78,40 @@ BC_WORD __cycle__in__spine = Chalt;
 #ifdef LINK_CLEAN_RUNTIME
 # include "copy_interpreter_to_host.h"
 # include "copy_host_to_interpreter.h"
-void* HOST_NODE[]         = { (void*) Cjsr_eval_host_node, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') };
+void* HOST_NODES[][6] = /* TODO curry tables are missing; presumably it's easier to include these from ABC code in every bytecode file */
+	{ { (void*) 0,  (void*) Cjsr_eval_host_node,    0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 1,  (void*) Cjsr_eval_host_node_1,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 2,  (void*) Cjsr_eval_host_node_2,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 3,  (void*) Cjsr_eval_host_node_3,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 4,  (void*) Cjsr_eval_host_node_4,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 5,  (void*) Cjsr_eval_host_node_5,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 6,  (void*) Cjsr_eval_host_node_6,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 7,  (void*) Cjsr_eval_host_node_7,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 8,  (void*) Cjsr_eval_host_node_8,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 9,  (void*) Cjsr_eval_host_node_9,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 10, (void*) Cjsr_eval_host_node_10, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 11, (void*) Cjsr_eval_host_node_11, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 12, (void*) Cjsr_eval_host_node_12, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 13, (void*) Cjsr_eval_host_node_13, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 14, (void*) Cjsr_eval_host_node_14, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 15, (void*) Cjsr_eval_host_node_15, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 16, (void*) Cjsr_eval_host_node_16, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 17, (void*) Cjsr_eval_host_node_17, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 18, (void*) Cjsr_eval_host_node_18, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 19, (void*) Cjsr_eval_host_node_19, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 20, (void*) Cjsr_eval_host_node_20, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 21, (void*) Cjsr_eval_host_node_21, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 22, (void*) Cjsr_eval_host_node_22, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 23, (void*) Cjsr_eval_host_node_23, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 24, (void*) Cjsr_eval_host_node_24, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 25, (void*) Cjsr_eval_host_node_25, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 26, (void*) Cjsr_eval_host_node_26, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 27, (void*) Cjsr_eval_host_node_27, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 28, (void*) Cjsr_eval_host_node_28, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 29, (void*) Cjsr_eval_host_node_29, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 30, (void*) Cjsr_eval_host_node_30, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	, { (void*) 31, (void*) Cjsr_eval_host_node_31, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
+	};
 #endif
 
 BC_WORD Fjmp_ap1 = Cjmp_ap1;

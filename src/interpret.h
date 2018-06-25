@@ -18,7 +18,7 @@ extern BC_WORD __cycle__in__spine;
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
-extern void* HOST_NODE[];
+extern void* HOST_NODES[][6];
 #endif
 
 extern BC_WORD *g_asp, *g_bsp, *g_hp;

@@ -169,7 +169,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	__interpreter_indirection[8] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[8]];
 
 # ifdef LINK_CLEAN_RUNTIME
-	HOST_NODE[0] = instruction_labels[Cjsr_eval_host_node];
+	for (int i = 0; i < 32; i++)
+		HOST_NODES[i][1] = instruction_labels[Cjsr_eval_host_node+i];
 # endif
 #endif
 
