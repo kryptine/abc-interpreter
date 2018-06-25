@@ -7,7 +7,7 @@ import StdEnum
 import StdInt
 import StdList
 
-NrOfTimes :== 2
+NrOfTimes :== 1000
 
 :: Elem :== {!ADT}
 
@@ -19,7 +19,7 @@ adts :: {ADT}
 adts =: {A,B,C,D,E,F}
 
 MyReverse :: Int -> Elem
-MyReverse n = last (Rev_n n [{adt j \\ j <- [0..i]} \\ i <- [n]])
+MyReverse n = last (Rev_n n [{adt j \\ j <- [0..i]} \\ i <- [1..n]])
 where
 	Rev_n :: Int [Elem] -> [Elem]
 	Rev_n 1 list = Rev list []
@@ -29,4 +29,4 @@ where
 	Rev [x:r] list = Rev r [x : list]
 	Rev []    list = list
 
-Start = [i \\ i <-: MyReverse NrOfTimes]
+Start = (MyReverse NrOfTimes).[NrOfTimes]
