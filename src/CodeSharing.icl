@@ -42,13 +42,17 @@ import StdEnum,StdFunc
 Start :: *World -> [Int]
 Start w
 # ((intsquare,sub5,sub3_10,sumints,rev),w) = get_expression "../test/functions.bc" w
-=
-	[ intsquare 6 + intsquare 1
-	, sub5 (last [1..47]) 1 2 3 (square 2)
-	, sub3_10 -20 -30 3
-	, sumints [1,1,2,3,4,5,6,7,8]
-	, last (rev [37,36..0])
-	]
+= use intsquare sub5 sub3_10 sumints rev
+where
+	use :: (Int -> Int) (Int Int Int Int Int -> Int) (Int Int Int -> Int) ([Int] -> Int) (A.a: [a] -> [a]) -> [Int]
+	use intsquare sub5 sub3_10 sumints rev =
+		[ intsquare 6 + intsquare 1
+		, sub5 (last [1..47]) 1 2 3 (square 2)
+		, sub3_10 -20 -30 3
+		, sumints [1,1,2,3,4,5,6,7,8]
+		, last (rev [37,36..0])
+		, length (last (rev [[1..i] \\ i <- [37,36..0]]))
+		]
 
 square :: Int -> Int
 square x = x * x
