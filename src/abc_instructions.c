@@ -173,7 +173,7 @@ char *instruction_type (BC_WORD i) {
 		case CfillR_b:               return "nn";
 		case Cfillcaf:               return "lnn";
 		case Cfill_a:                return "nn";
-		case Cfill_r:                return "?";
+		case Cfill_r:                return "nnnlnn";
 		case Cfill_ra0:              return "nnnl";
 		case Cfill_ra1:              return "?";
 		case Cfill_r1b:              return "?";

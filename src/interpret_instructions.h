@@ -3315,11 +3315,20 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 		int l,i;
 		char *cs;
 
+		int16_t arity = ((int16_t*)d)[-1];
+
+		if (arity > 127) { /* record */
+			int ts_len = ((BC_WORD*)(d-2))[1];
+			ts_len = ts_len / IF_INT_64_OR_32(8,4) + (ts_len % IF_INT_64_OR_32(8,4) ? 1 : 0);
+			ts_len *= IF_INT_64_OR_32(8,4);
+			s=(uint32_t*)(d+ts_len+IF_INT_64_OR_32(14,6));
+		} else {
 #if (WORD_WIDTH == 64)
-		s=(uint32_t*)((BC_WORD)d+22+2*(*(uint16_t*)d));
+			s=(uint32_t*)((BC_WORD)d+22+2*(*(uint16_t*)d));
 #else
-		s=(uint32_t*)((BC_WORD)d+10+*(uint16_t*)d);
+			s=(uint32_t*)((BC_WORD)d+10+*(uint16_t*)d);
 #endif
+		}
 		l=s[0];
 		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
 		for (i=0; i<l; ++i) {
@@ -3329,6 +3338,18 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(print_char):
+	PRINTF("%c",(char)*bsp++);
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(print_int):
+	PRINTF(BC_WORD_FMT,*bsp++);
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(print_real):
+	PRINTF("%.15g",(*(BC_REAL*)bsp++)+0.0);
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pushA_a):
 {
 	BC_WORD *n;
@@ -7082,6 +7103,50 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 }
 #endif
 
+INSTRUCTION_BLOCK(push_r_arg_t):
+	bsp[0]=*(char*)bsp[0];
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(push_t_r_a):
+{
+	BC_WORD *n=(BC_WORD*)asp[pc[1]];
+	*--bsp=n[0]+IF_INT_64_OR_32(14,6);
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(push_t_r_args):
+{
+	BC_WORD *n=(BC_WORD*)*asp--;
+	BC_WORD *d=(BC_WORD*)n[0];
+	int16_t a_arity=((int16_t*)d)[-1];
+	a_arity = ((int16_t*)d)[0];
+	int16_t b_arity = ((int16_t*)d)[-1] - 256 - a_arity;
+	if (a_arity + b_arity < 3) {
+		int i=2;
+		while (b_arity--)
+			*--bsp=n[i--];
+		while (a_arity--)
+			*++asp=n[i--];
+	} else {
+		BC_WORD *rest=(BC_WORD*)n[2];
+		int i=a_arity+b_arity-2;
+		while (b_arity-- && i >= 0)
+			*--bsp=rest[i--];
+		while (a_arity-- && i >= 0)
+			*++asp=rest[i--];
+		if (a_arity >= 0)
+			*++asp=n[1];
+		else
+			*--bsp=n[1];
+	}
+	*--bsp=n[0]+IF_INT_64_OR_32(14,6);
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(push_a_r_args): // voor unboxed array van records. Op A-stack array, op B-stack elementnummer, maak een kopie op de stack
+INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
+INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
+
 INSTRUCTION_BLOCK(add_arg4):
 INSTRUCTION_BLOCK(add_arg5):
 INSTRUCTION_BLOCK(add_arg6):
@@ -7112,17 +7177,6 @@ INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(eval_upd4):
-INSTRUCTION_BLOCK(print_char):
-INSTRUCTION_BLOCK(print_int):
-INSTRUCTION_BLOCK(print_real):
-
-INSTRUCTION_BLOCK(push_a_r_args): // voor unboxed array van records. Op A-stack array, op B-stack elementnummer, maak een kopie op de stack
-INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
-INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
-INSTRUCTION_BLOCK(push_r_arg_t):  // type string op B-stack, haal een karakter eruit
-INSTRUCTION_BLOCK(push_t_r_a):    // push de type string
-INSTRUCTION_BLOCK(push_t_r_args): // push de argumenten van een unboxed record
-
 INSTRUCTION_BLOCK(pushcaf11):
 INSTRUCTION_BLOCK(pushcaf20):
 INSTRUCTION_BLOCK(A_data_IIIla):
