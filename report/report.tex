@@ -148,21 +148,14 @@ This document is meant to give an overview of the work that has been done, not t
 		That way, when the host does not requires the interpreter any more, its memory is freed as well.
 
 	\item
-		Applying interpreted functions to native data (e.g. \texttt{(interpret sum) [0..10]}) is currently only possible in very limited circumstances.
-		What still has to be done:
+		Applying interpreted functions to native data (e.g. \texttt{(interpret sum) [0..10]}) is possible in some environments.
+		For now, the interpreter must have the descriptors of the arguments.
+		It is possible to apply functions partially applied in the interpreter (e.g. \texttt{(interpret (map square)) [0..10]}).
+		It is not yet possible to apply higher-order functions to host functions (e.g. \texttt{(interpret map) square [0..10]}).
 
-		\begin{itemize}
-			\item
-				Make this copying lazy.
-			\item
-				Ensure that nodes referenced from the interpreter are not garbage collected.
-			\item
-				Allow functions partially applied in the interpreter.\\
-				For instance: \texttt{(interpret (map square)) [0..10]}.
-			\item
-				Allow higher order functions applied to host functions.\\
-				For instance: \texttt{(interpreter map) square [0..10]}.
-		\end{itemize}
+		Also, we still need to ensure that nodes referenced from the interpreter are not garbage collected.
+		As discussed, we need to keep an array of references in the host for this.
+		In the end we did not have time for this.
 \end{itemize}
 
 \section*{Demo projects}
@@ -184,12 +177,37 @@ However, we have thought about possible applications.
 		Create a program that takes a number of bots supplied on the command line.
 		A bot is a bytecode file containing a function to perform moves.
 		The host program runs a game or competition between these bots.
+
+	\item
+		A distributed task scheduler.
+		The slaves run the interpreter, the master sends expressions to the slaves to evaluate.
+		These expressions can be part of a mining task in blockchain applications or so.
+		By interpreting the expression, slaves do not need any knowledge of the task they are performing.
+		Such things are also needed in systems like the World Community Grid\footnote{\url{https://www.worldcommunitygrid.org/}},
+			which lets any device be part of a large distributed cluster.
+		(Of course, for applications like this a JIT compiler would be a must for efficiency reasons.)
 \end{itemize}
 
-\section*{Further work \& way ahead}
+\section*{Loose ends \& further work}
 \begin{itemize}
 	\item
+		There are some missing cases in the node copying functionality, as mentioned above.
+		In particular, it must be made possible to work with descriptors which do not exist in the host/interpreter.
+		Also garbage collection for host nodes referenced from the interpreter must be implemented.
+	\item
+		ABC instructions have been implemented in the bytecode generator and the interpreter as needed, to avoid writing untested code.
+		In particular, not all printing functionality from \texttt{\_system.abc} has been implemented.
+		The instruction set needs to be expanded.
+	\item
 		We'd like to adapt \texttt{clm} and/or \texttt{cpm} to be able to generate bytecode files.
+		We then also need a way to generate 64-bit ABC on 32-bit machines.
+	\item
+		The node copying functionality is broken for (records with unboxed) reals, because they are stored differently in the host and the interpreter.
+		We need a good way to copy reals properly.
+	\item
+		When copying reals works, we can look at adding functionality to SoccerFun to share teams with other players using our serialisation/interpretation functions.
+	\item
+		A JIT compiler would improve performance.
 	\item
 		Ideally, we extend the Clean runtime system with an exception mechanism to be able to catch errors in the interpreter and not crash the host.
 \end{itemize}
