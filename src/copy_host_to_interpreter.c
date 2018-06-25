@@ -76,9 +76,21 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 				org_heap[2] = node[2];
 		}
 	} else {
-		/* TODO */
-		fprintf(stderr,"jsr_eval_host_node: fallthrough\n");
-		exit(1);
+		heap += a_arity + b_arity + 2;
+		if (a_arity >= 1) {
+			org_heap[1] = (BC_WORD) heap;
+			heap += make_host_node(heap, (BC_WORD*) node[1], 0);
+		} else {
+			org_heap[1] = node[1];
+		}
+		org_heap[2] = (BC_WORD)&org_heap[3];
+		BC_WORD *rest = (BC_WORD*) node[2];
+		for (int i = 0; i < a_arity - 1; i++) {
+			org_heap[3+i] = (BC_WORD) heap;
+			heap += make_host_node(heap, (BC_WORD*) rest[i], 0);
+		}
+		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
+			org_heap[3+i] = (BC_WORD) rest[i];
 	}
 
 	return heap - org_heap;
