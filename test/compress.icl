@@ -12,7 +12,7 @@ derive bimap Maybe, (,)
 derive gCompress R, ADT
 derive gUncompress R, ADT
 derive gCompressedSize R, ADT
-derive gEq R, ADT, Maybe
+derive gEq R, ADT
 
 :: R = R !Int Int /* Data.GenCompress does not support records */
 :: ADT = ConsA !Real Char !Bool | Record R
