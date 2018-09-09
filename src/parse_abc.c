@@ -1,15 +1,13 @@
 #include <inttypes.h>
-#include "instruction_parse.h"
+#include "parse_abc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "../abci_types.h"
-#include "../util.h"
-#include "instruction_code.h"
-#include "instruction_table.h"
+#include "bcgen_instructions.h"
+#include "util.h"
 
 void warning_i (char *error_string,int integer) {
 	fprintf(stderr, error_string, integer);

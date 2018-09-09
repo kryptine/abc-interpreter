@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../abci_types.h"
-#include "../bytecode.h"
+#include "bytecode.h"
 
 struct label {
 	char *label_name;

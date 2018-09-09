@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../util.h"
-#include "bytecode_gen.h"
-#include "instruction_code.h"
-#include "instruction_parse.h"
-#include "instruction_table.h"
+#include "bcgen.h"
+#include "bcgen_instructions.h"
+#include "bcgen_instruction_table.h"
+#include "parse_abc.h"
+#include "util.h"
 
 void parse_file(FILE *file) {
 	char* line = NULL;

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "abci_types.h"
 #include "abc_instructions.h"
 
 char *instruction_name(BC_WORD i) {

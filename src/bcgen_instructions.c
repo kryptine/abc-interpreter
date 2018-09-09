@@ -1,12 +1,12 @@
-#include "instruction_code.h"
+#include "bcgen_instructions.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../abc_instructions.h"
-#include "../util.h"
-#include "bytecode_gen.h"
+#include "abc_instructions.h"
+#include "bcgen.h"
+#include "util.h"
 
 #define max_implemented_instruction_n CMAX-1
 

@@ -10,7 +10,7 @@
 #endif
 
 #ifdef LINKER
-# include "bytecode_gen/instruction_code.h"
+# include "bcgen_instructions.h"
 #endif
 
 void init_parser(struct parser *state

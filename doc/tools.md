@@ -18,8 +18,8 @@ optimise < "Clean System Files/fsieve.abc" > "Clean System Files/fsieve.opt.abc"
 optimise < "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" > "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
 
 # Generate bytecode
-bytecode "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
-bytecode "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc"
+bcgen "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
+bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc"
 
 # Link bytecode
 link "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.abc -o fsieve.bc
@@ -40,13 +40,13 @@ blocks, and introduces many new ABC instructions for frequently used blocks.
 
 Usage: `optimise < ABC > OABC`
 
-### bytecode
+### bcgen
 
 Generates bytecode from ABC files.
 
-Usage: `bytecode (O)ABC [(O)ABC ...] -o OBC`
+Usage: `bcgen (O)ABC [(O)ABC ...] -o OBC`
 
-In principle, `bytecode` can handle multiple ABC files and link them together.
+In principle, `bcgen` can handle multiple ABC files and link them together.
 However, this is not used any more since we have a linker. Thus, it is safer to
 generate bytecode for every tool separately and link them together with `link`.
 

@@ -1,10 +1,10 @@
 #include <string.h>
 
-#include "../settings.h"
-#include "../util.h"
-#include "instruction_code.h"
-#include "instruction_parse.h"
-#include "instruction_table.h"
+#include "bcgen_instructions.h"
+#include "bcgen_instruction_table.h"
+#include "parse_abc.h"
+#include "settings.h"
+#include "util.h"
 
 // Global instruction table
 inst_element** inst_table;

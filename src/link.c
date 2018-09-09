@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "bcgen_instructions.h"
 #include "link.h"
 #include "parse.h"
 #include "settings.h"
 #include "util.h"
-#include "bytecode_gen/instruction_code.h"
 
 #define MAX_INPUT_FILES 1024
 

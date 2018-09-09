@@ -5,11 +5,6 @@
 
 #include "settings.h"
 
-#ifdef BC_GEN
-# include "bytecode_gen/bytecode_gen.h"
-# include "bytecode_gen/instruction_code.h"
-#endif
-
 /* Size of an instruction in binary bytecode, in bytes */
 #define BYTEWIDTH_INSTRUCTION 2
 

@@ -10,7 +10,7 @@ override CFLAGS+=\
 	-lm
 DIR:="Clean System Files"
 
-all: optimise bytecode link interpret debug
+all: optimise bcgen link interpret debug
 
 CodeSharing: Clean\ System\ Files/interpret.a .FORCE
 	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
@@ -20,20 +20,20 @@ optimise: .FORCE
 
 SRC_BYTECODE:=\
 	abc_instructions.c\
-	util.c\
-	bytecode_gen/bytecode_gen.c\
-	bytecode_gen/instruction_code.c\
-	bytecode_gen/instruction_parse.c\
-	bytecode_gen/instruction_table.c
+	bcgen.c\
+	bcgen_instructions.c\
+	bcgen_instruction_table.c\
+	parse_abc.c\
+	util.c
 DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
 
-bytecode: $(SRC_BYTECODE) $(DEP_BYTECODE)
+bcgen: $(SRC_BYTECODE) $(DEP_BYTECODE)
 	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
 
 SRC_LINK:=\
 	abc_instructions.c\
+	bcgen_instructions.c\
 	bytecode.c\
-	bytecode_gen/instruction_code.c\
 	link.c\
 	parse.c\
 	util.c

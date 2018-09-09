@@ -1,6 +1,6 @@
 #pragma once
 
-#include "instruction_table.h"
+#include "bcgen_instruction_table.h"
 
 void init_parser(void);
 void parse_line(char*, unsigned int);
