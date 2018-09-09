@@ -7,6 +7,7 @@
 #include <ctype.h>
 
 #include "bcgen_instructions.h"
+#include "settings.h"
 #include "util.h"
 
 void warning_i (char *error_string,int integer) {
@@ -241,9 +242,9 @@ static void abc_parser_error_i(char *message, int i) {
 	exit(-1);
 }
 
-static int parse_integer (LONG *integer_p)
+static int parse_integer (int64_t *integer_p)
 {
-	LONG integer;
+	int64_t integer;
 	int minus_sign;
 
 	minus_sign=0;
@@ -448,9 +449,9 @@ static void parse_record_field_types (char *label_string)
 	skip_spaces_and_tabs();
 }
 
-static int parse_unsigned_integer (LONG *integer_p)
+static int parse_unsigned_integer (int64_t *integer_p)
 {
-	LONG integer;
+	int64_t integer;
 
 	if (!is_digit_character (last_char))
 		abc_parser_error_i ("Integer expected at line %d\n",line_number);
@@ -854,7 +855,7 @@ int parse_instruction_a (instruction *instruction)
 int parse_instruction_a_n (instruction *instruction)
 {
 	STRING a;
-	LONG n;
+	int64_t n;
 
 	parse_label (a);
 	if (!parse_unsigned_integer (&n))
@@ -866,7 +867,7 @@ int parse_instruction_a_n (instruction *instruction)
 int parse_instruction_a_n_a (instruction *instruction)
 {
 	STRING a1,a2;
-	LONG n1;
+	int64_t n1;
 
 	parse_label (a1);
 	if (!parse_integer (&n1))
@@ -879,7 +880,7 @@ int parse_instruction_a_n_a (instruction *instruction)
 int parse_instruction_a_n_a_a_n_a (instruction *instruction)
 {
 	STRING a1,a2,a3,a4;
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	parse_label (a1);
 	if (!parse_integer (&n1))
@@ -896,7 +897,7 @@ int parse_instruction_a_n_a_a_n_a (instruction *instruction)
 int parse_instruction_a_n_a_n (instruction *instruction)
 {
 	STRING a1,a2;
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	parse_label (a1);
 	if (!parse_integer (&n1))
@@ -911,7 +912,7 @@ int parse_instruction_a_n_a_n (instruction *instruction)
 int parse_instruction_a_n_n (instruction *instruction)
 {
 	STRING a;
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	parse_label (a);
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2))
@@ -923,7 +924,7 @@ int parse_instruction_a_n_n (instruction *instruction)
 int parse_instruction_a_n_n_a (instruction *instruction)
 {
 	STRING a1,a2;
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	parse_label (a1);
 	if (!parse_integer (&n1))
@@ -938,7 +939,7 @@ int parse_instruction_a_n_n_a (instruction *instruction)
 int parse_instruction_a_n_n_n (instruction *instruction)
 {
 	STRING a;
-	LONG n1,n2,n3;
+	int64_t n1,n2,n3;
 
 	parse_label (a);
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) || !parse_unsigned_integer (&n3))
@@ -965,7 +966,7 @@ static void parse_bit_string (char *s_p)
 int parse_instruction_a_n_n_b (instruction *instruction)
 {
 	STRING a1,a2;
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	parse_label (a1);
 	if (!parse_unsigned_integer (&n1))
@@ -984,7 +985,7 @@ int parse_instruction_a_n_n_b (instruction *instruction)
 int parse_instruction_a_n_n_n_b (instruction *instruction)
 {
 	STRING a1,a2;
-	LONG n1,n2,n3;
+	int64_t n1,n2,n3;
 
 	parse_label (a1);
 	if (!parse_unsigned_integer (&n1))
@@ -1005,7 +1006,7 @@ int parse_instruction_a_n_n_n_b (instruction *instruction)
 int parse_instruction_a_n_n_n_n (instruction *instruction)
 {
 	STRING a1;
-	LONG n1,n2,n3,n4;
+	int64_t n1,n2,n3,n4;
 
 	parse_label (a1);
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
@@ -1018,7 +1019,7 @@ int parse_instruction_a_n_n_n_n (instruction *instruction)
 int parse_instruction_a_n_n_n_n_n (instruction *instruction)
 {
 	STRING a1;
-	LONG n1,n2,n3,n4,n5;
+	int64_t n1,n2,n3,n4,n5;
 
 	parse_label (a1);
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
@@ -1042,7 +1043,7 @@ int parse_instruction_b (instruction *instruction)
 int parse_instruction_b_n (instruction *instruction)
 {
 	int b;
-	LONG n;
+	int64_t n;
 
 	if (!parse_boolean (&b) || !parse_unsigned_integer (&n))
 		return 0;
@@ -1063,7 +1064,7 @@ int parse_instruction_c (instruction *instruction)
 int parse_instruction_c_c_n_a_a (instruction *instruction)
 {
 	unsigned char c1,c2;
-	LONG n;
+	int64_t n;
 	STRING a1,a2;
 
 	if (!parse_character (&c1) || !parse_character (&c2) || !parse_unsigned_integer (&n))
@@ -1077,7 +1078,7 @@ int parse_instruction_c_c_n_a_a (instruction *instruction)
 int parse_instruction_c_n (instruction *instruction)
 {
 	unsigned char c;
-	LONG n;
+	int64_t n;
 
 	if (!parse_character (&c) || !parse_unsigned_integer (&n))
 		return 0;
@@ -1088,7 +1089,7 @@ int parse_instruction_c_n (instruction *instruction)
 int parse_instruction_c_n_a (instruction *instruction)
 {
 	unsigned char c;
-	LONG n;
+	int64_t n;
 	STRING a;
 
 	if (!parse_character (&c) || !parse_unsigned_integer (&n))
@@ -1111,7 +1112,7 @@ int parse_instruction_i (instruction *instruction)
 int parse_instruction_i_i_n_a_a (instruction *instruction)
 {
 	CleanInt i1,i2;
-	LONG n;
+	int64_t n;
 	STRING a1,a2;
 
 	if (!parse_clean_integer (&i1) || !parse_clean_integer (&i2) || !parse_unsigned_integer (&n))
@@ -1125,7 +1126,7 @@ int parse_instruction_i_i_n_a_a (instruction *instruction)
 int parse_instruction_i_n (instruction *instruction)
 {
 	CleanInt i;
-	LONG n;
+	int64_t n;
 
 	if (!parse_clean_integer (&i) || !parse_unsigned_integer (&n))
 		return 0;
@@ -1136,7 +1137,7 @@ int parse_instruction_i_n (instruction *instruction)
 int parse_instruction_i_n_a (instruction *instruction)
 {
 	CleanInt i;
-	LONG n;
+	int64_t n;
 	STRING a;
 
 	if (!parse_clean_integer (&i) || !parse_unsigned_integer (&n))
@@ -1167,7 +1168,7 @@ int parse_instruction_l (instruction *instruction)
 
 int parse_instruction_n (instruction *instruction)
 {
-	LONG n;
+	int64_t n;
 
 	if (!parse_unsigned_integer (&n))
 		return 0;
@@ -1179,7 +1180,7 @@ int parse_instruction_n (instruction *instruction)
 int parse_instruction_n_a (instruction *instruction)
 {
 	STRING a;
-	LONG n;
+	int64_t n;
 
 	if (!parse_unsigned_integer (&n))
 		return 0;
@@ -1191,7 +1192,7 @@ int parse_instruction_n_a (instruction *instruction)
 int parse_instruction_n_a_n_a_a_n_a (instruction *instruction)
 {
 	STRING a1,a2,a3,a4;
-	LONG n0,n1,n2;
+	int64_t n0,n1,n2;
 
 	if (!parse_unsigned_integer (&n0))
 		return 0;
@@ -1210,7 +1211,7 @@ int parse_instruction_n_a_n_a_a_n_a (instruction *instruction)
 int parse_instruction_n_b (instruction *instruction)
 {
 	int b;
-	LONG n;
+	int64_t n;
 
 	if (!parse_unsigned_integer (&n) || !parse_boolean (&b))
 		return 0;
@@ -1220,7 +1221,7 @@ int parse_instruction_n_b (instruction *instruction)
 
 int parse_instruction_n_n (instruction *instruction)
 {
-	LONG n1,n2;
+	int64_t n1,n2;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2))
 		return 0;
@@ -1230,7 +1231,7 @@ int parse_instruction_n_n (instruction *instruction)
 
 int parse_instruction_n_n_n (instruction *instruction)
 {
-	LONG n1,n2,n3;
+	int64_t n1,n2,n3;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
 		!parse_unsigned_integer (&n3))
@@ -1241,7 +1242,7 @@ int parse_instruction_n_n_n (instruction *instruction)
 
 int parse_instruction_n_n_n_n (instruction *instruction)
 {
-	LONG n1,n2,n3,n4;
+	int64_t n1,n2,n3,n4;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
 		!parse_unsigned_integer (&n3) || !parse_unsigned_integer (&n4))
@@ -1252,7 +1253,7 @@ int parse_instruction_n_n_n_n (instruction *instruction)
 
 int parse_instruction_n_n_n_n_n (instruction *instruction)
 {
-	LONG n1,n2,n3,n4,n5;
+	int64_t n1,n2,n3,n4,n5;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
 		!parse_unsigned_integer (&n3) || !parse_unsigned_integer (&n4) ||
@@ -1264,7 +1265,7 @@ int parse_instruction_n_n_n_n_n (instruction *instruction)
 
 int parse_instruction_n_n_n_n_n_n_n (instruction *instruction)
 {
-	LONG n1,n2,n3,n4,n5,n6,n7;
+	int64_t n1,n2,n3,n4,n5,n6,n7;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2) ||
 		!parse_unsigned_integer (&n3) || !parse_unsigned_integer (&n4) ||
@@ -1277,7 +1278,7 @@ int parse_instruction_n_n_n_n_n_n_n (instruction *instruction)
 
 int parse_instruction_on (instruction *instruction)
 {
-	LONG n;
+	int64_t n;
 
 	if (!is_digit_character (last_char))
 		n=-1;
@@ -1321,7 +1322,7 @@ int parse_instruction_s2_n_a (instruction *instruction)
 	STRING s1,s2;
 	int length;
 	char *string;
-	LONG n;
+	int64_t n;
 
 	string=parse_string2 (s1,&length);
 	if (!parse_unsigned_integer (&n))
@@ -1344,7 +1345,7 @@ int parse_directive (instruction *instruction)
 
 int parse_directive_a (instruction *instruction)
 {
-	LONG n;
+	int64_t n;
 	STRING s;
 
 	if (!parse_integer (&n))
@@ -1391,8 +1392,8 @@ int parse_directive_desc (instruction *instruction)
 {
 	STRING a1,a2,a3,s;
 	int l;
-	LONG n;
-	LONG f;
+	int64_t n;
+	int64_t f;
 
 	parse_label (a1);
 	parse_label (a2);
@@ -1408,7 +1409,7 @@ int parse_directive_desc0 (instruction *instruction)
 {
 	STRING a1,s;
 	int l;
-	LONG n;
+	int64_t n;
 
 	parse_label (a1);
 
@@ -1422,7 +1423,7 @@ int parse_directive_descn (instruction *instruction)
 {
 	STRING a1,a2,s;
 	int l;
-	LONG n;
+	int64_t n;
 	int f;
 
 	parse_label (a1);
@@ -1495,7 +1496,7 @@ int parse_directive_module (instruction *instruction)
 
 int parse_directive_n (instruction *instruction)
 {
-	LONG n;
+	int64_t n;
 	STRING s;
 
 	if (!parse_integer (&n))
@@ -1518,7 +1519,7 @@ int parse_directive_n (instruction *instruction)
 
 int parse_directive_nu (instruction *instruction)
 {
-	LONG n1,n2;
+	int64_t n1,n2;
 	STRING s;
 
 	if (!parse_integer (&n1) || !parse_integer (&n2))
@@ -1541,7 +1542,7 @@ int parse_directive_nu (instruction *instruction)
 
 int parse_directive_n_l (instruction *instruction)
 {
-	LONG n;
+	int64_t n;
 	STRING s;
 
 	if (!parse_unsigned_integer (&n))
@@ -1556,7 +1557,7 @@ int parse_directive_n_l (instruction *instruction)
 
 int parse_directive_n_n_n (instruction *instruction)
 {
-	LONG n1,n2,n3;
+	int64_t n1,n2,n3;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2)
 	||  !parse_unsigned_integer (&n3))
@@ -1572,10 +1573,10 @@ int parse_directive_n_n_n (instruction *instruction)
 
 int parse_directive_n_n_t (instruction *instruction)
 {
-	LONG n1,n2;
+	int64_t n1,n2;
 	int i;
-	static ULONG small_vector;
-	ULONG *vector_p;
+	static uint64_t small_vector;
+	uint64_t *vector_p;
 	int vector_size=0;
 
 	if (!parse_unsigned_integer (&n1) || !parse_unsigned_integer (&n2))
@@ -1585,7 +1586,7 @@ int parse_directive_n_n_t (instruction *instruction)
 	if (vector_size+1<=SMALL_VECTOR_SIZE)
 		vector_p=&small_vector;
 	else
-		vector_p=(ULONG*)safe_malloc(((vector_size+1+SMALL_VECTOR_SIZE-1)>>LOG_SMALL_VECTOR_SIZE) * sizeof (ULONG));
+		vector_p=(uint64_t*)safe_malloc(((vector_size+1+SMALL_VECTOR_SIZE-1)>>LOG_SMALL_VECTOR_SIZE) * sizeof (uint64_t));
 
 	i=0;
 	while (i!=n2){
@@ -1644,7 +1645,7 @@ int parse_directive_pb (instruction *instruction)
 int parse_directive_record (instruction *instruction)
 {
 	STRING a1,a2,s;
-	LONG n1,n2;
+	int64_t n1,n2;
 	int l;
 
 	parse_label (a1);

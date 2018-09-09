@@ -288,7 +288,7 @@ void code_a(int n_apply_args, char *ea_label_name);
 void code_algtype(int n_constructors);
 void code_caf(char *label_name, int a_size, int b_size);
 void code_comp(int version, char *options);
-void code_d(int da, int db, unsigned long vector[]);
+void code_d(int da, int db, uint32_t vector[]);
 void code_depend(char *module_name, int module_name_length);
 void code_desc(char label_name[], char node_entry_label_name[], char *code_label_name,
 		int arity, int lazy_record_flag, char descriptor_name[], int descriptor_name_length);
@@ -308,7 +308,7 @@ void code_label(char *label_name);
 void code_module(char label_name[], char string[], uint32_t string_length);
 void code_n(int number_of_arguments, char *descriptor_name, char *ea_label_name);
 void code_nu(int a_size, int b_size, char *descriptor_name, char *ea_label_name);
-void code_o(int oa, int ob, unsigned long vector[]);
+void code_o(int oa, int ob, uint32_t vector[]);
 void code_record(char *s1, char *s2, int n1, int n2, char *s3, int s3_length);
 void code_record_start(char record_label_name[], char type[], int a_size, int b_size);
 void code_record_descriptor_label(char descriptor_name[]);

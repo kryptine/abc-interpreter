@@ -1,5 +1,7 @@
 #pragma once
 
+#include <inttypes.h>
+
 #define BCGEN_INSTRUCTION_TABLE_SIZE 512
 
 #ifndef WORD_WIDTH
@@ -11,3 +13,5 @@
 #else
 # define IF_INT_64_OR_32(a,b) (b)
 #endif
+
+typedef int32_t CleanInt;
