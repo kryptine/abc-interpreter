@@ -10,7 +10,6 @@
 
 #ifdef LINK_CLEAN_RUNTIME
 # include "../copy_interpreter_to_host.h"
-# include "../finalizers.h"
 #endif
 
 int in_first_semispace = 1;
@@ -48,6 +47,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 	}
 
 #ifdef LINK_CLEAN_RUNTIME
+#if 0 // TODO
 	/* Pass 1b: reverse pointers on the A-stack */
 # if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
@@ -61,6 +61,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 		finalizers->cur->arg = *temp;
 		*temp = (BC_WORD) (&finalizers->cur->arg) | 1;
 	}
+#endif
 #endif
 
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
