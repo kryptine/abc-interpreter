@@ -50,3 +50,9 @@ Some defines are used to indicate what tool is being built:
 - `LINK_CLEAN_RUNTIME`:
   Compile for linking with the Clean run-time system. This means sharing some
   internal descriptors (such as `INT`) and excluding `main`.
+
+- `SHARED_NODE_TABLE_SIZE`:
+  The interpreter keeps an indirection table of all nodes that are shared. This
+  is a 2D array of size `SHARED_NODE_TABLE_SIZE`&times;`SHARED_NODE_TABLE_SIZE`
+  so e.g. a value of 512 allows for up to 512<sup>2</sup> = 262144 shared
+  nodes.

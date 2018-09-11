@@ -10,13 +10,22 @@ struct host_status {
 	size_t host_hp_free;
 };
 
+struct shared_nodes {
+	unsigned int ptr;
+	BC_WORD **shared_nodes[SHARED_NODE_TABLE_SIZE];
+};
+
 struct interpretation_environment {
 	struct host_status *host;
 	struct program *program;
+
 	BC_WORD *heap;
 	BC_WORD heap_size;
 	BC_WORD *stack;
 	BC_WORD stack_size;
+
+	struct shared_nodes *shared_nodes;
+
 	BC_WORD *asp;
 	BC_WORD *bsp;
 	BC_WORD *csp;

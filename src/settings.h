@@ -15,3 +15,6 @@
 typedef int32_t CleanInt;
 
 #define BCGEN_INSTRUCTION_TABLE_SIZE 512
+
+// maximum number of shared nodes is SHARED_NODE_TABLE_SIZE ^ 2
+#define SHARED_NODE_TABLE_SIZE 512

@@ -49,6 +49,52 @@ extern void *e__CodeSharing__dinterpret__30;
 extern void *e__CodeSharing__dinterpret__31;
 extern void *__Tuple;
 
+void free_shared_nodes(struct shared_nodes *sn) {
+	for (int i = 0; i < SHARED_NODE_TABLE_SIZE; i++)
+		if (sn->shared_nodes[i] != NULL)
+			free(sn->shared_nodes[i]);
+}
+
+void init_shared_nodes(struct shared_nodes *sn) {
+	sn->ptr = 0;
+	sn->shared_nodes[0] = safe_malloc(sizeof(BC_WORD*) * SHARED_NODE_TABLE_SIZE);
+	for (int i = 0; i < SHARED_NODE_TABLE_SIZE; i++)
+		sn->shared_nodes[0][i] = NULL;
+	for (int i = 1; i < SHARED_NODE_TABLE_SIZE; i++)
+		sn->shared_nodes[i] = NULL;
+}
+
+BC_WORD **add_shared_node(struct shared_nodes *sns) {
+	unsigned int tempptr = sns->ptr;
+	while (1) {
+		if (sns->shared_nodes[tempptr/SHARED_NODE_TABLE_SIZE][tempptr%SHARED_NODE_TABLE_SIZE] == NULL) {
+			sns->ptr = tempptr+1;
+			if (sns->shared_nodes[sns->ptr/SHARED_NODE_TABLE_SIZE] == NULL)
+				sns->ptr = 0;
+			return &sns->shared_nodes[tempptr / SHARED_NODE_TABLE_SIZE][tempptr % SHARED_NODE_TABLE_SIZE];
+		}
+
+		tempptr++;
+		if (sns->shared_nodes[tempptr/SHARED_NODE_TABLE_SIZE] == NULL)
+			tempptr = 0;
+
+		if (tempptr == sns->ptr) {
+			for (int i = 0; i < SHARED_NODE_TABLE_SIZE; i++) {
+				if (sns->shared_nodes[i] == NULL) {
+					sns->shared_nodes[i] = safe_malloc(sizeof(BC_WORD*) * SHARED_NODE_TABLE_SIZE);
+					for (int j = 0; j < SHARED_NODE_TABLE_SIZE; j++)
+						sns->shared_nodes[i][j] = NULL;
+					sns->ptr = i * SHARED_NODE_TABLE_SIZE + 1;
+					return &sns->shared_nodes[i][0];
+				}
+			}
+
+			fprintf(stderr,"Shared node table is full.\n");
+			exit(-1);
+		}
+	}
+}
+
 struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
@@ -56,10 +102,15 @@ struct interpretation_environment *build_interpretation_environment(
 	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
+
 	ie->heap = heap;
 	ie->heap_size = heap_size;
 	ie->stack = stack;
 	ie->stack_size = stack_size;
+
+	ie->shared_nodes = safe_malloc(sizeof(struct shared_nodes));
+	init_shared_nodes(ie->shared_nodes);
+
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
@@ -70,11 +121,12 @@ struct interpretation_environment *build_interpretation_environment(
 	return ie;
 }
 
-BC_WORD *build_start_node(struct interpretation_environment *ie) {
-	BC_WORD *hp = ie->hp;
+BC_WORD **build_start_node(struct interpretation_environment *ie) {
+	BC_WORD **snode = add_shared_node(ie->shared_nodes);
+	*snode = ie->heap;
 	*ie->hp = ((BC_WORD*)ie->program->code[1])[1];
 	ie->hp += 3;
-	return hp;
+	return snode;
 }
 
 void interpretation_environment_finalizer(struct interpretation_environment *ie) {
@@ -86,6 +138,7 @@ void interpretation_environment_finalizer(struct interpretation_environment *ie)
 	free(ie->program);
 	free(ie->heap);
 	free(ie->stack);
+	free_shared_nodes(ie->shared_nodes);
 	free(ie);
 }
 
@@ -93,7 +146,8 @@ void *get_interpretation_environment_finalizer(void) {
 	return interpretation_environment_finalizer;
 }
 
-void interpreter_finalizer(BC_WORD interpret_node) {
+void interpreter_finalizer(BC_WORD shared_node_reference) {
+	*((BC_WORD**) shared_node_reference) = NULL;
 }
 
 BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_WORD node, int args_needed) {
@@ -136,7 +190,11 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 	}
 	heap[1] = (BC_WORD) ie_finalizer;
 	heap[2] = (BC_WORD) &heap[3+args_needed];
-	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
+
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+	BC_WORD **snode = add_shared_node(ie->shared_nodes);
+	*snode = (BC_WORD*) node;
+	return build_finalizer(heap+3+args_needed, interpreter_finalizer, (BC_WORD) snode);
 }
 
 int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
@@ -291,7 +349,8 @@ void *__interpret__copy__node__asm_redirect_node;
 BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
+	BC_WORD **snode = (BC_WORD**) node_finalizer->cur->arg;
+	BC_WORD *node = *snode;
 
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Copying %p -> %p...\n", node, (void*)*node);
@@ -332,7 +391,8 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
 		int n_args, ...) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
+	BC_WORD **snode = (BC_WORD**) node_finalizer->cur->arg;
+	BC_WORD *node = *snode;
 	va_list arguments;
 
 #if DEBUG_CLEAN_LINKS > 0
