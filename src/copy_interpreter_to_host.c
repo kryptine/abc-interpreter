@@ -141,8 +141,10 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
-BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *ie_finalizer, BC_WORD *node) {
+BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+	BC_WORD *host_heap = ie->host->host_hp_ptr;
+	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
 
 	if (node[0] == (BC_WORD) &INT+2) {
@@ -272,7 +274,13 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 // Used to communicate redirect host thunks with the ASM interface; see #51
 void *__interpret__copy__node__asm_redirect_node;
 
-BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
+/**
+ * This signature is weird to make calling it from Clean easy and lightweight:
+ *
+ * - The dummies are used so that the other arguments are already in the right
+ *   register.
+ */
+BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
@@ -301,17 +309,18 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		}
 	}
 
-	host_heap = ie->host->host_hp_ptr;
-	host_heap_free = ie->host->host_hp_free;
-
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
+	return copy_to_host(ie_finalizer, node);
 }
 
 /**
- * The first argument is passed before the ie_finalizer to make calling from
- * Clean lightweight on x64. The rest of the arguments is passed variadically.
+ * This signature is weird to make calling it from Clean easy and lightweight:
+ *
+ * - The dummies are used so that the other arguments are already in the right
+ *   register.
+ * - The first argument to the interpreter function is passed normally; the
+ *   rest variadically; for the same reason.
  */
-BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
+BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
 		int n_args, ...) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
@@ -367,8 +376,5 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
 
-	host_heap = ie->host->host_hp_ptr;
-	host_heap_free = ie->host->host_hp_free;
-
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
+	return copy_to_host(ie_finalizer, node);
 }

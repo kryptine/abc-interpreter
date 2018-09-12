@@ -66,10 +66,7 @@ __interpret__copy__node__asm:
 	push	rbp
 	save_host_status_via_rbp
 
-	#mov	rdi,rdi # heap pointer
-	mov	rsi,r15 # free words
-	#mov	rdx,rdx # finalizer of interpretation environment
-	#mov	rcx,rcx # finalizer of node
+	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm_finish:
 	mov	rbp,rax
@@ -118,6 +115,7 @@ __interpret__copy__node__asm__n_args:
 	sub	rax,8
 	jne	__interpret__copy__node__asm__n_args
 __interpret__copy__node__asm__n_has_all_args:
+	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
 	jmp	__interpret__copy__node__asm_finish
