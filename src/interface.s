@@ -30,15 +30,11 @@
 	push	r8
 	push	r10
 	push	r11
-	push	rdi
-	push	rsi
 	push	rdx
 .endm
 
 .macro restore_registers
 	pop	rdx
-	pop	rsi
-	pop	rdi
 	pop	r11
 	pop	r10
 	pop	r8
@@ -67,6 +63,7 @@ __interpret__copy__node__asm:
 	# Get interpretation_environment from finalizer
 	mov	rbp,[rdx+16]
 	mov	rbp,[rbp+8]
+	push	rbp
 	save_host_status_via_rbp
 
 	#mov	rdi,rdi # heap pointer
@@ -76,6 +73,8 @@ __interpret__copy__node__asm:
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm_finish:
 	mov	rbp,rax
+	pop	rdi
+	restore_host_status_via_rdi
 	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
@@ -104,7 +103,13 @@ __interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
+
 	save_registers
+	mov	rbp,[r8+16]
+	mov	rbp,[rbp+8]
+	push	rbp
+	save_host_status_via_rbp
+
 	mov	rbx,rax
 	cmp	rax,0
 	je	__interpret__copy__node__asm__n_has_all_args

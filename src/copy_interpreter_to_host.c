@@ -301,6 +301,9 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		}
 	}
 
+	host_heap = ie->host->host_hp_ptr;
+	host_heap_free = ie->host->host_hp_free;
+
 	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
 
@@ -363,6 +366,9 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 
 	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
+
+	host_heap = ie->host->host_hp_ptr;
+	host_heap_free = ie->host->host_hp_free;
 
 	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
 }
