@@ -10,6 +10,11 @@ char *instruction_name(BC_WORD i) {
 #include "abc_instructions.h"
 #undef _INSTRUCTION_NAMES
 
+#ifdef INTERPRETER
+		case CMAX:
+			return "eval_to_hnf_return";
+			break;
+#endif
 		default:
 			fprintf(stderr,"Unknown instruction %d\n",(int)i);
 			return "";

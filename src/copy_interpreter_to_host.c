@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#include "abc_instructions.h"
 #include "copy_host_to_interpreter.h"
 #include "copy_interpreter_to_host.h"
 #include "gc.h"
@@ -140,8 +141,10 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
-BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
-		struct finalizers *ie_finalizer, BC_WORD *node) {
+BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+	BC_WORD *host_heap = ie->host->host_hp_ptr;
+	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
 
 	if (node[0] == (BC_WORD) &INT+2) {
@@ -268,7 +271,16 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 	return host_heap - org_host_heap;
 }
 
-BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
+// Used to communicate redirect host thunks with the ASM interface; see #51
+void *__interpret__copy__node__asm_redirect_node;
+
+/**
+ * This signature is weird to make calling it from Clean easy and lightweight:
+ *
+ * - The dummies are used so that the other arguments are already in the right
+ *   register.
+ */
+BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
@@ -278,30 +290,46 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #endif
 
 	if (!(node[0] & 2)) {
+		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
+			__interpret__copy__node__asm_redirect_node = (void*) node[1];
 #if DEBUG_CLEAN_LINKS > 1
-		fprintf(stderr,"\tInterpreting...\n");
+			fprintf(stderr,"\tTarget is a host node; returning immediately\n");
 #endif
-		*++ie->asp = (BC_WORD) node;
-		if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
-			fprintf(stderr,"Failed to interpret\n");
-			return -1;
+			return -3;
+		} else {
+#if DEBUG_CLEAN_LINKS > 1
+			fprintf(stderr,"\tInterpreting...\n");
+#endif
+			*++ie->asp = (BC_WORD) node;
+			if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
+				fprintf(stderr,"Failed to interpret\n");
+				return -1;
+			}
+			node = (BC_WORD*)*ie->asp--;
 		}
-		node = (BC_WORD*)*ie->asp--;
 	}
 
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
+	return copy_to_host(ie_finalizer, node);
 }
 
 /**
- * The first argument is passed before the ie_finalizer to make calling from
- * Clean lightweight on x64. The rest of the arguments is passed variadically.
+ * This signature is weird to make calling it from Clean easy and lightweight:
+ *
+ * - The dummies are used so that the other arguments are already in the right
+ *   register.
+ * - The first argument to the interpreter function is passed normally; the
+ *   rest variadically; for the same reason.
  */
-BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
+BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
 		int n_args, ...) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
+
+#if DEBUG_CLEAN_LINKS > 0
+	fprintf(stderr,"Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
+#endif
 
 	va_start(arguments,n_args);
 	for (int i = 0; i < n_args; i++) {
@@ -348,5 +376,5 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
+	return copy_to_host(ie_finalizer, node);
 }

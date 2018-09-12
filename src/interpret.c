@@ -232,8 +232,10 @@ eval_to_hnf_return:
 # ifdef DEBUG_ALL_INSTRUCTIONS
 		if (program->data <= pc && pc < program->data + program->data_size)
 			fprintf(stderr, "D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
-		else
+		else if (program->code <= pc && pc < program->code + program->code_size)
 			fprintf(stderr, ":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
+		else
+			fprintf(stderr, ":------ %s\n", instruction_name(*pc));
 # endif
 # ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);

@@ -30,15 +30,11 @@
 	push	r8
 	push	r10
 	push	r11
-	push	rdi
-	push	rsi
 	push	rdx
 .endm
 
 .macro restore_registers
 	pop	rdx
-	pop	rsi
-	pop	rdi
 	pop	r11
 	pop	r10
 	pop	r8
@@ -54,10 +50,10 @@
 .endm
 
 .macro restore_host_status_via_rdi # rdi is the interpretation_environment
-	mov	rbp,[rdi]
-	mov	rsi,[rbp]
-	mov	rdi,[rbp+8]
-	mov	r15,[rbp+16]
+	mov	rdi,[rdi]
+	mov	rsi,[rdi]
+	mov	r15,[rdi+16]
+	mov	rdi,[rdi+8]
 .endm
 
 .globl	__interpret__copy__node__asm
@@ -67,24 +63,32 @@ __interpret__copy__node__asm:
 	# Get interpretation_environment from finalizer
 	mov	rbp,[rdx+16]
 	mov	rbp,[rbp+8]
+	push	rbp
 	save_host_status_via_rbp
 
-	#mov	rdi,rdi # heap pointer
-	mov	rsi,r15 # free words
-	#mov	rdx,rdx # finalizer of interpretation environment
-	#mov	rcx,rcx # finalizer of node
+	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host
-__interpret__copy__node__asm__finish:
+__interpret__copy__node__asm_finish:
 	mov	rbp,rax
+	pop	rdi
+	restore_host_status_via_rdi
 	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
+	cmp	rbp,-3 # Redirect to host node
+	je	__interpret__copy__node__asm_redirect
 
 	mov	rcx,rdi
 	sub	r15,rbp
 	shl	rbp,3
 	add	rdi,rbp
 
+	ret
+
+.global	__interpret__copy__node__asm_redirect_node
+__interpret__copy__node__asm_redirect:
+	lea	rbp,__interpret__copy__node__asm_redirect_node
+	mov	rcx,[rbp]
 	ret
 
 __interpret__copy__node__asm_gc:
@@ -96,21 +100,28 @@ __interpret__copy__node__asm__n:
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
+
 	save_registers
+	mov	rbp,[r8+16]
+	mov	rbp,[rbp+8]
+	push	rbp
+	save_host_status_via_rbp
+
 	mov	rbx,rax
 	cmp	rax,0
-__interpret__copy__node__asm__n_args:
 	je	__interpret__copy__node__asm__n_has_all_args
+__interpret__copy__node__asm__n_args:
 	push	[rsi+rax-8]
 	sub	rax,8
-	jmp	__interpret__copy__node__asm__n_args
+	jne	__interpret__copy__node__asm__n_args
 __interpret__copy__node__asm__n_has_all_args:
+	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
-	jmp	__interpret__copy__node__asm__finish
+	jmp	__interpret__copy__node__asm_finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(ie_finalizer, a0)
+	# Call as __interpret__evaluate__host(ie, a0)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp
