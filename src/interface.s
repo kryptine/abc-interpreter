@@ -54,10 +54,10 @@
 .endm
 
 .macro restore_host_status_via_rdi # rdi is the interpretation_environment
-	mov	rbp,[rdi]
-	mov	rsi,[rbp]
-	mov	rdi,[rbp+8]
-	mov	r15,[rbp+16]
+	mov	rdi,[rdi]
+	mov	rsi,[rdi]
+	mov	r15,[rdi+16]
+	mov	rdi,[rdi+8]
 .endm
 
 .globl	__interpret__copy__node__asm
@@ -74,17 +74,25 @@ __interpret__copy__node__asm:
 	#mov	rdx,rdx # finalizer of interpretation environment
 	#mov	rcx,rcx # finalizer of node
 	call	copy_interpreter_to_host
-__interpret__copy__node__asm__finish:
+__interpret__copy__node__asm_finish:
 	mov	rbp,rax
 	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
+	cmp	rbp,-3 # Redirect to host node
+	je	__interpret__copy__node__asm_redirect
 
 	mov	rcx,rdi
 	sub	r15,rbp
 	shl	rbp,3
 	add	rdi,rbp
 
+	ret
+
+.global	__interpret__copy__node__asm_redirect_node
+__interpret__copy__node__asm_redirect:
+	lea	rbp,__interpret__copy__node__asm_redirect_node
+	mov	rcx,[rbp]
 	ret
 
 __interpret__copy__node__asm_gc:
@@ -99,18 +107,18 @@ __interpret__copy__node__asm__n:
 	save_registers
 	mov	rbx,rax
 	cmp	rax,0
-__interpret__copy__node__asm__n_args:
 	je	__interpret__copy__node__asm__n_has_all_args
+__interpret__copy__node__asm__n_args:
 	push	[rsi+rax-8]
 	sub	rax,8
-	jmp	__interpret__copy__node__asm__n_args
+	jne	__interpret__copy__node__asm__n_args
 __interpret__copy__node__asm__n_has_all_args:
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
-	jmp	__interpret__copy__node__asm__finish
+	jmp	__interpret__copy__node__asm_finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(ie_finalizer, a0)
+	# Call as __interpret__evaluate__host(ie, a0)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp

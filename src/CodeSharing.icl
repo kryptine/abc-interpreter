@@ -115,10 +115,6 @@ where
 		pushI 0
 	}
 
-// On purpose unique: this ensures there is only one InterpretationEnvironment,
-// ever. This is needed to ensure that the heap address gets shared by all
-// interpretations. Also on purpose lazy: this ensures it is passed on the
-// A-stack, so that we can easily pass it to C.
 interpret :: !InterpretationEnvironment !InterpretedExpression -> .a
 interpret ce fin = code {
 	.d 2 0

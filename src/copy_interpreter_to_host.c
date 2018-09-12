@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#include "abc_instructions.h"
 #include "copy_host_to_interpreter.h"
 #include "copy_interpreter_to_host.h"
 #include "gc.h"
@@ -268,6 +269,9 @@ BC_WORD copy_to_host(BC_WORD *host_heap, size_t host_heap_free,
 	return host_heap - org_host_heap;
 }
 
+// Used to communicate redirect host thunks with the ASM interface; see #51
+void *__interpret__copy__node__asm_redirect_node;
+
 BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
@@ -278,15 +282,23 @@ BC_WORD copy_interpreter_to_host(BC_WORD *host_heap, size_t host_heap_free,
 #endif
 
 	if (!(node[0] & 2)) {
+		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
+			__interpret__copy__node__asm_redirect_node = (void*) node[1];
 #if DEBUG_CLEAN_LINKS > 1
-		fprintf(stderr,"\tInterpreting...\n");
+			fprintf(stderr,"\tTarget is a host node; returning immediately\n");
 #endif
-		*++ie->asp = (BC_WORD) node;
-		if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
-			fprintf(stderr,"Failed to interpret\n");
-			return -1;
+			return -3;
+		} else {
+#if DEBUG_CLEAN_LINKS > 1
+			fprintf(stderr,"\tInterpreting...\n");
+#endif
+			*++ie->asp = (BC_WORD) node;
+			if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
+				fprintf(stderr,"Failed to interpret\n");
+				return -1;
+			}
+			node = (BC_WORD*)*ie->asp--;
 		}
-		node = (BC_WORD*)*ie->asp--;
 	}
 
 	return copy_to_host(host_heap, host_heap_free, ie_finalizer, node);
@@ -302,6 +314,10 @@ BC_WORD copy_interpreter_to_host_n(BC_WORD *host_heap, size_t host_heap_free,
 	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
+
+#if DEBUG_CLEAN_LINKS > 0
+	fprintf(stderr,"Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
+#endif
 
 	va_start(arguments,n_args);
 	for (int i = 0; i < n_args; i++) {

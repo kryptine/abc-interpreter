@@ -8,7 +8,6 @@ int make_host_node(BC_WORD *heap, BC_WORD *node, int args_needed) {
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,heap);
 	fprintf(stderr,"\t[1]=%p; still %d args needed\n",node,args_needed);
-	fprintf(stderr,"\t%ld, %ld, %ld\n",(BC_WORD)HOST_NODES[args_needed][0],(BC_WORD)HOST_NODES[args_needed][1],(BC_WORD)HOST_NODES[args_needed][2]);
 #endif
 	heap[0] = (BC_WORD) (&HOST_NODES[args_needed][1]);
 	heap[1] = (BC_WORD) node;
