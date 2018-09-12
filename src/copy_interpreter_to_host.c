@@ -10,6 +10,7 @@
 #include "abc_instructions.h"
 #include "copy_host_to_interpreter.h"
 #include "copy_interpreter_to_host.h"
+#include "finalizers.h"
 #include "gc.h"
 #include "interpret.h"
 #include "util.h"
@@ -67,6 +68,13 @@ struct interpretation_environment *build_interpretation_environment(
 	fprintf(stderr,"Building interpretation_environment %p\n",ie);
 #endif
 	return ie;
+}
+
+BC_WORD *build_start_node(struct interpretation_environment *ie) {
+	BC_WORD *hp = ie->hp;
+	*ie->hp = ((BC_WORD*)ie->program->code[1])[1];
+	ie->hp += 3;
+	return hp;
 }
 
 void interpretation_environment_finalizer(struct interpretation_environment *ie) {

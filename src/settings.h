@@ -2,8 +2,6 @@
 
 #include <inttypes.h>
 
-#define BCGEN_INSTRUCTION_TABLE_SIZE 512
-
 #ifndef WORD_WIDTH
 #define WORD_WIDTH 64
 #endif
@@ -15,3 +13,5 @@
 #endif
 
 typedef int32_t CleanInt;
+
+#define BCGEN_INSTRUCTION_TABLE_SIZE 512

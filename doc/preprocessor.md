@@ -13,6 +13,12 @@
 - `DEBUG_ALL_INSTRUCTIONS`:
   Prints all instructions that are executed during interpretation.
 
+- `DEBUG_CLEAN_LINKS`:
+  Prints debugging information when nodes are copied to and from the
+  interpreter from a native Clean implementation. As with
+  `DEBUG_GARBAGE_COLLECTOR`, a higher value increases verbosity, with 0 turning
+  off debugging output.
+
 - `DEBUG_GARBAGE_COLLECTOR`:
   Because the garbage collector is still very experimental, there is a lot of
   debugging code available. This preprocessor macro can be set to any integer

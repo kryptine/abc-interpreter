@@ -62,8 +62,7 @@ square x = x * x
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
 
-OFFSET_PARSER_PROGRAM    :== 8 // Offset to the program field in the parser struct (parse.h)
-OFFSET_PROGRAM_CODE      :== 8 // Offset to the code field in the program struct (bytecode.h)
+OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
 
 get_expression :: !String !*World -> *(a, *World)
 get_expression filename w
@@ -80,31 +79,30 @@ get_expression filename w
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
 # heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
-# hp = writeInt heap 0 start_node
-	with
-		code_segment = readInt pgm OFFSET_PROGRAM_CODE
-		start_label = readInt code_segment (IF_INT_64_OR_32 8 4)
-		start_node = readInt start_label (IF_INT_64_OR_32 8 4)
-# start_node = hp
-# hp = hp + IF_INT_64_OR_32 24 12
-#! ce_settings = build_interpretation_environment
+# ie_settings = build_interpretation_environment
 	pgm
 	heap HEAP_SIZE stack STACK_SIZE
-	asp bsp csp hp
-#! (ce,_) = make_finalizer ce_settings
+	asp bsp csp heap
+# start_node = build_start_node ie_settings
+#! (ce,_) = make_finalizer ie_settings
 = (interpret ce (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
 	// it to the finalizer_list anyway. This is just to ensure that the first
-	// call to `interpret gets the right argument.
+	// call to interpret gets the right argument.
 where
 	build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
 	build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp = code {
 		ccall build_interpretation_environment "ppIpIpppp:p"
 	}
 
+	build_start_node :: !Pointer -> Pointer
+	build_start_node ie = code {
+		ccall build_start_node "p:p"
+	}
+
 	make_finalizer :: !Int -> (!.Finalizer,!Int)
-	make_finalizer ce_settings = code {
+	make_finalizer ie_settings = code {
 		push_finalizers
 		ccall get_interpretation_environment_finalizer ":p"
 		push_a_b 0
