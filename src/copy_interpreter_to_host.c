@@ -15,6 +15,14 @@
 #include "interpret.h"
 #include "util.h"
 
+// This struct matches the Clean structure that the interpretation_environment
+// is kept in.
+struct InterpretationEnvironment {
+	void *__ie_descriptor;
+	struct finalizers *__ie_finalizer;
+	void *__ie_shared_nodes[0];
+};
+
 extern void *e__CodeSharing__ninterpret;
 extern void *e__CodeSharing__dinterpret__1;
 extern void *e__CodeSharing__dinterpret__2;
@@ -96,7 +104,7 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_WORD node, int args_needed) {
+BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *clean_ie, BC_WORD node, int args_needed) {
 	switch (args_needed) {
 		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ninterpret; break;
 		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
@@ -134,7 +142,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 			fprintf(stderr,"Missing case in make_interpret_node\n");
 			exit(1);
 	}
-	heap[1] = (BC_WORD) ie_finalizer;
+	heap[1] = (BC_WORD) clean_ie;
 	heap[2] = (BC_WORD) &heap[3+args_needed];
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
@@ -149,8 +157,8 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
-BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *host_heap = ie->host->host_hp_ptr;
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
@@ -194,7 +202,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, (BC_WORD) node, args_needed);
+			host_heap = make_interpret_node(host_heap, clean_ie, (BC_WORD) node, args_needed);
 			return host_heap - org_host_heap;
 		}
 	}
@@ -237,11 +245,11 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_interpret_node(host_heap, ie_finalizer, node[2], 0);
+				host_heap = make_interpret_node(host_heap, clean_ie, node[2], 0);
 			} else if (b_arity == 1) {
 				host_node[2] = node[2];
 			}
@@ -254,7 +262,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 		host_heap += a_arity + b_arity + 2;
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
 		} else {
 			host_node[1] = node[1];
 		}
@@ -262,7 +270,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, rest[i], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, rest[i], 0);
 		}
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[3+i] = (BC_WORD) rest[i];
@@ -289,8 +297,8 @@ void *__interpret__copy__node__asm_redirect_node;
  *   register.
  */
 BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
-		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+		struct InterpretationEnvironment *clean_ie, struct finalizers *node_finalizer) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -317,7 +325,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	return copy_to_host(ie_finalizer, node);
+	return copy_to_host(clean_ie, node);
 }
 
 /**
@@ -329,9 +337,9 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *   rest variadically; for the same reason.
  */
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
-		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
-		int n_args, ...) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+		struct finalizers *node_finalizer, BC_WORD *arg1,
+		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 
@@ -384,5 +392,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host(ie_finalizer, node);
+	return copy_to_host(clean_ie, node);
 }

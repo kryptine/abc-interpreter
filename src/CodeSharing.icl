@@ -29,7 +29,7 @@ import code from "interpret.a"
 // - Pointer to rest of the finalizers (dealt with in the RTS)
 :: Finalizer = Finalizer !Int !Int !Int
 :: InterpretedExpression :== Finalizer
-:: InterpretationEnvironment :== Finalizer
+:: InterpretationEnvironment = E.a: IE !Finalizer !{a}
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
@@ -84,8 +84,9 @@ get_expression filename w
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp heap
 # start_node = build_start_node ie_settings
-#! (ce,_) = make_finalizer ie_settings
-= (interpret ce (Finalizer 0 0 start_node), w)
+#! (ie,_) = make_finalizer ie_settings
+# ie = IE ie {}
+= (interpret ie (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
 	// it to the finalizer_list anyway. This is just to ensure that the first
@@ -114,14 +115,14 @@ where
 	}
 
 interpret :: !InterpretationEnvironment !InterpretedExpression -> .a
-interpret ce fin = code {
+interpret ie fin = code {
 	.d 2 0
 	jsr _interpret_copy_node_asm
 	.o 1 0
 }
 
 interpret_1 :: !InterpretationEnvironment !InterpretedExpression b -> .a
-interpret_1 ce fin arg = code {
+interpret_1 ie fin arg = code {
 	pushI 0
 	.d 3 1 i
 	jsr _interpret_copy_node_asm_n

@@ -60,9 +60,10 @@
 __interpret__copy__node__asm:
 	save_registers
 
-	# Get interpretation_environment from finalizer
-	mov	rbp,[rdx+16]
-	mov	rbp,[rbp+8]
+	# Get host_status from InterpretationEnvironment
+	mov	rbp,[rdx+8]  # First argument of ADT constructor
+	mov	rbp,[rbp+16] # Second block of finalizer
+	mov	rbp,[rbp+8]  # Second argument of finalizer, ptr to interpretation_environment
 	push	rbp
 	save_host_status_via_rbp
 
@@ -102,7 +103,8 @@ __interpret__copy__node__asm__n:
 	sub	rsi,rax
 
 	save_registers
-	mov	rbp,[r8+16]
+	mov	rbp,[r8+8]
+	mov	rbp,[rbp+16]
 	mov	rbp,[rbp+8]
 	push	rbp
 	save_host_status_via_rbp
