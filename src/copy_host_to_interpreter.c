@@ -30,7 +30,7 @@ BC_WORD copy_to_interpreter(struct program *program, BC_WORD *heap,
 		a_arity = ((int16_t*)(node[0]))[0];
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 		/* TODO */
-		fprintf(stderr,"Cannot copy records to interpreter yet\n");
+		fprintf(stderr,"Cannot copy records to interpreter yet (%d/%d)\n",a_arity,b_arity);
 		exit(1);
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)(node[0]))[0];
