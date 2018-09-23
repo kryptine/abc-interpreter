@@ -15,6 +15,7 @@ from StdFile import class <<<
 	| Ibuildh0_put_a_jsr !String !Int !String
 	| Ibuildho2 !String !Int !Int
 	| Ibuildo1 !String !Int
+	| Icreate
 	| Idup2_a !Int
 	| Idup3_a !Int
 	| Idup_a !Int
@@ -24,6 +25,7 @@ from StdFile import class <<<
 	| IeqI_b !Int !Int
 	| Ieq_desc !String !Int !Int
 	| Iexchange_a !Int !Int
+	| Ifill !String !Int !String !Int
 	| Ifill_a !Int !Int
 	| Ifill_a01_pop_rtn
 	| Ifillh !String !Int !Int

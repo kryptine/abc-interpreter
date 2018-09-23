@@ -57,6 +57,8 @@ where
 	| otherwise     = False
 
 opt_abc :: [ABCInstruction] -> [ABCInstruction]
+opt_abc [Icreate:Ifill d a c 0:is] = [Ibuild d a c:opt_abc is]
+
 opt_abc [Ipop_a 0:is] = opt_abc is
 opt_abc [Ipop_b 0:is] = opt_abc is
 opt_abc [IpushI 0:Iupdate_b 1 0:is]                    = opt_abc [Ipush_b 0:is]
