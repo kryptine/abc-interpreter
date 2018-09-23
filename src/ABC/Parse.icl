@@ -115,10 +115,12 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 	"Line"            -> Nothing
 	"Annotation"      -> Nothing
 	"OtherAnnotation" -> Nothing
-	instr             -> if (startsWith ((if (d.gcd_arity == 0) instr (instr +++ " ")):=(0, first_char)) line)
-		(appFst CONS <$> fx (size instr + 1) line)
-		Nothing
-	with
+	instr
+		| not (startsWith (instr:=(0,first_char)) line) -> Nothing
+		| d.gcd_arity > 0 && not (isSpace line.[size instr]) -> Nothing
+		| d.gcd_arity == 0 && size line > size instr && not (isSpace line.[size instr]) -> Nothing
+		| otherwise -> appFst CONS <$> fx (size instr + 1) line
+	where
 		first_char = case instr.[0] of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
