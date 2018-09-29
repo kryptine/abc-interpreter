@@ -6,7 +6,7 @@ from symbols_in_program import :: Symbol
 :: InterpretedExpression
 :: *InterpretationEnvironment
 
-add_shared_node :: !Int !*{a} a -> *(!Int, !*{a})
+add_shared_node :: !Int !*{a} a -> *(!Int, !*{a}, !Int)
 
 interpret    :: InterpretationEnvironment !InterpretedExpression -> .a
 interpret_1  :: InterpretationEnvironment !InterpretedExpression b -> a

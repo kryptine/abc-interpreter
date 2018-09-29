@@ -15,14 +15,6 @@
 #include "interpret.h"
 #include "util.h"
 
-// This struct matches the Clean structure that the interpretation_environment
-// is kept in.
-struct InterpretationEnvironment {
-	void *__ie_descriptor;
-	struct finalizers *__ie_finalizer;
-	void *__ie_shared_nodes[0];
-};
-
 extern void *e__CodeSharing__ninterpret;
 extern void *e__CodeSharing__dinterpret__1;
 extern void *e__CodeSharing__dinterpret__2;
@@ -307,7 +299,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 
 	if (!(node[0] & 2)) {
 		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
-			__interpret__copy__node__asm_redirect_node = (void*) node[1];
+			__interpret__copy__node__asm_redirect_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
 #if DEBUG_CLEAN_LINKS > 1
 			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
 #endif
@@ -337,7 +329,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *   rest variadically; for the same reason.
  */
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
-		struct finalizers *node_finalizer, BC_WORD *arg1,
+		struct finalizers *node_finalizer, int arg1,
 		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
@@ -348,12 +340,15 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 #endif
 
 	va_start(arguments,n_args);
-	for (int i = 0; i < n_args; i++) {
-		*++ie->asp = (BC_WORD) ie->hp;
-		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*), 0);
-	}
 	*++ie->asp = (BC_WORD) ie->hp;
 	ie->hp += make_host_node(ie->hp, arg1, 0);
+	for (int i = 0; i < n_args; i++) {
+		*++ie->asp = (BC_WORD) ie->hp;
+		int hostid = va_arg(arguments, int);
+		if (i == n_args-1)
+			*ie->asp = (BC_WORD) ie->hp;
+		ie->hp += make_host_node(ie->hp, hostid, 0);
+	}
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];

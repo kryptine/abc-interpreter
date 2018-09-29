@@ -66,6 +66,7 @@ __interpret__copy__node__asm:
 	mov	rbp,[rbp+8]  # Second argument of finalizer, ptr to interpretation_environment
 	push	rbp
 	save_host_status_via_rbp
+	mov	[rbp+24],rdx
 
 	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host
@@ -103,10 +104,20 @@ __interpret__copy__node__asm_redirect_finish:
 
 .global __interpret__copy__node__asm__n
 __interpret__copy__node__asm__n:
+	save_registers
+	mov	rbp,[r8+8]
+	mov	rbp,[rbp+16]
+	mov	rbp,[rbp+8]
+	push	rbp
+
+	# Temporarily store int argument in host_status
+	mov	rbp,[rbp]
+	mov	[rbp],rax
+
 	# Add arguments to shared nodes array in InterpretationEnvironment
+	# Simultaneously, push the indices to the stack as variadic arguments
 	mov	r9,rax
 	shl	r9,3
-	push	rax
 	mov	[rsi],rcx
 	mov	[rsi+8],rdx
 	mov	[rsi+16],r8
@@ -118,6 +129,7 @@ __interpret__copy__node__asm__n_adding_shared_nodes:
 	push	r9
 	call	e__CodeSharing__sadd__shared__node
 	pop	r9
+	push	rbx
 	test	r9,r9
 	je	__interpret__copy__node__asm__n_added_shared_nodes
 	sub	r9,8
@@ -134,36 +146,33 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	[rbp+8],rax
 	mov	rcx,[rsi]
 	mov	rdx,[rsi+8]
-	pop	rax
+	pop	rcx # One argument is not passed variadically
 
-	# Prepare for calling C function
-	mov	r9,rax
-	shl	rax,3
-	sub	rsi,rax
-
-	save_registers
+	# Get interpretation_environment
 	mov	rbp,[r8+8]
 	mov	rbp,[rbp+16]
 	mov	rbp,[rbp+8]
-	push	rbp
-	save_host_status_via_rbp
 
-	# Add variadic arguments
+	# Retrieve int argument from host_status
+	mov	r9,[rbp]
+	mov	r9,[r9]
+
+	# Prepare for calling C function
+	mov	rax,r9
+	shl	rax,3
 	mov	rbx,rax
-	cmp	rax,0
-	je	__interpret__copy__node__asm__n_has_all_args
-__interpret__copy__node__asm__n_args:
-	push	[rsi+rax-8]
-	sub	rax,8
-	jne	__interpret__copy__node__asm__n_args
-__interpret__copy__node__asm__n_has_all_args:
+	sub	rsi,rax
+
+	save_host_status_via_rbp
+	mov	[rbp+24],r8
+
 	# Parameters are already in the right register; see copy_interpreter_to_host.c
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
 	jmp	__interpret__copy__node__asm_finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(ie, a0)
+	# Call as __interpret__evaluate__host(ie, node_index)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp
@@ -188,4 +197,48 @@ __interpret__evaluate__host:
 	pop	rbx
 
 	mov	rax,rcx
+	ret
+
+.global __interpret__add__shared__node
+	# Call as __interpret__add__shared__node(Clean_IE, node)
+__interpret__add__shared__node:
+	push	rbx
+	push	rbp
+	push	r12
+	push	r13
+	push	r14
+	push	r15
+
+	# Get shared nodes & ptr from InterpretationEnvironment
+	mov	rbp,[rdi+16]
+	mov	rdx,[rbp]
+	mov	rax,[rbp+8]
+	push	rbp
+
+	mov	rcx,rsi
+
+	# Get interpretation_environment from InterpretationEnvironment
+	mov	rdi,[rdi+8]
+	mov	rdi,[rdi+16]
+	mov	rdi,[rdi+8]
+	push	rdi
+	restore_host_status_via_rdi
+
+	call	e__CodeSharing__sadd__shared__node
+
+	pop	rbp
+	save_host_status_via_rbp
+
+	pop	rbp
+	mov	[rbp],rcx
+	mov	[rbp+8],rax
+	mov	rax,rbx
+
+	pop	r15
+	pop	r14
+	pop	r13
+	pop	r12
+	pop	rbp
+	pop	rbx
+
 	ret

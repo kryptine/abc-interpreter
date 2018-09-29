@@ -125,14 +125,14 @@ where
 		pushI 0
 	}
 
-add_shared_node :: !Int !*{a} a -> *(!Int, !*{a})
+add_shared_node :: !Int !*{a} a -> *(!Int, !*{a}, !Int)
 add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize+1, {copy 0 arraysize nodes (unsafeCreate (arraysize+100)) & [arraysize]=node})
+	= (arraysize, {copy 0 arraysize nodes (unsafeCreate (arraysize+5)) & [arraysize]=node}, arraysize+1)
 | otherwise
-	= (if (spot+1 >= arraysize) 0 (spot+1), {nodes & [spot]=node})
+	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where
 	copy :: !Int !Int !*{a} !*{a} -> *{a}
 	copy i end fr to

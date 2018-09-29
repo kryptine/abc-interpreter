@@ -7081,9 +7081,10 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_30):
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	BC_WORD *host_node = (void*) n[1];
+	int host_nodeid = n[1];
+	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
+	fprintf(stderr,"\t%p -> [%d; %p -> %p]\n",(void*)asp[0],host_nodeid,host_node,(void*)*host_node);
 #endif
 	if (!(host_node[0] & 2)) {
 		host_node = __interpret__evaluate__host(ie, host_node);
@@ -7095,7 +7096,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	/* TODO: if possible, it is more efficient to overwrite the old node
 	 * instead of creating a new node.
 	 */
-	BC_WORD words_used = copy_to_interpreter(program, hp, heap_free, host_node);
+	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
 	asp[0] = (BC_WORD) hp;
 	hp += words_used;
 

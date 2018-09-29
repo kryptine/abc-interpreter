@@ -1,13 +1,27 @@
 #pragma once
 
 #include "bytecode.h"
+#include "finalizers.h"
 
 extern void *dINT;
 
+// This struct matches the Clean structure that the interpretation_environment
+// is kept in.
+struct InterpretationEnvironment2 {
+	BC_WORD **__ie_shared_nodes;
+	int __ie_shared_nodes_ptr;
+};
+struct InterpretationEnvironment {
+	void *__ie_descriptor;
+	struct finalizers *__ie_finalizer;
+	struct InterpretationEnvironment2 *__ie_2;
+};
+
 struct host_status {
-	BC_WORD *host_a_ptr;
-	void *host_hp_ptr;
-	size_t host_hp_free;
+	BC_WORD *host_a_ptr; /* The A-stack pointer of the host */
+	void *host_hp_ptr;   /* Heap pointer */
+	size_t host_hp_free; /* Nr. of free heap words */
+	struct InterpretationEnvironment *clean_ie; /* Clean InterpretationEnvironment */
 };
 
 struct interpretation_environment {
