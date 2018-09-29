@@ -42,13 +42,6 @@ import StdEnum,StdFunc
 //# (primes,w) = get_expression "../test/infprimes.bc" w
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
-/*Start _ = iter 10 (flip add_shared_node node) {ie_finalizer=Finalizer 0 0 0,ie_snode_ptr=0,ie_snodes=unsafeCreate 100}
-where
-	node :: a
-	node = code {
-		buildI 37
-	}*/
-
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
@@ -130,7 +123,7 @@ add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize, {copy 0 arraysize nodes (unsafeCreate (arraysize+5)) & [arraysize]=node}, arraysize+1)
+	= (arraysize, {copy 0 arraysize nodes (unsafeCreate (arraysize+100)) & [arraysize]=node}, arraysize+1)
 | otherwise
 	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where
