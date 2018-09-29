@@ -7085,11 +7085,12 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%p; %p -> %p]\n",(void*)asp[0],(void*)n[1],host_node,(void*)*host_node);
 #endif
-	if (!(host_node[0] & 2))
+	if (!(host_node[0] & 2)) {
 		host_node = __interpret__evaluate__host(ie, host_node);
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
+		fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
+	}
 
 	/* TODO: if possible, it is more efficient to overwrite the old node
 	 * instead of creating a new node.

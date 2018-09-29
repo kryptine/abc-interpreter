@@ -85,15 +85,20 @@ __interpret__copy__node__asm_finish:
 
 	ret
 
+__interpret__copy__node__asm_gc:
+	call	collect_3
+	jmp	__interpret__copy__node__asm
+
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
 	lea	rbp,__interpret__copy__node__asm_redirect_node
 	mov	rcx,[rbp]
+	# Evaluate the node if necessary
+	testb	[rcx],2
+	jne	__interpret__copy__node__asm_redirect_finish
+	call	[rcx]
+__interpret__copy__node__asm_redirect_finish:
 	ret
-
-__interpret__copy__node__asm_gc:
-	call	collect_3
-	jmp	__interpret__copy__node__asm
 
 .global __interpret__copy__node__asm__n
 __interpret__copy__node__asm__n:
