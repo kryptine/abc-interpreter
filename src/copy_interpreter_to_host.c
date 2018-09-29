@@ -309,7 +309,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
 			__interpret__copy__node__asm_redirect_node = (void*) node[1];
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tTarget is a host node; returning immediately\n");
+			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
 #endif
 			return -3;
 		} else {
