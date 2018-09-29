@@ -96,7 +96,7 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_WORD node, int args_needed) {
+BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *clean_ie, BC_WORD node, int args_needed) {
 	switch (args_needed) {
 		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ninterpret; break;
 		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
@@ -134,7 +134,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct finalizers *ie_finalizer, BC_
 			fprintf(stderr,"Missing case in make_interpret_node\n");
 			exit(1);
 	}
-	heap[1] = (BC_WORD) ie_finalizer;
+	heap[1] = (BC_WORD) clean_ie;
 	heap[2] = (BC_WORD) &heap[3+args_needed];
 	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
 }
@@ -149,8 +149,8 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
-BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *host_heap = ie->host->host_hp_ptr;
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
@@ -194,7 +194,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, (BC_WORD) node, args_needed);
+			host_heap = make_interpret_node(host_heap, clean_ie, (BC_WORD) node, args_needed);
 			return host_heap - org_host_heap;
 		}
 	}
@@ -237,11 +237,11 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
 
 			if (a_arity == 2) {
 				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_interpret_node(host_heap, ie_finalizer, node[2], 0);
+				host_heap = make_interpret_node(host_heap, clean_ie, node[2], 0);
 			} else if (b_arity == 1) {
 				host_node[2] = node[2];
 			}
@@ -254,7 +254,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 		host_heap += a_arity + b_arity + 2;
 		if (a_arity >= 1) {
 			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, node[1], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
 		} else {
 			host_node[1] = node[1];
 		}
@@ -262,7 +262,7 @@ BC_WORD copy_to_host(struct finalizers *ie_finalizer, BC_WORD *node) {
 		BC_WORD *rest = (BC_WORD*) node[2];
 		for (int i = 0; i < a_arity - 1; i++) {
 			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, ie_finalizer, rest[i], 0);
+			host_heap = make_interpret_node(host_heap, clean_ie, rest[i], 0);
 		}
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[3+i] = (BC_WORD) rest[i];
@@ -289,8 +289,8 @@ void *__interpret__copy__node__asm_redirect_node;
  *   register.
  */
 BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
-		struct finalizers *ie_finalizer, struct finalizers *node_finalizer) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+		struct InterpretationEnvironment *clean_ie, struct finalizers *node_finalizer) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
@@ -299,7 +299,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 
 	if (!(node[0] & 2)) {
 		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
-			__interpret__copy__node__asm_redirect_node = (void*) node[1];
+			__interpret__copy__node__asm_redirect_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
 #if DEBUG_CLEAN_LINKS > 1
 			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
 #endif
@@ -317,7 +317,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	return copy_to_host(ie_finalizer, node);
+	return copy_to_host(clean_ie, node);
 }
 
 /**
@@ -329,9 +329,9 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *   rest variadically; for the same reason.
  */
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
-		struct finalizers *node_finalizer, BC_WORD *arg1, struct finalizers *ie_finalizer,
-		int n_args, ...) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) ie_finalizer->cur->arg;
+		struct finalizers *node_finalizer, int arg1,
+		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 
@@ -340,12 +340,15 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 #endif
 
 	va_start(arguments,n_args);
-	for (int i = 0; i < n_args; i++) {
-		*++ie->asp = (BC_WORD) ie->hp;
-		ie->hp += make_host_node(ie->hp, va_arg(arguments, BC_WORD*), 0);
-	}
 	*++ie->asp = (BC_WORD) ie->hp;
 	ie->hp += make_host_node(ie->hp, arg1, 0);
+	for (int i = 0; i < n_args; i++) {
+		*++ie->asp = (BC_WORD) ie->hp;
+		int hostid = va_arg(arguments, int);
+		if (i == n_args-1)
+			*ie->asp = (BC_WORD) ie->hp;
+		ie->hp += make_host_node(ie->hp, hostid, 0);
+	}
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
@@ -384,5 +387,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host(ie_finalizer, node);
+	return copy_to_host(clean_ie, node);
 }
