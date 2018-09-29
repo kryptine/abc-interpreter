@@ -6,10 +6,10 @@ from symbols_in_program import :: Symbol
 :: InterpretedExpression
 :: *InterpretationEnvironment
 
-add_shared_node :: InterpretationEnvironment (A.a: a) -> InterpretationEnvironment
+add_shared_node :: !Int !*{a} a -> *(!Int, !*{a})
 
 interpret    :: InterpretationEnvironment !InterpretedExpression -> .a
-interpret_1  :: InterpretationEnvironment !InterpretedExpression (A.a: a) -> a
+interpret_1  :: InterpretationEnvironment !InterpretedExpression b -> a
 interpret_2  :: InterpretationEnvironment !InterpretedExpression b b -> .a
 interpret_3  :: InterpretationEnvironment !InterpretedExpression b b b -> .a
 interpret_4  :: InterpretationEnvironment !InterpretedExpression b b b b -> .a

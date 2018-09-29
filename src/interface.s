@@ -103,6 +103,40 @@ __interpret__copy__node__asm_redirect_finish:
 
 .global __interpret__copy__node__asm__n
 __interpret__copy__node__asm__n:
+	# Add arguments to shared nodes array in InterpretationEnvironment
+	mov	r9,rax
+	shl	r9,3
+	push	rax
+	mov	[rsi],rcx
+	mov	[rsi+8],rdx
+	mov	[rsi+16],r8
+	add	rsi,24
+	mov	rbp,[r8+16]
+	mov	rdx,[rbp]
+	mov	rax,[rbp+8]
+__interpret__copy__node__asm__n_adding_shared_nodes:
+	push	r9
+	call	e__CodeSharing__sadd__shared__node
+	pop	r9
+	test	r9,r9
+	je	__interpret__copy__node__asm__n_added_shared_nodes
+	sub	r9,8
+	mov	rdx,rcx
+	mov	rbp,rsi
+	sub	rbp,r9
+	mov	rcx,[rbp-32]
+	jmp	__interpret__copy__node__asm__n_adding_shared_nodes
+__interpret__copy__node__asm__n_added_shared_nodes:
+	sub	rsi,24
+	mov	r8,[rsi+16]
+	mov	rbp,[r8+16]
+	mov	[rbp],rcx
+	mov	[rbp+8],rax
+	mov	rcx,[rsi]
+	mov	rdx,[rsi+8]
+	pop	rax
+
+	# Prepare for calling C function
 	mov	r9,rax
 	shl	rax,3
 	sub	rsi,rax
@@ -114,6 +148,7 @@ __interpret__copy__node__asm__n:
 	push	rbp
 	save_host_status_via_rbp
 
+	# Add variadic arguments
 	mov	rbx,rax
 	cmp	rax,0
 	je	__interpret__copy__node__asm__n_has_all_args
