@@ -298,7 +298,11 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #endif
 
 	if (!(node[0] & 2)) {
+#ifdef COMPUTED_GOTOS
+		if (*((BC_WORD*)node[0]) == (BC_WORD) instruction_labels[Cjsr_eval_host_node]) {
+#else
 		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
+#endif
 			__interpret__copy__node__asm_redirect_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
 #if DEBUG_CLEAN_LINKS > 1
 			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);

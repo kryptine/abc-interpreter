@@ -153,8 +153,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 #ifdef COMPUTED_GOTOS
 	/* See rationale in interpret.h */
-	void *instruction_labels[CMAX];
-	interpret((void*) instruction_labels, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
 	Fjmp_ap1 = (BC_WORD) instruction_labels[Fjmp_ap1];
 	Fjmp_ap2 = (BC_WORD) instruction_labels[Fjmp_ap2];

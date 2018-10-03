@@ -161,6 +161,10 @@ BC_WORD *get_heap_address(void) {
 	return hp;
 }
 
+#ifdef COMPUTED_GOTOS
+void *instruction_labels[CMAX];
+#endif
+
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
@@ -173,13 +177,11 @@ int interpret(
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
 	if (stack == NULL) { /* See rationale in interpret.h */
+		if (instruction_labels[0] != NULL)
+			return 0;
 # define _COMPUTED_GOTO_LABELS
 # include "abc_instructions.h"
-#  ifdef LINK_CLEAN_RUNTIME
-		memcpy(ie, _instruction_labels, sizeof(BC_WORD) * CMAX);
-#  else
-		memcpy(program, _instruction_labels, sizeof(BC_WORD) * CMAX);
-#  endif
+		memcpy(instruction_labels, _instruction_labels, sizeof(BC_WORD) * CMAX);
 		return 0;
 	}
 #endif
