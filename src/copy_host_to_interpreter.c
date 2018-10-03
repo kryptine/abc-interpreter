@@ -35,7 +35,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 		fprintf(stderr,"Cannot copy records to interpreter yet (%d/%d)\n",a_arity,b_arity);
 		exit(1);
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0];
+		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
 		if (args_needed != 0) { /* TODO: special case for tuples */
 			nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
 			return make_host_node(heap, nodeid, args_needed);

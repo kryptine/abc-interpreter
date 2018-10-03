@@ -7080,17 +7080,25 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_29):
 INSTRUCTION_BLOCK(jsr_eval_host_node_30):
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
+#ifdef COMPUTED_GOTOS
+# error jsr_eval_host_node not implemented with COMPUTED_GOTOS yet
+#endif
 	BC_WORD *n=(BC_WORD*)asp[0];
 	int host_nodeid = n[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%d; %p -> %p]\n",(void*)asp[0],host_nodeid,host_node,(void*)*host_node);
 #endif
-	if (!(host_node[0] & 2)) {
-		host_node = __interpret__evaluate__host(ie, host_node);
+	if (*pc == Cjsr_eval_host_node) {
+		if (!(host_node[0] & 2)) {
+			host_node = __interpret__evaluate__host(ie, host_node);
 #if DEBUG_CLEAN_LINKS > 1
-		fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
+			fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
+		}
+	} else {
+		fprintf(stderr,"jsr_eval_host_node with arguments\n");
+		exit(-1);
 	}
 
 	/* TODO: if possible, it is more efficient to overwrite the old node
