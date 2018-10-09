@@ -172,7 +172,7 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	jmp	__interpret__copy__node__asm_finish
 
 .global __interpret__evaluate__host
-	# Call as __interpret__evaluate__host(ie, node_index)
+	# Call as __interpret__evaluate__host(ie, node)
 __interpret__evaluate__host:
 	push	rbx
 	push	rbp

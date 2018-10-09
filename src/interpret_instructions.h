@@ -6639,9 +6639,9 @@ INSTRUCTION_BLOCK(jmp_ap5):
 
 		arity=((uint16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+40+6)) - 24);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+66+6)) - 24);
 #else
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+40-6)) - 12);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+32+2)) - 12);
 #endif
 		if (arity<=1){
 			if (arity<1){
@@ -6685,7 +6685,11 @@ INSTRUCTION_BLOCK(jmp_ap4):
 		BC_WORD arity;
 
 		arity=((uint16_t*)d)[-1];
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+32-6)) - 12);
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+48+6)) - 24);
+#else
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+24+2)) - 12);
+#endif
 		if (arity<=1){
 			if (arity<1){
 				--asp;
@@ -6736,9 +6740,9 @@ INSTRUCTION_BLOCK(jmp_ap3):
 
 		arity=((uint16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+24+6)) - 24);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+32+6)) - 24);
 #else
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+24-6)) - 12);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+2)) - 12);
 #endif
 		if (arity<=1){
 			if (arity<1){
@@ -6792,7 +6796,7 @@ INSTRUCTION_BLOCK(jmp_ap2):
 #if (WORD_WIDTH == 64)
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+16+6)) - 24);
 #else
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+16-6)) - 12);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+8+2)) - 12);
 #endif
 		if (arity<=1){
 			if (arity<1){
