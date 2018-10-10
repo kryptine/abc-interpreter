@@ -7118,9 +7118,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 #endif
 	BC_WORD *n=(BC_WORD*)asp[0];
 	int host_nodeid=n[1];
-	fprintf(stderr,"\t%p, %p, %p\n",(void*)asp[0],(void*)asp[-1],(void*)asp[-2]);
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
-	int node_arity=((int16_t*)(host_node[0]))[-1];
 	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
 	int n_args=*pc-Cjsr_eval_host_node;
 
@@ -7133,10 +7131,13 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 		exit(-1);
 	}
 
+#if DEBUG_CLEAN_LINKS > 1
+	int node_arity=((int16_t*)(host_node[0]))[-1];
 	fprintf(stderr,"\thost node (%d: %p -> %p) arity is %d; %d needed\n",
 			host_nodeid,host_node,(void*)*host_node,node_arity,args_needed);
 	for (int i = 1; i <= n_args; i++)
 		fprintf(stderr,"\targ %d: %p -> %p\n",i,(void*)asp[-i],*(void**)asp[-i]);
+#endif
 
 	for (int i=n_args; i>=3; i--) {
 		*ie->host->host_a_ptr++ = (BC_WORD) ie->host->host_hp_ptr;

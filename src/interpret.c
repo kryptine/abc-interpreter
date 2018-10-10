@@ -109,10 +109,6 @@ void build_host_nodes(void) {
 		HOST_NODE_DESCRIPTORS[i++] = 0;
 		HOST_NODE_DESCRIPTORS[i++] = 0;
 	}
-	fprintf(stderr,"HOST_NODES at %p\n",(void*)HOST_NODES);
-	fprintf(stderr,"HOST_NODE_DESCRIPTORS at %p\n",(void*)HOST_NODE_DESCRIPTORS);
-	fprintf(stderr,"HOST_NODE_INSTRUCTIONS at %p\n",(void*)HOST_NODE_INSTRUCTIONS);
-	fprintf(stderr,"%d\n",i);
 }
 
 extern void *ap_2;
@@ -251,10 +247,12 @@ int interpret(
 
 		if (0) {
 eval_to_hnf_return:
+#ifdef LINK_CLEAN_RUNTIME
 			ie->asp = asp;
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+#endif
 			return 0;
 		}
 	}
