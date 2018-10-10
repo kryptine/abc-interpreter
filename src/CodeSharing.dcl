@@ -1,5 +1,4 @@
 definition module CodeSharing
-const :: a b -> a
 
 from System._Pointer import :: Pointer
 from symbols_in_program import :: Symbol

@@ -65,11 +65,8 @@ where
 		, last (rev [37,36..0])
 		, length (last (rev [[1..i] \\ i <- [37,36..0]]))
 		, ap3 (\x y z -> 10*x + 3*y + z)
-		//, foldr const 0 [1,2,3,4]
+		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
 		]
-
-const :: a b -> a
-const x _ = x
 
 square :: Int -> Int
 square x = x * x

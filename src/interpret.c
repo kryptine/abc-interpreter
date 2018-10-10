@@ -196,10 +196,6 @@ void handle_segv(int sig) {
 }
 #endif
 
-BC_WORD *get_heap_address(void) {
-	return hp;
-}
-
 #ifdef COMPUTED_GOTOS
 void *instruction_labels[CMAX];
 #endif
@@ -253,9 +249,14 @@ int interpret(
 		*--csp = (BC_WORD) &ret;
 		pc = _pc;
 
-		if (0)
+		if (0) {
 eval_to_hnf_return:
+			ie->asp = asp;
+			ie->bsp = bsp;
+			ie->csp = csp;
+			ie->hp = hp;
 			return 0;
+		}
 	}
 
 #ifdef COMPUTED_GOTOS

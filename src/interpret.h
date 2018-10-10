@@ -38,8 +38,6 @@ extern void* __interpreter_indirection[9];
 extern jmp_buf segfault_restore_point;
 #endif
 
-BC_WORD *get_heap_address(void);
-
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
 extern void *instruction_labels[CMAX];

@@ -145,7 +145,6 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
 			pc);
-	ie->hp = get_heap_address();
 	return result;
 }
 
@@ -349,7 +348,6 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	va_start(arguments,n_args);
 	for (int i = 0; i <= n_args; i++) {
 		int hostid = va_arg(arguments, int);
-		fprintf(stderr,"\t%p: %d\n",&ie->asp[n_args-i],i);
 		ie->asp[i == n_args ? n_args+1 : n_args-i] = (BC_WORD) ie->hp;
 		ie->hp += make_host_node(ie->hp, hostid, 0);
 	}
@@ -389,7 +387,6 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		return -1;
 	}
 
-	ie->asp -= pop_args;
 	node = (BC_WORD*) *ie->asp--;
 
 	return copy_to_host(clean_ie, node);

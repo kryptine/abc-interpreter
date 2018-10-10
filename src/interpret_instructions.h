@@ -7060,9 +7060,12 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	fprintf(stderr,"\t%p -> [%d; %p -> %p]\n",(void*)asp[0],host_nodeid,host_node,(void*)*host_node);
 #endif
 	if (!(host_node[0] & 2)) {
-		fprintf(stderr,"\t----------\n");
-		fprintf(stderr,"\t%p, %p\n",host_node,(void*)*host_node);
+		ie->asp = asp;
+		ie->bsp = bsp;
+		ie->csp = csp;
+		ie->hp = hp;
 		host_node = __interpret__evaluate__host(ie, host_node);
+		hp = ie->hp;
 #if DEBUG_CLEAN_LINKS > 1
 		fprintf(stderr,"\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
@@ -7074,15 +7077,6 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
 	asp[0] = (BC_WORD) hp;
 	hp += words_used;
-
-	/*n=(BC_WORD*)asp[0];
-	if ((n[0] & 2)!=0) {
-		pc=(BC_WORD*)*csp++;
-		END_INSTRUCTION_BLOCK;
-	} else {
-		pc=(BC_WORD*)n[0];
-		END_INSTRUCTION_BLOCK;
-	}*/
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -7156,7 +7150,12 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	arg1 = ie->host->host_hp_ptr;
 	ie->host->host_hp_ptr = make_interpret_node(ie->host->host_hp_ptr, ie->host->clean_ie, asp[-1], 0);
 
+	ie->asp = asp;
+	ie->bsp = bsp;
+	ie->csp = csp;
+	ie->hp = hp;
 	host_node = __interpret__evaluate__host_with_args(ie, 0, arg1, arg2, host_node, ap_addresses[n_args-2]);
+	hp = ie->hp;
 
 	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
 	asp-=n_args;
