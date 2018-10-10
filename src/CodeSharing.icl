@@ -45,18 +45,27 @@ import StdEnum,StdFunc
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr),w) = get_expression "../test/functions.bc" w
-= use intsquare sub5 sub3_10 sumints rev foldr
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap3),w) = get_expression "../test/functions.bc" w
+= use intsquare sub5 sub3_10 sumints rev foldr ap3
 where
-	use :: (Int -> Int) (Int Int Int Int Int -> Int) (Int Int Int -> Int) ([Int] -> Int) (A.a: [a] -> [a]) (A.a b: (a b -> b) b [a] -> b) -> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr =
-		[ /*intsquare 6 + intsquare 1
+	use ::
+		(Int -> Int)
+		(Int Int Int Int Int -> Int)
+		(Int Int Int -> Int)
+		([Int] -> Int)
+		(A.a: [a] -> [a])
+		(A.a b: (a b -> b) b [a] -> b)
+		((Int Int Int -> Int) -> Int)
+		-> [Int]
+	use intsquare sub5 sub3_10 sumints rev foldr ap3 =
+		[ intsquare 6 + intsquare 1
 		, sub5 (last [1..47]) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
 		, sumints [1,1,2,3,4,5,6,7,8]
 		, last (rev [37,36..0])
 		, length (last (rev [[1..i] \\ i <- [37,36..0]]))
-		,*/ foldr const 0 [1,2,3,4]
+		, ap3 (\x y z -> 10*x + 3*y + z)
+		//, foldr const 0 [1,2,3,4]
 		]
 
 const :: a b -> a

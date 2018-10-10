@@ -199,6 +199,33 @@ __interpret__evaluate__host:
 	mov	rax,rcx
 	ret
 
+.global __interpret__evaluate__host_with_args
+	# Call as __interpret__evaluate__host_with_args(ie, _, arg1, arg2, node, ap_address)
+__interpret__evaluate__host_with_args:
+	push	rbx
+	push	rbp
+	push	r12
+	push	r13
+	push	r14
+	push	r15
+
+	push	rdi
+	restore_host_status_via_rdi
+	call	r9
+
+	pop	rbp
+	save_host_status_via_rbp
+
+	pop	r15
+	pop	r14
+	pop	r13
+	pop	r12
+	pop	rbp
+	pop	rbx
+
+	mov	rax,rcx
+	ret
+
 .global __interpret__add__shared__node
 	# Call as __interpret__add__shared__node(Clean_IE, node)
 __interpret__add__shared__node:
