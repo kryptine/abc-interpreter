@@ -16,8 +16,6 @@ test:
     - (cd ../test; ./run_tests.sh -Rqo functions)
     - make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
-
-    - (cd ../test; ./run_tests.sh -Rqo functions)
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
