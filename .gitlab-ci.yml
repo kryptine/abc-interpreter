@@ -11,8 +11,18 @@ test:
     - cd src
     - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B
+
+    - (cd ../test; ./run_tests.sh -Rqo functions)
+    - make -B CodeSharing
+    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
+
+    - (cd ../test; ./run_tests.sh -Rqo functions)
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
+    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
+
     - cd ../test
     - ./run_tests.sh --benchmark --fast
     - ./run_tests.sh --32-bit --benchmark --fast
+
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
