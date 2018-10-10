@@ -329,11 +329,14 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *
  * - The dummies are used so that the other arguments are already in the right
  *   register.
- * - The first argument to the interpreter function is passed normally; the
- *   rest variadically; for the same reason.
+ * - All arguments (indexes of the shared nodes array in the Clean
+ *   InterpretationEnvironment) are passed variadically, with n_args the number
+ *   of arguments minus 1. The first argument is the *last* element in the
+ *   variadic list; otherwise it is in order. For instance, for a function with
+ *   arity 5 the arguments are passed as 2, 3, 4, 5, 1.
  */
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
-		struct finalizers *node_finalizer, int arg1,
+		struct finalizers *node_finalizer, void *__dummy_2,
 		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
@@ -344,15 +347,13 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 #endif
 
 	va_start(arguments,n_args);
-	*++ie->asp = (BC_WORD) ie->hp;
-	ie->hp += make_host_node(ie->hp, arg1, 0);
-	for (int i = 0; i < n_args; i++) {
-		*++ie->asp = (BC_WORD) ie->hp;
+	for (int i = 0; i <= n_args; i++) {
 		int hostid = va_arg(arguments, int);
-		if (i == n_args-1)
-			*ie->asp = (BC_WORD) ie->hp;
+		fprintf(stderr,"\t%p: %d\n",&ie->asp[n_args-i],i);
+		ie->asp[i == n_args ? n_args+1 : n_args-i] = (BC_WORD) ie->hp;
 		ie->hp += make_host_node(ie->hp, hostid, 0);
 	}
+	ie->asp += n_args+1;
 	va_end(arguments);
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];

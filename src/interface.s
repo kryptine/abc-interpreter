@@ -144,9 +144,7 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	rbp,[r8+16]
 	mov	[rbp],rcx
 	mov	[rbp+8],rax
-	mov	rcx,[rsi]
 	mov	rdx,[rsi+8]
-	pop	rcx # One argument is not passed variadically
 
 	# Get interpretation_environment
 	mov	rbp,[r8+8]
@@ -167,8 +165,10 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	[rbp+24],r8
 
 	# Parameters are already in the right register; see copy_interpreter_to_host.c
+	mov	rax,0
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
+	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
 
 .global __interpret__evaluate__host
