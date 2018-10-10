@@ -81,7 +81,7 @@ BC_WORD __cycle__in__spine = Chalt;
 void **HOST_NODES[32];
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
 BC_WORD ADD_ARG[33];
-BC_WORD HOST_NODE_INSTRUCTIONS[32];
+BC_WORD HOST_NODE_INSTRUCTIONS[32*4];
 
 /* TODO: only build if not built yet */
 void build_host_nodes(void) {
@@ -92,9 +92,17 @@ void build_host_nodes(void) {
 		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
 #ifdef COMPUTED_GOTOS
 		interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
-		HOST_NODE_INSTRUCTIONS[arity-1] = (BC_WORD) instruction_labels[Cjsr_eval_host_node+arity-1];
+		HOST_NODE_INSTRUCTIONS[4*arity-4] =
+			HOST_NODE_INSTRUCTIONS[4*arity-3] =
+			HOST_NODE_INSTRUCTIONS[4*arity-2] =
+			HOST_NODE_INSTRUCTIONS[4*arity-1] =
+			(BC_WORD) instruction_labels[Cjsr_eval_host_node+arity-1];
 #else
-		HOST_NODE_INSTRUCTIONS[arity-1] = Cjsr_eval_host_node+arity-1;
+		HOST_NODE_INSTRUCTIONS[4*arity-4] =
+			HOST_NODE_INSTRUCTIONS[4*arity-3] =
+			HOST_NODE_INSTRUCTIONS[4*arity-2] =
+			HOST_NODE_INSTRUCTIONS[4*arity-1] =
+			Cjsr_eval_host_node+arity-1;
 #endif
 
 		HOST_NODE_DESCRIPTORS[i] = (BC_WORD)&HOST_NODE_DESCRIPTORS[i+1]+2;
@@ -104,7 +112,7 @@ void build_host_nodes(void) {
 			if (n < arity - 1)
 				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &ADD_ARG[n];
 			else if (n == arity - 1)
-				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[arity-1+3];
+				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[4*arity-1];
 		}
 		HOST_NODE_DESCRIPTORS[i++] = (arity << 16) + 0;
 		HOST_NODE_DESCRIPTORS[i++] = 0;

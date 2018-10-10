@@ -7113,10 +7113,6 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_29):
 INSTRUCTION_BLOCK(jsr_eval_host_node_30):
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
-	BC_WORD *n=(BC_WORD*)asp[0];
-	int host_nodeid=n[1];
-	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
-	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
 #ifdef COMPUTED_GOTOS
 	int n_args;
 	void *instr_label = (void*) *pc;
@@ -7159,12 +7155,18 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	int n_args=*pc-Cjsr_eval_host_node;
 #endif
 
-	if (args_needed!=n_args) {
-		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,n_args);
-		exit(-1);
-	}
 	if (n_args==1) {
 		fprintf(stderr,"jsr_eval_host_node: cannot handle n_args=1 yet\n");
+		exit(-1);
+	}
+
+	BC_WORD *n=(BC_WORD*)asp[0];
+	int host_nodeid=n[1];
+	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
+	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
+
+	if (args_needed!=n_args) {
+		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,n_args);
 		exit(-1);
 	}
 
