@@ -7,6 +7,7 @@ test:
     - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-base-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
     - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-platform-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
     - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-dynamics-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
+    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-graphcopy-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
   script:
     - cd src
     - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B
