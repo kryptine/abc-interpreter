@@ -7113,14 +7113,51 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_29):
 INSTRUCTION_BLOCK(jsr_eval_host_node_30):
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 {
-#ifdef COMPUTED_GOTOS
-# error jsr_eval_host_node not implemented with COMPUTED_GOTOS yet
-#endif
 	BC_WORD *n=(BC_WORD*)asp[0];
 	int host_nodeid=n[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
+#ifdef COMPUTED_GOTOS
+	int n_args;
+	void *instr_label = (void*) *pc;
+	if      (instr_label == &&instr_jsr_eval_host_node_1)  n_args = 1;
+	else if (instr_label == &&instr_jsr_eval_host_node_2)  n_args = 2;
+	else if (instr_label == &&instr_jsr_eval_host_node_3)  n_args = 3;
+	else if (instr_label == &&instr_jsr_eval_host_node_4)  n_args = 4;
+	else if (instr_label == &&instr_jsr_eval_host_node_5)  n_args = 5;
+	else if (instr_label == &&instr_jsr_eval_host_node_6)  n_args = 6;
+	else if (instr_label == &&instr_jsr_eval_host_node_7)  n_args = 7;
+	else if (instr_label == &&instr_jsr_eval_host_node_8)  n_args = 8;
+	else if (instr_label == &&instr_jsr_eval_host_node_9)  n_args = 9;
+	else if (instr_label == &&instr_jsr_eval_host_node_10) n_args = 10;
+	else if (instr_label == &&instr_jsr_eval_host_node_11) n_args = 11;
+	else if (instr_label == &&instr_jsr_eval_host_node_12) n_args = 12;
+	else if (instr_label == &&instr_jsr_eval_host_node_13) n_args = 13;
+	else if (instr_label == &&instr_jsr_eval_host_node_14) n_args = 14;
+	else if (instr_label == &&instr_jsr_eval_host_node_15) n_args = 15;
+	else if (instr_label == &&instr_jsr_eval_host_node_16) n_args = 16;
+	else if (instr_label == &&instr_jsr_eval_host_node_17) n_args = 17;
+	else if (instr_label == &&instr_jsr_eval_host_node_18) n_args = 18;
+	else if (instr_label == &&instr_jsr_eval_host_node_19) n_args = 19;
+	else if (instr_label == &&instr_jsr_eval_host_node_20) n_args = 20;
+	else if (instr_label == &&instr_jsr_eval_host_node_21) n_args = 21;
+	else if (instr_label == &&instr_jsr_eval_host_node_22) n_args = 22;
+	else if (instr_label == &&instr_jsr_eval_host_node_23) n_args = 23;
+	else if (instr_label == &&instr_jsr_eval_host_node_24) n_args = 24;
+	else if (instr_label == &&instr_jsr_eval_host_node_25) n_args = 25;
+	else if (instr_label == &&instr_jsr_eval_host_node_26) n_args = 26;
+	else if (instr_label == &&instr_jsr_eval_host_node_27) n_args = 27;
+	else if (instr_label == &&instr_jsr_eval_host_node_28) n_args = 28;
+	else if (instr_label == &&instr_jsr_eval_host_node_29) n_args = 29;
+	else if (instr_label == &&instr_jsr_eval_host_node_30) n_args = 30;
+	else if (instr_label == &&instr_jsr_eval_host_node_31) n_args = 31;
+	else {
+		fprintf(stderr,"Unknown jsr_eval_host_node_n\n");
+		exit(-1);
+	}
+#else
 	int n_args=*pc-Cjsr_eval_host_node;
+#endif
 
 	if (args_needed!=n_args) {
 		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,n_args);
@@ -7143,7 +7180,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 		*ie->host->host_a_ptr++ = (BC_WORD) ie->host->host_hp_ptr;
 		ie->host->host_hp_ptr = make_interpret_node(ie->host->host_hp_ptr, ie->host->clean_ie, asp[-i], 0);
 	}
-	BC_WORD *arg1, *arg2;
+	BC_WORD *arg1, *arg2 = NULL;
 	if (n_args >= 2) {
 		arg2 = ie->host->host_hp_ptr;
 		ie->host->host_hp_ptr = make_interpret_node(ie->host->host_hp_ptr, ie->host->clean_ie, asp[-2], 0);

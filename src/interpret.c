@@ -91,7 +91,8 @@ void build_host_nodes(void) {
 		ADD_ARG[arity] = Cadd_arg0 + arity;
 		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
 #ifdef COMPUTED_GOTOS
-# error build_host_nodes for COMPUTED_GOTOS not implemented
+		interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+		HOST_NODE_INSTRUCTIONS[arity-1] = (BC_WORD) instruction_labels[Cjsr_eval_host_node+arity-1];
 #else
 		HOST_NODE_INSTRUCTIONS[arity-1] = Cjsr_eval_host_node+arity-1;
 #endif
