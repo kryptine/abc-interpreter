@@ -38,4 +38,11 @@ struct interpretation_environment {
 };
 
 void interpreter_finalizer(BC_WORD interpret_node);
-extern BC_WORD *__interpret__evaluate__host(struct interpretation_environment *ie, BC_WORD *node);
+BC_WORD *make_interpret_node(BC_WORD *heap,
+		struct InterpretationEnvironment *clean_ie,
+		BC_WORD node, int args_needed);
+extern BC_WORD *__interpret__evaluate__host(
+		struct interpretation_environment *ie, BC_WORD *node);
+extern BC_WORD *__interpret__evaluate__host_with_args(
+		struct interpretation_environment *ie, void *dummy,
+		BC_WORD *arg2, BC_WORD *arg1, BC_WORD *node, void *ap_address);

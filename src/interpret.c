@@ -78,40 +78,75 @@ BC_WORD __cycle__in__spine = Chalt;
 #ifdef LINK_CLEAN_RUNTIME
 # include "copy_interpreter_to_host.h"
 # include "copy_host_to_interpreter.h"
-void* HOST_NODES[][6] = /* TODO curry tables are missing; presumably it's easier to include these from ABC code in every bytecode file */
-	{ { (void*) 0,  (void*) Cjsr_eval_host_node,    0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 1,  (void*) Cjsr_eval_host_node_1,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 2,  (void*) Cjsr_eval_host_node_2,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 3,  (void*) Cjsr_eval_host_node_3,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 4,  (void*) Cjsr_eval_host_node_4,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 5,  (void*) Cjsr_eval_host_node_5,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 6,  (void*) Cjsr_eval_host_node_6,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 7,  (void*) Cjsr_eval_host_node_7,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 8,  (void*) Cjsr_eval_host_node_8,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 9,  (void*) Cjsr_eval_host_node_9,  0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 10, (void*) Cjsr_eval_host_node_10, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 11, (void*) Cjsr_eval_host_node_11, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 12, (void*) Cjsr_eval_host_node_12, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 13, (void*) Cjsr_eval_host_node_13, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 14, (void*) Cjsr_eval_host_node_14, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 15, (void*) Cjsr_eval_host_node_15, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 16, (void*) Cjsr_eval_host_node_16, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 17, (void*) Cjsr_eval_host_node_17, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 18, (void*) Cjsr_eval_host_node_18, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 19, (void*) Cjsr_eval_host_node_19, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 20, (void*) Cjsr_eval_host_node_20, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 21, (void*) Cjsr_eval_host_node_21, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 22, (void*) Cjsr_eval_host_node_22, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 23, (void*) Cjsr_eval_host_node_23, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 24, (void*) Cjsr_eval_host_node_24, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 25, (void*) Cjsr_eval_host_node_25, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 26, (void*) Cjsr_eval_host_node_26, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 27, (void*) Cjsr_eval_host_node_27, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 28, (void*) Cjsr_eval_host_node_28, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 29, (void*) Cjsr_eval_host_node_29, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 30, (void*) Cjsr_eval_host_node_30, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	, { (void*) 31, (void*) Cjsr_eval_host_node_31, 0, &m____system, (void*) 4, _4chars2int('H','O','S','T') }
-	};
+void **HOST_NODES[32];
+BC_WORD HOST_NODE_DESCRIPTORS[1216];
+BC_WORD ADD_ARG[33];
+BC_WORD HOST_NODE_INSTRUCTIONS[32];
+
+/* TODO: only build if not built yet */
+void build_host_nodes(void) {
+	int i = 0;
+	ADD_ARG[0] = Cadd_arg0;
+	for (int arity = 1; arity <= 32; arity++) {
+		ADD_ARG[arity] = Cadd_arg0 + arity;
+		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
+#ifdef COMPUTED_GOTOS
+# error build_host_nodes for COMPUTED_GOTOS not implemented
+#else
+		HOST_NODE_INSTRUCTIONS[arity-1] = Cjsr_eval_host_node+arity-1;
+#endif
+
+		HOST_NODE_DESCRIPTORS[i] = (BC_WORD)&HOST_NODE_DESCRIPTORS[i+1]+2;
+		i++;
+		for (int n = 0; n <= arity; n++) {
+			HOST_NODE_DESCRIPTORS[i++] = (((arity-n) << 3) << 16) + n;
+			if (n < arity - 1)
+				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &ADD_ARG[n];
+			else if (n == arity - 1)
+				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[arity-1+3];
+		}
+		HOST_NODE_DESCRIPTORS[i++] = (arity << 16) + 0;
+		HOST_NODE_DESCRIPTORS[i++] = 0;
+		HOST_NODE_DESCRIPTORS[i++] = 0;
+	}
+}
+
+extern void *ap_2;
+extern void *ap_3;
+extern void *ap_4;
+extern void *ap_5;
+extern void *ap_6;
+extern void *ap_7;
+extern void *ap_8;
+extern void *ap_9;
+extern void *ap_10;
+extern void *ap_11;
+extern void *ap_12;
+extern void *ap_13;
+extern void *ap_14;
+extern void *ap_15;
+extern void *ap_16;
+extern void *ap_17;
+extern void *ap_18;
+extern void *ap_19;
+extern void *ap_20;
+extern void *ap_21;
+extern void *ap_22;
+extern void *ap_23;
+extern void *ap_24;
+extern void *ap_25;
+extern void *ap_26;
+extern void *ap_27;
+extern void *ap_28;
+extern void *ap_29;
+extern void *ap_30;
+extern void *ap_31;
+extern void *ap_32;
+
+void *ap_addresses[] = {&ap_2, &ap_3, &ap_4, &ap_5, &ap_6, &ap_7, &ap_8, &ap_9,
+	&ap_10, &ap_11, &ap_12, &ap_13, &ap_14, &ap_15, &ap_16, &ap_17, &ap_18,
+	&ap_19, &ap_20, &ap_21, &ap_22, &ap_23, &ap_24, &ap_25, &ap_26, &ap_27,
+	&ap_28, &ap_29, &ap_30, &ap_31, &ap_32};
 #endif
 
 BC_WORD Fjmp_ap1 = Cjmp_ap1;
@@ -156,10 +191,6 @@ void handle_segv(int sig) {
 	exit(1);
 }
 #endif
-
-BC_WORD *get_heap_address(void) {
-	return hp;
-}
 
 #ifdef COMPUTED_GOTOS
 void *instruction_labels[CMAX];
@@ -214,9 +245,16 @@ int interpret(
 		*--csp = (BC_WORD) &ret;
 		pc = _pc;
 
-		if (0)
+		if (0) {
 eval_to_hnf_return:
+#ifdef LINK_CLEAN_RUNTIME
+			ie->asp = asp;
+			ie->bsp = bsp;
+			ie->csp = csp;
+			ie->hp = hp;
+#endif
 			return 0;
+		}
 	}
 
 #ifdef COMPUTED_GOTOS

@@ -9,9 +9,14 @@ int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 	fprintf(stderr,"\thost to interpreter: %d -> %p\n",shared_node_index,heap);
 	fprintf(stderr,"\t[1]=%d; still %d args needed\n",shared_node_index,args_needed);
 #endif
-	heap[0] = (BC_WORD) (&HOST_NODES[args_needed][1]);
-	heap[1] = shared_node_index;
-	return 2;
+	if (args_needed == 0)
+		heap[0] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[0];
+	else
+		heap[0] = (BC_WORD) HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2; /* TODO check 32-bit */
+	heap[1] = (BC_WORD) &heap[2];
+	heap[2] = (BC_WORD) &dINT+2;
+	heap[3] = shared_node_index;
+	return 4;
 }
 
 BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap,
@@ -35,7 +40,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 		fprintf(stderr,"Cannot copy records to interpreter yet (%d/%d)\n",a_arity,b_arity);
 		exit(1);
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0];
+		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
 		if (args_needed != 0) { /* TODO: special case for tuples */
 			nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
 			return make_host_node(heap, nodeid, args_needed);

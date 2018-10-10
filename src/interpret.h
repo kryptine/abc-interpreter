@@ -18,7 +18,9 @@ extern BC_WORD __cycle__in__spine;
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
-extern void* HOST_NODES[][6];
+void build_host_nodes(void);
+extern void **HOST_NODES[];
+extern BC_WORD HOST_NODE_INSTRUCTIONS[32];
 #endif
 
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
@@ -35,8 +37,6 @@ extern void* __interpreter_indirection[9];
 # include <setjmp.h>
 extern jmp_buf segfault_restore_point;
 #endif
-
-BC_WORD *get_heap_address(void);
 
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
