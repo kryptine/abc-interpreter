@@ -14,7 +14,7 @@ int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 	else
 		heap[0] = (BC_WORD) HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2; /* TODO check 32-bit */
 	heap[1] = (BC_WORD) &heap[2];
-	heap[2] = (BC_WORD) &dINT+2;
+	heap[2] = (BC_WORD) &INT+2;
 	heap[3] = shared_node_index;
 	return 4;
 }

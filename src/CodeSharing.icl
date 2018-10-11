@@ -66,6 +66,7 @@ where
 		, last (rev [37,36..0])
 		, length (last (rev [[1..i] \\ i <- [37,36..0]]))
 		, ap1 (\x -> x - 5)
+		, ap1 (flip (-) 5)
 		, ap3 (\x y z -> 10*x + 3*y + z)
 		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
 		]

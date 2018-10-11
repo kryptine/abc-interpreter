@@ -297,11 +297,13 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #endif
 
 	if (!(node[0] & 2)) {
+		if (((BC_WORD*)node[0])[1] ==
 #ifdef COMPUTED_GOTOS
-		if (*((BC_WORD*)node[0]) == (BC_WORD) instruction_labels[Cjsr_eval_host_node]) {
+				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
 #else
-		if (*((BC_WORD*)node[0]) == Cjsr_eval_host_node) {
+				Cjsr_eval_host_node
 #endif
+				) {
 			__interpret__copy__node__asm_redirect_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+((BC_WORD*)node[1])[1]];
 #if DEBUG_CLEAN_LINKS > 1
 			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
@@ -371,12 +373,10 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	BC_WORD *lazy_entry = ((BC_WORD**)(node[0]-2))[n_args*2+1];
 	BC_WORD *pc;
-	int pop_args = n_args + a_arity;
 
-	if (pop_args == 0) {
+	if (n_args + a_arity == 0) {
 		/* Function with arity 1; this do not have an apply entry point */
 		*++ie->asp = (BC_WORD) node;
-		pop_args++;
 		pc = lazy_entry;
 	} else {
 		pc = (BC_WORD*) lazy_entry[-2];
