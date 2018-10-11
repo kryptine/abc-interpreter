@@ -1818,7 +1818,7 @@ INSTRUCTION_BLOCK(eq_nulldesc):
 {
 	BC_WORD *n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	int16_t arity=((int16_t*)(n[0]))[-1];
-	*--bsp = *n==pc[2]+arity*IF_INT_64_OR_32(16,8); /* TODO check with John */
+	*--bsp = *n==pc[2]+arity*IF_INT_64_OR_32(16,8);
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
@@ -4341,7 +4341,7 @@ INSTRUCTION_BLOCK(push_r_args_b):
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
 	for (int i=0; i<n_args; i++)
-		bsp[0-n_args+i]=a[i+bo-3]; /* TODO why -3? */
+		bsp[0-n_args+i]=a[i+bo-3];
 	bsp-=n_args;
 	pc+=4;
 	END_INSTRUCTION_BLOCK;

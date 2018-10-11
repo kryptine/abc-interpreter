@@ -78,13 +78,14 @@ BC_WORD __cycle__in__spine = Chalt;
 #ifdef LINK_CLEAN_RUNTIME
 # include "copy_interpreter_to_host.h"
 # include "copy_host_to_interpreter.h"
-void **HOST_NODES[32];
+void **HOST_NODES[32] = {NULL};
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
 BC_WORD ADD_ARG[33];
 BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 
-/* TODO: only build if not built yet */
 void build_host_nodes(void) {
+	if (HOST_NODES[0] != NULL)
+		return;
 	int i = 0;
 	ADD_ARG[0] = Cadd_arg0;
 	for (int arity = 1; arity <= 32; arity++) {
