@@ -7159,6 +7159,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	int host_nodeid=n[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
+	int node_arity=((int16_t*)(host_node[0]))[-1];
 
 	if (args_needed!=n_args) {
 		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,n_args);
@@ -7166,7 +7167,6 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
-	int node_arity=((int16_t*)(host_node[0]))[-1];
 	fprintf(stderr,"\thost node (%d: %p -> %p) arity is %d; %d needed\n",
 			host_nodeid,host_node,(void*)*host_node,node_arity,args_needed);
 	for (int i = 1; i <= n_args; i++)
