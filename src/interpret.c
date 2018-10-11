@@ -81,7 +81,7 @@ BC_WORD __cycle__in__spine = Chalt;
 void **HOST_NODES[32];
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
 BC_WORD ADD_ARG[33];
-BC_WORD HOST_NODE_INSTRUCTIONS[32];
+BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 
 /* TODO: only build if not built yet */
 void build_host_nodes(void) {
@@ -91,10 +91,27 @@ void build_host_nodes(void) {
 		ADD_ARG[arity] = Cadd_arg0 + arity;
 		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
 #ifdef COMPUTED_GOTOS
-# error build_host_nodes for COMPUTED_GOTOS not implemented
+# define INSTR(i) (BC_WORD) instruction_labels[i]
+		interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 #else
-		HOST_NODE_INSTRUCTIONS[arity-1] = Cjsr_eval_host_node+arity-1;
+# define INSTR(i) i
 #endif
+		if (arity == 1) {
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Crepl_args1);
+			HOST_NODE_INSTRUCTIONS[6*arity-5] = INSTR(Cjsr_eval_host_node);
+		} else if (arity <= 5) {
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1);
+			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(
+				arity == 2 ? Crepl_args1 :
+				arity == 3 ? Crepl_args2 :
+				arity == 4 ? Crepl_args3 :
+				             Crepl_args4);
+			HOST_NODE_INSTRUCTIONS[6*arity-2] = INSTR(Cjsr_eval_host_node+arity-1);
+		} else {
+			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(Crepl_args);
+			HOST_NODE_INSTRUCTIONS[6*arity-2] = arity-1;
+			HOST_NODE_INSTRUCTIONS[6*arity-1] = INSTR(Cjsr_eval_host_node+arity-1);
+		}
 
 		HOST_NODE_DESCRIPTORS[i] = (BC_WORD)&HOST_NODE_DESCRIPTORS[i+1]+2;
 		i++;
@@ -103,7 +120,7 @@ void build_host_nodes(void) {
 			if (n < arity - 1)
 				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &ADD_ARG[n];
 			else if (n == arity - 1)
-				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[arity-1+3];
+				HOST_NODE_DESCRIPTORS[i++] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[6*arity-3];
 		}
 		HOST_NODE_DESCRIPTORS[i++] = (arity << 16) + 0;
 		HOST_NODE_DESCRIPTORS[i++] = 0;

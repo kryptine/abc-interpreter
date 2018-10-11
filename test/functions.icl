@@ -2,7 +2,7 @@ module functions
 
 import StdInt
 
-Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap3)
+Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3)
 
 square :: Int -> Int
 square x = x * x
@@ -23,6 +23,9 @@ where
 foldr :: (a b -> b) b [a] -> b
 foldr op e []     = e
 foldr op e [x:xs] = op x (foldr op e xs)
+
+ap1 :: (Int -> Int) -> Int
+ap1 f = f 42
 
 ap3 :: (Int Int Int -> Int) -> Int
 ap3 f = f 3 2 1
