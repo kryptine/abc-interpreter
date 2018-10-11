@@ -62,7 +62,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 #endif
 
 	BC_WORD *org_heap = heap;
-	heap[0] = (BC_WORD) host_symbol->interpreter_location + 2 + a_arity * 8;
+	heap[0] = (BC_WORD) host_symbol->interpreter_location + 2 + a_arity * 16;
 
 	if (a_arity + b_arity < 3) {
 		heap += 3;

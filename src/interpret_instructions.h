@@ -7054,7 +7054,7 @@ case EVAL_TO_HNF_LABEL:
 INSTRUCTION_BLOCK(jsr_eval_host_node):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	int host_nodeid = n[1];
+	int host_nodeid = ((BC_WORD*)n[1])[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\t%p -> [%d; %p -> %p]\n",(void*)asp[0],host_nodeid,host_node,(void*)*host_node);
@@ -7071,11 +7071,14 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 #endif
 	}
 
-	/* TODO: if possible, it is more efficient to overwrite the old node
-	 * instead of creating a new node.
+	/* TODO: if possible, it is more efficient to not create the new object at
+	 * all.
 	 */
 	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
-	asp[0] = (BC_WORD) hp;
+	n[0] = hp[0];
+	n[1] = hp[1];
+	if (((int16_t*)(n[0]))[-1] >= 2)
+		n[2] = hp[2];
 	hp += words_used;
 
 	pc=(BC_WORD*)*csp++;

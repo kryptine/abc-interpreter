@@ -45,8 +45,9 @@ import StdEnum,StdFunc
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3),w) = get_expression "../test/functions.bc" w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map),w)
+	= get_expression "../test/functions.bc" w
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map
 where
 	use ::
 		(Int -> Int)
@@ -57,8 +58,9 @@ where
 		(A.a b: (a b -> b) b [a] -> b)
 		((Int -> Int) -> Int)
 		((Int Int Int -> Int) -> Int)
+		(A.a b: (a -> b) [a] -> [b])
 		-> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 =
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map =
 		[ intsquare 6 + intsquare 1
 		, sub5 (last [1..47]) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
@@ -69,7 +71,15 @@ where
 		, ap1 (flip (-) 5)
 		, ap3 (\x y z -> 10*x + 3*y + z)
 		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
+		, toInt (last (rev [TestA,TestB]))
+		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
+
+:: TestT = TestA | TestB
+instance toInt TestT
+where
+	toInt TestA = 37
+	toInt TestB = 42
 
 square :: Int -> Int
 square x = x * x

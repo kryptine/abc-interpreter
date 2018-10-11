@@ -98,8 +98,7 @@ void build_host_nodes(void) {
 # define INSTR(i) i
 #endif
 		if (arity == 1) {
-			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Crepl_args1);
-			HOST_NODE_INSTRUCTIONS[6*arity-5] = INSTR(Cjsr_eval_host_node);
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node);
 		} else if (arity <= 5) {
 			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1);
 			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(

@@ -2,7 +2,7 @@ module functions
 
 import StdInt
 
-Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3)
+Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map)
 
 square :: Int -> Int
 square x = x * x
@@ -29,3 +29,7 @@ ap1 f = f 42
 
 ap3 :: (Int Int Int -> Int) -> Int
 ap3 f = f 3 2 1
+
+map :: (a -> b) [a] -> [b]
+map f [x:xs] = [f x:map f xs]
+map _ []     = []

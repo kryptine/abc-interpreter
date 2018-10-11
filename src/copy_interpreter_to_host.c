@@ -297,7 +297,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #endif
 
 	if (!(node[0] & 2)) {
-		if (((BC_WORD*)node[0])[1] ==
+		if (*((BC_WORD*)node[0]) ==
 #ifdef COMPUTED_GOTOS
 				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
 #else
@@ -346,6 +346,8 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
 #endif
+
+	*++ie->asp = (BC_WORD)node;
 
 	va_start(arguments,n_args);
 	for (int i = 0; i <= n_args; i++) {
