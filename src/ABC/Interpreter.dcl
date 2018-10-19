@@ -2,9 +2,11 @@ definition module ABC.Interpreter
 
 from System.FilePath import :: FilePath
 
-:: SerializedGraph
+:: *SerializedGraph
 
 serialize_for_interpretation :: a !FilePath !FilePath !*World -> *(!SerializedGraph, !*World)
+
+deserialize :: !SerializedGraph !FilePath !*World -> *(a, !*World)
 
 :: InterpretedExpression
 :: *InterpretationEnvironment

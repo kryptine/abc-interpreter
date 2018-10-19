@@ -1,11 +1,11 @@
-#include <stdint.h>
-
 #ifndef LINK_CLEAN_RUNTIME
 # define LINK_CLEAN_RUNTIME
 #endif
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "abc_instructions.h"
 #include "copy_host_to_interpreter.h"
@@ -75,6 +75,14 @@ BC_WORD *build_start_node(struct interpretation_environment *ie) {
 	*ie->hp = ((BC_WORD*)ie->program->code[1])[1];
 	ie->hp += 3;
 	return hp;
+}
+
+BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_environment *ie) {
+	int len = *(int*)clean_string;
+	memcpy(ie->hp, &clean_string[1], len);
+	BC_WORD *node = ie->hp;
+	ie->hp += len;
+	return node;
 }
 
 void interpretation_environment_finalizer(struct interpretation_environment *ie) {
@@ -154,7 +162,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
 
-	if (node[0] == (BC_WORD) &INT+2) {
+	if (node[0] == (BC_WORD) &INT+2 || node[0] == (BC_WORD) &dINT+2) {
 		if (host_heap_free < 2)
 			return -2;
 		host_heap[0] = (BC_WORD) &dINT+2;

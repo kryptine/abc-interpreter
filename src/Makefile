@@ -13,10 +13,10 @@ DIR:="Clean System Files"
 all: optimise bcgen link interpret debug
 
 CodeSharing: Clean\ System\ Files/interpret.a .FORCE
-	$(CLM) -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
+	$(CLM) -I . -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
 
 GraphTest: Clean\ System\ Files/interpret.a .FORCE graph_copy_with_names.icl graph_copy_with_names.dcl
-	$(CLM) -I . -IL Platform -IL GraphCopy -no-opt-link -ns -exl -desc $@ -o $@
+	$(CLM) -I . -IL Platform -IL GraphCopy -exl -desc -ns -no-opt-link $@ -o $@
 
 PATCHED:=graph_copy_with_names.icl graph_copy_with_names.dcl
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
