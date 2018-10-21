@@ -44,7 +44,7 @@ char *instruction_type (BC_WORD i) {
 		case CbuildB_b:              return "n";
 		case CbuildC:                return "c";
 		case CbuildC_b:              return "n";
-		case CbuildF_b:              return "?";
+		case CbuildF_b:              return "n";
 		case CbuildI:                return "i";
 		case CbuildI_b:              return "n";
 		case CbuildR:                return "r";
@@ -172,7 +172,8 @@ char *instruction_type (BC_WORD i) {
 		case Cfillh4:                return "nl";
 		case CfillB_b:               return "nn";
 		case CfillC_b:               return "nn";
-		case CfillF_b:               return "?";
+		case CfillF_b:               return "nn";
+		case CfillI:                 return "in";
 		case CfillI_b:               return "nn";
 		case CfillR_b:               return "nn";
 		case Cfillcaf:               return "lnn";
@@ -242,7 +243,7 @@ char *instruction_type (BC_WORD i) {
 		case CpushC0_pop_a1:         return "";
 		case CpushD:                 return "l";
 		case CpushD_a:               return "n";
-		case CpushF_a:               return "?";
+		case CpushF_a:               return "n";
 		case CpushI:                 return "i";
 		case CpushI_a:               return "n";
 		case CpushI0_pop_a1:         return "";
@@ -495,7 +496,7 @@ char *instruction_type (BC_WORD i) {
 		case Cjmp_neI_b:             return "nil";
 		case Cjmp_ne_desc:           return "nll";
 		case Cjmp_o_geI:             return "nl";
-		case Cjmp_o_geI_arraysize_a: return "?";
+		case Cjmp_o_geI_arraysize_a: return "nnl";
 		case CltIi:                  return "?";
 		case Cswap_b1:               return "";
 		case Cpop_a_jmp:             return "Nl";

@@ -91,6 +91,7 @@ void code_fillh(char descriptor_name[], int arity, int a_offset);
 void code_fillB_b(int b_offset, int a_offset);
 void code_fillC_b(int b_offset, int a_offset);
 void code_fillF_b(int b_offset, int a_offset);
+void code_fillI(CleanInt value, int a_offset);
 void code_fillI_b(int b_offset, int a_offset);
 void code_fillR_b(int b_offset, int a_offset);
 void code_fillcaf(char *label_name, int a_stack_size, int b_stack_size);

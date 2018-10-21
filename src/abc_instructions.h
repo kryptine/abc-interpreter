@@ -158,6 +158,7 @@ enum {
 	INSTRUCTION(fillB_b)
 	INSTRUCTION(fillC_b)
 	INSTRUCTION(fillF_b)
+	INSTRUCTION(fillI)
 	INSTRUCTION(fillI_b)
 	INSTRUCTION(fillR_b)
 	INSTRUCTION(fill_a)

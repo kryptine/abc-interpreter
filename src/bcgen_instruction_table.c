@@ -103,6 +103,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fillB_b",               parse_instruction_n_n,           code_fillB_b );
 	put_instruction_name("fillC_b",               parse_instruction_n_n,           code_fillC_b );
 	put_instruction_name("fillF_b",               parse_instruction_n_n,           code_fillF_b );
+	put_instruction_name("fillI",                 parse_instruction_i_n,           code_fillI );
 	put_instruction_name("fillI_b",               parse_instruction_n_n,           code_fillI_b );
 	put_instruction_name("fillR_b",               parse_instruction_n_n,           code_fillR_b );
 	put_instruction_name("fillcaf",               parse_instruction_a_n_n,         code_fillcaf );

@@ -2531,6 +2531,17 @@ INSTRUCTION_BLOCK(fillF_b):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fillI):
+{
+	BC_WORD *n,i;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	i=(BC_WORD_S)pc[2];
+	n[0]=(BC_WORD)&INT+2;
+	n[1]=i;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fillI_b):
 {
 	BC_WORD *n,i;

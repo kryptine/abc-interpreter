@@ -1892,6 +1892,10 @@ void code_fillF_b(int b_offset,int a_offset) {
 	add_instruction_w_w(CfillF_b,-a_offset,b_offset);
 }
 
+void code_fillI(CleanInt value,int a_offset) {
+	add_instruction_i_w(CfillI,value,-a_offset);
+}
+
 void code_fillI_b(int b_offset,int a_offset) {
 	add_instruction_w_w(CfillI_b,-a_offset,b_offset);
 }
@@ -2016,21 +2020,16 @@ void code_jmp(char label_name[]) {
 }
 
 void code_jmp_ap(int n_apply_args) {
-	if (n_apply_args==1) {
-		add_instruction(Cjmp_ap1);
-		return;
+	switch (n_apply_args) {
+		case 1: add_instruction(Cjmp_ap1); break;
+		case 2: add_instruction(Cjmp_ap2); break;
+		case 3: add_instruction(Cjmp_ap3); break;
+		case 4: add_instruction(Cjmp_ap4); break;
+		case 5: add_instruction(Cjmp_ap5); break;
+		default:
+			fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
+			exit(1);
 	}
-	if (n_apply_args==2) {
-		add_instruction(Cjmp_ap2);
-		return;
-	}
-	if (n_apply_args==3) {
-		add_instruction(Cjmp_ap3);
-		return;
-	}
-
-	fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
-	exit(1);
 }
 
 void code_jmp_eval(void) {
