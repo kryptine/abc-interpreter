@@ -133,11 +133,12 @@ from StdFile import class <<<
 	| Line !String //* An unrecognised line
 
 :: Annotation
-	= Ad !Int !Int !String //* .d
-	| Ao !Int !Int !String //* .o
+	= Ad !Int !Int !StringWithSpaces //* .d
+	| Ao !Int !Int !StringWithSpaces //* .o
 	| OtherAnnotation !String
 
 :: StringLiteral = StringLit !String
+:: StringWithSpaces = StringWithSpaces !String
 
 isAStackInstruction :: ABCInstruction -> Bool
 isBStackInstruction :: ABCInstruction -> Bool
