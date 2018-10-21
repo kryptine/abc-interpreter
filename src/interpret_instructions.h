@@ -1456,6 +1456,9 @@ INSTRUCTION_BLOCK(build_ua1):
 	hp[-1]=*bsp++;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(ccall):
+	fprintf(stderr,"ccall cannot be executed in the interpreter\n");
+	return 1;
 INSTRUCTION_BLOCK(cosR):
 {
 	BC_REAL d=cos(*(BC_REAL*)&bsp[0]);
@@ -5321,6 +5324,18 @@ INSTRUCTION_BLOCK(select_r02):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(select_r11):
+{
+	BC_WORD array_o,*element_p;
+
+	array_o = 2 * (BC_WORD_S)*bsp++;
+	element_p = &((BC_WORD*)(*asp))[array_o];
+	*asp = element_p[3];
+	bsp[-1] = element_p[4];
+	bsp-=1;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(select_r12):
 {
 	BC_WORD array_o,*element_p;
@@ -5668,6 +5683,21 @@ INSTRUCTION_BLOCK(update_r02):
 	element_p[3]=bsp[0];
 	element_p[4]=bsp[1];
 	bsp+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r11):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 2 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	asp-=1;
+	asp[0]=(BC_WORD)array;
+	element_p[4]=bsp[0];
+	bsp+=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(update_r12):

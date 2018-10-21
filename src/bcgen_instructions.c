@@ -2986,6 +2986,10 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 		add_instruction(Cselect_r02);
 		return;
 	}
+	if (a_size==1 && b_size==1) {
+		add_instruction(Cselect_r11);
+		return;
+	}
 	if (a_size==1 && b_size==2) {
 		add_instruction(Cselect_r12);
 		return;
@@ -3096,6 +3100,10 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 
 	if (a_size==0 && b_size==2) {
 		add_instruction(Cupdate_r02);
+		return;
+	}
+	if (a_size==1 && b_size==1) {
+		add_instruction(Cupdate_r11);
 		return;
 	}
 	if (a_size==1 && b_size==2) {
@@ -3275,6 +3283,11 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 		add_instruction_w_label(Cbuild_r20,-a_offset1,code_name);
 	else
 		add_instruction_w_w_label(Cbuildo2,-a_offset1,-a_offset2,code_name);
+}
+
+void code_ccall (char *c_function_name,char *s,int length) {
+	fprintf(stderr, "Warning: ccall does not work in the interpreter\n");
+	add_instruction(Cccall);
 }
 
 void code_dup_a(int a_offset) {

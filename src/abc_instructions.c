@@ -102,6 +102,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_u22:             return "l";
 		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "nl";
+		case Cccall:                 return "";
 		case CcosR:                  return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "?";
@@ -373,6 +374,7 @@ char *instruction_type (BC_WORD i) {
 		case Cselect_ra:             return "?";
 		case Cselect_ra1:            return "?";
 		case Cselect_r02:            return "?";
+		case Cselect_r11:            return "?";
 		case Cselect_r12:            return "?";
 		case Cselect_r20:            return "?";
 		case Cselect_r21:            return "?";
@@ -397,6 +399,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate_ra:             return "?";
 		case Cupdate_ra1:            return "?";
 		case Cupdate_r02:            return "?";
+		case Cupdate_r11:            return "?";
 		case Cupdate_r12:            return "?";
 		case Cupdate_r20:            return "?";
 		case Cupdate_r21:            return "?";

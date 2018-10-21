@@ -1166,6 +1166,19 @@ int parse_instruction_l (instruction *instruction)
 	return 1;
 }
 
+int parse_instruction_l_s (instruction *instruction)
+{
+	STRING l1,s1;
+	int l;
+
+	parse_label_without_conversion (l1);
+	if (!parse_string (s1,&l))
+		return 0;
+
+	instruction->code_function (l1,s1,l);
+	return 1;
+}
+
 int parse_instruction_n (instruction *instruction)
 {
 	int64_t n;
