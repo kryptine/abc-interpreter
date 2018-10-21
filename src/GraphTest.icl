@@ -7,4 +7,5 @@ Start w
 # (val,w) = deserialize graph "./GraphTest" w
 = val
 
-graph = 37
+import StdInt, StdList
+graph = map ((+) 100) [37,42,47]

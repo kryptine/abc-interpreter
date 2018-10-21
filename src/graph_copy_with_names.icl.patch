@@ -1,5 +1,23 @@
 --- a/graph_copy_with_names.icl
 +++ b/graph_copy_with_names.icl
+@@ -61,7 +61,7 @@ get_thunk_arity_32 a = code {
+ 
+ get_thunk_arity_64 :: !Int -> Int;
+ get_thunk_arity_64 a = code {
+-	load_si32 -4
++	load_si16 -4
+ }
+ 
+ get_thunk_descriptor a :== IF_INT_64_OR_32 (get_thunk_descriptor_64_platform a) (get_thunk_descriptor_32_platform a);
+@@ -721,7 +721,7 @@ lookup_symbol_value {di_prefix_arity_and_mod,di_name} mod_a symbols
+ 		| symbol_value== -1
+ 			= abort ("lookup_desc_info not found "+++symbol_name); 
+ 			# arity = prefix_n - PREFIX_D;
+-			= symbol_value+(arity*size_element_descriptor_currying)+2;
++			= symbol_value+(arity*size_element_descriptor_currying*2)+2;
+ 
+ lookup_symbol_values desc_info_a mod_a symbols
+ 	= {#lookup_symbol_value desc_info mod_a symbols \\ desc_info <-: desc_info_a};
 @@ -773,12 +773,14 @@ replace_desc_numbers_by_descs i s symbol_a symbol_offset array_desc
  			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)+l) s symbol_a symbol_offset array_desc;
  		= abort (toString l+++" "+++toString d);

@@ -60,7 +60,6 @@ serialize_for_interpretation graph thisexe bcfile w
 	}
 = (rec, w)
 
-import Debug.Trace, StdDebug
 deserialize :: !SerializedGraph !FilePath !*World -> *(a, !*World)
 deserialize {graph,descinfo,modules,bytecode} thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
@@ -84,7 +83,6 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 	asp bsp csp heap
 # graph_node = string_to_interpreter graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
-#! (ie,graph_node,w) = trace_stdout (ie,graph_node,w)
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreate 1}
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where

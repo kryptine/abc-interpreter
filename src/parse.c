@@ -505,6 +505,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset *= 2;
 # endif
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+
+# ifdef LINK_CLEAN_RUNTIME
+					if (state->program->symbol_table[state->ptr].name[0]) {
+						/* Descriptor has a _hnf code address */
+						struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
+						if (host_sym != NULL) {
+							host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
+						}
+					}
+# endif
 				}
 #endif
 #ifdef LINKER

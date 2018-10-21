@@ -79,8 +79,55 @@ BC_WORD *build_start_node(struct interpretation_environment *ie) {
 
 BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_environment *ie) {
 	int len = *(int*)clean_string;
-	memcpy(ie->hp, &clean_string[1], len);
+	void **s = &clean_string[1];
 	BC_WORD *node = ie->hp;
+
+	BC_WORD **ptr_stack = (BC_WORD**) ie->asp;
+	int16_t *a_size_stack = (int16_t*) ie->csp;
+	BC_WORD dummy;
+	*++ptr_stack = &dummy;
+	*--a_size_stack = 1;
+	/* TODO check heap & stack space */
+	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++) {
+		if (a_size_stack[0] == 0) {
+			i--;
+			a_size_stack++;
+		} else {
+			a_size_stack[0]--;
+
+			BC_WORD desc=(BC_WORD) s[i];
+			s[i] = ie->hp;
+
+			if (desc & 1) { /* redirection */
+				**ptr_stack-- = (BC_WORD) s[i+(desc-1)/IF_INT_64_OR_32(8,4)];
+				continue;
+			}
+
+			**ptr_stack-- = (BC_WORD) ie->hp;
+			*ie->hp++ = desc;
+
+			int16_t a_arity = ((int16_t*)desc)[-1];
+			int16_t b_arity = 0;
+
+			if (desc == (BC_WORD) &dINT+2) { /* TODO more special cases */
+				b_arity = 1;
+			} if (a_arity > 256) { /* record */
+				a_arity = ((int16_t*)desc)[0];
+				b_arity = ((int16_t*)desc)[-1] - 256 - a_arity;
+			}
+
+			/* TODO: HNFs should be split */
+			for (int a=0; a<a_arity; a++)
+				*++ptr_stack = ie->hp + a_arity-a-1;
+			ie->hp += a_arity;
+
+			for (int b=0; b<b_arity; b++)
+				*ie->hp++ = (BC_WORD) s[++i];
+
+			*--a_size_stack = a_arity;
+		}
+	}
+
 	ie->hp += len;
 	return node;
 }
@@ -197,7 +244,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tstill %d argument(s) needed\n",args_needed);
+			fprintf(stderr,"\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
