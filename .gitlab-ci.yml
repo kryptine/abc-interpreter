@@ -10,10 +10,11 @@ test:
     - make -C /tmp/clean-tools/clm -f Makefile.linux64
     - mv /tmp/clean-tools/clm/clm /opt/clean/bin
 
-    - ln -s "$PWD/src/optimise" /opt/clean/exe/optimise
-    - ln -s "$PWD/src/bcgen" /opt/clean/exe/bcgen
-    - ln -s "$PWD/src/link" /opt/clean/exe/bclink
-    - clm -bytecode -S _system
+    - ln -s "$PWD/src/optimise" /opt/clean/lib/exe/optimise
+    - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
+    - ln -s "$PWD/src/link" /opt/clean/lib/exe/bclink
+    - make -C src
+    - clm -bytecode -O _system
   script:
     - cd src
     - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B

@@ -93,7 +93,7 @@ debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 
 clean:
 	shopt -s globstar; $(RM) -r \
-		bytecode\
+		bcgen\
 		debug\
 		interpret\
 		link\
