@@ -22,7 +22,7 @@ bcgen "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
 bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc"
 
 # Link bytecode
-link "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.abc -o fsieve.bc
+link "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.obc -o fsieve.bc
 
 # Interpret bytecode
 interpret fsieve.bc
