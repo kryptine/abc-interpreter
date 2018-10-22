@@ -1456,9 +1456,6 @@ INSTRUCTION_BLOCK(build_ua1):
 	hp[-1]=*bsp++;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(ccall):
-	fprintf(stderr,"ccall cannot be executed in the interpreter\n");
-	return 1;
 INSTRUCTION_BLOCK(cosR):
 {
 	BC_REAL d=cos(*(BC_REAL*)&bsp[0]);
@@ -3702,9 +3699,6 @@ INSTRUCTION_BLOCK(push_b):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(push_finalizers):
-	fprintf(stderr,"push_finalizers cannot be executed in the interpreter\n");
-	return 1;
 INSTRUCTION_BLOCK(push_node):
 {
 	BC_WORD *n,n_a;
@@ -5443,9 +5437,6 @@ INSTRUCTION_BLOCK(select_r40):
 INSTRUCTION_BLOCK(rtn):
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
-INSTRUCTION_BLOCK(set_finalizers):
-	fprintf(stderr,"set_finalizers cannot be executed in the interpreter\n");
-	return 1;
 INSTRUCTION_BLOCK(shiftlI):
 	bsp[1]=bsp[0] << bsp[1];
 	++bsp;
@@ -7383,9 +7374,19 @@ INSTRUCTION_BLOCK(add_arg29):
 INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
+INSTRUCTION_BLOCK(ccall):
 INSTRUCTION_BLOCK(eval_upd4):
+INSTRUCTION_BLOCK(instruction):
+INSTRUCTION_BLOCK(load_i):
+INSTRUCTION_BLOCK(load_si16):
+INSTRUCTION_BLOCK(load_si32):
+INSTRUCTION_BLOCK(load_ui8):
+INSTRUCTION_BLOCK(push_finalizers):
+INSTRUCTION_BLOCK(pushL):
+INSTRUCTION_BLOCK(pushLc):
 INSTRUCTION_BLOCK(pushcaf11):
 INSTRUCTION_BLOCK(pushcaf20):
+INSTRUCTION_BLOCK(set_finalizers):
 INSTRUCTION_BLOCK(A_data_IIIla):
 INSTRUCTION_BLOCK(A_data_IIl):
 INSTRUCTION_BLOCK(A_data_IlI):
