@@ -3,7 +3,7 @@ module GraphTest
 import ABC.Interpreter
 
 Start w
-# (graph,w) = serialize_for_interpretation graph "./GraphTest" "../test/hamming.bc" w
+# (graph,w) = serialize_for_interpretation graph "./GraphTest" "./GraphTest.bc" w
 # (val,w) = deserialize graph "./GraphTest" w
 = val
 

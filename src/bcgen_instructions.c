@@ -3950,12 +3950,12 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 	if (list_code)
 		printf("\t.data\n");
 
-	/* Resolve descriptor address */
-	store_data_l(-1);
-
 	if (list_code)
 		printf("%d\t.data4 %d\n",pgrm.data_size<<2,desc0_number);
 	store_data_l(desc0_number);
+
+	/* Resolve descriptor address */
+	store_data_l(-1);
 
 	if (list_code)
 		printf("\t.data4 %s+2\n",label_name);
