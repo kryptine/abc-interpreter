@@ -1,8 +1,12 @@
 implementation module Compiler
 
+import StdFile
 import StdList
 
+import Data.Either
 import Data.Maybe
+
+import ABC.Interpreter
 
 import Compiler.Optimise.Add
 
@@ -26,4 +30,24 @@ where
 		[a:b:rest] -> exec` is [a*b:rest]
 		_          -> Nothing
 
-Start = compile (Add (Lit 1) (Mul (Lit 2) (Add (Lit 3) (Lit 4))))
+Start w
+# (opt_add,w) = testThroughFile optimise_addition "opt_add.graph" w
+# asm = compile program
+# asm = opt_add asm
+= (asm,w)
+where
+	program = Add (Lit 1) (Mul (Lit 2) (Add (Lit 3) (Lit 4)))
+
+testThroughFile :: a !FilePath !*World -> *(a, !*World)
+testThroughFile graph fp w
+# (graph_s,w) = serialize_for_interpretation optimise_addition "./compiler" "./compiler.bc" w
+
+# (ok,f,w) = fopen fp FWriteData w
+# (graph_s,f) = graphToFile graph_s f
+# (_,w) = fclose f w
+
+# (ok,f,w) = fopen fp FReadData w
+# (Right graph_s,f) = graphFromFile f
+# (_,w) = fclose f w
+
+= deserialize graph_s "./compiler" w

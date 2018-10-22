@@ -1394,6 +1394,7 @@ void code_eqAC_a(char *string,int string_length) {
 
 	if (list_code)
 		printf("\t.data\n");
+	store_data_label_value("__STRING__",2);
 	store_string(string,string_length,0);
 	if (list_code)
 		printf("\t.text\n");

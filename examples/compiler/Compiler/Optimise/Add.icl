@@ -11,5 +11,3 @@ optimise_addition = \is -> case is of
 		is                -> [IPush a:is]
 	[i:is] -> [i:optimise_addition is]
 	[]     -> []
-
-Start = optimise_addition

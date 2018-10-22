@@ -8,6 +8,7 @@ import StdMisc
 import StdOrdList
 
 import Data._Array
+import Data.Either
 import Data.Error
 from Data.Func import `on`, on
 import Data.Maybe
@@ -175,3 +176,74 @@ make_finalizer ie_settings = code {
 	set_finalizers
 	pushI 0
 }
+
+graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
+graphToFile {graph,descinfo,modules,bytecode} f
+# (graph_cpy,graph,graph_size) = copy graph
+# f = f <<< graph_size
+# f = f <<< {#c \\ c <- graph_cpy}
+
+# (descinfo_cpy,descinfo,descinfo_size) = copy descinfo
+# f = f <<< descinfo_size
+# f = writeList (\di f -> f <<< di.di_prefix_arity_and_mod <<< size di.di_name <<< di.di_name) descinfo_cpy f
+
+# (modules_cpy,modules,modules_size) = copy modules
+# f = f <<< modules_size
+# f = writeList (\m f -> f <<< size m <<< m) modules_cpy f
+
+# f = f <<< size bytecode
+# f = f <<< bytecode
+
+= ({graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
+where
+	copy :: !*(b a) -> *(![a], !*b a, !Int) | Array b a
+	copy arr
+	# (s,arr) = usize arr
+	# (cpy,arr) = copy (s-1) arr []
+	= (cpy,arr,s)
+	where
+		copy :: !Int !*(b a) ![a] -> *(![a], !*b a) | Array b a
+		copy -1 arr cpy = (cpy, arr)
+		copy i  arr cpy
+		# (x,arr) = arr![i]
+		= copy (i-1) arr [x:cpy]
+
+	writeList :: !(a *File -> *File) ![a] !*File -> *File
+	writeList write [x:xs] f = writeList write xs (write x f)
+	writeList _ [] f = f
+
+graphFromFile :: !*File -> *(!Either String *SerializedGraph, !*File)
+graphFromFile f
+# (graph,f) = readString f
+
+# (_,descinfo_size,f) = freadi f
+# (descinfo,f) = readArray readDescInfo 0 descinfo_size (createArrayUnsafe descinfo_size) f
+
+# (_,modules_size,f) = freadi f
+# (modules,f) = readArray readString 0 modules_size (createArrayUnsafe modules_size) f
+
+# (bytecode,f) = readString f
+
+# (end,f) = fend f
+| not end = (Left "EOF not found after end of graph",f)
+# (err,f) = ferror f
+| err = (Left "I/O error while reading graph",f)
+
+= (Right {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
+where
+	readArray :: !(*File -> *(a, *File)) !Int !Int !*(arr a) !*File -> *(!*arr a, !*File) | Array arr a
+	readArray _ i end xs f | i == end = (xs,f)
+	readArray read i end xs f
+	# (x,f) = read f
+	= readArray read (i+1) end {xs & [i]=x} f
+
+	readDescInfo :: !*File -> *(!DescInfo, !*File)
+	readDescInfo f
+	# (_,prefix_arity_and_mod,f) = freadi f
+	# (name,f) = readString f
+	= ({di_prefix_arity_and_mod=prefix_arity_and_mod, di_name=name}, f)
+
+	readString :: !*File -> *(!.String, !*File)
+	readString f
+	# (_,size,f) = freadi f
+	= freads f size

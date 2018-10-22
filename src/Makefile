@@ -8,7 +8,6 @@ override CFLAGS+=\
 	-Werror\
 	-DPOSIX\
 	-lm
-DIR:="Clean System Files"
 
 all: optimise bcgen link interpret debug
 

@@ -2,19 +2,12 @@
 *.a
 *.abc
 *.tcl
+a.out
+
 *.opt.abc
 *.obc
 *.bc
-a.out
 
-*.aux
-*.bbl
-*.bcf
-*.blg
-*.fdb_latexmk
-*.fls
-*.log
-*.out
-*.pdf
-*.run.xml
-_minted-*/
+*.graph
+
+examples/compiler/compiler
