@@ -51,6 +51,7 @@ int parse_directive_desc(struct instruction*);
 int parse_directive_desc0(struct instruction*);
 int parse_directive_descn(struct instruction*);
 int parse_directive_implab(struct instruction*);
+int parse_directive_implib_impobj(struct instruction*);
 int parse_directive_labels(struct instruction*);
 int parse_directive_module(struct instruction*);
 int parse_directive_n(struct instruction*);

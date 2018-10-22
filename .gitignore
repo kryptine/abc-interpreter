@@ -1,6 +1,11 @@
-Clean System Files/
 *.o
 *.a
+*.abc
+*.tcl
+*.opt.abc
+*.obc
+*.bc
+a.out
 
 *.aux
 *.bbl

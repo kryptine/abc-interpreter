@@ -1465,6 +1465,18 @@ int parse_directive_implab (instruction *instruction)
 	return 1;
 }
 
+int parse_directive_implib_impobj (instruction *instruction)
+{
+	STRING s;
+	int l;
+
+	if (!parse_string (s,&l))
+		return 0;
+
+	skip_spaces_and_tabs();
+	return 1;
+}
+
 int parse_directive_labels (instruction *instruction)
 {
 	STRING s;

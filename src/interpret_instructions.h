@@ -2781,6 +2781,55 @@ INSTRUCTION_BLOCK(fill_ra1):
 	hp+=n_a;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill_r0b):
+{
+	BC_WORD_S bo;
+	BC_WORD *n,n_b,*bo_p;
+
+	n_b=pc[1];
+	NEED_HEAP(n_b);
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
+	bo=((SS*)pc)[4];
+	bo_p=&bsp[bo];
+	n[0]=*(BC_WORD*)&pc[3];
+	n[1]=bo_p[1];
+	n[2]=(BC_WORD)hp;
+	pc+=5;
+	hp[0]=bsp[bo];
+	hp[1]=bo_p[2];
+	hp[2]=bo_p[3];
+	hp[3]=bo_p[4];
+	do {
+		if (n_b< 6) break; hp[ 4]=bo_p[ 5];
+		if (n_b< 7) break; hp[ 5]=bo_p[ 6];
+		if (n_b< 8) break; hp[ 6]=bo_p[ 7];
+		if (n_b< 9) break; hp[ 7]=bo_p[ 8];
+		if (n_b<10) break; hp[ 8]=bo_p[ 9];
+		if (n_b<11) break; hp[ 9]=bo_p[10];
+		if (n_b<12) break; hp[10]=bo_p[11];
+		if (n_b<13) break; hp[11]=bo_p[12];
+		if (n_b<14) break; hp[12]=bo_p[13];
+		if (n_b<15) break; hp[13]=bo_p[14];
+		if (n_b<16) break; hp[14]=bo_p[15];
+		if (n_b<17) break; hp[15]=bo_p[16];
+		if (n_b<18) break; hp[16]=bo_p[17];
+		if (n_b<19) break; hp[17]=bo_p[18];
+		if (n_b<20) break; hp[18]=bo_p[19];
+		if (n_b<21) break; hp[19]=bo_p[20];
+		if (n_b<22) break; hp[20]=bo_p[21];
+		if (n_b<23) break; hp[21]=bo_p[22];
+		if (n_b<24) break; hp[22]=bo_p[23];
+		if (n_b<25) break; hp[23]=bo_p[24];
+		if (n_b<26) break; hp[24]=bo_p[25];
+		if (n_b<27) break; hp[25]=bo_p[26];
+		if (n_b<28) break; hp[26]=bo_p[27];
+		if (n_b<29) break; hp[27]=bo_p[28];
+		if (n_b<30) break; hp[28]=bo_p[29];
+		if (n_b<31) break; hp[29]=bo_p[30];
+	} while (0);
+	hp+=n_b;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fill_r1b):
 {
 	BC_WORD_S ao,bo;
@@ -3653,6 +3702,9 @@ INSTRUCTION_BLOCK(push_b):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_finalizers):
+	fprintf(stderr,"push_finalizers cannot be executed in the interpreter\n");
+	return 1;
 INSTRUCTION_BLOCK(push_node):
 {
 	BC_WORD *n,n_a;
@@ -5391,6 +5443,9 @@ INSTRUCTION_BLOCK(select_r40):
 INSTRUCTION_BLOCK(rtn):
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(set_finalizers):
+	fprintf(stderr,"set_finalizers cannot be executed in the interpreter\n");
+	return 1;
 INSTRUCTION_BLOCK(shiftlI):
 	bsp[1]=bsp[0] << bsp[1];
 	++bsp;

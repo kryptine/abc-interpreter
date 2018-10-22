@@ -39,6 +39,16 @@ uint32_t allocated_data_relocations_size;
 
 static uint32_t Fadd_arg_label_used[N_ADD_ARG_LABELS];
 
+int16_t warned_unsupported_instructions[128]={-1};
+int warned_unsupported_instructions_i=0;
+void unsupported_instruction_warning(int16_t instruction) {
+	for (int i=0; i<warned_unsupported_instructions_i; i++)
+		if (warned_unsupported_instructions[i] == instruction)
+			return;
+	warned_unsupported_instructions[warned_unsupported_instructions_i++] = instruction;
+	fprintf(stderr,"Warning: instruction %s is not supported by the interpreter\n",instruction_name(instruction));
+}
+
 void initialize_code(void) {
 	int i;
 	for(i = 0; i < N_ADD_ARG_LABELS; ++i)
@@ -1968,7 +1978,10 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 		}
 	}
 
-	if (a_size==1 && b_size>=4) {
+	if (a_size==0 && b_size>=4) {
+		add_instruction_w_w_label_offset_w(Cfill_r0b,b_size,-root_offset,descriptor_name,2,b_offset);
+		return;
+	} if (a_size==1 && b_size>=4) {
 		add_instruction_w_w_w_label_offset_w(Cfill_r1b,b_size,-root_offset,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
@@ -2000,6 +2013,11 @@ void code_halt(void) {
 
 void code_incI(void) {
 	add_instruction(CincI);
+}
+
+void code_instruction(CleanInt value) {
+	unsupported_instruction_warning(Cinstruction);
+	add_instruction_i(Cinstruction,value);
 }
 
 void code_is_record(int a_offset) {
@@ -2142,6 +2160,26 @@ void code_jsr_eval(int a_offset) {
 
 void code_lnR(void) {
 	add_instruction(ClnR);
+}
+
+void code_load_i(CleanInt value) {
+	unsupported_instruction_warning(Cload_i);
+	add_instruction_i(Cload_i,value);
+}
+
+void code_load_si16(CleanInt value) {
+	unsupported_instruction_warning(Cload_si16);
+	add_instruction_i(Cload_si16,value);
+}
+
+void code_load_si32(CleanInt value) {
+	unsupported_instruction_warning(Cload_si32);
+	add_instruction_i(Cload_si32,value);
+}
+
+void code_load_ui8(CleanInt value) {
+	unsupported_instruction_warning(Cload_ui8);
+	add_instruction_i(Cload_ui8,value);
 }
 
 void code_log10R(void) {
@@ -2305,6 +2343,16 @@ void code_pushI0_pop_a1() {
 	add_instruction(CpushI0_pop_a1);
 }
 
+void code_pushL(char *label) {
+	unsupported_instruction_warning(CpushL);
+	add_instruction(CpushL);
+}
+
+void code_pushLc(char *label) {
+	unsupported_instruction_warning(CpushLc);
+	add_instruction(CpushLc);
+}
+
 void code_pushR(double r) {
 	add_instruction_r(CpushR,r);
 }
@@ -2427,6 +2475,11 @@ void code_push_arraysize(char element_descriptor[],int a_size,int b_size) {
 
 void code_push_b(int b_offset) {
 	add_instruction_w(Cpush_b,b_offset);
+}
+
+void code_push_finalizers(void) {
+	unsupported_instruction_warning(Cpush_finalizers);
+	add_instruction(Cpush_finalizers);
 }
 
 void code_push_node(char *label_name,int n_arguments) {
@@ -3028,6 +3081,11 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 	exit(1);
 }
 
+void code_set_finalizers(void) {
+	unsupported_instruction_warning(Cset_finalizers);
+	add_instruction(Cset_finalizers);
+}
+
 void code_shiftl(void) {
 	add_instruction(CshiftlI);
 }
@@ -3286,7 +3344,7 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 }
 
 void code_ccall (char *c_function_name,char *s,int length) {
-	fprintf(stderr, "Warning: ccall does not work in the interpreter\n");
+	unsupported_instruction_warning(Cccall);
 	add_instruction(Cccall);
 }
 
