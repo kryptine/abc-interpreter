@@ -112,7 +112,7 @@ get_expression filename w
 	asp bsp csp heap
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
-# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreate 1}
+# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
 = (interpret ie (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
@@ -146,7 +146,7 @@ add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize, {copy 0 arraysize nodes (unsafeCreate (arraysize+100)) & [arraysize]=node}, arraysize+1)
+	= (arraysize, {copy 0 arraysize nodes (unsafeCreateArray (arraysize+100)) & [arraysize]=node}, arraysize+1)
 | otherwise
 	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where
@@ -504,7 +504,7 @@ new_parser syms
 where
 	symbol_n = size syms
 	symbol_string_length = sum [size s.symbol_name \\ s <-: syms]
-	symbol_string = build_symbol_string 0 0 (createArrayUnsafe (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
+	symbol_string = build_symbol_string 0 0 (unsafeCreateArray (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
 
 	build_symbol_string :: !Int !Int !*{#Char}-> *{#Char}
 	build_symbol_string i j s
