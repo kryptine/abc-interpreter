@@ -84,7 +84,7 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 	asp bsp csp heap
 # graph_node = string_to_interpreter graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
-# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreate 1}
+# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where
 	matchSymbols :: ![Symbol] ![Symbol] -> [Symbol]
@@ -148,7 +148,7 @@ get_start_rule_as_expression filename w
 	asp bsp csp heap
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
-# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreate 1}
+# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
 = (interpret ie (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
@@ -217,10 +217,10 @@ graphFromFile f
 # (graph,f) = readString f
 
 # (_,descinfo_size,f) = freadi f
-# (descinfo,f) = readArray readDescInfo 0 descinfo_size (createArrayUnsafe descinfo_size) f
+# (descinfo,f) = readArray readDescInfo 0 descinfo_size (unsafeCreateArray descinfo_size) f
 
 # (_,modules_size,f) = freadi f
-# (modules,f) = readArray readString 0 modules_size (createArrayUnsafe modules_size) f
+# (modules,f) = readArray readString 0 modules_size (unsafeCreateArray modules_size) f
 
 # (bytecode,f) = readString f
 

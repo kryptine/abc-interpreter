@@ -13,7 +13,7 @@ add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize, {copy 0 arraysize nodes (unsafeCreate (arraysize+100)) & [arraysize]=node}, arraysize+1)
+	= (arraysize, {copy 0 arraysize nodes (unsafeCreateArray (arraysize+100)) & [arraysize]=node}, arraysize+1)
 | otherwise
 	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where

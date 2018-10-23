@@ -41,7 +41,7 @@ new_parser syms
 where
 	symbol_n = size syms
 	symbol_string_length = sum [size s.symbol_name \\ s <-: syms]
-	symbol_string = build_symbol_string 0 0 (createArrayUnsafe (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
+	symbol_string = build_symbol_string 0 0 (unsafeCreateArray (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
 
 	build_symbol_string :: !Int !Int !*{#Char}-> *{#Char}
 	build_symbol_string i j s
