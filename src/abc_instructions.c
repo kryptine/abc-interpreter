@@ -124,7 +124,7 @@ char *instruction_type (BC_WORD i) {
 		case CdivR:                  return "";
 		case CentierR:               return "";
 		case CeqAC:                  return "";
-		case CeqAC_a:                return "S";
+		case CeqAC_a:                return "s";
 		case CeqB:                   return "";
 		case CeqB_aFALSE:            return "n";
 		case CeqB_aTRUE:             return "n";
