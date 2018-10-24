@@ -1,5 +1,5 @@
-test:
-  image: "camilstaps/clean:nightly"
+.base:
+  image: camilstaps/clean:nightly
   before_script:
     - dpkg --add-architecture i386
     - apt-get update -qq
@@ -15,25 +15,47 @@ test:
     - ln -s "$PWD/src/link" /opt/clean/lib/exe/bclink
     - make -C src
     - clm -bytecode -O _system
-  script:
-    - cd src
-    - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B
 
-    - (cd ../test; ./run_tests.sh -Rqo functions)
+build:
+  extends: .base
+  script:
+    - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B -C src
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B -C src
+
+test-gc:
+  extends: .base
+  script:
+    - cd test
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
+
+interworking-from-Start:
+  extends: .base
+  script:
+    - (cd test; ./run_tests.sh -Rqo functions)
+    - cd src
     - make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
+interworking-with-GraphCopy:
+  extends: .base
+  script:
+    - cd src
     - make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
+benchmark:
+  extends: .base
+  script:
     - cd ../test
     - ./run_tests.sh --benchmark --fast
-    - ./run_tests.sh --32-bit --benchmark --fast
 
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
+benchmark-x86:
+  extends: .base
+  script:
+    - cd ../test
+    - ./run_tests.sh --32-bit --benchmark --fast
