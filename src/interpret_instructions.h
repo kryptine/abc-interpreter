@@ -4510,50 +4510,28 @@ INSTRUCTION_BLOCK(replaceREAL):
 	++bsp;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(replace_ra):
+INSTRUCTION_BLOCK(replace_r):
 {
-	BC_WORD *array,array_o,*a;
-	BC_WORD_S n_a;
+	BC_WORD *array,array_o,*a,*b;
+	BC_WORD_S n_a,n_b;
 
 	n_a=pc[1];
-	array_o = (n_a * (BC_WORD_S)*bsp++) + 3;
+	n_b=pc[2];
+	array_o = ((n_a+n_b) * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
-	pc+=2;
-	a = &array[array_o];
-	asp[ 0]=a[0]; a[0]=asp[-1];
-	asp[-1]=a[1]; a[1]=asp[-2];
-	asp[-2]=a[2]; a[2]=asp[-3];
-	asp[-3]=a[3]; a[3]=asp[-4];
-	asp[-4]=a[4]; a[4]=asp[-5];
-	do {
-		if (n_a< 6) break; asp[ -5]=a[ 5]; a[ 5]=asp[ -6];
-		if (n_a< 7) break; asp[ -6]=a[ 6]; a[ 6]=asp[ -7];
-		if (n_a< 8) break; asp[ -7]=a[ 7]; a[ 7]=asp[ -8];
-		if (n_a< 9) break; asp[ -8]=a[ 8]; a[ 8]=asp[ -9];
-		if (n_a<10) break; asp[ -9]=a[ 9]; a[ 9]=asp[-10];
-		if (n_a<11) break; asp[-10]=a[10]; a[10]=asp[-11];
-		if (n_a<12) break; asp[-11]=a[11]; a[11]=asp[-12];
-		if (n_a<13) break; asp[-12]=a[12]; a[12]=asp[-13];
-		if (n_a<14) break; asp[-13]=a[13]; a[13]=asp[-14];
-		if (n_a<15) break; asp[-14]=a[14]; a[14]=asp[-15];
-		if (n_a<16) break; asp[-15]=a[15]; a[15]=asp[-16];
-		if (n_a<17) break; asp[-16]=a[16]; a[16]=asp[-17];
-		if (n_a<18) break; asp[-17]=a[17]; a[17]=asp[-18];
-		if (n_a<19) break; asp[-18]=a[18]; a[18]=asp[-19];
-		if (n_a<20) break; asp[-19]=a[19]; a[19]=asp[-20];
-		if (n_a<21) break; asp[-20]=a[20]; a[20]=asp[-21];
-		if (n_a<22) break; asp[-21]=a[21]; a[21]=asp[-22];
-		if (n_a<23) break; asp[-22]=a[22]; a[22]=asp[-23];
-		if (n_a<24) break; asp[-23]=a[23]; a[23]=asp[-24];
-		if (n_a<25) break; asp[-24]=a[24]; a[24]=asp[-25];
-		if (n_a<26) break; asp[-25]=a[25]; a[25]=asp[-26];
-		if (n_a<27) break; asp[-26]=a[26]; a[26]=asp[-27];
-		if (n_a<28) break; asp[-27]=a[27]; a[27]=asp[-28];
-		if (n_a<29) break; asp[-28]=a[28]; a[28]=asp[-29];
-		if (n_a<30) break; asp[-29]=a[29]; a[29]=asp[-30];
-		if (n_a<31) break; asp[-30]=a[30]; a[30]=asp[-31];
-		if (n_a<32) break; asp[-31]=a[31]; a[31]=asp[-32];
-	} while (0);
+	pc+=3;
+	a=&array[array_o];
+	b=a+n_a;
+
+	for (int i=0; i<n_a; i++) {
+		asp[-i]=a[i];
+		a[i]=asp[-1-i];
+	}
+	for (int i=0; i<n_b; i++) {
+		BC_WORD temp=b[i];
+		b[i]=bsp[i];
+		bsp[i]=temp;
+	}
 	asp[-n_a]=(BC_WORD)array;
 	END_INSTRUCTION_BLOCK;
 }

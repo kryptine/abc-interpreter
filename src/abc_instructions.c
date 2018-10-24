@@ -343,7 +343,7 @@ char *instruction_type (BC_WORD i) {
 		case CreplaceCHAR:           return "";
 		case CreplaceINT:            return "";
 		case CreplaceREAL:           return "";
-		case Creplace_ra:            return "?";
+		case Creplace_r:             return "nn";
 		case Crepl_args1:            return "";
 		case Crepl_args2:            return "";
 		case Crepl_args3:            return "";

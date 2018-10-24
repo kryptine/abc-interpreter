@@ -2813,14 +2813,8 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 			}
 	}
 
-
-	if (a_size>4 && b_size==0) {
-		add_instruction_w(Creplace_ra,a_size);
-		return;
-	}
-
-	fprintf(stderr, "Error: replace %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);
+	add_instruction_w_w(Creplace_r,a_size,b_size);
+	return;
 }
 
 void code_repl_arg(int arity,int argument_n) {

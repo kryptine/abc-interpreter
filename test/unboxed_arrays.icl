@@ -24,4 +24,4 @@ t2_3 = {t2_x=t1_3, t2_y=3}
 t2s :: .{#T2}
 t2s = {if (i rem 2 == 0) t2_1 t2_2 \\ i <- [0..10]}
 
-Start = {t2s & [2]=t2_3}
+Start = replace t2s 2 t2_3

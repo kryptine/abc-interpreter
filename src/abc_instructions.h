@@ -327,7 +327,7 @@ enum {
 	INSTRUCTION(replaceCHAR)
 	INSTRUCTION(replaceINT)
 	INSTRUCTION(replaceREAL)
-	INSTRUCTION(replace_ra)
+	INSTRUCTION(replace_r)
 	INSTRUCTION(repl_args)
 	INSTRUCTION(repl_args1)
 	INSTRUCTION(repl_args2)
