@@ -25,8 +25,7 @@ build:
   extends: .base
   stage: build
   script:
-    - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B -C src
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B -C src
+    - CFLAGS='-DDEBUG_ALL_INSTRUCTIONS -DDEBUG_CLEAN_LINKS=10 -DDEBUG_GARBAGE_COLLECTOR=10' make -B -C src
 
 test-gc:
   extends: .base
@@ -40,7 +39,7 @@ benchmark:
   extends: .base
   stage: test-interpreter
   script:
-    - cd ../test
+    - cd test
     - ./run_tests.sh --benchmark --fast
     - ./run_tests.sh --32-bit --benchmark --fast
 
