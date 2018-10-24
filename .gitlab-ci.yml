@@ -1,3 +1,8 @@
+stages:
+  - build
+  - test-interpreter
+  - test-interworking
+
 .base:
   image: camilstaps/clean:nightly
   before_script:
@@ -18,19 +23,30 @@
 
 build:
   extends: .base
+  stage: build
   script:
     - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B -C src
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B -C src
 
 test-gc:
   extends: .base
+  stage: test-interpreter
   script:
     - cd test
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
 
+benchmark:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd ../test
+    - ./run_tests.sh --benchmark --fast
+    - ./run_tests.sh --32-bit --benchmark --fast
+
 interworking-from-Start:
   extends: .base
+  stage: test-interworking
   script:
     - (cd test; ./run_tests.sh -Rqo functions)
     - cd src
@@ -41,21 +57,10 @@ interworking-from-Start:
 
 interworking-with-GraphCopy:
   extends: .base
+  stage: test-interworking
   script:
     - cd src
     - make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
-
-benchmark:
-  extends: .base
-  script:
-    - cd ../test
-    - ./run_tests.sh --benchmark --fast
-
-benchmark-x86:
-  extends: .base
-  script:
-    - cd ../test
-    - ./run_tests.sh --32-bit --benchmark --fast
