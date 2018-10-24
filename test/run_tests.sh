@@ -128,6 +128,7 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 fi
 
 CFLAGS="$CFLAGS" make -BC ../src optimise bcgen link interpret || exit 1
+$CLM -bytecode -O _system
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null

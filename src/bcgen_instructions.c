@@ -3188,7 +3188,10 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		return;
 	}
 
-	if (a_size>=2 && b_size>=2) {
+	if (a_size==0) {
+		add_instruction_w(Cupdate_r0b,b_size);
+		return;
+	} else if (a_size>=2 && b_size>=2) {
 		add_instruction_w_w_w(Cupdate_r,a_size+b_size,a_size,b_size);
 		return;
 	} else if (a_size>3 && b_size==1) {

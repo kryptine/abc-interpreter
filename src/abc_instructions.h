@@ -394,6 +394,7 @@ enum {
 	INSTRUCTION(update_b)
 	INSTRUCTION(update_r)
 	INSTRUCTION(update_r02)
+	INSTRUCTION(update_r0b)
 	INSTRUCTION(update_r11)
 	INSTRUCTION(update_r12)
 	INSTRUCTION(update_r20)

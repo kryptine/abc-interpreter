@@ -3343,13 +3343,17 @@ INSTRUCTION_BLOCK(print):
 }
 INSTRUCTION_BLOCK(printD):
 {
-	uint32_t *s;
-	int l,i;
+	BC_WORD *s;
+	BC_WORD l,i;
 	char *cs;
 
-	s=(uint32_t*)*bsp++;
+	s=(BC_WORD*)*bsp++;
 	l=s[0];
-	cs=(char*)&s[IF_INT_64_OR_32(2,1)];
+	if (l>256) { /* record; skip arity and type string */
+		s+=2+s[1]/IF_INT_64_OR_32(8,4)+(s[1]%IF_INT_64_OR_32(8,4) ? 1 : 0);
+		l=s[0];
+	}
+	cs=(char*)&s[1];
 	for (i=0; i<l; ++i) {
 		PUTCHAR(cs[i]);
 	}
@@ -5731,6 +5735,20 @@ INSTRUCTION_BLOCK(update_r02):
 	bsp+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(update_r0b):
+{
+	BC_WORD *array,array_o,*element_p,n;
+
+	n=pc[1];
+	array_o = n * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=2;
+	element_p = &array[array_o+3];
+	for (int i=0; i<n; i++)
+		element_p[i]=bsp[i];
+	bsp+=n;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(update_r11):
 {
 	BC_WORD *array,array_o,*element_p;
@@ -7341,7 +7359,32 @@ INSTRUCTION_BLOCK(push_t_r_args):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(push_a_r_args): // voor unboxed array van records. Op A-stack array, op B-stack elementnummer, maak een kopie op de stack
+INSTRUCTION_BLOCK(push_a_r_args):
+	/* Unboxed array of records in asp[0], index in bsp[0].
+	 * Copy elements to the stacks and push record descriptor to B-stack. */
+{
+	BC_WORD *array,*desc,n,array_o,*a,*b;
+	int16_t a_arity,b_arity,ab_arity;
+
+	pc+=1;
+	n=*bsp++;
+	array=(BC_WORD*)asp[0];
+	desc=(BC_WORD*)array[2];
+	ab_arity=((int16_t*)desc)[0]-256;
+	a_arity=((int16_t*)desc)[1];
+	b_arity=ab_arity-a_arity;
+	array_o=(ab_arity*n)+3;
+	a=&array[array_o];
+	b=a+a_arity;
+	for (int i=0;i<a_arity;i++)
+		asp[i]=a[i];
+	asp+=a_arity-1;
+	bsp-=b_arity;
+	for (int i=0;i<b_arity;i++)
+		bsp[i]=b[i];
+	*--bsp=(BC_WORD)(desc+2);
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
 INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
 

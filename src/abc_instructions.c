@@ -409,6 +409,7 @@ char *instruction_type (BC_WORD i) {
 		case Cupdate_ra:             return "?";
 		case Cupdate_ra1:            return "?";
 		case Cupdate_r02:            return "";
+		case Cupdate_r0b:            return "n";
 		case Cupdate_r11:            return "";
 		case Cupdate_r12:            return "";
 		case Cupdate_r20:            return "";
