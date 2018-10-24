@@ -4,17 +4,8 @@ stages:
   - test-interworking
 
 .base:
-  image: camilstaps/clean:nightly
+  image: camilstaps/abc-interpreter
   before_script:
-    - dpkg --add-architecture i386
-    - apt-get update -qq
-    - apt-get install -y -qq --no-install-recommends build-essential gcc-multilib time bc libncurses5-dev libncurses5-dev:i386 git
-    - install_clean_nightly.sh base lib-platform lib-dynamics lib-graphcopy
-
-    - git clone https://gitlab.science.ru.nl/cstaps/clean-tools /tmp/clean-tools
-    - make -C /tmp/clean-tools/clm -f Makefile.linux64
-    - mv /tmp/clean-tools/clm/clm /opt/clean/bin
-
     - ln -s "$PWD/src/optimise" /opt/clean/lib/exe/optimise
     - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
     - ln -s "$PWD/src/link" /opt/clean/lib/exe/bclink
@@ -35,12 +26,18 @@ test-gc:
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
 
-benchmark:
+benchmark-x64:
   extends: .base
   stage: test-interpreter
   script:
     - cd test
     - ./run_tests.sh --benchmark --fast
+
+benchmark-x86:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd test
     - ./run_tests.sh --32-bit --benchmark --fast
 
 interworking-from-Start:
