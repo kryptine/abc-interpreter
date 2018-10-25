@@ -31,6 +31,12 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 		heap[0]=(BC_WORD)&INT+2;
 		heap[1]=node[1];
 		return 2;
+	} else if (node[0] == (BC_WORD)&CHAR+2 ||
+			node[0] == (BC_WORD)&REAL+2 ||
+			node[0] == (BC_WORD)&BOOL+2) {
+		heap[0]=node[0];
+		heap[1]=node[1];
+		return 2;
 	}
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
@@ -88,6 +94,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			heap[3]=length;
 			heap[4]=0;
 			BC_WORD *new_array=&heap[5];
+			heap+=5+length;
 			for (int i=0; i<length; i++) {
 				nodeid = __interpret__add__shared__node(ie->host->clean_ie, (BC_WORD*)arr[i+3]);
 				new_array[i]=(BC_WORD)heap;

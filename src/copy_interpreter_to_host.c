@@ -291,9 +291,22 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 				words=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+3;
 			else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
 				words=len+3;
-			else {
-				fprintf(stderr,"TODO: boxed array\n");
-				exit(1);
+			else { /* boxed array */
+				int words_needed = 5+len+(3+FINALIZER_SIZE_ON_HEAP)*len;
+				if (host_heap_free < words_needed)
+					return -2;
+				host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
+				host_heap[1]=(BC_WORD) &host_heap[2];
+				host_heap[2]=arr[0];
+				host_heap[3]=arr[1];
+				host_heap[4]=arr[2];
+				BC_WORD *new_array=&host_heap[5];
+				host_heap+=5+len;
+				for (int i=0; i<len; i++) {
+					new_array[i]=(BC_WORD)host_heap;
+					host_heap=make_interpret_node(host_heap, clean_ie, arr[i+3], 0);
+				}
+				return words_needed;
 			}
 			if (host_heap_free < words+2)
 				return -2;
