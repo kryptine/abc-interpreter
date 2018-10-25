@@ -45,7 +45,7 @@ void init_parser(struct parser *state
 
 	char *symbol_strings = state->program->host_symbols_strings;
 	for (int i = 0; i < host_symbols_n; i++) {
-		state->program->host_symbols[i].interpreter_location = NULL;
+		state->program->host_symbols[i].interpreter_location = (void*) -1;
 		state->program->host_symbols[i].location = *(void**)host_symbols;
 		host_symbols += IF_INT_64_OR_32(8,4);
 		state->program->host_symbols[i].name = symbol_strings;
@@ -54,6 +54,10 @@ void init_parser(struct parser *state
 		*symbol_strings++ = '\0';
 		host_symbols++;
 	}
+
+	/* TODO: pre-seed the symbol matching with more descriptors that are not in the bytecode */
+	find_host_symbol_by_name(state->program, "INT")->interpreter_location = (void*) &INT;
+	find_host_symbol_by_name(state->program, "dINT")->interpreter_location = (void*) &dINT;
 #endif
 
 #ifdef LINKER
@@ -501,6 +505,16 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset *= 2;
 # endif
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
+
+# ifdef LINK_CLEAN_RUNTIME
+					if (state->program->symbol_table[state->ptr].name[0]) {
+						/* Descriptor has a _hnf code address */
+						struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
+						if (host_sym != NULL) {
+							host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
+						}
+					}
+# endif
 				}
 #endif
 #ifdef LINKER

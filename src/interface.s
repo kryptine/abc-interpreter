@@ -127,7 +127,7 @@ __interpret__copy__node__asm__n:
 	mov	rax,[rbp+8]
 __interpret__copy__node__asm__n_adding_shared_nodes:
 	push	r9
-	call	e__CodeSharing__sadd__shared__node
+	call	e__ABC_PInterpreter_PInternal__sadd__shared__node
 	pop	r9
 	push	rbx
 	test	r9,r9
@@ -251,7 +251,7 @@ __interpret__add__shared__node:
 	push	rdi
 	restore_host_status_via_rdi
 
-	call	e__CodeSharing__sadd__shared__node
+	call	e__ABC_PInterpreter_PInternal__sadd__shared__node
 
 	pop	rbp
 	save_host_status_via_rbp

@@ -109,6 +109,7 @@ where
 	| start >= size line   = (StringLit (toString (reverse cs)), start)
 	| isSpace line.[start] = (StringLit (toString (reverse cs)), start)
 	| otherwise            = stringlit [line.[start]:cs] (start + 1) line
+parseLine`{|StringWithSpaces|} = \i s -> Just (StringWithSpaces (s % (i,size s-1)), size s-1)
 
 parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 	"IIns"            -> Nothing

@@ -39,6 +39,16 @@ uint32_t allocated_data_relocations_size;
 
 static uint32_t Fadd_arg_label_used[N_ADD_ARG_LABELS];
 
+int16_t warned_unsupported_instructions[128]={-1};
+int warned_unsupported_instructions_i=0;
+void unsupported_instruction_warning(int16_t instruction) {
+	for (int i=0; i<warned_unsupported_instructions_i; i++)
+		if (warned_unsupported_instructions[i] == instruction)
+			return;
+	warned_unsupported_instructions[warned_unsupported_instructions_i++] = instruction;
+	fprintf(stderr,"Warning: instruction %s is not supported by the interpreter\n",instruction_name(instruction));
+}
+
 void initialize_code(void) {
 	int i;
 	for(i = 0; i < N_ADD_ARG_LABELS; ++i)
@@ -1892,6 +1902,10 @@ void code_fillF_b(int b_offset,int a_offset) {
 	add_instruction_w_w(CfillF_b,-a_offset,b_offset);
 }
 
+void code_fillI(CleanInt value,int a_offset) {
+	add_instruction_i_w(CfillI,value,-a_offset);
+}
+
 void code_fillI_b(int b_offset,int a_offset) {
 	add_instruction_w_w(CfillI_b,-a_offset,b_offset);
 }
@@ -1964,7 +1978,10 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 		}
 	}
 
-	if (a_size==1 && b_size>=4) {
+	if (a_size==0 && b_size>=4) {
+		add_instruction_w_w_label_offset_w(Cfill_r0b,b_size,-root_offset,descriptor_name,2,b_offset);
+		return;
+	} else if (a_size==1 && b_size>=4) {
 		add_instruction_w_w_w_label_offset_w(Cfill_r1b,b_size,-root_offset,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
@@ -1998,6 +2015,11 @@ void code_incI(void) {
 	add_instruction(CincI);
 }
 
+void code_instruction(CleanInt value) {
+	unsupported_instruction_warning(Cinstruction);
+	add_instruction_i(Cinstruction,value);
+}
+
 void code_is_record(int a_offset) {
 	add_instruction_w(Cis_record, a_offset);
 }
@@ -2016,21 +2038,16 @@ void code_jmp(char label_name[]) {
 }
 
 void code_jmp_ap(int n_apply_args) {
-	if (n_apply_args==1) {
-		add_instruction(Cjmp_ap1);
-		return;
+	switch (n_apply_args) {
+		case 1: add_instruction(Cjmp_ap1); break;
+		case 2: add_instruction(Cjmp_ap2); break;
+		case 3: add_instruction(Cjmp_ap3); break;
+		case 4: add_instruction(Cjmp_ap4); break;
+		case 5: add_instruction(Cjmp_ap5); break;
+		default:
+			fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
+			exit(1);
 	}
-	if (n_apply_args==2) {
-		add_instruction(Cjmp_ap2);
-		return;
-	}
-	if (n_apply_args==3) {
-		add_instruction(Cjmp_ap3);
-		return;
-	}
-
-	fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
-	exit(1);
 }
 
 void code_jmp_eval(void) {
@@ -2143,6 +2160,26 @@ void code_jsr_eval(int a_offset) {
 
 void code_lnR(void) {
 	add_instruction(ClnR);
+}
+
+void code_load_i(CleanInt value) {
+	unsupported_instruction_warning(Cload_i);
+	add_instruction_i(Cload_i,value);
+}
+
+void code_load_si16(CleanInt value) {
+	unsupported_instruction_warning(Cload_si16);
+	add_instruction_i(Cload_si16,value);
+}
+
+void code_load_si32(CleanInt value) {
+	unsupported_instruction_warning(Cload_si32);
+	add_instruction_i(Cload_si32,value);
+}
+
+void code_load_ui8(CleanInt value) {
+	unsupported_instruction_warning(Cload_ui8);
+	add_instruction_i(Cload_ui8,value);
 }
 
 void code_log10R(void) {
@@ -2306,6 +2343,16 @@ void code_pushI0_pop_a1() {
 	add_instruction(CpushI0_pop_a1);
 }
 
+void code_pushL(char *label) {
+	unsupported_instruction_warning(CpushL);
+	add_instruction(CpushL);
+}
+
+void code_pushLc(char *label) {
+	unsupported_instruction_warning(CpushLc);
+	add_instruction(CpushLc);
+}
+
 void code_pushR(double r) {
 	add_instruction_r(CpushR,r);
 }
@@ -2428,6 +2475,11 @@ void code_push_arraysize(char element_descriptor[],int a_size,int b_size) {
 
 void code_push_b(int b_offset) {
 	add_instruction_w(Cpush_b,b_offset);
+}
+
+void code_push_finalizers(void) {
+	unsupported_instruction_warning(Cpush_finalizers);
+	add_instruction(Cpush_finalizers);
 }
 
 void code_push_node(char *label_name,int n_arguments) {
@@ -2761,14 +2813,8 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 			}
 	}
 
-
-	if (a_size>4 && b_size==0) {
-		add_instruction_w(Creplace_ra,a_size);
-		return;
-	}
-
-	fprintf(stderr, "Error: replace %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);
+	add_instruction_w_w(Creplace_r,a_size,b_size);
+	return;
 }
 
 void code_repl_arg(int arity,int argument_n) {
@@ -2987,6 +3033,10 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 		add_instruction(Cselect_r02);
 		return;
 	}
+	if (a_size==1 && b_size==1) {
+		add_instruction(Cselect_r11);
+		return;
+	}
 	if (a_size==1 && b_size==2) {
 		add_instruction(Cselect_r12);
 		return;
@@ -3023,6 +3073,11 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 
 	fprintf(stderr, "Error: select %s %d %d\n",element_descriptor,a_size,b_size);
 	exit(1);
+}
+
+void code_set_finalizers(void) {
+	unsupported_instruction_warning(Cset_finalizers);
+	add_instruction(Cset_finalizers);
 }
 
 void code_shiftl(void) {
@@ -3099,6 +3154,10 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		add_instruction(Cupdate_r02);
 		return;
 	}
+	if (a_size==1 && b_size==1) {
+		add_instruction(Cupdate_r11);
+		return;
+	}
 	if (a_size==1 && b_size==2) {
 		add_instruction(Cupdate_r12);
 		return;
@@ -3122,7 +3181,10 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 		return;
 	}
 
-	if (a_size>=2 && b_size>=2) {
+	if (a_size==0) {
+		add_instruction_w(Cupdate_r0b,b_size);
+		return;
+	} else if (a_size>=2 && b_size>=2) {
 		add_instruction_w_w_w(Cupdate_r,a_size+b_size,a_size,b_size);
 		return;
 	} else if (a_size>3 && b_size==1) {
@@ -3276,6 +3338,11 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 		add_instruction_w_label(Cbuild_r20,-a_offset1,code_name);
 	else
 		add_instruction_w_w_label(Cbuildo2,-a_offset1,-a_offset2,code_name);
+}
+
+void code_ccall (char *c_function_name,char *s,int length) {
+	unsupported_instruction_warning(Cccall);
+	add_instruction(Cccall);
 }
 
 void code_dup_a(int a_offset) {
@@ -3880,12 +3947,12 @@ void code_desc0(char label_name[],int desc0_number,char descriptor_name[],int de
 	if (list_code)
 		printf("\t.data\n");
 
-	/* Resolve descriptor address */
-	store_data_l(-1);
-
 	if (list_code)
 		printf("%d\t.data4 %d\n",pgrm.data_size<<2,desc0_number);
 	store_data_l(desc0_number);
+
+	/* Resolve descriptor address */
+	store_data_l(-1);
 
 	if (list_code)
 		printf("\t.data4 %s+2\n",label_name);

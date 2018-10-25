@@ -1,27 +1,70 @@
-test:
-  image: "camilstaps/clean:base"
-  before_script:
-    - dpkg --add-architecture i386
-    - apt-get update -qq
-    - apt-get install -y -qq --no-install-recommends ca-certificates curl tar build-essential gcc-multilib time bc libncurses5-dev libncurses5-dev:i386
-    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-base-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
-    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-platform-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
-    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-dynamics-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
-    - curl https://ftp.cs.ru.nl/Clean/builds/linux-x64/clean-lib-graphcopy-linux-x64-latest.tgz | tar xzv --strip-components=1 -C /opt/clean
-  script:
-    - cd src
-    - CFLAGS=-DDEBUG_ALL_INSTRUCTIONS make -B
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR=10 make -B
+stages:
+  - build
+  - test-interpreter
+  - test-interworking
+  - examples
 
-    - (cd ../test; ./run_tests.sh -Rqo functions)
+.base:
+  image: camilstaps/abc-interpreter
+  before_script:
+    - ln -s "$PWD/src/optimise" /opt/clean/lib/exe/optimise
+    - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
+    - ln -s "$PWD/src/link" /opt/clean/lib/exe/bclink
+    - make -C src
+    - clm -bytecode -O _system
+
+build:
+  extends: .base
+  stage: build
+  script:
+    - CFLAGS='-DDEBUG_ALL_INSTRUCTIONS -DDEBUG_CLEAN_LINKS=10 -DDEBUG_GARBAGE_COLLECTOR=10' make -B -C src
+
+test-gc:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd test
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
+
+benchmark-x64:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd test
+    - ./run_tests.sh --benchmark --fast
+
+benchmark-x86:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd test
+    - ./run_tests.sh --32-bit --benchmark --fast
+
+interworking-from-Start:
+  extends: .base
+  stage: test-interworking
+  script:
+    - (cd test; ./run_tests.sh -Rqo functions)
+    - cd src
     - make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
-    - cd ../test
-    - ./run_tests.sh --benchmark --fast
-    - ./run_tests.sh --32-bit --benchmark --fast
+interworking-with-GraphCopy:
+  extends: .base
+  stage: test-interworking
+  script:
+    - cd src
+    - make -B GraphTest
+    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
+    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
+examples:
+  extends: .base
+  stage: examples
+  script:
+    - cd examples
+    - ./test.sh

@@ -2531,6 +2531,17 @@ INSTRUCTION_BLOCK(fillF_b):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fillI):
+{
+	BC_WORD *n,i;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	i=(BC_WORD_S)pc[2];
+	n[0]=(BC_WORD)&INT+2;
+	n[1]=i;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fillI_b):
 {
 	BC_WORD *n,i;
@@ -2765,6 +2776,55 @@ INSTRUCTION_BLOCK(fill_ra1):
 	pc+=6;
 	hp[n_a-1]=bsp[bo];
 	hp+=n_a;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill_r0b):
+{
+	BC_WORD_S bo;
+	BC_WORD *n,n_b,*bo_p;
+
+	n_b=pc[1];
+	NEED_HEAP(n_b);
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
+	bo=((SS*)pc)[4];
+	bo_p=&bsp[bo];
+	n[0]=*(BC_WORD*)&pc[3];
+	n[1]=bo_p[1];
+	n[2]=(BC_WORD)hp;
+	pc+=5;
+	hp[0]=bsp[bo];
+	hp[1]=bo_p[2];
+	hp[2]=bo_p[3];
+	hp[3]=bo_p[4];
+	do {
+		if (n_b< 6) break; hp[ 4]=bo_p[ 5];
+		if (n_b< 7) break; hp[ 5]=bo_p[ 6];
+		if (n_b< 8) break; hp[ 6]=bo_p[ 7];
+		if (n_b< 9) break; hp[ 7]=bo_p[ 8];
+		if (n_b<10) break; hp[ 8]=bo_p[ 9];
+		if (n_b<11) break; hp[ 9]=bo_p[10];
+		if (n_b<12) break; hp[10]=bo_p[11];
+		if (n_b<13) break; hp[11]=bo_p[12];
+		if (n_b<14) break; hp[12]=bo_p[13];
+		if (n_b<15) break; hp[13]=bo_p[14];
+		if (n_b<16) break; hp[14]=bo_p[15];
+		if (n_b<17) break; hp[15]=bo_p[16];
+		if (n_b<18) break; hp[16]=bo_p[17];
+		if (n_b<19) break; hp[17]=bo_p[18];
+		if (n_b<20) break; hp[18]=bo_p[19];
+		if (n_b<21) break; hp[19]=bo_p[20];
+		if (n_b<22) break; hp[20]=bo_p[21];
+		if (n_b<23) break; hp[21]=bo_p[22];
+		if (n_b<24) break; hp[22]=bo_p[23];
+		if (n_b<25) break; hp[23]=bo_p[24];
+		if (n_b<26) break; hp[24]=bo_p[25];
+		if (n_b<27) break; hp[25]=bo_p[26];
+		if (n_b<28) break; hp[26]=bo_p[27];
+		if (n_b<29) break; hp[27]=bo_p[28];
+		if (n_b<30) break; hp[28]=bo_p[29];
+		if (n_b<31) break; hp[29]=bo_p[30];
+	} while (0);
+	hp+=n_b;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill_r1b):
@@ -3283,13 +3343,17 @@ INSTRUCTION_BLOCK(print):
 }
 INSTRUCTION_BLOCK(printD):
 {
-	uint32_t *s;
-	int l,i;
+	BC_WORD *s;
+	BC_WORD l,i;
 	char *cs;
 
-	s=(uint32_t*)*bsp++;
+	s=(BC_WORD*)*bsp++;
 	l=s[0];
-	cs=(char*)&s[IF_INT_64_OR_32(2,1)];
+	if (l>256) { /* record; skip arity and type string */
+		s+=2+s[1]/IF_INT_64_OR_32(8,4)+(s[1]%IF_INT_64_OR_32(8,4) ? 1 : 0);
+		l=s[0];
+	}
+	cs=(char*)&s[1];
 	for (i=0; i<l; ++i) {
 		PUTCHAR(cs[i]);
 	}
@@ -4446,50 +4510,28 @@ INSTRUCTION_BLOCK(replaceREAL):
 	++bsp;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(replace_ra):
+INSTRUCTION_BLOCK(replace_r):
 {
-	BC_WORD *array,array_o,*a;
-	BC_WORD_S n_a;
+	BC_WORD *array,array_o,*a,*b;
+	BC_WORD_S n_a,n_b;
 
 	n_a=pc[1];
-	array_o = (n_a * (BC_WORD_S)*bsp++) + 3;
+	n_b=pc[2];
+	array_o = ((n_a+n_b) * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
-	pc+=2;
-	a = &array[array_o];
-	asp[ 0]=a[0]; a[0]=asp[-1];
-	asp[-1]=a[1]; a[1]=asp[-2];
-	asp[-2]=a[2]; a[2]=asp[-3];
-	asp[-3]=a[3]; a[3]=asp[-4];
-	asp[-4]=a[4]; a[4]=asp[-5];
-	do {
-		if (n_a< 6) break; asp[ -5]=a[ 5]; a[ 5]=asp[ -6];
-		if (n_a< 7) break; asp[ -6]=a[ 6]; a[ 6]=asp[ -7];
-		if (n_a< 8) break; asp[ -7]=a[ 7]; a[ 7]=asp[ -8];
-		if (n_a< 9) break; asp[ -8]=a[ 8]; a[ 8]=asp[ -9];
-		if (n_a<10) break; asp[ -9]=a[ 9]; a[ 9]=asp[-10];
-		if (n_a<11) break; asp[-10]=a[10]; a[10]=asp[-11];
-		if (n_a<12) break; asp[-11]=a[11]; a[11]=asp[-12];
-		if (n_a<13) break; asp[-12]=a[12]; a[12]=asp[-13];
-		if (n_a<14) break; asp[-13]=a[13]; a[13]=asp[-14];
-		if (n_a<15) break; asp[-14]=a[14]; a[14]=asp[-15];
-		if (n_a<16) break; asp[-15]=a[15]; a[15]=asp[-16];
-		if (n_a<17) break; asp[-16]=a[16]; a[16]=asp[-17];
-		if (n_a<18) break; asp[-17]=a[17]; a[17]=asp[-18];
-		if (n_a<19) break; asp[-18]=a[18]; a[18]=asp[-19];
-		if (n_a<20) break; asp[-19]=a[19]; a[19]=asp[-20];
-		if (n_a<21) break; asp[-20]=a[20]; a[20]=asp[-21];
-		if (n_a<22) break; asp[-21]=a[21]; a[21]=asp[-22];
-		if (n_a<23) break; asp[-22]=a[22]; a[22]=asp[-23];
-		if (n_a<24) break; asp[-23]=a[23]; a[23]=asp[-24];
-		if (n_a<25) break; asp[-24]=a[24]; a[24]=asp[-25];
-		if (n_a<26) break; asp[-25]=a[25]; a[25]=asp[-26];
-		if (n_a<27) break; asp[-26]=a[26]; a[26]=asp[-27];
-		if (n_a<28) break; asp[-27]=a[27]; a[27]=asp[-28];
-		if (n_a<29) break; asp[-28]=a[28]; a[28]=asp[-29];
-		if (n_a<30) break; asp[-29]=a[29]; a[29]=asp[-30];
-		if (n_a<31) break; asp[-30]=a[30]; a[30]=asp[-31];
-		if (n_a<32) break; asp[-31]=a[31]; a[31]=asp[-32];
-	} while (0);
+	pc+=3;
+	a=&array[array_o];
+	b=a+n_a;
+
+	for (int i=0; i<n_a; i++) {
+		asp[-i]=a[i];
+		a[i]=asp[-1-i];
+	}
+	for (int i=0; i<n_b; i++) {
+		BC_WORD temp=b[i];
+		b[i]=bsp[i];
+		bsp[i]=temp;
+	}
 	asp[-n_a]=(BC_WORD)array;
 	END_INSTRUCTION_BLOCK;
 }
@@ -5310,6 +5352,18 @@ INSTRUCTION_BLOCK(select_r02):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(select_r11):
+{
+	BC_WORD array_o,*element_p;
+
+	array_o = 2 * (BC_WORD_S)*bsp++;
+	element_p = &((BC_WORD*)(*asp))[array_o];
+	*asp = element_p[3];
+	bsp[-1] = element_p[4];
+	bsp-=1;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(select_r12):
 {
 	BC_WORD array_o,*element_p;
@@ -5657,6 +5711,35 @@ INSTRUCTION_BLOCK(update_r02):
 	element_p[3]=bsp[0];
 	element_p[4]=bsp[1];
 	bsp+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r0b):
+{
+	BC_WORD *array,array_o,*element_p,n;
+
+	n=pc[1];
+	array_o = n * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=2;
+	element_p = &array[array_o+3];
+	for (int i=0; i<n; i++)
+		element_p[i]=bsp[i];
+	bsp+=n;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r11):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 2 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	asp-=1;
+	asp[0]=(BC_WORD)array;
+	element_p[4]=bsp[0];
+	bsp+=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(update_r12):
@@ -7254,7 +7337,32 @@ INSTRUCTION_BLOCK(push_t_r_args):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(push_a_r_args): // voor unboxed array van records. Op A-stack array, op B-stack elementnummer, maak een kopie op de stack
+INSTRUCTION_BLOCK(push_a_r_args):
+	/* Unboxed array of records in asp[0], index in bsp[0].
+	 * Copy elements to the stacks and push record descriptor to B-stack. */
+{
+	BC_WORD *array,*desc,n,array_o,*a,*b;
+	int16_t a_arity,b_arity,ab_arity;
+
+	pc+=1;
+	n=*bsp++;
+	array=(BC_WORD*)asp[0];
+	desc=(BC_WORD*)array[2];
+	ab_arity=((int16_t*)desc)[0]-256;
+	a_arity=((int16_t*)desc)[1];
+	b_arity=ab_arity-a_arity;
+	array_o=(ab_arity*n)+3;
+	a=&array[array_o];
+	b=a+a_arity;
+	for (int i=0;i<a_arity;i++)
+		asp[i]=a[i];
+	asp+=a_arity-1;
+	bsp-=b_arity;
+	for (int i=0;i<b_arity;i++)
+		bsp[i]=b[i];
+	*--bsp=(BC_WORD)(desc+2);
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
 INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
 
@@ -7287,9 +7395,19 @@ INSTRUCTION_BLOCK(add_arg29):
 INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
+INSTRUCTION_BLOCK(ccall):
 INSTRUCTION_BLOCK(eval_upd4):
+INSTRUCTION_BLOCK(instruction):
+INSTRUCTION_BLOCK(load_i):
+INSTRUCTION_BLOCK(load_si16):
+INSTRUCTION_BLOCK(load_si32):
+INSTRUCTION_BLOCK(load_ui8):
+INSTRUCTION_BLOCK(push_finalizers):
+INSTRUCTION_BLOCK(pushL):
+INSTRUCTION_BLOCK(pushLc):
 INSTRUCTION_BLOCK(pushcaf11):
 INSTRUCTION_BLOCK(pushcaf20):
+INSTRUCTION_BLOCK(set_finalizers):
 INSTRUCTION_BLOCK(A_data_IIIla):
 INSTRUCTION_BLOCK(A_data_IIl):
 INSTRUCTION_BLOCK(A_data_IlI):

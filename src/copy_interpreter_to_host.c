@@ -1,11 +1,11 @@
-#include <stdint.h>
-
 #ifndef LINK_CLEAN_RUNTIME
 # define LINK_CLEAN_RUNTIME
 #endif
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "abc_instructions.h"
 #include "copy_host_to_interpreter.h"
@@ -15,38 +15,38 @@
 #include "interpret.h"
 #include "util.h"
 
-extern void *e__CodeSharing__ninterpret;
-extern void *e__CodeSharing__dinterpret__1;
-extern void *e__CodeSharing__dinterpret__2;
-extern void *e__CodeSharing__dinterpret__3;
-extern void *e__CodeSharing__dinterpret__4;
-extern void *e__CodeSharing__dinterpret__5;
-extern void *e__CodeSharing__dinterpret__6;
-extern void *e__CodeSharing__dinterpret__7;
-extern void *e__CodeSharing__dinterpret__8;
-extern void *e__CodeSharing__dinterpret__9;
-extern void *e__CodeSharing__dinterpret__10;
-extern void *e__CodeSharing__dinterpret__11;
-extern void *e__CodeSharing__dinterpret__12;
-extern void *e__CodeSharing__dinterpret__13;
-extern void *e__CodeSharing__dinterpret__14;
-extern void *e__CodeSharing__dinterpret__15;
-extern void *e__CodeSharing__dinterpret__16;
-extern void *e__CodeSharing__dinterpret__17;
-extern void *e__CodeSharing__dinterpret__18;
-extern void *e__CodeSharing__dinterpret__19;
-extern void *e__CodeSharing__dinterpret__20;
-extern void *e__CodeSharing__dinterpret__21;
-extern void *e__CodeSharing__dinterpret__22;
-extern void *e__CodeSharing__dinterpret__23;
-extern void *e__CodeSharing__dinterpret__24;
-extern void *e__CodeSharing__dinterpret__25;
-extern void *e__CodeSharing__dinterpret__26;
-extern void *e__CodeSharing__dinterpret__27;
-extern void *e__CodeSharing__dinterpret__28;
-extern void *e__CodeSharing__dinterpret__29;
-extern void *e__CodeSharing__dinterpret__30;
-extern void *e__CodeSharing__dinterpret__31;
+extern void *e__ABC_PInterpreter_PInternal__ninterpret;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__1;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__2;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__3;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__4;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__5;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__6;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__7;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__8;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__9;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__10;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__11;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__12;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__13;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__14;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__15;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__16;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__17;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__18;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__19;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__20;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__21;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__22;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__23;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__24;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__25;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__26;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__27;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__28;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__29;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__30;
+extern void *e__ABC_PInterpreter_PInternal__dinterpret__31;
 extern void *__Tuple;
 
 struct interpretation_environment *build_interpretation_environment(
@@ -77,6 +77,80 @@ BC_WORD *build_start_node(struct interpretation_environment *ie) {
 	return hp;
 }
 
+BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_environment *ie) {
+	int len = *(int*)clean_string;
+	void **s = &clean_string[1];
+	BC_WORD *node = ie->hp;
+
+	BC_WORD **ptr_stack = (BC_WORD**) ie->asp;
+	int16_t *a_size_stack = (int16_t*) ie->csp;
+	BC_WORD dummy;
+	*++ptr_stack = &dummy;
+	*--a_size_stack = 1;
+	/* TODO check heap & stack space */
+	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++) {
+		if (a_size_stack[0] == 0) {
+			i--;
+			a_size_stack++;
+		} else {
+			a_size_stack[0]--;
+
+			BC_WORD desc=(BC_WORD) s[i];
+			s[i] = ie->hp;
+
+			if (desc & 1) { /* redirection */
+				**ptr_stack-- = (BC_WORD) s[i+(desc-1)/IF_INT_64_OR_32(8,4)];
+				continue;
+			}
+
+			int16_t a_arity = ((int16_t*)desc)[-1];
+			/*int16_t b_arity = 0;*/
+
+			if (a_arity==0) {
+				if (desc == (BC_WORD)&dINT+2) { /* TODO: more special cases */
+					**ptr_stack--=(BC_WORD)ie->hp;
+					*ie->hp++=desc;
+					*ie->hp++=(BC_WORD)s[++i];
+				} else {
+					desc-=10;
+					**ptr_stack--=desc;
+					s[i]=(void*)desc;
+					if (i==0)
+						node=(BC_WORD*)desc;
+				}
+			} else {
+				**ptr_stack-- = (BC_WORD) ie->hp;
+				ie->hp[0] = desc;
+
+				if (a_arity == 1) {
+					*++ptr_stack=ie->hp+1;
+					ie->hp+=2;
+				} else if (a_arity == 2) {
+					*++ptr_stack=ie->hp+2;
+					*++ptr_stack=ie->hp+1;
+					ie->hp+=3;
+				} else if (a_arity < 256) {
+					ie->hp[2]=(BC_WORD)&ie->hp[3];
+					for (int a=a_arity; a>1; a--)
+						*++ptr_stack=&ie->hp[a+1];
+					*++ptr_stack=&ie->hp[1];
+					ie->hp+=a_arity+2;
+				} else { /* record */
+					a_arity = ((int16_t*)desc)[0];
+					/*b_arity = ((int16_t*)desc)[-1] - 256 - a_arity;*/
+					fprintf(stderr,"cannot copy records from string yet\n"); /* TODO */
+					exit(1);
+				}
+			}
+
+			*--a_size_stack = a_arity;
+		}
+	}
+
+	ie->hp += len;
+	return node;
+}
+
 void interpretation_environment_finalizer(struct interpretation_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
 	fprintf(stderr,"Freeing interpretation_environment %p\n",ie);
@@ -98,38 +172,38 @@ void interpreter_finalizer(BC_WORD interpret_node) {
 
 BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *clean_ie, BC_WORD node, int args_needed) {
 	switch (args_needed) {
-		case 0:  heap[0] = (BC_WORD) &e__CodeSharing__ninterpret; break;
-		case 1:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
-		case 2:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__2+(2<<3)+2; break;
-		case 3:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__3+(2<<3)+2; break;
-		case 4:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__4+(2<<3)+2; break;
-		case 5:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__5+(2<<3)+2; break;
-		case 6:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__6+(2<<3)+2; break;
-		case 7:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__7+(2<<3)+2; break;
-		case 8:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__8+(2<<3)+2; break;
-		case 9:  heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__9+(2<<3)+2; break;
-		case 10: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__10+(2<<3)+2; break;
-		case 11: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__11+(2<<3)+2; break;
-		case 12: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__12+(2<<3)+2; break;
-		case 13: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__13+(2<<3)+2; break;
-		case 14: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__14+(2<<3)+2; break;
-		case 15: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__15+(2<<3)+2; break;
-		case 16: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__16+(2<<3)+2; break;
-		case 17: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__17+(2<<3)+2; break;
-		case 18: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__18+(2<<3)+2; break;
-		case 19: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__19+(2<<3)+2; break;
-		case 20: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__20+(2<<3)+2; break;
-		case 21: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__21+(2<<3)+2; break;
-		case 22: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__22+(2<<3)+2; break;
-		case 23: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__23+(2<<3)+2; break;
-		case 24: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__24+(2<<3)+2; break;
-		case 25: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__25+(2<<3)+2; break;
-		case 26: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__26+(2<<3)+2; break;
-		case 27: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__27+(2<<3)+2; break;
-		case 28: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__28+(2<<3)+2; break;
-		case 29: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__29+(2<<3)+2; break;
-		case 30: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__30+(2<<3)+2; break;
-		case 31: heap[0] = (BC_WORD) &e__CodeSharing__dinterpret__31+(2<<3)+2; break;
+		case 0:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__ninterpret; break;
+		case 1:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__1+(2<<3)+2; break; /* TODO check 32-bit */
+		case 2:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__2+(2<<3)+2; break;
+		case 3:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__3+(2<<3)+2; break;
+		case 4:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__4+(2<<3)+2; break;
+		case 5:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__5+(2<<3)+2; break;
+		case 6:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__6+(2<<3)+2; break;
+		case 7:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__7+(2<<3)+2; break;
+		case 8:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__8+(2<<3)+2; break;
+		case 9:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__9+(2<<3)+2; break;
+		case 10: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__10+(2<<3)+2; break;
+		case 11: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__11+(2<<3)+2; break;
+		case 12: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__12+(2<<3)+2; break;
+		case 13: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__13+(2<<3)+2; break;
+		case 14: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__14+(2<<3)+2; break;
+		case 15: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__15+(2<<3)+2; break;
+		case 16: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__16+(2<<3)+2; break;
+		case 17: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__17+(2<<3)+2; break;
+		case 18: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__18+(2<<3)+2; break;
+		case 19: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__19+(2<<3)+2; break;
+		case 20: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__20+(2<<3)+2; break;
+		case 21: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__21+(2<<3)+2; break;
+		case 22: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__22+(2<<3)+2; break;
+		case 23: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__23+(2<<3)+2; break;
+		case 24: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__24+(2<<3)+2; break;
+		case 25: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__25+(2<<3)+2; break;
+		case 26: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__26+(2<<3)+2; break;
+		case 27: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__27+(2<<3)+2; break;
+		case 28: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__28+(2<<3)+2; break;
+		case 29: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<3)+2; break;
+		case 30: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<3)+2; break;
+		case 31: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<3)+2; break;
 		default:
 			fprintf(stderr,"Missing case in make_interpret_node\n");
 			exit(1);
@@ -154,7 +228,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
 
-	if (node[0] == (BC_WORD) &INT+2) {
+	if (node[0] == (BC_WORD) &INT+2 || node[0] == (BC_WORD) &dINT+2) {
 		if (host_heap_free < 2)
 			return -2;
 		host_heap[0] = (BC_WORD) &dINT+2;
@@ -189,7 +263,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tstill %d argument(s) needed\n",args_needed);
+			fprintf(stderr,"\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;

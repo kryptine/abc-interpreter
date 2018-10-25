@@ -3,4 +3,9 @@ debug
 interpret
 link
 optimise
+
+graph_copy_with_names.dcl
+graph_copy_with_names.icl
+
 CodeSharing
+GraphTest

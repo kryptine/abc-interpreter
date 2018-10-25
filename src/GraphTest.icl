@@ -1,41 +1,12 @@
-module CodeSharing
+module GraphTest
 
-import StdArray
-import StdBool
-import StdClass
-import StdFile
-import StdInt
-import StdList
-import StdMisc
-import StdString
-
-import Data._Array
-import Data.Error
-from Data.Func import hyperstrict
-import Data.Maybe
-import System.CommandLine
-import System.File
-import System._Pointer
-import System._Posix
-import Text
-
-import symbols_in_program
-
+import StdEnv
 import ABC.Interpreter
-import ABC.Interpreter.Util
 
-// Example: get an infinite list of primes from a bytecode file and take only
-// the first 100 elements.
-import StdEnum,StdFunc
-//Start w
-//# (primes,w) = get_start_rule_as_expression "../test/infprimes.bc" w
-//= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
-
-// Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map),w)
-	= get_start_rule_as_expression "../test/functions.bc" w
+# (graph,w) = serialize_for_interpretation graph "./GraphTest" "./GraphTest.bc" w
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map),w) = deserialize graph "./GraphTest" w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map
 where
 	use ::
@@ -70,5 +41,34 @@ where
 	toInt TestA = 37
 	toInt TestB = 42
 
+graph = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map)
+
 square :: Int -> Int
 square x = x * x
+
+sub5 :: Int Int Int Int Int -> Int
+sub5 a b c d e = a - b - c - d - e
+
+sumints :: [Int] -> Int
+sumints []     = 0
+sumints [x:xs] = x + sumints xs
+
+reverse :: [a] -> [a]
+reverse xs = rev [] xs
+where
+	rev new []     = new
+	rev new [x:xs] = rev [x:new] xs
+
+foldr :: (a b -> b) b [a] -> b
+foldr op e []     = e
+foldr op e [x:xs] = op x (foldr op e xs)
+
+ap1 :: (Int -> Int) -> Int
+ap1 f = f 42
+
+ap3 :: (Int Int Int -> Int) -> Int
+ap3 f = f 3 2 1
+
+map :: (a -> b) [a] -> [b]
+map f [x:xs] = [f x:map f xs]
+map _ []     = []

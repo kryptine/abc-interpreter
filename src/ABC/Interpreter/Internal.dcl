@@ -1,10 +1,6 @@
-definition module CodeSharing
+definition module ABC.Interpreter.Internal
 
-from System._Pointer import :: Pointer
-from symbols_in_program import :: Symbol
-
-:: InterpretedExpression
-:: *InterpretationEnvironment
+import ABC.Interpreter
 
 add_shared_node :: !Int !*{a} a -> *(!Int, !*{a}, !Int)
 

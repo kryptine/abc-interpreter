@@ -1,10 +1,8 @@
 #!/bin/bash
 
 CLM=clm
-CLMFLAGS="-IL Platform -IL Dynamics -dynamics -exl -desc"
-CG=../src/bcgen
-LINK=../src/link
-OPT=../src/optimise
+CLMFLAGS="-IL Platform -IL Dynamics -dynamics -exl -desc -bytecode"
+OPTCLMFLAG=" -optabc"
 IP=../src/interpret
 
 RED="\033[0;31m"
@@ -84,7 +82,7 @@ while true; do
 			NATIVE_RUNFLAGS+=" -h $2"
 			shift 2;;
 		-O | --no-opt)
-		    OPT="cat -"
+		    OPTCLMFLAG=""
 			shift;;
 		-s | --stack)
 			RUNFLAGS+=" -s $2"
@@ -122,18 +120,19 @@ while true; do
 	esac
 done
 
+CLMFLAGS="$CLMFLAGS $OPTCLMFLAG"
+
 if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
 	sleep 1
 fi
 
 CFLAGS="$CFLAGS" make -BC ../src optimise bcgen link interpret || exit 1
+$CLM -bytecode -O _system
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null
 fi
-
-$CG "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc"
 
 while read line
 do
@@ -141,7 +140,6 @@ do
 	line=(${line//$'\t'/ })
 	MODULE=${line[0]}
 	MODULE_RUNFLAGS=${line[1]//,/ }
-	IFS=',' read -r -a DEPS <<< "${line[2]}"
 
 	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
@@ -175,31 +173,6 @@ do
 	fi
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
-
-	BCDEPS=()
-	for dep in ${DEPS[@]}; do
-		IFS=':' read -r -a dep <<< "$dep"
-		SYSFILES="$CLEAN_HOME/lib/${dep[0]}/Clean System Files"
-		$OPT < "$SYSFILES/${dep[1]}.abc" > "$SYSFILES/${dep[1]}.opt.abc"
-		$CG "$SYSFILES/${dep[1]}.opt.abc" -o "$SYSFILES/${dep[1]}.o.bc"
-		if [ $? -ne 0 ]; then
-			echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
-			FAILED=1
-			continue 2
-		fi
-		BCDEPS+=("$SYSFILES/${dep[1]}.o.bc")
-	done
-
-	$OPT < Clean\ System\ Files/$MODULE.abc > $MODULE.opt.abc
-	$CG $MODULE.opt.abc -o $MODULE.o.bc
-
-	rm $MODULE.bc 2>/dev/null
-	$LINK $MODULE.o.bc "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.o.bc" "${BCDEPS[@]}" -o $MODULE.bc
-	if [ $? -ne 0 ]; then
-		echo -e "${RED}FAILED: $MODULE (code generation)$RESET"
-		FAILED=1
-		continue
-	fi
 
 	if [ $BENCHMARK -gt 0 ]; then
 		# https://unix.stackexchange.com/a/430182/37050

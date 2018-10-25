@@ -449,7 +449,6 @@ int main(int argc, char **argv) {
 
 #ifdef DEBUG_CURSES
 	close_debugger();
-	return 0;
 #endif
 
 	free_program(state.program);

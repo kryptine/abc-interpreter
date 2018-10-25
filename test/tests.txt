@@ -1,37 +1,38 @@
 # vim: ts=12:
 acker
-brainfuck		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-chars		StdEnv:_SystemArray
-compress		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdGeneric,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMaybe,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:_Array,Platform/Data:Functor,Platform/Data:GenCompress,Platform/Data:GenEq,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
-e		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-fsieve		StdEnv:StdReal
-functions		StdEnv:StdChar,StdEnv:StdInt
-hamming		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-iks		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMaybe,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum,Dynamics:_SystemDynamic,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Either,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
-#infprimes		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
-invperm		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
-lqueen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-match		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray,StdEnv:_SystemEnum
-matchlarge		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:_SystemEnum
+brainfuck
+chars
+compress
+e
+fsieve
+functions
+hamming
+iks
+#infprimes
+invperm
+lqueen
+match
+matchlarge
 mulmat
 nfib
-parser	-h,48m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray
-pascal		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdCharList,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-prolog	-h,48m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemArray
-reals		StdEnv:StdReal
-reverse		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
-reversearray		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
-reverse2		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
-revrec		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-revtwice	-h,4m,-s,2m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:_SystemEnum
-rfib		StdEnv:StdReal
-sieve		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdEnum,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray,StdEnv:_SystemEnum
-squeen		StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMisc,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:_SystemArray
-symsieve	-h,100m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdInt,StdEnv:StdMisc,StdEnv:StdOverloaded
-sudoku	-h,5m	StdEnv:StdChar,StdEnv:StdClass,StdEnv:StdFunctions,StdEnv:StdInt,StdEnv:StdList,StdEnv:StdMaybe,StdEnv:StdMisc,StdEnv:StdOrdList,StdEnv:StdOverloaded,StdEnv:StdReal,StdEnv:StdTuple,StdEnv:_SystemArray,StdEnv:_SystemEnum,Platform/Control:Applicative,Platform/Control:Monad,Platform/Data:Functor,Platform/Data:List,Platform/Data:Maybe,Platform/Data:Monoid
-str_arit		StdEnv:StdString
+parser	-h,48m
+pascal
+prolog	-h,48m
+reals
+reverse
+reversearray
+reverse2
+revrec
+revtwice	-h,4m,-s,2m
+rfib
+sieve
+squeen
+symsieve	-h,100m
+sudoku	-h,5m
+str_arit
 stwice
 tak
 twice
-war_seq		StdEnv:StdChar,StdEnv:StdInt,StdEnv:StdMisc
+unboxed_arrays
+war_seq
 weird_types

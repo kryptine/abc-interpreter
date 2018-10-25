@@ -26,6 +26,15 @@ void free_program(struct program *pgm) {
 
 # ifdef LINK_CLEAN_RUNTIME
 # include <string.h>
+
+int get_host_symbols_n(struct program *pgm) {
+	return pgm->host_symbols_n;
+}
+
+struct host_symbol *get_host_symbols(struct program *pgm) {
+	return pgm->host_symbols;
+}
+
 struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name) {
 	int start = 0;
 	int end = pgm->host_symbols_n - 1;

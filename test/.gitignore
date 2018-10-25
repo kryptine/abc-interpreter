@@ -1,5 +1,1 @@
 *.result
-*.abc
-!i_system.abc
-a.out
-*.bc

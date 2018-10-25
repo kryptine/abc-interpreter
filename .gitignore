@@ -1,15 +1,13 @@
-Clean System Files/
 *.o
 *.a
+*.abc
+*.tcl
+a.out
 
-*.aux
-*.bbl
-*.bcf
-*.blg
-*.fdb_latexmk
-*.fls
-*.log
-*.out
-*.pdf
-*.run.xml
-_minted-*/
+*.opt.abc
+*.obc
+*.bc
+
+*.graph
+
+examples/compiler/compiler
