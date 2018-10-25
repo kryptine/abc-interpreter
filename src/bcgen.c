@@ -7,6 +7,7 @@
 #include "bcgen_instruction_table.h"
 #include "parse_abc.h"
 #include "util.h"
+#include "winsupport.h"
 
 void parse_file(FILE *file) {
 	char* line = NULL;

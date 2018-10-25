@@ -2,14 +2,23 @@ SHELL:=bash
 CLM:=clm
 CLMFLAGS:=-IL Platform -nr -nt
 override CFLAGS+=\
+	-std=c99\
 	-Wall\
 	-Wno-misleading-indentation\
 	-Wno-strict-aliasing\
 	-Werror\
-	-DPOSIX\
 	-lm
 
-all: optimise bcgen link interpret debug
+BINARIES:=optimise bcgen link interpret
+
+ifeq ($(OS),Windows_NT)
+override CFLAGS+=-DWINDOWS
+else
+override CFLAGS+=-DPOSIX
+override BINARIES+=debug
+endif
+
+all: $(BINARIES)
 
 CodeSharing: Clean\ System\ Files/interpret.a .FORCE graph_copy_with_names.icl graph_copy_with_names.dcl
 	$(CLM) -I . -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
@@ -25,17 +34,18 @@ $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
 
-SRC_BYTECODE:=\
+SRC_BCGEN:=\
 	abc_instructions.c\
 	bcgen.c\
 	bcgen_instructions.c\
 	bcgen_instruction_table.c\
 	parse_abc.c\
-	util.c
-DEP_BYTECODE:=$(subst .c,.h,$(SRC_BYTECODE)) settings.h
+	util.c\
+	winsupport.c
+DEP_BYTECODE:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
-bcgen: $(SRC_BYTECODE) $(DEP_BYTECODE)
-	$(CC) $(CFLAGS) $(SRC_BYTECODE) -DBC_GEN -o $@
+bcgen: $(SRC_BCGEN) $(DEP_BYTECODE)
+	$(CC) $(CFLAGS) $(SRC_BCGEN) -DBC_GEN -o $@
 
 SRC_LINK:=\
 	abc_instructions.c\
@@ -43,7 +53,8 @@ SRC_LINK:=\
 	bytecode.c\
 	link.c\
 	parse.c\
-	util.c
+	util.c\
+	winsupport.c
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
@@ -58,7 +69,8 @@ SRC_INTERPRET:=\
 	interpret.c\
 	parse.c\
 	traps.c\
-	util.c
+	util.c\
+	winsupport.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	gc/util.h\
 	interpret_instructions.h\
@@ -92,11 +104,7 @@ debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 
 clean:
 	shopt -s globstar; $(RM) -r \
-		bcgen\
-		debug\
-		interpret\
-		link\
-		optimise\
+		$(BINARIES) \
 		**/Clean\ System\ Files\
 		CodeSharing\
 		GraphTest\

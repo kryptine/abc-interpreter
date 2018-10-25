@@ -90,10 +90,14 @@ int provide_chars(void *ptr, size_t size, size_t nmemb, struct char_provider *st
 			{
 				int ret = fread(ptr, size, nmemb, (FILE*) stream->arg);
 				if (ret < nmemb) {
-#if (WORD_WIDTH == 64)
-					fprintf(stderr, "Read %d out of %ld items", ret, nmemb);
+#ifdef WINDOWS
+# if (WORD_WIDTH==64)
+					fprintf(stderr, "Read %d out of %" PRIu64 " items", ret, nmemb);
+# else
+					fprintf(stderr, "Read %d out of %" PRIu32 " items", ret, nmemb);
+# endif
 #else
-					fprintf(stderr, "Read %d out of %d items", ret, nmemb);
+					fprintf(stderr, "Read %d out of %zu items", ret, nmemb);
 #endif
 					return -1;
 				}

@@ -1,5 +1,9 @@
 #pragma once
 
+#if !defined(POSIX) && !defined(WINDOWS)
+# error Define either POSIX or WINDOWS
+#endif
+
 #include <inttypes.h>
 
 #ifndef WORD_WIDTH

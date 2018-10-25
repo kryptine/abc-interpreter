@@ -314,7 +314,7 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 	uint8_t j;
 	for (i = 0; i < length; i++) {
 		FPRINTF(f, "%d\t", i);
-		FPRINTF(f, IF_INT_64_OR_32("%016lx  ","%08x  "), data[i]);
+		FPRINTF(f, IF_INT_64_OR_32("%016"SCNx64"  ","%08"SCNx32"  "), data[i]);
 
 		for (j=0; j < IF_INT_64_OR_32(8,4); j++) {
 			char c = (data[i] >> j*8) & 0xff;
@@ -326,7 +326,7 @@ void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t
 		} else if (data[i] >= (BC_WORD) code && data[i] < (BC_WORD) (code + code_length)) {
 			FPRINTF(f, "  <code+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) code) / IF_INT_64_OR_32(8,4));
 		} else {
-			FPRINTF(f, IF_INT_64_OR_32("  %ld\n","  %d\n"), data[i]);
+			FPRINTF(f, "  " BC_WORD_FMT "\n", data[i]);
 		}
 	}
 }

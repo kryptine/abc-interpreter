@@ -9,6 +9,7 @@
 #include "bcgen_instructions.h"
 #include "settings.h"
 #include "util.h"
+#include "winsupport.h"
 
 void warning_i (char *error_string,int integer) {
 	fprintf(stderr, error_string, integer);

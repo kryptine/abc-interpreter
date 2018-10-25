@@ -19,6 +19,12 @@ build:
   script:
     - CFLAGS='-DDEBUG_ALL_INSTRUCTIONS -DDEBUG_CLEAN_LINKS=10 -DDEBUG_GARBAGE_COLLECTOR=10' make -B -C src
 
+build-windows:
+  extends: .base
+  stage: build
+  script:
+    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B
+
 test-gc:
   extends: .base
   stage: test-interpreter
