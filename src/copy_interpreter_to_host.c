@@ -103,26 +103,43 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 				continue;
 			}
 
-			**ptr_stack-- = (BC_WORD) ie->hp;
-			*ie->hp++ = desc;
-
 			int16_t a_arity = ((int16_t*)desc)[-1];
-			int16_t b_arity = 0;
+			/*int16_t b_arity = 0;*/
 
-			if (desc == (BC_WORD) &dINT+2) { /* TODO more special cases */
-				b_arity = 1;
-			} if (a_arity > 256) { /* record */
-				a_arity = ((int16_t*)desc)[0];
-				b_arity = ((int16_t*)desc)[-1] - 256 - a_arity;
+			if (a_arity==0) {
+				if (desc == (BC_WORD)&dINT+2) { /* TODO: more special cases */
+					**ptr_stack--=(BC_WORD)ie->hp;
+					*ie->hp++=desc;
+					*ie->hp++=(BC_WORD)s[++i];
+				} else {
+					desc-=10;
+					**ptr_stack--=desc;
+					s[i]=(void*)desc;
+				}
+			} else {
+				**ptr_stack-- = (BC_WORD) ie->hp;
+				ie->hp[0] = desc;
+
+				if (a_arity == 1) {
+					*++ptr_stack=ie->hp+1;
+					ie->hp+=2;
+				} else if (a_arity == 2) {
+					*++ptr_stack=ie->hp+2;
+					*++ptr_stack=ie->hp+1;
+					ie->hp+=3;
+				} else if (a_arity < 256) {
+					ie->hp[2]=(BC_WORD)&ie->hp[3];
+					for (int a=a_arity; a>1; a--)
+						*++ptr_stack=&ie->hp[a+1];
+					*++ptr_stack=&ie->hp[1];
+					ie->hp+=a_arity+2;
+				} else { /* record */
+					a_arity = ((int16_t*)desc)[0];
+					/*b_arity = ((int16_t*)desc)[-1] - 256 - a_arity;*/
+					fprintf(stderr,"cannot copy records from string yet\n"); /* TODO */
+					exit(1);
+				}
 			}
-
-			/* TODO: HNFs should be split */
-			for (int a=0; a<a_arity; a++)
-				*++ptr_stack = ie->hp + a_arity-a-1;
-			ie->hp += a_arity;
-
-			for (int b=0; b<b_arity; b++)
-				*ie->hp++ = (BC_WORD) s[++i];
 
 			*--a_size_stack = a_arity;
 		}
