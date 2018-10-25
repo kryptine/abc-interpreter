@@ -1,5 +1,6 @@
 SHELL:=bash
 CLM:=clm
+CPM:=cpm
 CLMFLAGS:=-IL Platform -nr -nt
 override CFLAGS+=\
 	-std=c99\
@@ -31,8 +32,13 @@ $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
 	cp $< $@
 	patch < $@.patch
 
+ifeq ($(OS),Windows_NT)
+optimise: .FORCE
+	$(CPM) project $@_win.prj build
+else
 optimise: .FORCE
 	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
+endif
 
 SRC_BCGEN:=\
 	abc_instructions.c\
