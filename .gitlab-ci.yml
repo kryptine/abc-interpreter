@@ -23,7 +23,7 @@ build-windows:
   extends: .base
   stage: build
   script:
-    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src
+    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src bcgen link interpret
 
 test-gc:
   extends: .base
