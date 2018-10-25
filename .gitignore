@@ -1,8 +1,11 @@
-*.o
 *.a
-*.abc
-*.tcl
+*.o
+*.exe
 a.out
+
+*.abc
+*.prp
+*.tcl
 
 *.opt.abc
 *.obc

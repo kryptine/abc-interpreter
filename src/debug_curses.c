@@ -573,11 +573,14 @@ void scroll_heap_window(int up, int left) {
 
 void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 	wmove(win_heap, 0, 0);
-	if (sigsetjmp(segfault_restore_point, 1) == 0) {
+#ifdef POSIX
+	if (sigsetjmp(segfault_restore_point, 1) == 0)
+#endif
 		debugger_show_node_as_tree_(win_heap, node, 0, 0, max_depth, 0);
-	} else {
+#ifdef POSIX
+	else
 		mvwprintw(win_heap, 0, 0, "\n  Failed to read graph -\n  perhaps the node is a string?");
-	}
+#endif
 	CLEAR_HEAP();
 	REFRESH_HEAP(heap_line, heap_col);
 }

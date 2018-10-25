@@ -14,9 +14,9 @@
 #if (WORD_WIDTH == 64)
 # define BC_WORD   uint64_t
 # define BC_WORD_S  int64_t
-# define BC_WORD_FMT "%lu"
-# define BC_WORD_FMT_HEX "%lx"
-# define BC_WORD_S_FMT "%ld"
+# define BC_WORD_FMT "%"SCNu64
+# define BC_WORD_FMT_HEX "%"SCNx64
+# define BC_WORD_S_FMT "%"SCNd64
 # define BC_REAL double
 #else
 # define BC_WORD   uint32_t

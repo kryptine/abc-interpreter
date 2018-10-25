@@ -2,6 +2,7 @@
 #define _H_ABCINT_UTIL
 
 #include <stdio.h>
+#include <sys/types.h>
 
 void *safe_malloc(size_t);
 void *safe_calloc(size_t, size_t);
@@ -26,6 +27,9 @@ int starts_with(const char* prefix, char* str);
 size_t string_to_size(char*);
 
 char *escape(char);
+
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+char *strsep(char **stringp, const char *delim);
 
 #ifdef DEBUG_CURSES
 # include <curses.h>

@@ -3,7 +3,15 @@ FROM camilstaps/clean:nightly
 RUN \
 	dpkg --add-architecture i386 &&\
 	apt-get update -qq &&\
-	apt-get install -y -qq --no-install-recommends build-essential gcc-multilib time bc libncurses5-dev libncurses5-dev:i386 git
+	apt-get install -y -qq --no-install-recommends\
+		git\
+		build-essential\
+		gcc-multilib\
+		gcc-mingw-w64-x86-64\
+		libncurses5-dev\
+		libncurses5-dev:i386\
+		time\
+		bc
 
 RUN	install_clean_nightly.sh base lib-platform lib-dynamics lib-graphcopy
 
