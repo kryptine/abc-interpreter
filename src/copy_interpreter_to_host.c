@@ -115,6 +115,8 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 					desc-=10;
 					**ptr_stack--=desc;
 					s[i]=(void*)desc;
+					if (i==0)
+						node=(BC_WORD*)desc;
 				}
 			} else {
 				**ptr_stack-- = (BC_WORD) ie->hp;

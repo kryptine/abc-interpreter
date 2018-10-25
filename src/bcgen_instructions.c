@@ -1981,7 +1981,7 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 	if (a_size==0 && b_size>=4) {
 		add_instruction_w_w_label_offset_w(Cfill_r0b,b_size,-root_offset,descriptor_name,2,b_offset);
 		return;
-	} if (a_size==1 && b_size>=4) {
+	} else if (a_size==1 && b_size>=4) {
 		add_instruction_w_w_w_label_offset_w(Cfill_r1b,b_size,-root_offset,-a_offset,descriptor_name,2,b_offset);
 		return;
 	} else if (a_size>=2 && b_size>=2) {
