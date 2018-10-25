@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "bcgen_instructions.h"
@@ -17,24 +18,18 @@ int main(int argc, char **argv) {
 	char *input_file_names[MAX_INPUT_FILES];
 	input_file_names[0] = NULL;
 
-	char opt;
-	while ((opt = getopt(argc, argv, "o:")) != -1) {
-		switch (opt) {
-			case 'o':
-				if ((output_file = fopen(optarg, "wb")) == NULL) {
-					fprintf(stderr, "Could not open '%s' for writing.\n", optarg);
-					exit(1);
-				}
-				break;
-			default:
-				fprintf(stderr, usage, argv[0]);
-				exit(1);
+	int f=0;
+	for (int i=1; i<argc; i++) {
+		if(!strcmp("-o", argv[i]) && i <= argc-1) {
+			if((output_file = fopen(argv[i + 1], "wb")) == NULL) {
+				fprintf(stderr, "Error: Could not open output file: %s\n", argv[i + 1]);
+				return -1;
+			}
+			i++;
+		} else {
+			input_file_names[f++]=argv[i];
+			input_file_names[f]=NULL;
 		}
-	}
-
-	for (int i = 0; optind < argc; optind++) {
-		input_file_names[i] = argv[optind];
-		input_file_names[++i] = NULL;
 	}
 
 	if (input_file_names[0] == NULL) {

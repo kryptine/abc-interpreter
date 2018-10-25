@@ -14,7 +14,7 @@ BINARIES:=optimise bcgen link interpret
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
 else
-override CFLAGS+=-DPOSIX
+override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE
 override BINARIES+=debug
 endif
 
@@ -40,8 +40,7 @@ SRC_BCGEN:=\
 	bcgen_instructions.c\
 	bcgen_instruction_table.c\
 	parse_abc.c\
-	util.c\
-	winsupport.c
+	util.c
 DEP_BYTECODE:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
 bcgen: $(SRC_BCGEN) $(DEP_BYTECODE)
@@ -53,8 +52,7 @@ SRC_LINK:=\
 	bytecode.c\
 	link.c\
 	parse.c\
-	util.c\
-	winsupport.c
+	util.c
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
@@ -69,8 +67,7 @@ SRC_INTERPRET:=\
 	interpret.c\
 	parse.c\
 	traps.c\
-	util.c\
-	winsupport.c
+	util.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	gc/util.h\
 	interpret_instructions.h\

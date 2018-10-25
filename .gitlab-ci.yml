@@ -23,7 +23,7 @@ build-windows:
   extends: .base
   stage: build
   script:
-    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B
+    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src
 
 test-gc:
   extends: .base

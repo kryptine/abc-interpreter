@@ -339,8 +339,6 @@ const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
 # endif
 
 int main(int argc, char **argv) {
-	int opt;
-
 #ifndef DEBUG_CURSES
 	int list_program = 0;
 	int run = 1;
@@ -355,56 +353,37 @@ int main(int argc, char **argv) {
 	struct parser state;
 	init_parser(&state);
 
-#if defined(DEBUG_CURSES) || defined(COMPUTED_GOTOS)
-	char *optstring = "s:h:";
-#else
-	char *optstring = "lRs:h:";
-#endif
-
-	while ((opt = getopt(argc, argv, optstring)) != -1) {
-		switch (opt) {
+	for (int i=1; i<argc; i++) {
 #if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)
-			case 'l':
-				list_program = 1;
-				break;
-			case 'R':
-				run = 0;
-				break;
+		if (!strcmp(argv[i],"-l"))
+			list_program=1;
+		else if (!strcmp(argv[i],"-R"))
+			run=0;
+		else
 #endif
-			case 's':
-				stack_size = string_to_size(optarg) * 2;
-				if (stack_size == -1) {
-					fprintf(stderr, "Illegal stack size: '%s'\n", optarg);
-					fprintf(stderr, usage, argv[0]);
-					exit(-1);
-				}
-				break;
-			case 'h':
-				heap_size = string_to_size(optarg);
-				if (heap_size == -1) {
-					fprintf(stderr, "Illegal heap size: '%s'\n", optarg);
-					fprintf(stderr, usage, argv[0]);
-					exit(-1);
-				}
-				break;
-			default:
+		if (!strcmp(argv[i],"-s")) {
+			stack_size=string_to_size(argv[++i]);
+			if (stack_size==-1) {
+				fprintf(stderr, "Illegal stack size: '%s'\n", argv[i]);
 				fprintf(stderr, usage, argv[0]);
 				exit(-1);
-		}
-	}
-
-	if (argc != optind + 1) {
-		fprintf(stderr, usage, argv[0]);
-		exit(-1);
-	}
-
-	if (!strcmp(argv[optind], "-")) {
-		input = stdin;
-	} else {
-		input = fopen(argv[optind], "rb");
-		if (!input) {
-			fprintf(stderr, "Could not open '%s'\n", argv[optind]);
+			}
+		} else if (!strcmp(argv[i],"-h")) {
+			heap_size=string_to_size(argv[++i]);
+			if (heap_size==-1) {
+				fprintf(stderr, "Illegal heap size: '%s'\n", argv[i]);
+				fprintf(stderr, usage, argv[0]);
+				exit(-1);
+			}
+		} else if (input) {
+			fprintf(stderr, usage, argv[0]);
 			exit(-1);
+		} else {
+			input = fopen(argv[i], "rb");
+			if (!input) {
+				fprintf(stderr, "Could not open '%s'\n", argv[i]);
+				exit(-1);
+			}
 		}
 	}
 
