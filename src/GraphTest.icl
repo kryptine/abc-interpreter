@@ -37,7 +37,7 @@ where
 		, toInt (last (rev [TestA,TestB]))
 		, length [c \\ c <-: reverse_string "0123456789012345678901234567890123456"]
 		, length [i \\ i <-: reverse_array {i \\ i <- [0..36]}]
-		, length [c \\ c <-: reverse_boxed_array {c\\ c <- ['a'..'z']}]
+		, length [c \\ c <-: reverse_boxed_array {c\\ c <- ['A'..'e']}]
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
