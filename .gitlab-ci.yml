@@ -2,6 +2,7 @@ stages:
   - build
   - test-interpreter
   - test-interworking
+  - examples
 
 .base:
   image: camilstaps/abc-interpreter
@@ -60,3 +61,10 @@ interworking-with-GraphCopy:
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+
+examples:
+  extends: .base
+  stage: examples
+  script:
+    - cd examples
+    - ./test.sh
