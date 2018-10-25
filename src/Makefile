@@ -98,6 +98,9 @@ clean:
 		link\
 		optimise\
 		**/Clean\ System\ Files\
+		CodeSharing\
+		GraphTest\
+		graph_copy_with_names.{dcl,icl}\
 		$(OBJ_INTERPRET_LIB)
 
 .FORCE:

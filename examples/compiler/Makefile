@@ -12,7 +12,6 @@ BIN:=compiler
 MAIN:=Compiler
 
 $(BIN): .FORCE
-	$(MAKE) -C ../../src Clean\ System\ Files/interpret.a
 	$(CLM) $(CLMFLAGS) $(MAIN) -o $@
 
 clean:
