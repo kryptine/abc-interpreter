@@ -14,8 +14,8 @@ the run-time system for the interpreter:
 clm fsieve
 
 # Optimise ABC code
-optimise < "Clean System Files/fsieve.abc" > "Clean System Files/fsieve.opt.abc"
-optimise < "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" > "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
+optimise "Clean System Files/fsieve.abc" -o "Clean System Files/fsieve.opt.abc"
+optimise "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
 
 # Generate bytecode
 bcgen "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
@@ -38,7 +38,7 @@ debug fsieve.bc
 Optimises ABC code. This removes unnecessary instructions, shrinks instruction
 blocks, and introduces many new ABC instructions for frequently used blocks.
 
-Usage: `optimise < ABC > OABC`
+Usage: `optimise ABC -o OABC`
 
 ### bcgen
 

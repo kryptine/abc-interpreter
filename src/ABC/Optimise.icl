@@ -4,12 +4,14 @@ import StdArray
 import StdBool
 import StdClass
 import StdFile
-from StdFunc import o
+from StdFunctions import o
 import StdInt
 import StdList
+import StdMisc
 import StdString
 
 import Data.Maybe
+import System.CommandLine
 from Text import <+
 
 import ABC.Instructions
@@ -388,10 +390,17 @@ skip_b_instructions is              n = (is,n)
 
 Start :: *World -> *World
 Start w
-# (io,w) = stdio w
-# (pgm,io) = loop io
-# io = io <<< optimise pgm
-# (_,w) = fclose io w
+# (args,w) = getCommandLine w
+| length args <> 4 || args!!2 <> "-o" = abort "Usage: optimise ABC_FILE -o OPTABC_FILE\n"
+# [_:input:_:output:_] = args
+# (ok,input,w) = fopen input FReadText w
+| not ok = abort "Could not open input file\n"
+# (pgm,input) = loop input
+# (_,w) = fclose input w
+# (ok,output,w) = fopen output FWriteText w
+| not ok = abort "Could not open output file\n"
+# output = output <<< optimise pgm
+# (_,w) = fclose output w
 = w
 where
 	loop :: !*File -> ([ABCInstruction], *File)
