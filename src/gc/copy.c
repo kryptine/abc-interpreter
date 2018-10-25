@@ -101,7 +101,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 			if (node[0] == (BC_WORD) &INT + 2 ||
 					node[0] == (BC_WORD) &CHAR + 2 ||
 					node[0] == (BC_WORD) &BOOL + 2 ||
-					node[0] == (BC_WORD) &REAL + 2) { /* TODO more basic types */
+					node[0] == (BC_WORD) &REAL + 2) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\t(INT / CHAR / BOOL / REAL)\n");
 #endif

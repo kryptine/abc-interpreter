@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "copy_host_to_interpreter.h"
 #include "interpret.h"
@@ -19,6 +20,7 @@ int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 	return 4;
 }
 
+extern void *ARRAY;
 BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap,
 		size_t heap_free, BC_WORD *node) {
 	int nodeid;
@@ -63,6 +65,41 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 
 	BC_WORD *org_heap = heap;
 	heap[0] = (BC_WORD) host_symbol->interpreter_location + 2 + a_arity * 16;
+
+	if ((BC_WORD) host_symbol->location == (BC_WORD) &ARRAY) {
+		heap[1] = (BC_WORD) &heap[2];
+		BC_WORD *arr=(BC_WORD*)node[1];
+		int length=arr[1];
+		int words;
+
+		if (arr[0] == (BC_WORD) &__STRING__+2) {
+			words=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+			memcpy(&heap[2], arr, (2+words)*IF_INT_64_OR_32(8,4));
+			return words+4;
+		}
+
+		BC_WORD desc=arr[2];
+		if (desc == (BC_WORD) &CHAR+2 || desc == (BC_WORD) &BOOL+2)
+			words=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+		else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
+			words=length;
+		else {
+			heap[2]=(BC_WORD)&__ARRAY__+2;
+			heap[3]=length;
+			heap[4]=0;
+			BC_WORD *new_array=&heap[5];
+			for (int i=0; i<length; i++) {
+				nodeid = __interpret__add__shared__node(ie->host->clean_ie, (BC_WORD*)arr[i+3]);
+				new_array[i]=(BC_WORD)heap;
+				heap += make_host_node(heap, nodeid, 0);
+			}
+			return heap-org_heap;
+		}
+
+		memcpy(&heap[2], arr, (3+words)*IF_INT_64_OR_32(8,4));
+
+		return words+5;
+	}
 
 	if (a_arity + b_arity < 3) {
 		heap += 3;

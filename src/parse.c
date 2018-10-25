@@ -58,6 +58,11 @@ void init_parser(struct parser *state
 	/* TODO: pre-seed the symbol matching with more descriptors that are not in the bytecode */
 	find_host_symbol_by_name(state->program, "INT")->interpreter_location = (void*) &INT;
 	find_host_symbol_by_name(state->program, "dINT")->interpreter_location = (void*) &dINT;
+	find_host_symbol_by_name(state->program, "BOOL")->interpreter_location = (void*) &BOOL;
+	find_host_symbol_by_name(state->program, "CHAR")->interpreter_location = (void*) &CHAR;
+	find_host_symbol_by_name(state->program, "REAL")->interpreter_location = (void*) &REAL;
+	find_host_symbol_by_name(state->program, "__ARRAY__")->interpreter_location = (void*) &__ARRAY__;
+	find_host_symbol_by_name(state->program, "__STRING__")->interpreter_location = (void*) &__STRING__;
 #endif
 
 #ifdef LINKER
