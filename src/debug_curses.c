@@ -319,7 +319,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 	else if (node[0] == (BC_WORD) &REAL+2)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
 	else if (node[0] == (BC_WORD) &__cycle__in__spine)
-		wprintw(win, "__cycle__in__spine");
+		wprintw(win, "_cycle_in_spine");
 	else {
 		char _tmp[256];
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
@@ -483,6 +483,11 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		return;
 	}
 
+	if (node[0] == (BC_WORD) &__cycle__in__spine) {
+		wprintw(win, " _cycle_in_spine");
+		return;
+	}
+
 	if (is_last)
 		indent_mask ^= 1;
 
@@ -520,8 +525,6 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " __ARRAY__");
 	else if (node[0] == (BC_WORD) ARRAY+18)
 		wprintw(win, " ARRAY");
-	else if (node[0] == (BC_WORD) &__cycle__in__spine)
-		wprintw(win, " __cycle__in__spine");
 	else {
 		char _tmp[256];
 		if (a_arity + b_arity > 0)

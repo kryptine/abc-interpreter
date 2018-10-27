@@ -1754,8 +1754,8 @@ INSTRUCTION_BLOCK(create_array_r_a):
 	hp[0]=(BC_WORD)&__ARRAY__+2;
 	hp[1]=s;
 	hp[2]=*(BC_WORD*)&pc[2];
-	hp+=3;
 	*++asp=(BC_WORD)hp;
+	hp+=3;
 	pc+=3;
 	for (i=0; i!=a_n_a; ++i)
 		hp[i] = ((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
@@ -3367,7 +3367,7 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
 	if (d==(BC_WORD)&INT+2){
-		PRINTF("%d",(int)n[1]);
+		PRINTF(BC_WORD_S_FMT,(BC_WORD_S)n[1]);
 	} else if (d==(BC_WORD)&BOOL+2) {
 		PRINTF("%s",n[1] ? "True" : "False");
 	} else if (d==(BC_WORD)&CHAR+2){
@@ -6150,7 +6150,7 @@ INSTRUCTION_BLOCK(jmp_eq_desc):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(jmp_geI):
-	if ((int)bsp[0] >= (int)bsp[1]){
+	if ((BC_WORD_S)bsp[0] >= (BC_WORD_S)bsp[1]){
 		bsp+=2;
 		pc=(BC_WORD*)pc[1];
 		END_INSTRUCTION_BLOCK;
@@ -6159,7 +6159,7 @@ INSTRUCTION_BLOCK(jmp_geI):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(jmp_ltI):
-	if ((int)bsp[0] < (int)bsp[1]){
+	if ((BC_WORD_S)bsp[0] < (BC_WORD_S)bsp[1]){
 		bsp+=2;
 		pc=(BC_WORD*)pc[1];
 		END_INSTRUCTION_BLOCK;
@@ -6202,7 +6202,7 @@ INSTRUCTION_BLOCK(jmp_ne_desc):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(jmp_o_geI):
-	if ((int)bsp[((BC_WORD_S*)pc)[1]] >= (int)bsp[0]){
+	if ((BC_WORD_S)bsp[((BC_WORD_S*)pc)[1]] >= (BC_WORD_S)bsp[0]){
 		bsp+=1;
 		pc=(BC_WORD*)pc[2];
 		END_INSTRUCTION_BLOCK;
@@ -6216,7 +6216,7 @@ INSTRUCTION_BLOCK(jmp_o_geI_arraysize_a):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	if ((int)bsp[((BC_WORD_S*)pc)[1]] >= (int)n[1]){
+	if ((BC_WORD_S)bsp[((BC_WORD_S*)pc)[1]] >= (BC_WORD_S)n[1]){
 		pc=(BC_WORD*)pc[3];
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7316,11 +7316,11 @@ INSTRUCTION_BLOCK(push_t_r_args):
 	a_arity = ((int16_t*)d)[0];
 	int16_t b_arity = ((int16_t*)d)[-1] - 256 - a_arity;
 	if (a_arity + b_arity < 3) {
-		int i=2;
-		while (b_arity--)
-			*--bsp=n[i--];
+		int i=1;
 		while (a_arity--)
-			*++asp=n[i--];
+			*++asp=n[i++];
+		while (b_arity--)
+			*--bsp=n[i++];
 	} else {
 		BC_WORD *rest=(BC_WORD*)n[2];
 		int i=a_arity+b_arity-2;
