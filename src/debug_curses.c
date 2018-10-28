@@ -574,7 +574,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 			if (b_arity--) {
 				debugger_show_unboxed_value(win, node[1], indent, indent_mask, b_arity==0);
 				if (b_arity--)
-					debugger_show_unboxed_value(win, node[1], indent, indent_mask, b_arity==0);
+					debugger_show_unboxed_value(win, node[2], indent, indent_mask, b_arity==0);
 			}
 		} else {
 			if (a_arity) {
@@ -588,8 +588,8 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 			BC_WORD *rest=(BC_WORD*)node[2];
 			for (int i=0; i<a_arity; i++)
 				debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent, indent_mask, max_depth, i==a_arity-1 && b_arity==0);
-			for (int i=0; i<b_arity; i++)
-				debugger_show_unboxed_value(win, node[1], indent, indent_mask, i==b_arity-1);
+			for (int i=a_arity; i<a_arity+b_arity; i++)
+				debugger_show_unboxed_value(win, rest[i], indent, indent_mask, i==a_arity+b_arity-1);
 		}
 	} else {
 		for (int i = 1; i <= a_arity; i++)
