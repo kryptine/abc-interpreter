@@ -2222,7 +2222,7 @@ INSTRUCTION_BLOCK(fill2a012):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao1=((BC_WORD_S*)pc)[2];
-	ao2=((SS*)pc)[3];
+	ao2=pc[3];
 	a=(BC_WORD*)n[2];
 	n[1]=asp[0];
 	a[ao1]=asp[-1];
@@ -2252,7 +2252,7 @@ INSTRUCTION_BLOCK(fill2ab002):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a_o1=((BC_WORD_S*)pc)[2];
-	a_o2=((SS*)pc)[3];
+	a_o2=pc[3];
 	a=(BC_WORD*)n[2];
 	a[a_o1]=asp[0];
 	a[a_o2]=bsp[0];
@@ -2268,8 +2268,8 @@ INSTRUCTION_BLOCK(fill2ab003):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a_o1=((BC_WORD_S*)pc)[2];
-	a_o2=((SS*)pc)[3];
-	a_o3=((SS*)pc)[4];
+	a_o2=pc[3];
+	a_o3=pc[4];
 	a=(BC_WORD*)n[2];
 	a[a_o1]=asp[0];
 	a[a_o2]=asp[-1];
@@ -2298,7 +2298,7 @@ INSTRUCTION_BLOCK(fill2b002):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao1=((BC_WORD_S*)pc)[2];
-	ao2=((SS*)pc)[3];
+	ao2=pc[3];
 	a=(BC_WORD*)n[2];
 	a[ao1]=bsp[0];
 	a[ao2]=bsp[1];
@@ -2327,7 +2327,7 @@ INSTRUCTION_BLOCK(fill2b012):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	ao1=((BC_WORD_S*)pc)[2];
-	ao2=((SS*)pc)[3];
+	ao2=pc[3];
 	a=(BC_WORD*)n[2];
 	n[1]=bsp[0];
 	a[ao1]=bsp[1];
@@ -2343,8 +2343,8 @@ INSTRUCTION_BLOCK(fill2ab013):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a_o1=((BC_WORD_S*)pc)[2];
-	a_o2=((SS*)pc)[3];
-	a_o3=((SS*)pc)[4];
+	a_o2=pc[3];
+	a_o3=pc[4];
 	a=(BC_WORD*)n[2];
 	n[1]=asp[0];
 	a[a_o1]=asp[-1];
@@ -2379,7 +2379,7 @@ INSTRUCTION_BLOCK(fill3a11):
 	ao=((BC_WORD_S*)pc)[1];
 	ns=(BC_WORD*)asp[0];
 	nd=(BC_WORD*)asp[ao];
-	a_o1=((SS*)pc)[3];
+	a_o1=pc[3];
 	a=(BC_WORD*)ns[2];
 	ns[0]=(BC_WORD)&__cycle__in__spine;
 	nd[0]=*(BC_WORD_S*)&pc[2];
@@ -2398,8 +2398,8 @@ INSTRUCTION_BLOCK(fill3a12):
 	ao=((BC_WORD_S*)pc)[1];
 	ns=(BC_WORD*)asp[0];
 	nd=(BC_WORD*)asp[ao];
-	a_o1=((SS*)pc)[3];
-	a_o2=((SS*)pc)[4];
+	a_o1=pc[3];
+	a_o2=pc[4];
 	a=(BC_WORD*)ns[2];
 	ns[0]=(BC_WORD)&__cycle__in__spine;
 	nd[0]=*(BC_WORD_S*)&pc[2];
@@ -2419,9 +2419,9 @@ INSTRUCTION_BLOCK(fill3aaab13):
 	ao=((BC_WORD_S*)pc)[1];
 	ns=(BC_WORD*)asp[0];
 	nd=(BC_WORD*)asp[ao];
-	a_o1=((SS*)pc)[3];
-	a_o2=((SS*)pc)[4];
-	b_o1=((SS*)pc)[5];
+	a_o1=pc[3];
+	a_o2=pc[4];
+	b_o1=pc[5];
 	a=(BC_WORD*)ns[2];
 	ns[0]=(BC_WORD)&__cycle__in__spine;
 	nd[0]=*(BC_WORD_S*)&pc[2];
@@ -2600,7 +2600,7 @@ INSTRUCTION_BLOCK(fill_r):
 	n_ab=pc[1];
 	NEED_HEAP(n_ab-1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	ao=((SS*)pc)[3];
+	ao=pc[3];
 	n[0]=*(BC_WORD*)&pc[4];
 	n[1]=asp[ao];
 	ao_p=&asp[ao];
@@ -2638,7 +2638,7 @@ INSTRUCTION_BLOCK(fill_r):
 		if (n_a<29) break; hp[27]=ao_p[-28];
 		if (n_a<30) break; hp[28]=ao_p[-29];
 	} while (0);
-	bo=((SS*)pc)[6];
+	bo=pc[6];
 	pc+=7;
 	hp+=n_a-1;
 	hp[0]=bsp[bo];
@@ -2685,7 +2685,7 @@ INSTRUCTION_BLOCK(fill_ra0):
 	n_a=pc[1];
 	NEED_HEAP(n_a-1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	ao=((SS*)pc)[3];
+	ao=pc[3];
 	n[0]=*(BC_WORD*)&pc[4];
 	n[1]=asp[ao];
 	ao_p=&asp[ao];
@@ -2735,7 +2735,7 @@ INSTRUCTION_BLOCK(fill_ra1):
 	n_a=pc[1];
 	NEED_HEAP(n_a);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	ao=((SS*)pc)[3];
+	ao=pc[3];
 	n[0]=*(BC_WORD*)&pc[4];
 	n[1]=asp[ao];
 	ao_p=&asp[ao];
@@ -2772,7 +2772,7 @@ INSTRUCTION_BLOCK(fill_ra1):
 		if (n_a<30) break; hp[28]=ao_p[-29];
 		if (n_a<31) break; hp[29]=ao_p[-30];
 	} while (0);
-	bo=((SS*)pc)[5];
+	bo=pc[5];
 	pc+=6;
 	hp[n_a-1]=bsp[bo];
 	hp+=n_a;
@@ -2784,15 +2784,15 @@ INSTRUCTION_BLOCK(fill_r0b):
 	BC_WORD *n,n_b,*bo_p;
 
 	n_b=pc[1];
-	NEED_HEAP(n_b);
+	NEED_HEAP(n_b-1);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	bo=((SS*)pc)[4];
+	bo=pc[4];
 	bo_p=&bsp[bo];
 	n[0]=*(BC_WORD*)&pc[3];
-	n[1]=bo_p[1];
+	n[1]=bo_p[0];
 	n[2]=(BC_WORD)hp;
 	pc+=5;
-	hp[0]=bsp[bo];
+	hp[0]=bo_p[1];
 	hp[1]=bo_p[2];
 	hp[2]=bo_p[3];
 	hp[3]=bo_p[4];
@@ -2824,7 +2824,7 @@ INSTRUCTION_BLOCK(fill_r0b):
 		if (n_b<30) break; hp[28]=bo_p[29];
 		if (n_b<31) break; hp[29]=bo_p[30];
 	} while (0);
-	hp+=n_b;
+	hp+=n_b-1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill_r1b):
@@ -2835,11 +2835,11 @@ INSTRUCTION_BLOCK(fill_r1b):
 	n_b=pc[1];
 	NEED_HEAP(n_b);
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[2]];
-	ao=((SS*)pc)[3];
+	ao=pc[3];
 	n[0]=*(BC_WORD*)&pc[4];
 	n[1]=asp[ao];
 	n[2]=(BC_WORD)hp;
-	bo=((SS*)pc)[5];
+	bo=pc[5];
 	pc+=6;
 	hp[0]=bsp[bo];
 	bo_p=&bsp[bo];
@@ -3091,7 +3091,7 @@ INSTRUCTION_BLOCK(get_node_arity):
 {
 	BC_WORD *n;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	*--bsp=((SS*)(n[0]))[-1];
+	*--bsp=((int16_t*)(n[0]))[-1];
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
@@ -3116,7 +3116,7 @@ INSTRUCTION_BLOCK(is_record):
 {
 	BC_WORD *n;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	*--bsp=((SS*)(n[0]))[-1] > 127;
+	*--bsp=((int16_t*)(n[0]))[-1] > 127;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }

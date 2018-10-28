@@ -29,10 +29,6 @@
 
 #define BC_BOOL uint8_t
 
-#ifdef INTERPRETER
-# define SS short /* TODO check what to do with this */
-#endif
-
 struct symbol {
 	BC_WORD offset;
 	char *name;

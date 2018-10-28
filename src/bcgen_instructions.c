@@ -1153,7 +1153,7 @@ void code_build_r(char descriptor_name[],int a_size,int b_size,int a_offset,int 
 	}
 
 	if (a_size==0 && b_size>=5) {
-		add_instruction_w_label_offset(Cbuild_r0b,b_size,descriptor_name,2);
+		add_instruction_w_w_label_offset(Cbuild_r0b,b_size,b_offset,descriptor_name,2);
 		return;
 	} else if (a_size==1 && b_size>=4) {
 		add_instruction_w_w_label_offset_w(Cbuild_r1b,b_size,-a_offset,descriptor_name,2,b_offset);
