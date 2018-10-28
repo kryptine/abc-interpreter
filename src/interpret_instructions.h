@@ -3382,9 +3382,15 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 
 		int16_t arity = ((int16_t*)d)[-1];
 
-		if (arity > 127) { /* record */
+		if (arity > 256) { /* record */
 			int ts_len = ((BC_WORD*)(d-2))[1];
-			ts_len = ts_len / IF_INT_64_OR_32(8,4) + (ts_len % IF_INT_64_OR_32(8,4) ? 1 : 0);
+			int child_descriptors=0;
+			char *type_string=(char*)(d+IF_INT_64_OR_32(14,6));
+			for (int i=0; i<ts_len; i++)
+				if (type_string[i]=='{')
+					child_descriptors++;
+			ts_len = (ts_len+IF_INT_64_OR_32(7,3)) / IF_INT_64_OR_32(8,4);
+			ts_len += child_descriptors;
 			ts_len *= IF_INT_64_OR_32(8,4);
 			s=(uint32_t*)(d+ts_len+IF_INT_64_OR_32(14,6));
 		} else {
@@ -7709,8 +7715,18 @@ INSTRUCTION_BLOCK(push_a_r_args):
 	*--bsp=(BC_WORD)(desc+2);
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_r_arg_D):
+	/* Pop a pointer to the end of the type string of a record from bsp;
+	 * set bsp[0] to the bsp[0]'th 'child descriptor' in that record. */
+{
+	BC_WORD desc=*bsp++;
+	desc=(desc+IF_INT_64_OR_32(7,3)) & IF_INT_64_OR_32(-8,-4);
+	desc+=bsp[0]<<IF_INT_64_OR_32(3,2);
+	bsp[0]=*(BC_WORD*)desc-2;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
-INSTRUCTION_BLOCK(push_r_arg_D):  // voor unboxed records, geünboxed in iets anders, pusht de descriptor van. Staat na de type string van de constructor
 
 INSTRUCTION_BLOCK(add_arg4):
 INSTRUCTION_BLOCK(add_arg5):

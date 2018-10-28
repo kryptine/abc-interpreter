@@ -2761,7 +2761,6 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 	}
 
 	add_instruction_w_w_w(Cpush_r_args_b,-a_offset,(a_size+argument_number-1-1)<<2,n_arguments);
-	fprintf(stderr, "Warning: push_r_args_b %d %d %d %d %d was added by Camil\n",a_offset,a_size,b_size,argument_number,n_arguments);
 }
 
 void code_push_r_args_u(int a_offset,int a_size,int b_size) {
@@ -4247,6 +4246,8 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 	if (list_code)
 		printf("%d\t.data4 0\n",pgrm.data_size<<2);
 	store_data_l((a_size + b_size + 256) | (a_size << 16));
+
+	store_string(type,strlen(type),1);
 }
 
 void code_record_descriptor_label(char descriptor_name[]) {
