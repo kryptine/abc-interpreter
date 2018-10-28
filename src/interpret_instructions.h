@@ -1105,8 +1105,8 @@ INSTRUCTION_BLOCK(build_r1b):
 	bo=pc[4];
 	*++asp=(BC_WORD)hp;
 	pc+=5;
-	hp[3]=bsp[bo];
 	bo_p=&bsp[bo];
+	hp[3]=bo_p[0];
 	hp[4]=bo_p[1];
 	hp[5]=bo_p[2];
 	hp[6]=bo_p[3];
@@ -5706,13 +5706,14 @@ INSTRUCTION_BLOCK(update_b):
 INSTRUCTION_BLOCK(update_r):
 {
 	BC_WORD *array,array_o,*a,*b;
-	BC_WORD_S n_ab,n_a,n_b;
+	BC_WORD_S n_a,n_b;
 
-	n_ab=pc[1];
-	array_o = (n_ab * (BC_WORD_S)*bsp++) + 3;
+	n_a=pc[1];
+	n_b=pc[2];
+	pc+=3;
+	array_o = ((n_a+n_b) * (BC_WORD_S)*bsp++) + 3;
 	array = (BC_WORD*)asp[0];
 	a = &array[array_o];
-	n_a=pc[2];
 	b=a+n_a;
 	a[0]=asp[-1];
 	a[1]=asp[-2];
@@ -5748,8 +5749,6 @@ INSTRUCTION_BLOCK(update_r):
 	} while (0);
 	asp-=n_a;
 	asp[0]=(BC_WORD)array;
-	n_b=pc[3];
-	pc+=4;
 	b[0]=bsp[0];
 	b[1]=bsp[1];
 	do {
@@ -5897,6 +5896,58 @@ INSTRUCTION_BLOCK(update_r12):
 	bsp+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(update_r13):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 4 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	asp-=1;
+	asp[0]=(BC_WORD)array;
+	element_p[4]=bsp[0];
+	element_p[5]=bsp[1];
+	element_p[6]=bsp[2];
+	bsp+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r14):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 5 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	asp-=1;
+	asp[0]=(BC_WORD)array;
+	element_p[4]=bsp[0];
+	element_p[5]=bsp[1];
+	element_p[6]=bsp[2];
+	element_p[7]=bsp[3];
+	bsp+=4;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r1b):
+{
+	BC_WORD *array,array_o,*element_p,n;
+
+	n=pc[1];
+	array_o = (n+1) * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=2;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	asp-=1;
+	asp[0]=(BC_WORD)array;
+	for (int i=0; i<n; i++)
+		element_p[i+1]=bsp[i];
+	bsp+=n;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(update_r20):
 {
 	BC_WORD *array,array_o,*element_p;
@@ -5926,6 +5977,78 @@ INSTRUCTION_BLOCK(update_r21):
 	element_p[5]=*bsp++;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(update_r22):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 4 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	element_p[4]=asp[-2];
+	asp-=2;
+	asp[0]=(BC_WORD)array;
+	element_p[5]=bsp[0];
+	element_p[6]=bsp[1];
+	bsp+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r23):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 5 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	element_p[4]=asp[-2];
+	asp-=2;
+	asp[0]=(BC_WORD)array;
+	element_p[5]=bsp[0];
+	element_p[6]=bsp[1];
+	element_p[7]=bsp[2];
+	bsp+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r24):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 6 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o];
+	element_p[3]=asp[-1];
+	element_p[4]=asp[-2];
+	asp-=2;
+	asp[0]=(BC_WORD)array;
+	element_p[5]=bsp[0];
+	element_p[6]=bsp[1];
+	element_p[7]=bsp[2];
+	element_p[8]=bsp[3];
+	bsp+=4;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r2b):
+{
+	BC_WORD *array,array_o,*element_p,n;
+
+	n=pc[1];
+	array_o = (n+2) * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=2;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	asp-=2;
+	asp[0]=(BC_WORD)array;
+	for (int i=0; i<n; i++)
+		element_p[i+2]=bsp[i];
+	bsp+=n;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(update_r30):
 {
 	BC_WORD *array,array_o,*element_p;
@@ -5933,12 +6056,104 @@ INSTRUCTION_BLOCK(update_r30):
 	array_o = 3 * (BC_WORD_S)*bsp++;
 	array = (BC_WORD*)asp[0];
 	pc+=1;
-	element_p = &array[array_o];
+	element_p = &array[array_o+3];
 	element_p[0]=asp[-1];
 	element_p[1]=asp[-2];
 	element_p[2]=asp[-3];
 	asp-=3;
 	asp[0]=(BC_WORD)array;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r31):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 4 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	element_p[2]=asp[-3];
+	element_p[3]=*bsp++;
+	asp-=3;
+	asp[0]=(BC_WORD)array;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r32):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 5 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	element_p[2]=asp[-3];
+	element_p[3]=bsp[0];
+	element_p[4]=bsp[1];
+	asp-=3;
+	bsp+=2;
+	asp[0]=(BC_WORD)array;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r33):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 6 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	element_p[2]=asp[-3];
+	element_p[3]=bsp[0];
+	element_p[4]=bsp[1];
+	element_p[5]=bsp[2];
+	asp-=3;
+	bsp+=3;
+	asp[0]=(BC_WORD)array;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r34):
+{
+	BC_WORD *array,array_o,*element_p;
+
+	array_o = 7 * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=1;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	element_p[2]=asp[-3];
+	element_p[3]=bsp[0];
+	element_p[4]=bsp[1];
+	element_p[5]=bsp[2];
+	element_p[6]=bsp[3];
+	asp-=3;
+	bsp+=4;
+	asp[0]=(BC_WORD)array;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(update_r3b):
+{
+	BC_WORD *array,array_o,*element_p,n;
+
+	n=pc[1];
+	array_o = (n+3) * (BC_WORD_S)*bsp++;
+	array = (BC_WORD*)asp[0];
+	pc+=2;
+	element_p = &array[array_o+3];
+	element_p[0]=asp[-1];
+	element_p[1]=asp[-2];
+	element_p[2]=asp[-3];
+	asp-=3;
+	asp[0]=(BC_WORD)array;
+	for (int i=0; i<n; i++)
+		element_p[i+3]=bsp[i];
+	bsp+=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(updatepop_a):
@@ -7485,9 +7700,9 @@ INSTRUCTION_BLOCK(push_a_r_args):
 	array_o=(ab_arity*n)+3;
 	a=&array[array_o];
 	b=a+a_arity;
-	for (int i=0;i<a_arity;i++)
-		asp[i]=a[i];
 	asp+=a_arity-1;
+	for (int i=0;i<a_arity;i++)
+		asp[-i]=a[i];
 	bsp-=b_arity;
 	for (int i=0;i<b_arity;i++)
 		bsp[i]=b[i];

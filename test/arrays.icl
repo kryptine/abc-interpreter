@@ -155,4 +155,4 @@ where
 			64 -> U_50 (genhd i); 65 -> U_51 (genhd i); 66 -> U_52 (genhd i); 67 -> U_53 (genhd i); 68 -> U_54 (genhd i); 69 -> U_55 (genhd i); 
 
 Start :: [Any]
-Start = /*iter 100 reverse*/ (take 35 (gen 0))
+Start = iter 100 reverse (take 100 (gen 0))
