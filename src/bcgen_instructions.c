@@ -2873,83 +2873,49 @@ void code_repl_args_b(void) {
 }
 
 void code_repl_r_args(int a_size,int b_size) {
-	if (a_size==0) {
-		if (b_size==1) {
-			add_instruction(Crepl_r_args01);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction(Crepl_r_args01); return;
+			case 2:  add_instruction(Crepl_r_args02); return;
+			case 3:  add_instruction(Crepl_r_args03); return;
+			case 4:  add_instruction(Crepl_r_args04); return;
+			default: add_instruction_w(Crepl_r_args0b,b_size); return;
 		}
-		if (b_size==2) {
-			add_instruction(Crepl_r_args02);
-			return;
+		case 1: switch (b_size) {
+			case 0:  add_instruction(Crepl_r_args10); return;
+			case 1:  add_instruction(Crepl_r_args11); return;
+			case 2:  add_instruction(Crepl_r_args12); return;
+			case 3:  add_instruction(Crepl_r_args13); return;
+			case 4:  add_instruction(Crepl_r_args14); return;
+			default: add_instruction_w(Crepl_r_args1b,b_size); return;
 		}
-		if (b_size==3) {
-			add_instruction(Crepl_r_args03);
-			return;
+		case 2: switch (b_size) {
+			case 0:  add_instruction(Crepl_r_args20); return;
+			case 1:  add_instruction(Crepl_r_args21); return;
+			case 2:  add_instruction(Crepl_r_args22); return;
+			case 3:  add_instruction(Crepl_r_args23); return;
+			case 4:  add_instruction(Crepl_r_args24); return;
+			default: add_instruction_w(Crepl_r_args2b,b_size); return;
 		}
-		if (b_size==4) {
-			add_instruction(Crepl_r_args04);
-			return;
+		case 3: switch (b_size) {
+			case 0:  add_instruction(Crepl_r_args30); return;
+			case 1:  add_instruction(Crepl_r_args31); return;
+			case 2:  add_instruction(Crepl_r_args32); return;
+			case 3:  add_instruction(Crepl_r_args33); return;
+			case 4:  add_instruction(Crepl_r_args34); return;
+			default: add_instruction_w(Crepl_r_args3b,b_size); return;
 		}
-	} else if (a_size==1) {
-		if (b_size==0) {
-			add_instruction(Crepl_r_args10);
-			return;
+		default: switch (b_size) {
+			case 0:
+				if (a_size==4)
+					add_instruction(Crepl_r_args40);
+				else
+					add_instruction_w(Crepl_r_argsa0,a_size-1);
+				return;
+			case 1: add_instruction_w(Crepl_r_argsa1,a_size-1); return;
+			default: add_instruction_w_w(Crepl_r_args,a_size-1,b_size); return;
 		}
-		if (b_size==1) {
-			add_instruction(Crepl_r_args11);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction(Crepl_r_args12);
-			return;
-		}
-		if (b_size==3) {
-			add_instruction(Crepl_r_args13);
-			return;
-		}
-	} else if (a_size==2) {
-		if (b_size==0) {
-			add_instruction(Crepl_r_args20);
-			return;
-		}
-		if (b_size==1) {
-			add_instruction(Crepl_r_args21);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction(Crepl_r_args22);
-			return;
-		}
-	} else if (a_size==3) {
-		if (b_size==0) {
-			add_instruction(Crepl_r_args30);
-			return;
-		}
-		if (b_size==1) {
-			add_instruction(Crepl_r_args31);
-			return;
-		}
-	} else if (a_size==4 && b_size==0) {
-		add_instruction(Crepl_r_args40);
-		return;
 	}
-
-	if (a_size==1 && b_size>=4) {
-		add_instruction_w(Crepl_r_args1b,b_size);
-		return;
-	} else if (a_size>=2 && b_size>=2) {
-		add_instruction_w_w(Crepl_r_args,a_size-1,b_size);
-		return;
-	} else if (a_size>=3 && b_size==1) {
-		add_instruction_w(Crepl_r_argsa1,a_size-1);
-		return;
-	} else if (a_size>=4 && b_size==0) {
-		add_instruction_w(Crepl_r_argsa0,a_size-1);
-		return;
-	}
-
-	fprintf(stderr, "Error: repl_r_args %d %d\n",a_size,b_size);
-	exit(1);
 }
 
 void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_arguments) {
@@ -3029,50 +2995,40 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 			}
 	}
 
-	if (a_size==0 && b_size==2) {
-		add_instruction(Cselect_r02);
-		return;
-	}
-	if (a_size==1 && b_size==1) {
-		add_instruction(Cselect_r11);
-		return;
-	}
-	if (a_size==1 && b_size==2) {
-		add_instruction(Cselect_r12);
-		return;
-	}
-	if (a_size==2) {
-		if (b_size==0) {
-			add_instruction(Cselect_r20);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction(Cselect_r01); return;
+			case 2:  add_instruction(Cselect_r02); return;
+			case 3:  add_instruction(Cselect_r03); return;
+			case 4:  add_instruction(Cselect_r04); return;
+			default: add_instruction_w(Cselect_r0b,b_size); return;
 		}
-		if (b_size==1) {
-			add_instruction(Cselect_r21);
-			return;
+		case 1: switch (b_size) {
+			case 0:  add_instruction(Cselect_r10); return;
+			case 1:  add_instruction(Cselect_r11); return;
+			case 2:  add_instruction(Cselect_r12); return;
+			case 3:  add_instruction(Cselect_r13); return;
+			case 4:  add_instruction(Cselect_r14); return;
+			default: add_instruction_w(Cselect_r1b,b_size); return;
 		}
-	}
-	if (a_size==4) {
-		if (b_size==0) {
-			add_instruction(Cselect_r40);
-			return;
+		case 2: switch (b_size) {
+			case 0:  add_instruction(Cselect_r20); return;
+			case 1:  add_instruction(Cselect_r21); return;
+			case 2:  add_instruction(Cselect_r22); return;
+			case 3:  add_instruction(Cselect_r23); return;
+			case 4:  add_instruction(Cselect_r24); return;
+			default: add_instruction_w(Cselect_r2b,b_size); return;
 		}
+		case 3: switch (b_size) {
+			case 0:  add_instruction(Cselect_r30); return;
+			case 1:  add_instruction(Cselect_r31); return;
+			case 2:  add_instruction(Cselect_r32); return;
+			case 3:  add_instruction(Cselect_r33); return;
+			case 4:  add_instruction(Cselect_r34); return;
+			default: add_instruction_w(Cselect_r3b,b_size); return;
+		}
+		default: add_instruction_w_w(Cselect_r,a_size,b_size); return;
 	}
-
-	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_w_w(Cselect_r,a_size+b_size,a_size,b_size);
-		return;
-	}
-	if (a_size>=4 && b_size==1) {
-		add_instruction_w(Cselect_ra1,a_size+b_size);
-		return;
-	}
-	if (a_size>=3 && b_size==0) {
-		add_instruction_w(Cselect_ra,a_size);
-		return;
-	}
-
-	fprintf(stderr, "Error: select %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);
 }
 
 void code_set_finalizers(void) {
@@ -3150,53 +3106,40 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 			}
 	}
 
-	if (a_size==0 && b_size==2) {
-		add_instruction(Cupdate_r02);
-		return;
-	}
-	if (a_size==1 && b_size==1) {
-		add_instruction(Cupdate_r11);
-		return;
-	}
-	if (a_size==1 && b_size==2) {
-		add_instruction(Cupdate_r12);
-		return;
-	}
-	if (a_size==2) {
-		if (b_size==0) {
-			add_instruction(Cupdate_r20);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction(Cupdate_r01); return;
+			case 2:  add_instruction(Cupdate_r02); return;
+			case 3:  add_instruction(Cupdate_r03); return;
+			case 4:  add_instruction(Cupdate_r04); return;
+			default: add_instruction_w(Cupdate_r0b,b_size); return;
 		}
-		if (b_size==1) {
-			add_instruction(Cupdate_r21);
-			return;
+		case 1: switch (b_size) {
+			case 0:  add_instruction(Cupdate_r10); return;
+			case 1:  add_instruction(Cupdate_r11); return;
+			case 2:  add_instruction(Cupdate_r12); return;
+			case 3:  add_instruction(Cupdate_r13); return;
+			case 4:  add_instruction(Cupdate_r14); return;
+			default: add_instruction_w(Cupdate_r1b,b_size); return;
 		}
+		case 2: switch (b_size) {
+			case 0:  add_instruction(Cupdate_r20); return;
+			case 1:  add_instruction(Cupdate_r21); return;
+			case 2:  add_instruction(Cupdate_r22); return;
+			case 3:  add_instruction(Cupdate_r23); return;
+			case 4:  add_instruction(Cupdate_r24); return;
+			default: add_instruction_w(Cupdate_r2b,b_size); return;
+		}
+		case 3: switch (b_size) {
+			case 0:  add_instruction(Cupdate_r30); return;
+			case 1:  add_instruction(Cupdate_r31); return;
+			case 2:  add_instruction(Cupdate_r32); return;
+			case 3:  add_instruction(Cupdate_r33); return;
+			case 4:  add_instruction(Cupdate_r34); return;
+			default: add_instruction_w(Cupdate_r3b,b_size); return;
+		}
+		default: add_instruction_w_w(Cupdate_r,a_size,b_size); return;
 	}
-	if (a_size==3 && b_size==0) {
-		add_instruction(Cupdate_r30);
-		return;
-	}
-	if (a_size==4 && b_size==0) {
-		add_instruction(Cupdate_r40);
-		return;
-	}
-
-	if (a_size==0) {
-		add_instruction_w(Cupdate_r0b,b_size);
-		return;
-	} else if (a_size>=2 && b_size>=2) {
-		add_instruction_w_w_w(Cupdate_r,a_size+b_size,a_size,b_size);
-		return;
-	} else if (a_size>3 && b_size==1) {
-		add_instruction_w(Cupdate_ra1,a_size+b_size);
-		return;
-	} else if (a_size>4 && b_size==0) {
-		add_instruction_w(Cupdate_ra,a_size);
-		return;
-	}
-
-	fprintf(stderr, "Error: update %s %d %d\n",element_descriptor,a_size,b_size);
-	exit(1);
 }
 
 void code_update_a(int a_offset_1,int a_offset_2) {
