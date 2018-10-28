@@ -67,6 +67,9 @@ struct program {
 	int host_symbols_n;
 	struct host_symbol *host_symbols;
 #endif
+#ifdef DEBUG_CURSES
+	unsigned int nr_instructions;
+#endif
 };
 
 void free_program(struct program *pgm);

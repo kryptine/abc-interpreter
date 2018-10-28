@@ -71,6 +71,10 @@ void init_parser(struct parser *state
 	state->code_offset = 0;
 	state->data_offset = 0;
 #endif
+
+#ifdef DEBUG_CURSES
+	state->program->nr_instructions = 0;
+#endif
 }
 
 void free_parser(struct parser *state) {
@@ -276,6 +280,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->program->code[state->ptr++] = elem16;
 # endif
 #endif
+#ifdef DEBUG_CURSES
+				state->program->nr_instructions++;
+#endif
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
 #ifdef LINKER
@@ -357,10 +364,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case '?':
+							fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
-#if 0
 							exit(-1);
-#endif
 						default:
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 								return 1;
