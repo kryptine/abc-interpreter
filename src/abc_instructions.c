@@ -406,12 +406,6 @@ char *instruction_type (BC_WORD i) {
 		case Cselect_r23:            return "";
 		case Cselect_r24:            return "";
 		case Cselect_r2b:            return "n";
-		case Cselect_r30:            return "";
-		case Cselect_r31:            return "";
-		case Cselect_r32:            return "";
-		case Cselect_r33:            return "";
-		case Cselect_r34:            return "";
-		case Cselect_r3b:            return "n";
 		case Cset_finalizers:        return "";
 		case CshiftlI:               return "";
 		case CshiftrI:               return "";

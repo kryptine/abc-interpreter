@@ -3018,14 +3018,6 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 			case 4:  add_instruction(Cselect_r24); return;
 			default: add_instruction_w(Cselect_r2b,b_size); return;
 		}
-		case 3: switch (b_size) {
-			case 0:  add_instruction(Cselect_r30); return;
-			case 1:  add_instruction(Cselect_r31); return;
-			case 2:  add_instruction(Cselect_r32); return;
-			case 3:  add_instruction(Cselect_r33); return;
-			case 4:  add_instruction(Cselect_r34); return;
-			default: add_instruction_w(Cselect_r3b,b_size); return;
-		}
 		default: add_instruction_w_w(Cselect_r,a_size,b_size); return;
 	}
 }
