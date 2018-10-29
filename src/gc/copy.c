@@ -269,7 +269,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 						}
 
 						for (i = 0; i < b_arity; i++)
-							*new_heap++ = (BC_WORD) rest[i+a_arity];
+							*new_heap++ = (BC_WORD) rest[i+a_arity-1];
 					}
 				} else if (b_arity < 3) {
 					*new_heap++ = node[1];
