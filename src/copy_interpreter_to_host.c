@@ -137,12 +137,19 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 						ie->hp[j]=(BC_WORD)s[i+j];
 					i+=len+2;
 					ie->hp+=1+len;
-				} else {
+				} else if (desc == (BC_WORD)&__ARRAY__+2) {
+					fprintf(stderr,"; TODO: arrays\n"); /* TODO */
+					exit(1);
+				} else if (desc & 2) {
 					desc-=10;
 					**ptr_stack--=desc;
 					s[i]=(void*)desc;
 					if (i==0)
 						node=(BC_WORD*)desc;
+				} else {
+					**ptr_stack--=(BC_WORD)ie->hp;
+					ie->hp[0]=desc;
+					ie->hp+=3;
 				}
 			} else {
 				**ptr_stack-- = (BC_WORD) ie->hp;
