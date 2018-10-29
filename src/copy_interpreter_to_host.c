@@ -292,6 +292,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 			else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
 				words=len+3;
 			else { /* boxed array */
+				/* TODO: unboxed record arrays */
 				int words_needed = 5+len+(3+FINALIZER_SIZE_ON_HEAP)*len;
 				if (host_heap_free < words_needed)
 					return -2;

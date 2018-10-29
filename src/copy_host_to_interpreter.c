@@ -89,7 +89,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			words=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
 			words=length;
-		else {
+		else { /* TODO: unboxed record arrays */
 			heap[2]=(BC_WORD)&__ARRAY__+2;
 			heap[3]=length;
 			heap[4]=0;

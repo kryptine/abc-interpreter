@@ -7,7 +7,7 @@ Global
 		CheckStacks:	False
 		CheckIndexes:	True
 	Application
-		HeapSize:	2097152000
+		HeapSize:	20971520
 		StackSize:	512000
 		ExtraMemory:	8192
 		IntialHeapSize:	204800
@@ -24,7 +24,7 @@ Global
 			Time:	False
 			Stack:	False
 			Dynamics:	False
-			GenericFusion:	False
+			GenericFusion:	True
 			DescExL:	False
 		Output
 			Output:	NoConsole
@@ -59,4 +59,4 @@ MainModule
 		Verbose:	True
 		ReadableABC:	False
 		ReuseUniqueNodes:	True
-		Fusion:	False
+		Fusion:	True

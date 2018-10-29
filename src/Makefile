@@ -1,7 +1,6 @@
 SHELL:=bash
 CLM:=clm
 CPM:=cpm
-CLMFLAGS:=-IL Platform -nr -nt -h 20m
 override CFLAGS+=\
 	-std=c99\
 	-Wall\
@@ -37,7 +36,7 @@ optimise: .FORCE
 	$(CPM) project $@_win.prj build
 else
 optimise: .FORCE
-	$(CLM) $(CLMFLAGS) ABC.Optimise -o $@
+	$(CPM) project $@.prj build
 endif
 
 SRC_BCGEN:=\

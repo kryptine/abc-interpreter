@@ -126,7 +126,11 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
 parseLine`{|OBJECT|} fx = \i s -> appFst OBJECT <$> fx i s
-parseLine`{|EITHER|} fl fr = \i s -> appFst LEFT <$> fl i s <|> appFst RIGHT <$> fr i s
+parseLine`{|EITHER|} fl fr = \i s -> case fl i s of
+	Just (l,i) -> Just (LEFT l,i)
+	Nothing    -> case fr i s of
+		Just (r,i) -> Just (RIGHT r,i)
+		Nothing    -> Nothing
 parseLine`{|UNIT|} = \i _ -> Just (UNIT, i)
 parseLine`{|PAIR|} fx fy = \i s -> fx i s >>= \(x,i) -> fy (skipSpace i s) s >>= \(y,i) -> Just (PAIR x y, skipSpace i s)
 where
