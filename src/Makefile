@@ -1,7 +1,7 @@
 SHELL:=bash
 CLM:=clm
 CPM:=cpm
-CLMFLAGS:=-IL Platform -nr -nt
+CLMFLAGS:=-IL Platform -nr -nt -h 20m
 override CFLAGS+=\
 	-std=c99\
 	-Wall\

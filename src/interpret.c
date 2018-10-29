@@ -314,7 +314,7 @@ eval_to_hnf_return:
 #endif
 				);
 #ifdef DEBUG_CURSES
-		debugger_set_heap(hp);
+		debugger_set_heap(hp+heap_free-heap_size);
 #endif
 		if (heap_free <= old_heap_free) {
 			fprintf(stderr, "Heap full (%d/%d).\n",old_heap_free,(int)heap_free);

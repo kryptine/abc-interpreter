@@ -205,9 +205,9 @@ EOF
 	fi
 
 	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
-		diff $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
+		git diff --no-index --word-diff -U0 $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
 	else
-		diff $MODULE$EXPECTED_PREFIX.expected $MODULE.result
+		git diff --no-index --word-diff -U0 $MODULE$EXPECTED_PREFIX.expected $MODULE.result
 	fi
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"

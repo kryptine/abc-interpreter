@@ -1,5 +1,6 @@
 # vim: ts=12:
 acker
+arrays
 brainfuck
 chars
 compress

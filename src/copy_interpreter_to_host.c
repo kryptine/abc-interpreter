@@ -12,6 +12,7 @@
 #include "copy_interpreter_to_host.h"
 #include "finalizers.h"
 #include "gc.h"
+#include "gc/util.h"
 #include "interpret.h"
 #include "util.h"
 
@@ -87,6 +88,9 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 	BC_WORD dummy;
 	*++ptr_stack = &dummy;
 	*--a_size_stack = 1;
+#if DEBUG_CLEAN_LINKS > 1
+	fprintf(stderr,"Copying from string:\n");
+#endif
 	/* TODO check heap & stack space */
 	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++) {
 		if (a_size_stack[0] == 0) {
@@ -103,14 +107,36 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 				continue;
 			}
 
+#if DEBUG_CLEAN_LINKS > 1
+			fprintf(stderr,"\t");
+			for (int16_t *a=(int16_t*)ie->csp-1; a>a_size_stack; a--)
+				fprintf(stderr,"   ");
+			fprintf(stderr,"%p := %p",ie->hp,(void*)desc);
+#endif
 			int16_t a_arity = ((int16_t*)desc)[-1];
 			/*int16_t b_arity = 0;*/
 
 			if (a_arity==0) {
 				if (desc == (BC_WORD)&dINT+2) { /* TODO: more special cases */
+#if DEBUG_CLEAN_LINKS > 1
+					fprintf(stderr,"; INT");
+#endif
 					**ptr_stack--=(BC_WORD)ie->hp;
 					*ie->hp++=desc;
 					*ie->hp++=(BC_WORD)s[++i];
+				} else if (desc == (BC_WORD)&__STRING__+2) {
+					**ptr_stack--=(BC_WORD)ie->hp;
+					ie->hp[0]=desc;
+					BC_WORD len=(BC_WORD)s[i+1];
+#if DEBUG_CLEAN_LINKS > 1
+					fprintf(stderr,"; __STRING__ %ld",len);
+#endif
+					ie->hp[1]=len;
+					len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+					for (int j=2; j<len+2; j++)
+						ie->hp[j]=(BC_WORD)s[i+j];
+					i+=len+2;
+					ie->hp+=1+len;
 				} else {
 					desc-=10;
 					**ptr_stack--=desc;
@@ -144,6 +170,10 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 			}
 
 			*--a_size_stack = a_arity;
+
+#if DEBUG_CLEAN_LINKS > 1
+			fprintf(stderr,"\n");
+#endif
 		}
 	}
 
@@ -222,6 +252,7 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
+extern void *ARRAY;
 BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *host_heap = ie->host->host_hp_ptr;
@@ -242,9 +273,49 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 		host_heap[0] = node[0];
 		host_heap[1] = node[1];
 		return 2;
+	} else if (on_heap(node[1], ie->heap, ie->heap_size)) {
+		BC_WORD *arr=(BC_WORD*)node[1];
+		int len=arr[1];
+		int words;
+		if (arr[0] == (BC_WORD) &__STRING__+2) {
+			words=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
+			if (host_heap_free < words+2)
+				return -2;
+			host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
+			host_heap[1]=(BC_WORD) &host_heap[2];
+			memcpy(&host_heap[2],arr,words*IF_INT_64_OR_32(8,4));
+			return words+2;
+		} else if (arr[0] == (BC_WORD) &__ARRAY__+2) {
+			BC_WORD desc=arr[2];
+			if (desc == (BC_WORD) &CHAR+2 || desc == (BC_WORD) &BOOL+2)
+				words=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+3;
+			else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
+				words=len+3;
+			else { /* boxed array */
+				int words_needed = 5+len+(3+FINALIZER_SIZE_ON_HEAP)*len;
+				if (host_heap_free < words_needed)
+					return -2;
+				host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
+				host_heap[1]=(BC_WORD) &host_heap[2];
+				host_heap[2]=arr[0];
+				host_heap[3]=arr[1];
+				host_heap[4]=arr[2];
+				BC_WORD *new_array=&host_heap[5];
+				host_heap+=5+len;
+				for (int i=0; i<len; i++) {
+					new_array[i]=(BC_WORD)host_heap;
+					host_heap=make_interpret_node(host_heap, clean_ie, arr[i+3], 0);
+				}
+				return words_needed;
+			}
+			if (host_heap_free < words+2)
+				return -2;
+			host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
+			host_heap[1]=(BC_WORD) &host_heap[2];
+			memcpy(&host_heap[2],arr,words*IF_INT_64_OR_32(8,4));
+			return words+2;
+		}
 	}
-	/* TODO: probably we get CHAR, BOOL and REAL for free? */
-	/* TODO: we do need to add strings, arrays etc. here though */
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;

@@ -58,6 +58,11 @@ void init_parser(struct parser *state
 	/* TODO: pre-seed the symbol matching with more descriptors that are not in the bytecode */
 	find_host_symbol_by_name(state->program, "INT")->interpreter_location = (void*) &INT;
 	find_host_symbol_by_name(state->program, "dINT")->interpreter_location = (void*) &dINT;
+	find_host_symbol_by_name(state->program, "BOOL")->interpreter_location = (void*) &BOOL;
+	find_host_symbol_by_name(state->program, "CHAR")->interpreter_location = (void*) &CHAR;
+	find_host_symbol_by_name(state->program, "REAL")->interpreter_location = (void*) &REAL;
+	find_host_symbol_by_name(state->program, "__ARRAY__")->interpreter_location = (void*) &__ARRAY__;
+	find_host_symbol_by_name(state->program, "__STRING__")->interpreter_location = (void*) &__STRING__;
 #endif
 
 #ifdef LINKER
@@ -65,6 +70,10 @@ void init_parser(struct parser *state
 	state->data_size = 0;
 	state->code_offset = 0;
 	state->data_offset = 0;
+#endif
+
+#ifdef DEBUG_CURSES
+	state->program->nr_instructions = 0;
 #endif
 }
 
@@ -271,6 +280,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->program->code[state->ptr++] = elem16;
 # endif
 #endif
+#ifdef DEBUG_CURSES
+				state->program->nr_instructions++;
+#endif
 				char *type = instruction_type(elem16);
 				for (; *type; type++) {
 #ifdef LINKER
@@ -352,10 +364,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case '?':
+							fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
-#if 0
 							exit(-1);
-#endif
 						default:
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 								return 1;

@@ -29,10 +29,6 @@
 
 #define BC_BOOL uint8_t
 
-#ifdef INTERPRETER
-# define SS short /* TODO check what to do with this */
-#endif
-
 struct symbol {
 	BC_WORD offset;
 	char *name;
@@ -70,6 +66,9 @@ struct program {
 	char *host_symbols_strings;
 	int host_symbols_n;
 	struct host_symbol *host_symbols;
+#endif
+#ifdef DEBUG_CURSES
+	unsigned int nr_instructions;
 #endif
 };
 

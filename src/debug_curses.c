@@ -107,7 +107,7 @@ void init_debugger(struct program *_program,
 	noecho();
 
 	winh_listing = newwin(1, WIN_LST_WIDTH, WIN_LST_TOP - 1, WIN_LST_LFT);
-	win_listing = newpad(20000, 255);
+	win_listing = newpad(program->nr_instructions, 255);
 	wprintw(winh_listing, "Program listing");
 	wbkgd(winh_listing, A_STANDOUT);
 	print_program(win_listing, program);
@@ -319,7 +319,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 	else if (node[0] == (BC_WORD) &REAL+2)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
 	else if (node[0] == (BC_WORD) &__cycle__in__spine)
-		wprintw(win, "__cycle__in__spine");
+		wprintw(win, "_cycle_in_spine");
 	else {
 		char _tmp[256];
 		print_label(_tmp, 256, 0, (BC_WORD*) node[0], program, hp, heap_size);
@@ -467,6 +467,29 @@ void debugger_update_views(BC_WORD *pc, BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp
 	wrefresh(win_vertical_bar);
 }
 
+void debugger_show_unboxed_value(WINDOW *win, BC_WORD value, int indent, uint64_t indent_mask, int is_last) {
+	if (indent > 0) {
+		waddch(win, ' ');
+		for (int i = indent-1; i > 0; i--) {
+			waddch(win, (indent_mask & (1 << i)) ? ACS_VLINE : ' ');
+			waddch(win, ' ');
+		}
+		waddch(win, is_last ? ACS_LLCORNER : ACS_LTEE);
+	}
+	waddch(win, ACS_HLINE);
+
+	wprintw(win, BC_WORD_S_FMT, value);
+	if (' ' <= value && value <= '~') {
+		wprintw(win, "  '%c'\n", value);
+	} else if (value == 0) {
+		wprintw(win, "  (false)\n");
+	} else if (value == 1) {
+		wprintw(win, "  (true)\n");
+	} else {
+		wprintw(win, "\n");
+	}
+}
+
 void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_t indent_mask, int max_depth, int is_last) {
 	if (indent > 0) {
 		waddch(win, ' ');
@@ -480,6 +503,11 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 
 	if (max_depth == -1) {
 		wprintw(win, "...\n");
+		return;
+	}
+
+	if (node[0] == (BC_WORD) &__cycle__in__spine) {
+		wprintw(win, " _cycle_in_spine");
 		return;
 	}
 
@@ -520,8 +548,6 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " __ARRAY__");
 	else if (node[0] == (BC_WORD) ARRAY+18)
 		wprintw(win, " ARRAY");
-	else if (node[0] == (BC_WORD) &__cycle__in__spine)
-		wprintw(win, " __cycle__in__spine");
 	else {
 		char _tmp[256];
 		if (a_arity + b_arity > 0)
@@ -532,32 +558,44 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 
 	if (on_heap((BC_WORD) node, hp, heap_size))
 		wprintw(win, "  {%d}", node - hp);
-	if (b_arity)
-		wprintw(win, " (%d unboxed values not shown)", b_arity);
 	waddch(win, '\n');
 
 	indent++;
 	indent_mask = (indent_mask << 1) + 1;
 	max_depth--;
 
-	/* TODO unboxed values */
-	if (a_arity == 0) {
-		return;
-	} else if (node[0] & 2) {
-		debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent, indent_mask, max_depth, a_arity == 1);
+	if (node[0] & 2) {
+		if (a_arity+b_arity < 3) {
+			if (a_arity--) {
+				debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent, indent_mask, max_depth, a_arity==0);
+				if (a_arity--)
+					debugger_show_node_as_tree_(win, (BC_WORD*) node[2], indent, indent_mask, max_depth, a_arity==0);
+			}
+			if (b_arity--) {
+				debugger_show_unboxed_value(win, node[1], indent, indent_mask, b_arity==0);
+				if (b_arity--)
+					debugger_show_unboxed_value(win, node[2], indent, indent_mask, b_arity==0);
+			}
+		} else {
+			if (a_arity) {
+				debugger_show_node_as_tree_(win, (BC_WORD*) node[1], indent, indent_mask, max_depth, 0);
+				a_arity--;
+			} else {
+				debugger_show_unboxed_value(win, node[1], indent, indent_mask, 0);
+				b_arity--;
+			}
 
-		if (a_arity == 1)
-			return;
-		else if (a_arity == 2 && b_arity == 0)
-			debugger_show_node_as_tree_(win, (BC_WORD*) node[2], indent, indent_mask, max_depth, 1);
-		else {
-			BC_WORD **rest = (BC_WORD**) node[2];
-			for (int i = 0; i < a_arity-1; i++)
-				debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent, indent_mask, max_depth, i+2 == a_arity);
+			BC_WORD *rest=(BC_WORD*)node[2];
+			for (int i=0; i<a_arity; i++)
+				debugger_show_node_as_tree_(win, (BC_WORD*) rest[i], indent, indent_mask, max_depth, i==a_arity-1 && b_arity==0);
+			for (int i=a_arity; i<a_arity+b_arity; i++)
+				debugger_show_unboxed_value(win, rest[i], indent, indent_mask, i==a_arity+b_arity-1);
 		}
 	} else {
 		for (int i = 1; i <= a_arity; i++)
-			debugger_show_node_as_tree_(win, (BC_WORD*) node[i], indent, indent_mask, max_depth, a_arity+b_arity == i);
+			debugger_show_node_as_tree_(win, (BC_WORD*) node[i], indent, indent_mask, max_depth, a_arity==i && b_arity==0);
+		for (int i = 0; i < b_arity; i++)
+			debugger_show_unboxed_value(win, node[a_arity+i+1], indent, indent_mask, i==b_arity-1);
 	}
 }
 

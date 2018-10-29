@@ -101,7 +101,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 			if (node[0] == (BC_WORD) &INT + 2 ||
 					node[0] == (BC_WORD) &CHAR + 2 ||
 					node[0] == (BC_WORD) &BOOL + 2 ||
-					node[0] == (BC_WORD) &REAL + 2) { /* TODO more basic types */
+					node[0] == (BC_WORD) &REAL + 2) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\t(INT / CHAR / BOOL / REAL)\n");
 #endif
@@ -131,51 +131,64 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 				new_heap++;
 				*new_heap++ = node[1];
 				*new_heap++ = node[2];
-				BC_WORD *start_array = &node[3];
+				BC_WORD *elem_p = &node[3];
 				uint32_t l = node[1];
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tlength is %d\n", l);
 #endif
-				if (node[2] == (BC_WORD) &INT + 2 || node[2] == (BC_WORD) &REAL + 2) {
+				if (node[2]==(BC_WORD)&INT+2 || node[2]==(BC_WORD)&REAL+2) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 					fprintf(stderr, "\t\tof type Int/Real\n");
 #endif
 					for (; l; l--)
-						*new_heap++ = *start_array++;
-				} else if (node[2] == (BC_WORD) &BOOL + 2) {
+						*new_heap++ = *elem_p++;
+				} else if (node[2]==(BC_WORD)&BOOL+2 || node[2]==(BC_WORD)&CHAR+2) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-					fprintf(stderr, "\t\tof type Bool\n");
+					fprintf(stderr, "\t\tof type Bool/Char\n");
 #endif
 					l = l / IF_INT_64_OR_32(8,4) + (l % IF_INT_64_OR_32(8,4) ? 1 : 0);
 					for (; l; l--)
-						*new_heap++ = *start_array++;
-				} else {
+						*new_heap++ = *elem_p++;
+				} else { /* unboxed */
+					int16_t arity=1;
+					int16_t a_arity=1;
+					int16_t b_arity=0;
+					if (node[2]!=0) { /* unboxed */
+						BC_WORD *desc=(BC_WORD*)node[2];
+						arity=((int16_t*)desc)[0];
+						a_arity=((int16_t*)desc)[1];
+						b_arity=arity-256-a_arity;
+						arity=a_arity+b_arity;
+					}
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-					fprintf(stderr, "\t\tof a boxed type\n");
+					fprintf(stderr,"\t\tof some type with arities %d/%d\n",a_arity,b_arity);
 #endif
 					for (; l; l--) {
-						if (on_heap(*start_array, old_heap, heap_size)) {
-							if (*start_array <= (BC_WORD) node) { /* Indirected */
+						for (int i=0; i<a_arity; i++) {
+							if (on_heap(*elem_p, old_heap, heap_size)) {
+								if (*elem_p <= (BC_WORD) node) { /* Indirected */
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-								fprintf(stderr, "\t\tElem is indirected; now %p\n", (void*)*(BC_WORD*)*start_array);
+									fprintf(stderr, "\t\tElem is indirected; now %p\n", (void*)*(BC_WORD*)*elem_p);
 #endif
-								*new_heap++ = *(BC_WORD*)*start_array;
-							} else { /* Reverse pointer */
-								BC_WORD temp = *(BC_WORD*)*start_array;
+									*new_heap++ = *(BC_WORD*)*elem_p;
+								} else { /* Reverse pointer */
+									BC_WORD temp = *(BC_WORD*)*elem_p;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-								fprintf(stderr, "\t\tReversing elem (%p)\n", (void*)temp);
+									fprintf(stderr, "\t\tReversing elem_p (%p)\n", (void*)temp);
 #endif
-								*(BC_WORD*)*start_array = (BC_WORD) new_heap | 1;
-								*new_heap++ = temp;
+									*(BC_WORD*)*elem_p = (BC_WORD) new_heap | 1;
+									*new_heap++ = temp;
+								}
+							} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+								fprintf(stderr, "\t\tElem is not on the heap (%p)\n",(void*)*elem_p);
+#endif
+								*new_heap++ = *elem_p;
 							}
-						} else {
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
-							fprintf(stderr, "\t\tElem is not on the heap\n");
-#endif
-							*new_heap++ = *start_array;
+							elem_p++;
 						}
-
-						start_array++;
+						for (int i=0; i<b_arity; i++)
+							*new_heap++=*elem_p++;
 					}
 				}
 			} else {
@@ -268,7 +281,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 						}
 
 						for (i = 0; i < b_arity; i++)
-							*new_heap++ = (BC_WORD) rest[i+a_arity];
+							*new_heap++ = (BC_WORD) rest[i+a_arity-1];
 					}
 				} else if (b_arity < 3) {
 					*new_heap++ = node[1];
@@ -282,6 +295,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 						*new_heap++ = rest[i];
 				}
 
+				/* TODO: is this necessary? */
 				if (b_arity + a_arity < 2)
 					new_heap += 2 - b_arity - a_arity;
 			}
@@ -326,11 +340,11 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 			for (int i = 0; i < b_arity; i++)
 				*new_heap++ = node[a_arity+i+1];
 
-			if (arity + b_arity < 2) {
+			if (a_arity + b_arity < 2) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\tFilling up with %d\n", 2 - arity - b_arity);
 #endif
-				new_heap += 2 - arity - b_arity;
+				new_heap += 2 - a_arity - b_arity;
 			}
 		}
 	}
