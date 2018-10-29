@@ -75,7 +75,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuildhr40:             return "?";
 		case Cbuild_r:               return "nnlnn";
 		case Cbuild_ra0:             return "nnl";
-		case Cbuild_ra1:             return "nnl";
+		case Cbuild_ra1:             return "nnln";
 		case Cbuild_r0b:             return "nnl";
 		case Cbuild_r1b:             return "nnln";
 		case Cbuild_r01:             return "nl";
