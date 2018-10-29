@@ -2,6 +2,7 @@ module arrays
 
 import StdEnv
 import StdGeneric
+from Data.Func import hyperstrict
 
 :: A = A_1 | A_2 Int | A_3 Int Int
 :: B :== Int
@@ -155,4 +156,4 @@ where
 			64 -> U_50 (genhd i); 65 -> U_51 (genhd i); 66 -> U_52 (genhd i); 67 -> U_53 (genhd i); 68 -> U_54 (genhd i); 69 -> U_55 (genhd i); 
 
 Start :: [Any]
-Start = iter 100 reverse (take 100 (gen 0))
+Start = iter 10000 reverse (hyperstrict (iter 10000 reverse (take 100 (gen 0))))

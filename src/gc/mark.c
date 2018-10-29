@@ -191,13 +191,26 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 					node[0] == (BC_WORD) &__STRING__ + 2) {
 			} else if (node[0] == (BC_WORD) &__ARRAY__ + 2) {
 				/* TODO unboxed records */
-				if (node[2] != (BC_WORD) &INT + 2 &&
-						node[2] != (BC_WORD) &REAL + 2 &&
-						node[2] != (BC_WORD) &BOOL + 2) {
-					uint32_t l = node[1];
-					BC_WORD **rest = (BC_WORD**) &node[3];
-					for (int i = 0; i < l; i++)
-						add_grey_node(set, rest[i], heap, heap_size);
+				if (node[2] == (BC_WORD) &INT + 2 ||
+						node[2] == (BC_WORD) &REAL + 2 ||
+						node[2] == (BC_WORD) &BOOL + 2) { /* unboxed, no nodes */
+				} else {
+					int16_t arity=1;
+					int16_t a_arity=1;
+					int16_t b_arity=0;
+					if (node[2]!=0) { /* unboxed */
+						BC_WORD *desc=(BC_WORD*)node[2];
+						arity=((int16_t*)desc)[0];
+						a_arity=((int16_t*)desc)[1];
+						b_arity=arity-256-a_arity;
+						arity=a_arity+b_arity;
+					}
+					BC_WORD **arr=(BC_WORD**)&node[3];
+					for (int len=node[1]; len; len--) {
+						for (int i=0; i<a_arity; i++)
+							add_grey_node(set, arr[i], heap, heap_size);
+						arr+=arity;
+					}
 				}
 			} else if (a_arity >= 1) {
 				add_grey_node(set, (BC_WORD*) node[1], heap, heap_size);

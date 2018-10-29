@@ -149,34 +149,46 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 					l = l / IF_INT_64_OR_32(8,4) + (l % IF_INT_64_OR_32(8,4) ? 1 : 0);
 					for (; l; l--)
 						*new_heap++ = *elem_p++;
-				} else {
-					/* TODO unboxed records */
+				} else { /* unboxed */
+					int16_t arity=1;
+					int16_t a_arity=1;
+					int16_t b_arity=0;
+					if (node[2]!=0) { /* unboxed */
+						BC_WORD *desc=(BC_WORD*)node[2];
+						arity=((int16_t*)desc)[0];
+						a_arity=((int16_t*)desc)[1];
+						b_arity=arity-256-a_arity;
+						arity=a_arity+b_arity;
+					}
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
-					fprintf(stderr, "\t\tof a boxed type\n");
+					fprintf(stderr,"\t\tof some type with arities %d/%d\n",a_arity,b_arity);
 #endif
 					for (; l; l--) {
-						if (on_heap(*elem_p, old_heap, heap_size)) {
-							if (*elem_p <= (BC_WORD) node) { /* Indirected */
+						for (int i=0; i<a_arity; i++) {
+							if (on_heap(*elem_p, old_heap, heap_size)) {
+								if (*elem_p <= (BC_WORD) node) { /* Indirected */
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-								fprintf(stderr, "\t\tElem is indirected; now %p\n", (void*)*(BC_WORD*)*elem_p);
+									fprintf(stderr, "\t\tElem is indirected; now %p\n", (void*)*(BC_WORD*)*elem_p);
 #endif
-								*new_heap++ = *(BC_WORD*)*elem_p;
-							} else { /* Reverse pointer */
-								BC_WORD temp = *(BC_WORD*)*elem_p;
+									*new_heap++ = *(BC_WORD*)*elem_p;
+								} else { /* Reverse pointer */
+									BC_WORD temp = *(BC_WORD*)*elem_p;
 #if (DEBUG_GARBAGE_COLLECTOR > 3)
-								fprintf(stderr, "\t\tReversing elem_p (%p)\n", (void*)temp);
+									fprintf(stderr, "\t\tReversing elem_p (%p)\n", (void*)temp);
 #endif
-								*(BC_WORD*)*elem_p = (BC_WORD) new_heap | 1;
-								*new_heap++ = temp;
+									*(BC_WORD*)*elem_p = (BC_WORD) new_heap | 1;
+									*new_heap++ = temp;
+								}
+							} else {
+#if (DEBUG_GARBAGE_COLLECTOR > 3)
+								fprintf(stderr, "\t\tElem is not on the heap (%p)\n",(void*)*elem_p);
+#endif
+								*new_heap++ = *elem_p;
 							}
-						} else {
-#if (DEBUG_GARBAGE_COLLECTOR > 3)
-							fprintf(stderr, "\t\tElem is not on the heap (%p)\n",(void*)*elem_p);
-#endif
-							*new_heap++ = *elem_p;
+							elem_p++;
 						}
-
-						elem_p++;
+						for (int i=0; i<b_arity; i++)
+							*new_heap++=*elem_p++;
 					}
 				}
 			} else {
