@@ -31,27 +31,27 @@ test-gc:
   script:
     - cd test
     - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh --32-bit -o weird_types
+    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -3 -o weird_types
 
 benchmark-x64:
   extends: .base
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh --benchmark --fast
+    - ./run_tests.sh -bf
 
 benchmark-x86:
   extends: .base
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh --32-bit --benchmark --fast
+    - ./run_tests.sh -3bf
 
 interworking-from-Start:
   extends: .base
   stage: test-interworking
   script:
-    - (cd test; ./run_tests.sh -Rqo functions)
+    - (cd test; ./run_tests.sh -Rq -o functions)
     - cd src
     - make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'

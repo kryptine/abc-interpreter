@@ -27,28 +27,27 @@ print_help () {
 	echo "$0: run tests"
 	echo
 	echo "Options:"
-	echo "  --help             Print this help"
+	echo "  -H       Print this help"
 	echo
-	echo "  -o/--only TEST     Only run test TEST"
+	echo "  -o TEST  Only run test TEST"
 	echo
-	echo "  -b/--benchmark     Run benchmarks"
-	echo "  -f/--fast          Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
-	echo "  -h/--heap SIZE     Set heap size to SIZE"
-	echo "  -O/--no-opt        Skip the ABC optimisation step"
-	echo "  -s/--stack SIZE    Set stack size to SIZE"
-	echo "  -3/--32-bit        Run tests as if on a 32-bit machine"
-	echo "  -R/--no-recompile  Don't recompile modules (faster, but halt addresses may be incorrect if optimisations are missed)"
+	echo "  -b       Run benchmarks"
+	echo "  -f       Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
+	echo "  -h SIZE  Set heap size to SIZE"
+	echo "  -O       Skip the ABC optimisation step"
+	echo "  -s SIZE  Set stack size to SIZE"
+	echo "  -3       Run tests as if on a 32-bit machine"
+	echo "  -R       Don't recompile modules (faster, but halt addresses may be incorrect if optimisations are missed)"
 	echo
-	echo "  -d/--debug-all-instructions"
-	echo "                     Print all instructions as they are executed"
-	echo "  -l/--list-code     List bytecode before execution"
-	echo "  -p/--profile       Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
-	echo "  -q/--quiet         Don't show program results"
+	echo "  -d       Print all instructions as they are executed"
+	echo "  -l       List bytecode before execution"
+	echo "  -p       Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
+	echo "  -q       Don't show program results"
 	exit 0
 }
 
 print_usage () {
-	echo "Usage: $0 OPTS (see --help for details)"
+	echo "Usage: $0 OPTS (see -H for details)"
 	exit 1
 }
 
@@ -59,56 +58,56 @@ contains () {
 	return 1
 }
 
-OPTS=`getopt -n "$0" -l help,only:,benchmark,fast,heap:,no-opt,stack:,32-bit,no-recompile,debug-all-instructions,list-code,profile,quiet "o:bfh:Os:3Rdlpq" "$@"` || print_usage
+OPTS=`getopt "Ho:bfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
 	case "$1" in
-		--help)
+		-H)
 			print_help;;
 
-		-o | --only)
+		-o)
 			RUN_ONLY+=("$2")
 			shift 2;;
 
-		-b | --benchmark)
+		-b)
 			BENCHMARK=1
 			shift;;
-		-f | --fast)
+		-f)
 			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations -DCOMPUTED_GOTOS"
 			shift;;
-		-h | --heap)
+		-h)
 			RUNFLAGS+=" -h $2"
 			NATIVE_RUNFLAGS+=" -h $2"
 			shift 2;;
-		-O | --no-opt)
+		-O)
 		    OPTCLMFLAG=""
 			shift;;
-		-s | --stack)
+		-s)
 			RUNFLAGS+=" -s $2"
 			NATIVE_RUNFLAGS+=" -s $2"
 			shift 2;;
-		-3 | --32-bit)
+		-3)
 			EXPECTED_PREFIX=".32"
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
 			shift;;
-		-R | --no-recompile)
+		-R)
 			RECOMPILE=0
 			shift;;
 
-		-d | --debug-all-instructions)
+		-d)
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS"
 			shift;;
-		-l | --list-code)
+		-l)
 			RUNFLAGS+=" -l"
 			shift;;
-		-p | --profile)
+		-p)
 			CFLAGS+=" -g -lprofiler"
 			export CPUPROFILE=/tmp/prof.out
 			export CPUPROFILE_FREQUENCY=10000
 			PROFILE=1
 			shift;;
-		-q | --quiet)
+		-q)
 			QUIET=1
 			shift;;
 
