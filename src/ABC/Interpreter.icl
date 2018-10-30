@@ -77,7 +77,7 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 # asp = stack
 # bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
 # csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
-# heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
+# heap = malloc (IF_INT_64_OR_32 8 4 * (HEAP_SIZE+4))
 # ie_settings = build_interpretation_environment
 	pgm
 	heap HEAP_SIZE stack STACK_SIZE
