@@ -1,35 +1,44 @@
 SHELL:=bash
 CLM:=clm
 CPM:=cpm
+override CLMFLAGS+=-I . -IL Platform -IL GraphCopy -ns
 override CFLAGS+=\
 	-std=c99\
 	-Wall\
 	-Wno-strict-aliasing\
-	-Werror\
-	-lm
+	-Werror
+override CLIBS+=-lm
 
-ifneq ($(shell $(CC) --version | grep -o clang),clang)
-override CFLAGS+=-Wno-misleading-indentation
+ifeq ($(shell $(CC) --version | grep -o clang),clang)
+OS:=Mac
 endif
 
-BINARIES:=optimise bcgen link interpret
-
+ifneq ($(OS),Mac)
+override CFLAGS+=-Wno-misleading-indentation
+override CLMFLAGS+=-no-opt-link
+endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
 else
 override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE -D_C99_SOURCE
+endif
+
+BINARIES:=optimise bcgen link interpret
+PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
+INTERPRET_LIB:=Clean\ System\ Files/interpret.a
+
+ifneq ($(OS),Windows_NT)
 override BINARIES+=debug
 endif
 
 all: $(BINARIES)
 
-CodeSharing: Clean\ System\ Files/interpret.a .FORCE graph_copy_with_names.icl graph_copy_with_names.dcl
-	$(CLM) -I . -IL Platform -IL GraphCopy -no-opt-link -ns $@ -o $@
+CodeSharing: $(INTERPRET_LIB) $(PATCHED) .FORCE
+	$(CLM) $(CLMFLAGS) $@ -o $@
 
-GraphTest: Clean\ System\ Files/interpret.a .FORCE graph_copy_with_names.icl graph_copy_with_names.dcl
-	$(CLM) -I . -IL Platform -IL GraphCopy -exl -desc -ns -no-opt-link -bytecode -optabc -h 10m $@ -o $@
+GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
+	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
-PATCHED:=graph_copy_with_names.icl graph_copy_with_names.dcl
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
 	cp $< $@
 	patch < $@.patch
@@ -52,7 +61,7 @@ SRC_BCGEN:=\
 DEP_BYTECODE:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
 bcgen: $(SRC_BCGEN) $(DEP_BYTECODE)
-	$(CC) $(CFLAGS) $(SRC_BCGEN) -DBC_GEN -o $@
+	$(CC) $(CFLAGS) $(CLIBS) $(SRC_BCGEN) -DBC_GEN -o $@
 
 SRC_LINK:=\
 	abc_instructions.c\
@@ -64,7 +73,7 @@ SRC_LINK:=\
 DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
 
 link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS $(SRC_LINK) -DLINKER -o $@
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_LINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -85,6 +94,7 @@ SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
 	copy_host_to_interpreter.c\
 	copy_interpreter_to_host.c\
 	finalizers.c
+ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
 OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	gc/util.h\
@@ -92,29 +102,36 @@ DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	settings.h
 
 interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
-	$(CC) $(CFLAGS) -DINTERPRETER $(SRC_INTERPRET) -o $@
+	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
-interface.o: interface.s
-	$(AS) $(ASFLAGS) $< -o $@
-
-Clean\ System\ Files/interpret.a: $(OBJ_INTERPRET_LIB) interface.o
+$(INTERPRET_LIB): $(OBJ_INTERPRET_LIB) interface.o
 	mkdir -p Clean\ System\ Files
 	ar cr '$@' $^
 
-$(OBJ_INTERPRET_LIB): %.o: %.c $(DEP_INTERPRET_LIB) $(DEP_BYTECODE)
-	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -c $< -o $@
+$(OBJ_INTERPRET_LIB) interface.o: %.o: %.s
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB) $(DEP_BYTECODE)
+	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -S $< -o $@
+ifeq ($(OS),Mac)
+	sed -i '' -f mac_fix_underscores.sed $@
+endif
 
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
-	$(CC) $(CFLAGS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
+
+AUXILIARIES:=$(BINARIES)\
+	$(INTERPRET_LIB)\
+	CodeSharing\
+	GraphTest\
+	$(PATCHED)\
+	$(ASM_INTERPRET_LIB)\
+	$(OBJ_INTERPRET_LIB)
 
 clean:
-	shopt -s globstar; $(RM) -r \
-		$(BINARIES) \
-		**/Clean\ System\ Files\
-		CodeSharing\
-		GraphTest\
-		graph_copy_with_names.{dcl,icl}\
-		$(OBJ_INTERPRET_LIB)
+	$(RM) $(AUXILIARIES)
+	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
+	find . -name 'Clean System Files' -delete
 
 .FORCE:
 .PHONY: all clean

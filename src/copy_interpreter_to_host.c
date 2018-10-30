@@ -129,7 +129,7 @@ BC_WORD *string_to_interpreter(void **clean_string, struct interpretation_enviro
 					ie->hp[0]=desc;
 					BC_WORD len=(BC_WORD)s[i+1];
 #if DEBUG_CLEAN_LINKS > 1
-					fprintf(stderr,"; __STRING__ %ld",len);
+					fprintf(stderr,"; __STRING__ " BC_WORD_FMT,len);
 #endif
 					ie->hp[1]=len;
 					len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);

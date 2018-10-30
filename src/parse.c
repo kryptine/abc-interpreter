@@ -13,6 +13,14 @@
 # include "bcgen_instructions.h"
 #endif
 
+#ifdef LINK_CLEAN_RUNTIME
+void preseed_symbol_matcher(struct parser *state, const char *label, void *location) {
+       struct host_symbol *sym=find_host_symbol_by_name(state->program,(char*)label);
+       if (sym!=NULL)
+               sym->interpreter_location=location;
+}
+#endif
+
 void init_parser(struct parser *state
 #ifdef LINK_CLEAN_RUNTIME
 		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
@@ -56,13 +64,13 @@ void init_parser(struct parser *state
 	}
 
 	/* TODO: pre-seed the symbol matching with more descriptors that are not in the bytecode */
-	find_host_symbol_by_name(state->program, "INT")->interpreter_location = (void*) &INT;
-	find_host_symbol_by_name(state->program, "dINT")->interpreter_location = (void*) &dINT;
-	find_host_symbol_by_name(state->program, "BOOL")->interpreter_location = (void*) &BOOL;
-	find_host_symbol_by_name(state->program, "CHAR")->interpreter_location = (void*) &CHAR;
-	find_host_symbol_by_name(state->program, "REAL")->interpreter_location = (void*) &REAL;
-	find_host_symbol_by_name(state->program, "__ARRAY__")->interpreter_location = (void*) &__ARRAY__;
-	find_host_symbol_by_name(state->program, "__STRING__")->interpreter_location = (void*) &__STRING__;
+	preseed_symbol_matcher(state, "INT", (void*) &dINT);
+	preseed_symbol_matcher(state, "dINT", (void*) &dINT);
+	preseed_symbol_matcher(state, "BOOL", (void*) &BOOL);
+	preseed_symbol_matcher(state, "CHAR", (void*) &CHAR);
+	preseed_symbol_matcher(state, "REAL", (void*) &REAL);
+	preseed_symbol_matcher(state, "__ARRAY__", (void*) &__ARRAY__);
+	preseed_symbol_matcher(state, "__STRING__", (void*) &__STRING__);
 #endif
 
 #ifdef LINKER
