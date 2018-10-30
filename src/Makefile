@@ -4,17 +4,20 @@ CPM:=cpm
 override CFLAGS+=\
 	-std=c99\
 	-Wall\
-	-Wno-misleading-indentation\
 	-Wno-strict-aliasing\
 	-Werror\
 	-lm
+
+ifneq ($(shell $(CC) --version | grep -o clang),clang)
+override CFLAGS+=-Wno-misleading-indentation
+endif
 
 BINARIES:=optimise bcgen link interpret
 
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
 else
-override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE
+override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE -D_C99_SOURCE
 override BINARIES+=debug
 endif
 
