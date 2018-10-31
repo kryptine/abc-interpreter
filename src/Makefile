@@ -44,12 +44,15 @@ $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
 	patch < $@.patch
 
 ifeq ($(OS),Windows_NT)
-optimise: .FORCE
-	$(CPM) project $@_win.prj build
+optimise.prj: optimise_win.prj.default
+	cp $< $@
 else
-optimise: .FORCE
-	$(CPM) project $@.prj build
+optimise.prj: optimise.prj.default
+	cp $< $@
 endif
+
+optimise: optimise.prj .FORCE
+	$(CPM) project $@.prj build
 
 SRC_BCGEN:=\
 	abc_instructions.c\
