@@ -63,8 +63,7 @@ void init_parser(struct parser *state
 		host_symbols++;
 	}
 
-	/* TODO: pre-seed the symbol matching with more descriptors that are not in the bytecode */
-	preseed_symbol_matcher(state, "INT", (void*) &dINT);
+	preseed_symbol_matcher(state, "INT", (void*) &INT);
 	preseed_symbol_matcher(state, "dINT", (void*) &dINT);
 	preseed_symbol_matcher(state, "BOOL", (void*) &BOOL);
 	preseed_symbol_matcher(state, "CHAR", (void*) &CHAR);
@@ -467,7 +466,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__ARRAY__;
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__STRING__;
-				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") || !strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") ||
+						!strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &INT;
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &BOOL;

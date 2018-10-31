@@ -3,8 +3,6 @@
 #include "bytecode.h"
 #include "finalizers.h"
 
-extern void *dINT;
-
 // This struct matches the Clean structure that the interpretation_environment
 // is kept in.
 struct InterpretationEnvironment2 {

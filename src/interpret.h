@@ -9,7 +9,8 @@ extern void* __ARRAY__[];
 extern void** ARRAY;
 #endif
 extern void* d___Nil[];
-extern void* INT[];
+extern void* dINT[];
+#define INT dINT
 extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];

@@ -27,8 +27,8 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 	struct program *program = ie->program;
 	/* TODO: check if we need garbage collection */
 
-	if (node[0] == (BC_WORD)&dINT+2) {
-		heap[0]=(BC_WORD)&INT+2;
+	if (node[0]==(BC_WORD)&INT+2) {
+		heap[0]=node[0];
 		heap[1]=node[1];
 		return 2;
 	} else if (node[0] == (BC_WORD)&CHAR+2 ||
@@ -84,15 +84,16 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			return words+4;
 		}
 
+		heap[2]=arr[0];
+		heap[3]=arr[1];
+		heap[4]=arr[2];
+
 		BC_WORD desc=arr[2];
-		if (desc == (BC_WORD) &CHAR+2 || desc == (BC_WORD) &BOOL+2)
+		if (desc==(BC_WORD)&BOOL+2)
 			words=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
+		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
 			words=length;
-		else { /* TODO: unboxed record arrays */
-			heap[2]=(BC_WORD)&__ARRAY__+2;
-			heap[3]=length;
-			heap[4]=0;
+		else if (desc==0) {
 			BC_WORD *new_array=&heap[5];
 			heap+=5+length;
 			for (int i=0; i<length; i++) {
@@ -101,9 +102,37 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 				heap += make_host_node(heap, nodeid, 0);
 			}
 			return heap-org_heap;
+		} else {
+			int16_t elem_a_arity=*(int16_t*)desc;
+			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			fprintf(stderr,"\tunboxed array %p %d %d\n",(void*)desc,elem_ab_arity,elem_a_arity);
+			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
+			if (elem_host_symbol==NULL) {
+				fprintf(stderr,"error: cannot copy unboxed array of unknown records to interpreter\n");
+				exit(1);
+			}
+			heap[4]=(BC_WORD)elem_host_symbol->interpreter_location;
+			fprintf(stderr,"\t%p\n",(void*)heap[4]);
+			arr+=3;
+			BC_WORD *new_array=&heap[5];
+			heap+=5+length*elem_ab_arity;
+			for (int i=0; i<length; i++) {
+				for (int a=0; a<elem_a_arity; a++) {
+					nodeid = __interpret__add__shared__node(ie->host->clean_ie, (BC_WORD*)arr[a]);
+					new_array[a]=(BC_WORD)heap;
+					heap+=make_host_node(heap, nodeid, 0);
+				}
+				for (int b=elem_a_arity; b<elem_ab_arity; b++)
+					new_array[b]=arr[b];
+				arr+=elem_ab_arity;
+				new_array+=elem_ab_arity;
+			}
+			return heap-org_heap;
 		}
 
-		memcpy(&heap[2], arr, (3+words)*IF_INT_64_OR_32(8,4));
+		fprintf(stderr,"\tcopying %d words for an array of size %d (%p)\n",words,length,(void*)desc);
+
+		memcpy(&heap[5], &arr[3], words*IF_INT_64_OR_32(8,4));
 
 		return words+5;
 	}

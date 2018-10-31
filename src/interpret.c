@@ -42,7 +42,6 @@ static BC_WORD m____system[] = {7, (BC_WORD) _7chars2int('_','s','y','s','t','e'
 
 void* d___Nil[]           = {2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int('_','N','i','l')};
 static void* d_FILE[]     = {&m____system, &d_FILE[4], (void*) (258<<16), _2chars2int('i','i'), (void*) 4, _4chars2int('F','I','L','E')};
-void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 
 # ifndef LINK_CLEAN_RUNTIME
 void* __ARRAY__[]         = {0, 0, &m____system, (void*) 7, _7chars2int('_','A','R','R','A','Y','_')};
@@ -50,13 +49,13 @@ void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S',
 void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
 void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
 void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
+void* dINT[]              = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 # endif
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
 
 void* d___Nil[]           = { 2+&d___Nil[1], 0, 0, &m____system, (void*) 4, _4chars2int ('_','N','i','l') };
 static void* d_FILE[]     = { &m____system, &d_FILE[4], (void*) (258<<16), _2chars2int ('i','i'), (void*) 4, _4chars2int ('F','I','L','E') };
-void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 
 # ifndef LINK_CLEAN_RUNTIME
 void* __ARRAY__[]         = { 0, 0, &m____system, (void*) 7, _4chars2int ('_','A','R','R'), _3chars2int ('A','Y','_') };
@@ -64,6 +63,7 @@ void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S
 void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
 void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
 void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
+void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 # endif
 #endif /* Word-width dependency */
 
