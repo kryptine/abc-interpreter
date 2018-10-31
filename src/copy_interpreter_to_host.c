@@ -152,8 +152,6 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 					ie->hp[1]=size;
 					ie->hp[2]=elem_desc;
 
-					fprintf(stderr,"; array of %p; " BC_WORD_FMT " values",(void*)elem_desc,size);
-
 					if (elem_desc==(BC_WORD)&INT+2 || elem_desc==(BC_WORD)&REAL+2) {
 						for (int v=3; v<size+3; v++)
 							ie->hp[v]=(BC_WORD)s[i+v];
@@ -358,15 +356,10 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
 
-	if (node[0] == (BC_WORD) &INT+2) {
-		if (host_heap_free < 2)
-			return -2;
-		host_heap[0] = (BC_WORD) &INT+2;
-		host_heap[1] = node[1];
-		return 2;
-	} else if (node[0] == (BC_WORD) &CHAR+2 ||
-			node[0] == (BC_WORD) &BOOL+2 ||
-			node[0] == (BC_WORD) &REAL+2) {
+	if (node[0]==(BC_WORD)&INT+2 ||
+			node[0]==(BC_WORD)&CHAR+2 ||
+			node[0]==(BC_WORD)&BOOL+2 ||
+			node[0]==(BC_WORD)&REAL+2) {
 		if (host_heap_free < 2)
 			return -2;
 		host_heap[0] = node[0];
@@ -411,7 +404,6 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 				desc|=2;
 				int16_t elem_a_arity=*(int16_t*)desc;
 				int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-				fprintf(stderr,"unboxed array %p %d %d\n",(void*)desc,elem_ab_arity,elem_a_arity);
 				int words_needed=5+len*elem_ab_arity+len*elem_a_arity*(3+FINALIZER_SIZE_ON_HEAP);
 				if (host_heap_free < words_needed)
 					return -2;
@@ -443,7 +435,6 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 			host_heap[1]=(BC_WORD) &host_heap[2];
 			memcpy(&host_heap[2],arr,words*IF_INT_64_OR_32(8,4));
 			host_heap[4]=(BC_WORD)&INT+2;
-			fprintf(stderr,"returning %d\n",words+2);
 			return words+3;
 		}
 	}

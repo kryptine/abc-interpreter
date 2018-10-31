@@ -105,14 +105,12 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 		} else {
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			fprintf(stderr,"\tunboxed array %p %d %d\n",(void*)desc,elem_ab_arity,elem_a_arity);
 			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
 			if (elem_host_symbol==NULL) {
 				fprintf(stderr,"error: cannot copy unboxed array of unknown records to interpreter\n");
 				exit(1);
 			}
 			heap[4]=(BC_WORD)elem_host_symbol->interpreter_location;
-			fprintf(stderr,"\t%p\n",(void*)heap[4]);
 			arr+=3;
 			BC_WORD *new_array=&heap[5];
 			heap+=5+length*elem_ab_arity;
@@ -129,8 +127,6 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			}
 			return heap-org_heap;
 		}
-
-		fprintf(stderr,"\tcopying %d words for an array of size %d (%p)\n",words,length,(void*)desc);
 
 		memcpy(&heap[5], &arr[3], words*IF_INT_64_OR_32(8,4));
 
