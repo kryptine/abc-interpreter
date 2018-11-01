@@ -21,6 +21,7 @@ int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 }
 
 extern void *ARRAY;
+extern void *__Tuple;
 BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap,
 		size_t heap_free, BC_WORD *node) {
 	int nodeid;
@@ -42,19 +43,21 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
 	BC_WORD *host_desc_label=(BC_WORD*)(node[0]-2);
+	struct host_symbol *host_symbol;
 	if (a_arity > 256) { /* record */
 		a_arity = ((int16_t*)(node[0]))[0];
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
-		if (args_needed != 0) { /* TODO: special case for tuples */
+		host_desc_label-=a_arity;
+		host_symbol = find_host_symbol_by_address(program, host_desc_label);
+		if (args_needed != 0 && host_symbol->location != &__Tuple) {
 			nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
 			return make_host_node(heap, nodeid, args_needed);
 		}
-		host_desc_label-=a_arity;
 	}
 
-	struct host_symbol *host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	if (host_symbol == NULL) {
 		/* TODO */
 		fprintf(stderr,"Descriptor %p not found in interpreter; this still has to be implemented\n",host_desc_label);

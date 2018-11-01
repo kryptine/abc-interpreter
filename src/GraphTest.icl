@@ -6,8 +6,8 @@ import ABC.Interpreter
 
 Start w
 # (graph,w) = serialize_for_interpretation graph "./GraphTest" "./GraphTest.bc" w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec),w) = deserialize graph "./GraphTest" w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize graph "./GraphTest" w
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup
 where
 	use ::
 		(Int -> Int)
@@ -25,8 +25,9 @@ where
 		({#TestRecord} -> {#TestRecord})
 		{#TestRecord}
 		(TestRecord -> Int)
+		((Int,Int,(Int,Int)) -> Int)
 		-> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec =
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup =
 		[ intsquare 6 + intsquare 1
 		, sub5 (last [1..47]) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
@@ -44,6 +45,7 @@ where
 		, sum [toInt x \\ x <-: recarr]
 		, sum [toInt x \\ x <-: reverse_recarr arr]
 		, toInt_rec {tr_a=37*37,tr_b=TestA,tr_c=False}
+		, sumtup (5,10,(15,7))
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
@@ -78,6 +80,7 @@ graph = hyperstrict
 	, reverse_recarr
 	, arr
 	, toInt_rec
+	, \(a,b,(c,d)) -> a + b + c + d + 0
 	)
 where
 	reverse_string :: String -> String
