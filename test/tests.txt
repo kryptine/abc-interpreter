@@ -21,17 +21,17 @@ pascal
 prolog	-h,48m
 reals
 reverse
-reversearray
 reverse2
+reversearray
 revrec
 revtwice	-h,4m,-s,2m
 rfib
 sieve
 squeen
-symsieve	-h,100m
-sudoku	-h,5m
 str_arit
 stwice
+sudoku	-h,5m
+symsieve	-h,100m
 tak
 twice
 unboxed_arrays
