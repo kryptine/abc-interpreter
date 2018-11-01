@@ -6,8 +6,8 @@ import ABC.Interpreter
 
 Start w
 # (graph,w) = serialize_for_interpretation graph "./GraphTest" "./GraphTest.bc" w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr),w) = deserialize graph "./GraphTest" w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec),w) = deserialize graph "./GraphTest" w
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec
 where
 	use ::
 		(Int -> Int)
@@ -24,8 +24,9 @@ where
 		({Char} -> {Char})
 		({#TestRecord} -> {#TestRecord})
 		{#TestRecord}
+		(TestRecord -> Int)
 		-> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr =
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec =
 		[ intsquare 6 + intsquare 1
 		, sub5 (last [1..47]) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
@@ -42,6 +43,7 @@ where
 		, length [c \\ c <-: reverse_boxed_array {c\\ c <- ['A'..'e']}]
 		, sum [toInt x \\ x <-: recarr]
 		, sum [toInt x \\ x <-: reverse_recarr arr]
+		, toInt_rec {tr_a=37*37,tr_b=TestA,tr_c=False}
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
@@ -75,7 +77,23 @@ graph = hyperstrict
 	, reverse_boxed_array
 	, reverse_recarr
 	, arr
+	, toInt_rec
 	)
+where
+	reverse_string :: String -> String
+	reverse_string arr = reverse_array` arr
+
+	reverse_array :: {#Int} -> {#Int}
+	reverse_array arr = reverse_array` arr
+
+	reverse_boxed_array :: {Char} -> {Char}
+	reverse_boxed_array arr = reverse_array` arr
+
+	reverse_recarr :: {#TestRecord} -> {#TestRecord}
+	reverse_recarr arr = reverse_array` arr
+
+	toInt_rec :: TestRecord -> Int
+	toInt_rec rec = toInt rec
 
 arr :: {#TestRecord}
 arr =
@@ -115,17 +133,5 @@ ap3 f = f 3 2 1
 map :: (a -> b) [a] -> [b]
 map f [x:xs] = [f x:map f xs]
 map _ []     = []
-
-reverse_string :: String -> String
-reverse_string arr = {arr.[i] \\ i <- [s-1,s-2..0]} where s = size arr
-
-reverse_array :: {#Int} -> {#Int}
-reverse_array arr = reverse_array` arr
-
-reverse_boxed_array :: {Char} -> {Char}
-reverse_boxed_array arr = reverse_array` arr
-
-reverse_recarr :: {#TestRecord} -> {#TestRecord}
-reverse_recarr arr = reverse_array` arr
 
 reverse_array` arr :== {arr.[i] \\ i <- [s-1,s-2..0]} where s = size arr
