@@ -13,7 +13,9 @@ ifeq ($(shell $(CC) --version | grep -o clang),clang)
 OS:=Mac
 endif
 
-ifneq ($(OS),Mac)
+ifeq ($(OS),Mac)
+override CFLAGS+=-DMACH_O64
+else
 override CFLAGS+=-Wno-misleading-indentation
 override CLMFLAGS+=-no-opt-link
 endif

@@ -248,7 +248,8 @@ int interpret(
 
 	BC_WORD ret = EVAL_TO_HNF_LABEL;
 
-#ifdef POSIX
+#if defined(POSIX) && !defined(MACH_O64)
+	/* TODO: check why this breaks on Mac */
 	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
 		perror("sigaction");
 		return 1;

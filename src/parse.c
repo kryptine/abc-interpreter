@@ -52,6 +52,9 @@ void init_parser(struct parser *state
 	state->program->host_symbols_strings = safe_malloc(host_symbols_string_length + host_symbols_n);
 
 	char *symbol_strings = state->program->host_symbols_strings;
+#ifdef MACH_O64
+	BC_WORD offset=0;
+#endif
 	for (int i = 0; i < host_symbols_n; i++) {
 		state->program->host_symbols[i].interpreter_location = (void*) -1;
 		state->program->host_symbols[i].location = *(void**)host_symbols;
@@ -61,7 +64,16 @@ void init_parser(struct parser *state
 			*symbol_strings++ = *host_symbols;
 		*symbol_strings++ = '\0';
 		host_symbols++;
+
+#ifdef MACH_O64
+		if (!strcmp(state->program->host_symbols[i].name,"___ARRAY__"))
+			offset=(BC_WORD)&__ARRAY__-(BC_WORD)state->program->host_symbols[i].location;
+#endif
 	}
+#ifdef MACH_O64
+	for (int i=0; i<host_symbols_n; i++)
+		state->program->host_symbols[i].location=(void*)((BC_WORD)state->program->host_symbols[i].location+offset);
+#endif
 
 	preseed_symbol_matcher(state, "INT", (void*) &INT);
 	preseed_symbol_matcher(state, "dINT", (void*) &dINT);
