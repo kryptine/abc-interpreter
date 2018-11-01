@@ -114,7 +114,7 @@ void clean_readLineF (void)
 void clean_sliceAC (void)
 {
 	uint32_t *s,n_words;
-	uint32_t l,first_i,end_i,i;
+	int32_t l,first_i,end_i,i;
 	unsigned char *s_p,*new_s_p;
 
 	s=(uint32_t*)g_asp[0];

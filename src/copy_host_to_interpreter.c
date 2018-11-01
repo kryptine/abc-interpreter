@@ -21,14 +21,15 @@ int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 }
 
 extern void *ARRAY;
+extern void *__Tuple;
 BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap,
 		size_t heap_free, BC_WORD *node) {
 	int nodeid;
 	struct program *program = ie->program;
 	/* TODO: check if we need garbage collection */
 
-	if (node[0] == (BC_WORD)&dINT+2) {
-		heap[0]=(BC_WORD)&INT+2;
+	if (node[0]==(BC_WORD)&INT+2) {
+		heap[0]=node[0];
 		heap[1]=node[1];
 		return 2;
 	} else if (node[0] == (BC_WORD)&CHAR+2 ||
@@ -41,23 +42,22 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
+	BC_WORD *host_desc_label=(BC_WORD*)(node[0]-2);
+	struct host_symbol *host_symbol;
 	if (a_arity > 256) { /* record */
 		a_arity = ((int16_t*)(node[0]))[0];
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
-		/* TODO */
-		fprintf(stderr,"Cannot copy records to interpreter yet (%d/%d)\n",a_arity,b_arity);
-		exit(1);
+		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
-		if (args_needed != 0) { /* TODO: special case for tuples */
+		host_desc_label-=a_arity;
+		host_symbol = find_host_symbol_by_address(program, host_desc_label);
+		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
 			nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
 			return make_host_node(heap, nodeid, args_needed);
 		}
 	}
 
-	BC_WORD *host_desc_label = (BC_WORD*)(node[0] - 8 * a_arity - 2);
-
-	struct host_symbol *host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	if (host_symbol == NULL) {
 		/* TODO */
 		fprintf(stderr,"Descriptor %p not found in interpreter; this still has to be implemented\n",host_desc_label);
@@ -84,15 +84,16 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			return words+4;
 		}
 
+		heap[2]=arr[0];
+		heap[3]=arr[1];
+		heap[4]=arr[2];
+
 		BC_WORD desc=arr[2];
-		if (desc == (BC_WORD) &CHAR+2 || desc == (BC_WORD) &BOOL+2)
+		if (desc==(BC_WORD)&BOOL+2)
 			words=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		else if (desc == (BC_WORD) &dINT+2 || desc == (BC_WORD) &REAL+2)
+		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
 			words=length;
-		else { /* TODO: unboxed record arrays */
-			heap[2]=(BC_WORD)&__ARRAY__+2;
-			heap[3]=length;
-			heap[4]=0;
+		else if (desc==0) {
 			BC_WORD *new_array=&heap[5];
 			heap+=5+length;
 			for (int i=0; i<length; i++) {
@@ -101,9 +102,33 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 				heap += make_host_node(heap, nodeid, 0);
 			}
 			return heap-org_heap;
+		} else {
+			int16_t elem_a_arity=*(int16_t*)desc;
+			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
+			if (elem_host_symbol==NULL) {
+				fprintf(stderr,"error: cannot copy unboxed array of unknown records to interpreter\n");
+				exit(1);
+			}
+			heap[4]=(BC_WORD)elem_host_symbol->interpreter_location;
+			arr+=3;
+			BC_WORD *new_array=&heap[5];
+			heap+=5+length*elem_ab_arity;
+			for (int i=0; i<length; i++) {
+				for (int a=0; a<elem_a_arity; a++) {
+					nodeid = __interpret__add__shared__node(ie->host->clean_ie, (BC_WORD*)arr[a]);
+					new_array[a]=(BC_WORD)heap;
+					heap+=make_host_node(heap, nodeid, 0);
+				}
+				for (int b=elem_a_arity; b<elem_ab_arity; b++)
+					new_array[b]=arr[b];
+				arr+=elem_ab_arity;
+				new_array+=elem_ab_arity;
+			}
+			return heap-org_heap;
 		}
 
-		memcpy(&heap[2], arr, (3+words)*IF_INT_64_OR_32(8,4));
+		memcpy(&heap[5], &arr[3], words*IF_INT_64_OR_32(8,4));
 
 		return words+5;
 	}

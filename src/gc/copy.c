@@ -294,10 +294,6 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 					for (int i = 0; i < b_arity-1; i++)
 						*new_heap++ = rest[i];
 				}
-
-				/* TODO: is this necessary? */
-				if (b_arity + a_arity < 2)
-					new_heap += 2 - b_arity - a_arity;
 			}
 		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
 #if (DEBUG_GARBAGE_COLLECTOR > 2)

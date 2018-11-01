@@ -211,8 +211,6 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 	uint32_t min_distance = -1;
 	char *min_distance_label = "?";
 	for (int i = 0; i < pgm->symbol_table_size; i++) {
-		if (pgm->symbol_table[i].offset < 0)
-			continue;
 		if ((BC_WORD*) pgm->symbol_table[i].offset - label == 0) {
 			if (*pgm->symbol_table[i].name)
 				return used + print_label_name(s, size - used, pgm->symbol_table[i].name);
@@ -270,10 +268,10 @@ void print_code(FILE *f, struct program *pgm) {
 						FPRINTF(f, " '\\x%02x'", (char) pgm->code[i]);
 					break;
 				case 'n': /* Stack index */
-					FPRINTF(f, " %d", abs((BC_WORD_S) pgm->code[i]));
+					FPRINTF(f, " %d", abs((int) pgm->code[i]));
 					break;
 				case 'N': /* Stack index times WORD_WIDTH/8 */
-					FPRINTF(f, " %d", abs((BC_WORD_S) pgm->code[i] / IF_INT_64_OR_32(8,4)));
+					FPRINTF(f, " %d", abs((int) pgm->code[i] / IF_INT_64_OR_32(8,4)));
 					break;
 				case 'r': /* Real constant */
 					FPRINTF(f, " %.15g", (*(BC_REAL*)&pgm->code[i]) + 0.0);

@@ -190,7 +190,6 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 					node[0] == (BC_WORD) &REAL + 2 ||
 					node[0] == (BC_WORD) &__STRING__ + 2) {
 			} else if (node[0] == (BC_WORD) &__ARRAY__ + 2) {
-				/* TODO unboxed records */
 				if (node[2] == (BC_WORD) &INT + 2 ||
 						node[2] == (BC_WORD) &REAL + 2 ||
 						node[2] == (BC_WORD) &BOOL + 2) { /* unboxed, no nodes */

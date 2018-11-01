@@ -1,8 +1,10 @@
+*.s
 *.a
 *.o
 *.exe
 a.out
 
+*.prj
 *.abc
 *.prp
 *.tcl
