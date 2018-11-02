@@ -6,6 +6,7 @@ RUN \
 	apt-get install -y -qq --no-install-recommends\
 		git\
 		build-essential\
+		clang\
 		gcc-multilib\
 		gcc-mingw-w64-x86-64\
 		libncurses5-dev\
