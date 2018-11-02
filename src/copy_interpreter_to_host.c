@@ -450,11 +450,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
 	int host_address_offset = -2 - 2*a_arity;
-#ifdef MACH_O64
-	int add_to_host_address = a_arity*2;
-#else
-	int add_to_host_address = a_arity;
-#endif
+	int add_to_host_address = a_arity*IF_MACH_O_ELSE(2,1);
 	if (a_arity > 256) { /* record */
 		host_address_offset = -2;
 		add_to_host_address = 0;
