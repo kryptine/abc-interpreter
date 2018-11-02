@@ -78,7 +78,8 @@ BC_WORD *build_start_node(struct interpretation_environment *ie) {
 	return hp;
 }
 
-BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_environment *ie) {
+BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
+		struct interpretation_environment *ie) {
 	int len = *(int*)clean_string;
 	uint64_t *s = &clean_string[1];
 	BC_WORD *node = ie->hp;
@@ -103,13 +104,15 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 		} else {
 			a_size_stack[0]--;
 
-			BC_WORD desc=(BC_WORD)s[i];
+			BC_WORD_S desc=(BC_WORD)s[i];
 			s[i]=(BC_WORD)ie->hp;
 
-			if (desc & 1) { /* redirection */
+			if (desc < 0) { /* redirection */
 				**ptr_stack-- = (BC_WORD) s[i+(desc-1)/8];
 				continue;
 			}
+
+			desc=descriptors[desc-1];
 
 #if DEBUG_CLEAN_LINKS > 1
 			fprintf(stderr,"\t");
@@ -146,7 +149,11 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 					ie->hp+=1+len;
 				} else if (desc == (BC_WORD)&__ARRAY__+2) {
 					BC_WORD size=(BC_WORD)s[i+1];
+#if DEBUG_CLEAN_LINKS > 1
+					fprintf(stderr,"; __ARRAY__ " BC_WORD_FMT,size);
+#endif
 					BC_WORD elem_desc=(BC_WORD)s[i+2];
+					elem_desc=elem_desc==0 ? 0 : descriptors[elem_desc-1];
 					**ptr_stack--=(BC_WORD)ie->hp;
 					ie->hp[0]=desc;
 					ie->hp[1]=size;

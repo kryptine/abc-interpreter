@@ -4,4 +4,4 @@
  copy_to_string_with_names :: a -> (!*{#Char},!*{#DescInfo},!*{#String});
  copy_from_string_with_names :: !*{#Char} !*{#DescInfo} !*{#String} !{#Symbol} -> (.a,!Int);
  
-+replace_symbols_in_graph :: !*{#Char} !*{#DescInfo} !*{#String} !{#Symbol} -> *{#Char};
++make_symbol_name :: !String !String !Int -> String;
