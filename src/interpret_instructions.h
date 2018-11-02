@@ -7809,7 +7809,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	BC_WORD *n=(BC_WORD*)asp[0];
 	int host_nodeid=n[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
-	int args_needed=((int16_t*)(host_node[0]))[0]>>3;
+	int args_needed=((int16_t*)(host_node[0]))[0]>>IF_MACH_O_ELSE(4,3);
 	int node_arity=((int16_t*)(host_node[0]))[-1];
 
 	if (args_needed!=n_args) {
@@ -7842,12 +7842,20 @@ INSTRUCTION_BLOCK(jsr_eval_host_node_31):
 	if (n_args >= 2) {
 		host_node = __interpret__evaluate__host_with_args(ie, 0, arg1, arg2, host_node, ap_addresses[n_args-2]);
 	} else if (node_arity > 0) {
+#ifdef MACH_O64
+		BC_WORD *lazy_entry = (BC_WORD*) (((BC_WORD*)(host_node[0]+6))[0]);
+#else
 		BC_WORD *lazy_entry = (BC_WORD*) (((BC_WORD*)(host_node[0]+2))[0] & 0xffffffff);
+#endif
 		*ie->host->host_a_ptr++ = (BC_WORD) host_node;
 		host_node = __interpret__evaluate__host_with_args(ie, 0, host_node,arg1,arg1, lazy_entry);
 		ie->host->host_a_ptr--;
 	} else {
+#ifdef MACH_O64
+		BC_WORD *lazy_entry = (BC_WORD*) (((BC_WORD*)(host_node[0]+6))[0]);
+#else
 		BC_WORD *lazy_entry = (BC_WORD*) (((BC_WORD*)(host_node[0]+2))[0] & 0xffffffff);
+#endif
 		host_node = __interpret__evaluate__host_with_args(ie, 0, arg1,arg1,arg1, lazy_entry);
 	}
 	hp = ie->hp;

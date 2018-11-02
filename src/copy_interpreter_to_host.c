@@ -293,11 +293,7 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-#ifdef MACH_O64
-# define CURRY_TABLE_ELEMENT_SIZE 4
-#else
-# define CURRY_TABLE_ELEMENT_SIZE 3
-#endif
+#define CURRY_TABLE_ELEMENT_SIZE IF_MACH_O_ELSE(4,3)
 BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *clean_ie, BC_WORD node, int args_needed) {
 	switch (args_needed) {
 		case 0:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__ninterpret; break;
@@ -446,7 +442,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 	int16_t b_arity = 0;
-	int host_address_offset = -2 - 2*a_arity; /* TODO probably needs to be 4*a_arity on 32-bit */
+	int host_address_offset = -2 - 2*a_arity;
 #ifdef MACH_O64
 	int add_to_host_address = a_arity*2;
 #else
@@ -460,7 +456,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	} else { /* may be curried */
 		int args_needed = host_address_offset + 2;
 		while (((BC_WORD*)(node[0]-2))[args_needed] >> 16)
-			args_needed += 2; /* TODO +4 on 32-bit?? */
+			args_needed += 2;
 		args_needed = args_needed / 2;
 
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
