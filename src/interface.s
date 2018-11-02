@@ -87,6 +87,11 @@ __interpret__copy__node__asm__n:
 	mov	rbp,[rbp+8]
 	push	rbp
 
+	test	rax,1
+	jne	__interpret__copy__node__asm__n_dont_align
+	push	rbp
+__interpret__copy__node__asm__n_dont_align:
+
 	# Temporarily store int argument in host_status
 	mov	rbp,[rbp]
 	mov	[rbp],rax
@@ -145,6 +150,10 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	rax,0
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
+	test	rbx,8
+	jne	__interpret__copy__node__asm__n_dont_align_2
+	pop	rbp
+__interpret__copy__node__asm__n_dont_align_2:
 	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
 
