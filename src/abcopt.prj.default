@@ -2,10 +2,11 @@ Version: 1.4
 Global
 	ProjectRoot:	.
 	Target:	StdEnv
-	Exec:	{Project}/optimise
+	Exec:	{Project}/abcopt
 	CodeGen
 		CheckStacks:	False
 		CheckIndexes:	False
+		GenerateByteCode:	False
 	Application
 		HeapSize:	20971520
 		StackSize:	512000

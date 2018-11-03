@@ -7,9 +7,9 @@ stages:
 .base:
   image: camilstaps/abc-interpreter
   before_script:
-    - ln -s "$PWD/src/optimise" /opt/clean/lib/exe/optimise
+    - ln -s "$PWD/src/abcopt" /opt/clean/lib/exe/abcopt
     - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
-    - ln -s "$PWD/src/link" /opt/clean/lib/exe/bclink
+    - ln -s "$PWD/src/bclink" /opt/clean/lib/exe/bclink
     - make -C src
     - clm -bytecode -O _system
 
@@ -29,7 +29,7 @@ build-windows:
   extends: .base
   stage: build
   script:
-    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src bcgen link interpret
+    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src bcgen bclink interpret
 
 test-gc:
   extends: .base

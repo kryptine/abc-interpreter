@@ -126,7 +126,7 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	sleep 1
 fi
 
-CFLAGS="$CFLAGS" make -BC ../src optimise bcgen link interpret || exit 1
+CFLAGS="$CFLAGS" make -BC ../src abcopt bcgen bclink interpret || exit 1
 $CLM -bytecode -O _system
 
 if [ $RECOMPILE -gt 0 ]; then
