@@ -9,18 +9,26 @@ override CFLAGS+=\
 	-Werror
 override CLIBS+=-lm
 
+USING_CLANG:=0
 ifeq ($(shell $(CC) --version | grep -o clang),clang)
+ifndef OS
 OS:=Mac
 endif
+USING_CLANG:=1
+endif
 
-ifneq ($(OS),Mac)
-override CFLAGS+=-Wno-misleading-indentation
+ifeq ($(OS),Mac)
+override CFLAGS+=-DMACH_O64
+else
 override CLMFLAGS+=-no-opt-link
 endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
 else
 override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE -D_C99_SOURCE
+endif
+ifeq ($(USING_CLANG),0)
+override CFLAGS+=-Wno-misleading-indentation
 endif
 
 BINARIES:=optimise bcgen link interpret

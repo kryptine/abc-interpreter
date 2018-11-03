@@ -1,49 +1,10 @@
 --- a/graph_copy_with_names.icl
 +++ b/graph_copy_with_names.icl
-@@ -61,7 +61,7 @@ get_thunk_arity_32 a = code {
+@@ -393,6 +393,7 @@ get_thunk_n_non_pointers d
+ 		# b_size = arity>>8;
+ 		= b_size;
  
- get_thunk_arity_64 :: !Int -> Int;
- get_thunk_arity_64 a = code {
--	load_si32 -4
-+	load_si16 -4
- }
- 
- get_thunk_descriptor a :== IF_INT_64_OR_32 (get_thunk_descriptor_64_platform a) (get_thunk_descriptor_32_platform a);
-@@ -721,7 +721,7 @@ lookup_symbol_value {di_prefix_arity_and_mod,di_name} mod_a symbols
- 		| symbol_value== -1
- 			= abort ("lookup_desc_info not found "+++symbol_name); 
- 			# arity = prefix_n - PREFIX_D;
--			= symbol_value+(arity*size_element_descriptor_currying)+2;
-+			= symbol_value+(arity*size_element_descriptor_currying*2)+2;
- 
- lookup_symbol_values desc_info_a mod_a symbols
- 	= {#lookup_symbol_value desc_info mod_a symbols \\ desc_info <-: desc_info_a};
-@@ -754,7 +754,7 @@ replace_desc_numbers_by_descs i s symbol_a symbol_offset array_desc
- 			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)) s symbol_a symbol_offset array_desc;
- 		# d = symbol_a.[d-1];
- 		# d = d+symbol_offset;
--		# s=store_int_in_string s (i+IF_INT_64_OR_32 16 8) array_desc;
-+		# s=store_int_in_string s (i+IF_INT_64_OR_32 16 8) d;
- 		#! l = get_D_from_string s (i+IF_INT_64_OR_32 8 4);
-         | is_Int_D d
- 			# l = l << IF_INT_64_OR_32 3 2;
-@@ -773,12 +773,14 @@ replace_desc_numbers_by_descs i s symbol_a symbol_offset array_desc
- 			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)+l) s symbol_a symbol_offset array_desc;
- 		= abort (toString l+++" "+++toString d);
- 
--copy_from_string_with_names :: !*{#Char} !*{#DescInfo} !*{#String} !{#Symbol} -> (.a,!Int);
--copy_from_string_with_names s desc_s_a mod_s_a symbols
-+replace_symbols_in_graph :: !*{#Char} !*{#DescInfo} !*{#String} !{#Symbol} -> *{#Char};
-+replace_symbols_in_graph s desc_s_a mod_s_a symbols
- 	# symbol_offset = if (is_using_desc_relative_to_array == 1) (((get_array_D {}) - (get_symbol_value "__ARRAY__" symbols)) - 2) 0;
- 	# array_desc = if (is_using_desc_relative_to_array == 1) ((get_array_D {} - 2)) 0;
- 	# symbol_a = lookup_symbol_values desc_s_a mod_s_a symbols;
--	# s = replace_desc_numbers_by_descs 0 s symbol_a symbol_offset array_desc;
--	= copy_from_string s;
--
-+	= replace_desc_numbers_by_descs 0 s symbol_a symbol_offset array_desc;
- 
-+copy_from_string_with_names :: !*{#Char} !*{#DescInfo} !*{#String} !{#Symbol} -> (.a,!Int);
-+copy_from_string_with_names s desc_s_a mod_s_a symbols
-+	# s = replace_symbols_in_graph s desc_s_a mod_s_a symbols;
-+	= copy_from_string s;
++make_symbol_name :: !String !String !Int -> String;
+ make_symbol_name "_system" descriptor_name prefix
+ 	= case descriptor_name of {
+ 		"INT"

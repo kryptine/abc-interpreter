@@ -19,6 +19,12 @@ build:
   script:
     - CFLAGS='-DDEBUG_ALL_INSTRUCTIONS -DDEBUG_CLEAN_LINKS=10 -DDEBUG_GARBAGE_COLLECTOR=10' make -B -C src
 
+build-clang:
+  extends: .base
+  stage: build
+  script:
+    - OS=Linux CC=clang CFLAGS='-DDEBUG_ALL_INSTRUCTIONS -DDEBUG_CLEAN_LINKS=10 -DDEBUG_GARBAGE_COLLECTOR=10' make -B -C src
+
 build-windows:
   extends: .base
   stage: build
@@ -47,7 +53,7 @@ benchmark-x86:
     - cd test
     - ./run_tests.sh -3bf
 
-interworking-from-Start:
+interworking-Start:
   extends: .base
   stage: test-interworking
   script:
@@ -58,10 +64,21 @@ interworking-from-Start:
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
     - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
 
-interworking-with-GraphCopy:
+interworking-GraphCopy:
   extends: .base
   stage: test-interworking
   script:
+    - cd src
+    - make -B GraphTest
+    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
+    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+
+interworking-GraphCopy-clang:
+  extends: .base
+  stage: test-interworking
+  script:
+    - export OS=Linux CC=clang
     - cd src
     - make -B GraphTest
     - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'

@@ -49,8 +49,8 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
-		host_desc_label-=a_arity;
+		int args_needed = ((int16_t*)(node[0]))[0] >> IF_MACH_O_ELSE(4,3);
+		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
 		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
 			nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);

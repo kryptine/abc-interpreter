@@ -1,28 +1,7 @@
 # vim: ts=8:
 .intel_syntax noprefix
 
-.extern	copy_interpreter_to_host
-.extern	copy_interpreter_to_host_1
-.extern	collect_1
-
 .text
-
-#       rax: B0
-# (res) rbx: B1
-#       rcx: A0
-#       rdx: A1
-# (res) rbp: scratch
-#       rsi: A_p
-#       rdi: Heap_p
-#       rsp: B_p
-#       r8:  A2
-#       r9:  scratch(?)
-#       r10: B2
-#       r11: B3
-# (res) r12: B4
-# (res) r13: B5
-# (res) r14: B6
-# (res) r15: Number of free words on heap
 
 .macro save_registers
 	push	rcx
@@ -32,7 +11,6 @@
 	push	r11
 	push	rdx
 .endm
-
 .macro restore_registers
 	pop	rdx
 	pop	r11
@@ -48,7 +26,6 @@
 	mov	[rbp+8],rdi  # set heap pointer
 	mov	[rbp+16],r15 # set nr. of free words
 .endm
-
 .macro restore_host_status_via_rdi # rdi is the interpretation_environment
 	mov	rdi,[rdi]
 	mov	rsi,[rdi]
@@ -93,10 +70,10 @@ __interpret__copy__node__asm_gc:
 
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
-	lea	rbp,__interpret__copy__node__asm_redirect_node
+	mov	rbp,[__interpret__copy__node__asm_redirect_node@GOTPCREL+rip]
 	mov	rcx,[rbp]
 	# Evaluate the node if necessary
-	testb	[rcx],2
+	test	QWORD PTR [rcx],2
 	jne	__interpret__copy__node__asm_redirect_finish
 	call	[rcx]
 __interpret__copy__node__asm_redirect_finish:
@@ -109,6 +86,11 @@ __interpret__copy__node__asm__n:
 	mov	rbp,[rbp+16]
 	mov	rbp,[rbp+8]
 	push	rbp
+
+	test	rax,1
+	jne	__interpret__copy__node__asm__n_dont_align
+	push	rbp
+__interpret__copy__node__asm__n_dont_align:
 
 	# Temporarily store int argument in host_status
 	mov	rbp,[rbp]
@@ -168,6 +150,10 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	rax,0
 	call	copy_interpreter_to_host_n
 	add	rsp,rbx
+	test	rbx,8
+	jne	__interpret__copy__node__asm__n_dont_align_2
+	pop	rbp
+__interpret__copy__node__asm__n_dont_align_2:
 	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
 

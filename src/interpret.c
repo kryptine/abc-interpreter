@@ -236,6 +236,7 @@ int interpret(
 
 #ifdef LINK_CLEAN_RUNTIME
 	struct program *program = ie->program;
+	int jsr_eval_host_node_n_args;
 #endif
 
 	BC_WORD *pc = program->code;
@@ -248,7 +249,8 @@ int interpret(
 
 	BC_WORD ret = EVAL_TO_HNF_LABEL;
 
-#ifdef POSIX
+#if defined(POSIX) && !defined(MACH_O64)
+	/* TODO: check why this breaks on Mac */
 	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
 		perror("sigaction");
 		return 1;
@@ -275,7 +277,7 @@ eval_to_hnf_return:
 	}
 
 #ifdef COMPUTED_GOTOS
-	goto **pc;
+	goto **(void**)pc;
 # include "interpret_instructions.h"
 #else
 	for (;;) {
@@ -326,7 +328,7 @@ eval_to_hnf_return:
 		}
 	}
 #ifdef COMPUTED_GOTOS
-	goto **pc;
+	goto **(void**)pc;
 #endif
 }
 

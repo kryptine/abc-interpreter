@@ -69,9 +69,8 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 | isNothing pgm = abort "Failed to parse bytecode\n"
 # pgm = fromJust pgm
 # int_syms = getInterpreterSymbols pgm
-# int_syms = {s \\ s <- matchSymbols [s \\ s <-: host_syms] int_syms}
-
-#! graph = replace_symbols_in_graph graph descinfo modules int_syms
+# int_syms = {#s \\ s <- matchSymbols [s \\ s <-: host_syms] int_syms}
+# int_syms = {#lookup_symbol_value d modules int_syms \\ d <-: descinfo}
 
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
 # asp = stack
@@ -82,7 +81,7 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 	pgm
 	heap HEAP_SIZE stack STACK_SIZE
 	asp bsp csp heap
-# graph_node = string_to_interpreter graph ie_settings
+# graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
 = (interpret ie (Finalizer 0 0 graph_node), w)
@@ -119,10 +118,34 @@ where
 			ccall get_host_symbols "p:p"
 		}
 
-	string_to_interpreter :: !String !Pointer -> Pointer
-	string_to_interpreter graph ie = code {
-		ccall string_to_interpreter "Sp:p"
+	string_to_interpreter :: !{#Int} !String !Pointer -> Pointer
+	string_to_interpreter symbol_values graph ie = code {
+		ccall string_to_interpreter "ASp:p"
 	}
+
+	lookup_symbol_value :: !DescInfo !{#String} !{#Symbol} -> Int
+	lookup_symbol_value {di_prefix_arity_and_mod,di_name} mod_a symbols
+		# prefix_n = di_prefix_arity_and_mod bitand 0xff
+		# module_n = (di_prefix_arity_and_mod >> 8)-1
+		# module_name = mod_a.[module_n]
+		| prefix_n<PREFIX_D
+			# symbol_name = make_symbol_name module_name di_name prefix_n
+			# symbol_value = get_symbol_value symbol_name symbols
+			| prefix_n<=1
+				| symbol_value== -1
+					= abort ("lookup_desc_info not found "+++symbol_name)
+					= symbol_value
+				| symbol_value== -1
+					= abort ("lookup_desc_info not found "+++symbol_name)
+					= symbol_value+2
+			# symbol_name = make_symbol_name module_name di_name PREFIX_D
+			# symbol_value = get_symbol_value symbol_name symbols
+			| symbol_value== -1
+				= abort ("lookup_desc_info not found "+++symbol_name)
+				# arity = prefix_n - PREFIX_D
+				= symbol_value+(arity*8*2)+2
+	where
+		PREFIX_D = 4
 
 STACK_SIZE :== (512 << 10) * 2
 HEAP_SIZE :== 2 << 20
