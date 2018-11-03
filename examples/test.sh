@@ -5,9 +5,9 @@ make -C ../src\
 	graph_copy_with_names.dcl\
 	graph_copy_with_names.icl\
 	Clean\ System\ Files/interpret.a\
-	optimise\
+	abcopt\
 	bcgen\
-	link
+	bclink
 
 for dir in *; do
 	[ -d "$dir" ] || continue
