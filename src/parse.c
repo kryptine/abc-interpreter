@@ -66,7 +66,7 @@ void init_parser(struct parser *state
 		host_symbols++;
 
 #ifdef MACH_O64
-		if (!strcmp(state->program->host_symbols[i].name,"___ARRAY__"))
+		if (!strcmp(state->program->host_symbols[i].name,"__ARRAY__"))
 			offset=(BC_WORD)&__ARRAY__-(BC_WORD)state->program->host_symbols[i].location;
 #endif
 	}
