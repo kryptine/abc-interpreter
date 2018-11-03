@@ -9,6 +9,8 @@ make -C ../src\
 	bcgen\
 	bclink
 
+clm -O -bytecode _system
+
 for dir in *; do
 	[ -d "$dir" ] || continue
 	echo -e "\033[0;33mTesting $dir\033[0m"
