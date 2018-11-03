@@ -25,7 +25,7 @@ Global
 			Time:	False
 			Stack:	False
 			Dynamics:	False
-			GenericFusion:	True
+			GenericFusion:	False
 			DescExL:	False
 		Output
 			Output:	NoConsole
