@@ -1,8 +1,5 @@
 #!/bin/bash
 
-CLM=clm
-CLMFLAGS="-IL Platform -IL Dynamics -dynamics -exl -desc -bytecode"
-OPTCLMFLAG=" -optabc"
 IP=../src/interpret
 
 RED="\033[0;31m"
@@ -11,7 +8,7 @@ YELLOW="\033[0;33m"
 PURPLE="\033[0;35m"
 RESET="\033[0m"
 
-FAILED=0
+FAILED=()
 
 RUNFLAGS=""
 NATIVE_RUNFLAGS=""
@@ -22,6 +19,27 @@ RUN_ONLY=()
 PROFILE=0
 RECOMPILE=1
 QUIET=0
+OPTIMISE=1
+
+cpprj () {
+	if [ $OPTIMISE -gt 0 ]; then
+		sed 's/OptimiseABC:.*/OptimiseABC:\tTrue/' "$1" > "$2"
+	else
+		sed 's/OptimiseABC:.*/OptimiseABC:\tFalse/' "$1" > "$2"
+	fi
+}
+
+cpmq() {
+    res="$(cpm $@)"
+    echo "$res" | grep -i 'Error' >/dev/null
+    if [ $? -eq 0 ]; then
+        echo "$res" | grep -v Analyzing | grep -i '^\|Error\|Warning'
+        return -1
+    else
+        echo "$res" | grep --color=never -i 'Finished making.'
+        return 0
+    fi
+}
 
 print_help () {
 	echo "$0: run tests"
@@ -81,7 +99,7 @@ while true; do
 			NATIVE_RUNFLAGS+=" -h $2"
 			shift 2;;
 		-O)
-		    OPTCLMFLAG=""
+			OPTIMISE=0
 			shift;;
 		-s)
 			RUNFLAGS+=" -s $2"
@@ -119,26 +137,20 @@ while true; do
 	esac
 done
 
-CLMFLAGS="$CLMFLAGS $OPTCLMFLAG"
-
 if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
 	sleep 1
 fi
 
 CFLAGS="$CFLAGS" make -BC ../src abcopt bcgen bclink interpret || exit 1
-$CLM -bytecode -O _system
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -r Clean\ System\ Files 2>/dev/null
 fi
 
-while read line
+for MODULE in *.icl
 do
-	line="${line//$'\t\t'/ , }"
-	line=(${line//$'\t'/ })
-	MODULE=${line[0]}
-	MODULE_RUNFLAGS=${line[1]//,/ }
+	MODULE="${MODULE/.icl/}"
 
 	if [[ "${MODULE:0:1}" == "#" ]]; then
 		continue
@@ -155,21 +167,28 @@ do
 
 	echo -e "${YELLOW}Running $MODULE...$RESET"
 
-	$CLM $CLMFLAGS -d $MODULE
-	CLMRESULT=$?
+	cpprj "$MODULE.prj.default" "$MODULE.prj"
+	cpmq project "$MODULE.prj" build
+	CPMRESULT=$?
 
-	if [ $CLMRESULT -ne 0 ]; then
+	if [ $CPMRESULT -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (compilation)$RESET"
 		[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
-		FAILED=1
+		FAILED+=("$MODULE")
 		continue
 	fi
 	if [ $RECOMPILE -gt 0 ]; then
-		touch "$MODULE.icl"
-		sleep 1
-		$CLM $CLMFLAGS -d $MODULE
-		$CLM $CLMFLAGS -d $MODULE
+		cpmq project "$MODULE.prj" build
 	fi
+
+	if [ "$MODULE" == "infprimes" ]; then
+		echo -e "${YELLOW}Skipping infprimes due to infinite result${RESET}"
+		continue
+	fi
+
+	MODULE_HEAPSIZE="$(grep -w HeapSize "$MODULE.prj" | cut -f4)"
+	MODULE_STACKSIZE="$(grep -w StackSize "$MODULE.prj" | cut -f4)"
+	MODULE_RUNFLAGS="-h $MODULE_HEAPSIZE -s $MODULE_STACKSIZE"
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
 
@@ -183,7 +202,7 @@ do
 EOF
 		WALL_TIME_NATIVE=""
 		{
-			/usr/bin/time -f %e ./a.out $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>/dev/fd/3
+			/usr/bin/time -f %e ./"$MODULE" $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>/dev/fd/3
 			WALL_TIME_NATIVE="$(cat <&3)"
 		} 3<<EOF
 EOF
@@ -210,14 +229,15 @@ EOF
 	fi
 	if [ $? -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"
-		FAILED=1
+		FAILED+=("$MODULE")
 	else
 		echo -e "${GREEN}Passed: $MODULE$RESET"
 	fi
-done < tests.txt
+done
 
-if [ $FAILED -eq 0 ]; then
+if [ ${#FAILED[@]} -eq 0 ]; then
 	echo -e "${GREEN}All tests passed$RESET"
 else
+	echo -e "${RED}Some tests failed: ${FAILED[@]}$RESET"
 	exit 1
 fi
