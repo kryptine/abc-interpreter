@@ -236,6 +236,7 @@ int interpret(
 
 #ifdef LINK_CLEAN_RUNTIME
 	struct program *program = ie->program;
+	int jsr_eval_host_node_n_args;
 #endif
 
 	BC_WORD *pc = program->code;
@@ -276,7 +277,7 @@ eval_to_hnf_return:
 	}
 
 #ifdef COMPUTED_GOTOS
-	goto **pc;
+	goto **(void**)pc;
 # include "interpret_instructions.h"
 #else
 	for (;;) {
@@ -327,7 +328,7 @@ eval_to_hnf_return:
 		}
 	}
 #ifdef COMPUTED_GOTOS
-	goto **pc;
+	goto **(void**)pc;
 #endif
 }
 

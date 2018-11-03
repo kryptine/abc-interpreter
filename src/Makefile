@@ -12,7 +12,7 @@ override CLIBS+=-lm
 USING_CLANG:=0
 ifeq ($(shell $(CC) --version | grep -o clang),clang)
 ifndef OS
-OS?=Mac
+OS:=Mac
 endif
 USING_CLANG:=1
 endif

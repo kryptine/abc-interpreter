@@ -1,6 +1,6 @@
 --- a/graph_copy_with_names.icl
 +++ b/graph_copy_with_names.icl
-@@ -393,7 +393,8 @@
+@@ -393,6 +393,7 @@ get_thunk_n_non_pointers d
  		# b_size = arity>>8;
  		= b_size;
  
