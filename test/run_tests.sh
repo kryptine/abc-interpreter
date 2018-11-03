@@ -31,8 +31,9 @@ cpprj () {
 
 cpmq() {
     res="$(cpm $@)"
+	ecode=$?
     echo "$res" | grep -i 'Error' >/dev/null
-    if [ $? -eq 0 ]; then
+    if [ $ecode -ne 0 ]; then
         echo "$res" | grep -v Analyzing | grep -i '^\|Error\|Warning'
         return -1
     else
@@ -145,7 +146,7 @@ fi
 CFLAGS="$CFLAGS" make -BC ../src abcopt bcgen bclink interpret || exit 1
 
 if [ $RECOMPILE -gt 0 ]; then
-	rm -r Clean\ System\ Files 2>/dev/null
+	rm -fr Clean\ System\ Files
 fi
 
 for MODULE in *.icl

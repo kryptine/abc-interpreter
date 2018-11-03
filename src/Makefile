@@ -45,6 +45,7 @@ CodeSharing: $(INTERPRET_LIB) $(PATCHED) .FORCE
 	$(CLM) $(CLMFLAGS) $@ -o $@
 
 GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
+	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch

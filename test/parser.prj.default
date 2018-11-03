@@ -8,6 +8,7 @@ Global
 		CheckStacks:	False
 		CheckIndexes:	False
 		GenerateByteCode:	True
+		OptimiseABC:	True
 	Application
 		HeapSize:	50331648
 		StackSize:	512000
