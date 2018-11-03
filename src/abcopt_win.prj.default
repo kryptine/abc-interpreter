@@ -2,10 +2,11 @@ Version: 1.4
 Global
 	ProjectRoot:	.
 	Target:	StdEnv
-	Exec:	{Project}\optimise.exe
+	Exec:	{Project}\ABCOptimiser.exe
 	CodeGen
 		CheckStacks:	False
 		CheckIndexes:	True
+		GenerateByteCode:	False
 	Application
 		HeapSize:	20971520
 		StackSize:	512000
@@ -24,7 +25,7 @@ Global
 			Time:	False
 			Stack:	False
 			Dynamics:	False
-			GenericFusion:	True
+			GenericFusion:	False
 			DescExL:	False
 		Output
 			Output:	NoConsole

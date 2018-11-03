@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "bcgen_instructions.h"
-#include "link.h"
+#include "bclink.h"
 #include "parse.h"
 #include "settings.h"
 #include "util.h"

@@ -1,22 +1,25 @@
 Version: 1.4
 Global
 	ProjectRoot:	.
-	Target:	StdEnv
-	Exec:	{Project}/optimise
+	Target:	ByteCode
+	Exec:	{Project}/functions
+	ByteCode:	{Project}/functions.bc
 	CodeGen
 		CheckStacks:	False
 		CheckIndexes:	False
+		GenerateByteCode:	True
+		OptimiseABC:	True
 	Application
-		HeapSize:	20971520
+		HeapSize:	2097152
 		StackSize:	512000
 		ExtraMemory:	8192
-		IntialHeapSize:	20971520
+		IntialHeapSize:	204800
 		HeapSizeMultiplier:	4096
 		ShowExecutionTime:	False
 		ShowGC:	False
 		ShowStackSize:	False
-		MarkingCollector:	True
-		DisableRTSFlags:	True
+		MarkingCollector:	False
+		DisableRTSFlags:	False
 		StandardRuntimeEnv:	True
 		Profile
 			Memory:	False
@@ -24,10 +27,10 @@ Global
 			Time:	False
 			Stack:	False
 			Dynamics:	False
-			GenericFusion:	True
-			DescExL:	False
+			GenericFusion:	False
+			DescExL:	True
 		Output
-			Output:	NoConsole
+			Output:	ShowConstructors
 			Font:	Monaco
 			FontSize:	9
 			WriteStdErr:	False
@@ -42,12 +45,10 @@ Global
 		ExportedNames:	
 	Paths
 		Path:	{Project}
-		Path:	{Application}*lib*StdEnv
-		Path:	{Application}*lib*Platform
 	Precompile:	
 	Postlink:	
 MainModule
-	Name:	ABC.Optimise
+	Name:	functions
 	Dir:	{Project}
 	Compiler
 		NeverMemoryProfile:	False
@@ -59,4 +60,4 @@ MainModule
 		Verbose:	True
 		ReadableABC:	False
 		ReuseUniqueNodes:	True
-		Fusion:	True
+		Fusion:	False

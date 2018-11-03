@@ -7,6 +7,7 @@ import StdClass
 import StdFile
 import StdGeneric
 import StdInt
+import StdList
 import StdString
 
 isAStackInstruction :: ABCInstruction -> Bool
@@ -31,8 +32,9 @@ printInstruction{|Char|} c = printChar c
 where
 	printChar :: !Char -> String
 	printChar c
-	| c < ' ' || c > '~' = {#'\'','\\',oct (ic / 64),oct ((ic rem 64) / 8),oct (ic rem 8),'\''}
-	| otherwise          = {#'\'',c,'\''}
+	| c < ' ' || c > '~' || isMember c ['\\\'']
+		= {#'\'','\\',oct (ic / 64),oct ((ic rem 64) / 8),oct (ic rem 8),'\''}
+		= {#'\'',c,'\''}
 	where
 		ic = toInt c
 		oct i = "01234567".[i]

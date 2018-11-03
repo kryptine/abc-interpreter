@@ -31,7 +31,7 @@ ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation
 endif
 
-BINARIES:=optimise bcgen link interpret
+BINARIES:=abcopt bcgen bclink interpret
 PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
 INTERPRET_LIB:=Clean\ System\ Files/interpret.a
 
@@ -45,6 +45,7 @@ CodeSharing: $(INTERPRET_LIB) $(PATCHED) .FORCE
 	$(CLM) $(CLMFLAGS) $@ -o $@
 
 GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
+	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
@@ -52,14 +53,14 @@ $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
 	patch < $@.patch
 
 ifeq ($(OS),Windows_NT)
-optimise.prj: optimise_win.prj.default
+abcopt.prj: abcopt_win.prj.default
 	cp $< $@
 else
-optimise.prj: optimise.prj.default
+abcopt.prj: abcopt.prj.default
 	cp $< $@
 endif
 
-optimise: optimise.prj .FORCE
+abcopt: abcopt.prj .FORCE
 	$(CPM) project $@.prj build
 
 SRC_BCGEN:=\
@@ -69,22 +70,22 @@ SRC_BCGEN:=\
 	bcgen_instruction_table.c\
 	parse_abc.c\
 	util.c
-DEP_BYTECODE:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
+DEP_BCGEN:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
-bcgen: $(SRC_BCGEN) $(DEP_BYTECODE)
+bcgen: $(SRC_BCGEN) $(DEP_BCGEN)
 	$(CC) $(CFLAGS) $(CLIBS) $(SRC_BCGEN) -DBC_GEN -o $@
 
-SRC_LINK:=\
+SRC_BCLINK:=\
 	abc_instructions.c\
 	bcgen_instructions.c\
+	bclink.c\
 	bytecode.c\
-	link.c\
 	parse.c\
 	util.c
-DEP_LINK:=$(subst .c,.h,$(SRC_LINK)) settings.h
+DEP_BCLINK:=$(subst .c,.h,$(SRC_BCLINK)) settings.h
 
-link: $(SRC_LINK) $(DEP_LINK)
-	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_LINK) -DLINKER -o $@
+bclink: $(SRC_BCLINK) $(DEP_BCLINK)
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -122,7 +123,7 @@ $(INTERPRET_LIB): $(OBJ_INTERPRET_LIB) interface.o
 $(OBJ_INTERPRET_LIB) interface.o: %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB) $(DEP_BYTECODE)
+$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB) $(DEP_BCGEN)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -S $< -o $@
 ifeq ($(OS),Mac)
 	sed -i '' -f mac_fix_underscores.sed $@

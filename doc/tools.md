@@ -14,15 +14,15 @@ the run-time system for the interpreter:
 clm fsieve
 
 # Optimise ABC code
-optimise "Clean System Files/fsieve.abc" -o "Clean System Files/fsieve.opt.abc"
-optimise "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
+abcopt "Clean System Files/fsieve.abc" -o "Clean System Files/fsieve.opt.abc"
+abcopt "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
 
 # Generate bytecode
 bcgen "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
 bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc"
 
 # Link bytecode
-link "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.obc -o fsieve.bc
+bclink "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.obc -o fsieve.bc
 
 # Interpret bytecode
 interpret fsieve.bc
@@ -33,12 +33,12 @@ debug fsieve.bc
 
 ## Detailed descriptions
 
-### optimise
+### abcopt
 
 Optimises ABC code. This removes unnecessary instructions, shrinks instruction
 blocks, and introduces many new ABC instructions for frequently used blocks.
 
-Usage: `optimise ABC -o OABC`
+Usage: `abcopt ABC -o OABC`
 
 ### bcgen
 
@@ -50,13 +50,13 @@ In principle, `bcgen` can handle multiple ABC files and link them together.
 However, this is not used any more since we have a linker. Thus, it is safer to
 generate bytecode for every tool separately and link them together with `link`.
 
-### link
+### bclink
 
 Links bytecode files together.
 Since there is no `start` field in the bytecode, execution always starts at
 address 0. Thus, the first OBC file should be that of the main module.
 
-Usage: `link OBC [OBC ...] -o BC`
+Usage: `bclink OBC [OBC ...] -o BC`
 
 ### interpret
 

@@ -1,0 +1,63 @@
+Version: 1.4
+Global
+	ProjectRoot:	.
+	Target:	StdEnv
+	Exec:	{Project}/abcopt
+	CodeGen
+		CheckStacks:	False
+		CheckIndexes:	False
+		GenerateByteCode:	False
+	Application
+		HeapSize:	20971520
+		StackSize:	512000
+		ExtraMemory:	8192
+		IntialHeapSize:	20971520
+		HeapSizeMultiplier:	4096
+		ShowExecutionTime:	False
+		ShowGC:	False
+		ShowStackSize:	False
+		MarkingCollector:	True
+		DisableRTSFlags:	True
+		StandardRuntimeEnv:	True
+		Profile
+			Memory:	False
+			MemoryMinimumHeapSize:	0
+			Time:	False
+			Stack:	False
+			Dynamics:	False
+			GenericFusion:	True
+			DescExL:	False
+		Output
+			Output:	NoConsole
+			Font:	Monaco
+			FontSize:	9
+			WriteStdErr:	False
+	Link
+		LinkMethod:	Static
+		GenerateRelocations:	False
+		GenerateSymbolTable:	False
+		GenerateLinkMap:	False
+		LinkResources:	False
+		ResourceSource:	
+		GenerateDLL:	False
+		ExportedNames:	
+	Paths
+		Path:	{Project}
+		Path:	{Application}*lib*StdEnv
+		Path:	{Application}*lib*Platform
+	Precompile:	
+	Postlink:	
+MainModule
+	Name:	ABC.Optimise
+	Dir:	{Project}
+	Compiler
+		NeverMemoryProfile:	False
+		NeverTimeProfile:	False
+		StrictnessAnalysis:	True
+		ListTypes:	StrictExportTypes
+		ListAttributes:	True
+		Warnings:	True
+		Verbose:	True
+		ReadableABC:	False
+		ReuseUniqueNodes:	True
+		Fusion:	True
