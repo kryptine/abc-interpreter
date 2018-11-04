@@ -60,7 +60,11 @@ GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
 	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
+ifeq ($(OS),Windows_NT)
+$(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
+else
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
+endif
 	cp $< $@
 	patch < $@.patch
 
