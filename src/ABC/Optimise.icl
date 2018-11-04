@@ -405,8 +405,25 @@ Start w
 where
 	loop :: !*File -> ([ABCInstruction], *File)
 	loop f
+	# (e,f) = fend f
+	| e = ([], f)
 	# (l,f) = freadline f
-	| l == "" = ([], f)
-	# instr = parseLine (l % (0, size l - 2))
+	# l = stripLineEnding l
+	| l == "" = loop f
+	# instr = parseLine l
 	# (pgm,f) = loop f
 	= ([instr:pgm], f)
+	where
+		stripLineEnding :: !String -> String
+		stripLineEnding s
+		| sz == 0 = s
+		| last == '\n' || last == '\r'
+			| sz == 1 = ""
+			| penultimate == '\n' || penultimate == '\r'
+				= s % (0,sz-3)
+				= s % (0,sz-2)
+		= s
+		where
+			sz = size s
+			last = s.[sz-1]
+			penultimate = s.[sz-2]

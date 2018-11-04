@@ -43,7 +43,7 @@ where
 	printBool :: !Bool -> String
 	printBool b = if b "TRUE" "FALSE"
 printInstruction{|String|} s = s
-printInstruction{|StringLiteral|} (StringLit s) = "\"" +++ s +++ "\"" // TODO escape
+printInstruction{|StringLiteral|} (StringLit s) = "\"" +++ s +++ "\""
 printInstruction{|StringWithSpaces|} (StringWithSpaces s) = s
 printInstruction{|UNIT|} UNIT = ""
 printInstruction{|PAIR|} fx fy (PAIR x y) = fx x +++ " " +++ fy y
