@@ -236,8 +236,8 @@ int interpret(
 
 #ifdef LINK_CLEAN_RUNTIME
 	struct program *program = ie->program;
-	int jsr_eval_host_node_n_args;
 #endif
+	int instr_arg;
 
 	BC_WORD *pc = program->code;
 	asp = _asp;

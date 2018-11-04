@@ -840,7 +840,6 @@ void code_buildh(char descriptor_name[],int arity);
 
 void code_build(char descriptor_name[],int arity,char *code_name) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		fprintf(stderr, "Warning: build %s %d %s\n",descriptor_name,arity,code_name);
 		code_buildh(descriptor_name,arity);
 		return;
 	}
@@ -1477,7 +1476,6 @@ void code_expR(void) {
 
 void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 	if (code_name[0]=='_' && code_name[1]=='_' && code_name[2]=='h' && code_name[3]=='n' && code_name[4]=='f' && code_name[5]=='\0') {
-		fprintf(stderr, "Warning: fill %s %d %s\n",descriptor_name,arity,code_name);
 		code_fillh(descriptor_name,arity,a_offset);
 		return;
 	}
@@ -2483,6 +2481,11 @@ void code_push_finalizers(void) {
 }
 
 void code_push_node(char *label_name,int n_arguments) {
+	if (!strcmp(label_name,"__")) {
+		add_instruction_w(Cpush_node_,n_arguments);
+		return;
+	}
+
 	if (strcmp(label_name,"__cycle__in__spine") && strcmp(label_name,"__reserve"))
 		fprintf(stderr, "Warning: push_node not implemented for '%s'\n", label_name);
 
@@ -3739,23 +3742,15 @@ void code_a(int n_apply_args,char *ea_label_name) {
 		add_instruction(CA_data_IlI);
 		add_instruction_label(Cjmp,ea_label_name);
 		add_instruction(Chalt);
-	} else if (n_apply_args==2) {
+	} else if (n_apply_args<=32) {
 		add_instruction(CA_data_IlI);
-		add_instruction_label(Cadd_empty_node2,ea_label_name);
-		add_instruction(Chalt);
-	} else if (n_apply_args==3) {
-		add_instruction(CA_data_IlI);
-		add_instruction_label(Cadd_empty_node3,ea_label_name);
+		add_instruction_label(Cadd_empty_node3+(n_apply_args-3),ea_label_name);
 		add_instruction(Chalt);
 	} else {
 		if (ea_label_name!=NULL)
-			fprintf(stderr, "Warning: .a %d %s\n",n_apply_args,ea_label_name);
+			fprintf(stderr, "Error: .a %d %s\n",n_apply_args,ea_label_name);
 		else
-			fprintf(stderr, "Warning: .a %d\n",n_apply_args);
-		/* to do add_empty_node_n */
-		add_instruction(CA_data_IIl);
-		add_instruction(Chalt);
-		add_instruction_label(Cjmp,ea_label_name);
+			fprintf(stderr, "Error: .a %d\n",n_apply_args);
 	}
 }
 
@@ -4082,20 +4077,8 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			if (number_of_arguments<-2)
 				number_of_arguments=1;
 
-			if (number_of_arguments==0) {
-				add_instruction_label(Ceval_upd0,ea_label_name);
-				add_instruction(Chalt);
-			} else if (number_of_arguments==1) {
-				add_instruction_label(Ceval_upd1,ea_label_name);
-				add_instruction(Chalt);
-			} else if (number_of_arguments==2) {
-				add_instruction_label(Ceval_upd2,ea_label_name);
-				add_instruction(Chalt);
-			} else if (number_of_arguments==3) {
-				add_instruction_label(Ceval_upd3,ea_label_name);
-				add_instruction(Chalt);
-			} else if (number_of_arguments==4) {
-				add_instruction_label(Ceval_upd4,ea_label_name);
+			if (number_of_arguments>=0 && number_of_arguments<=32) {
+				add_instruction_label(Ceval_upd0+number_of_arguments,ea_label_name);
 				add_instruction(Chalt);
 			} else if (number_of_arguments==-1) {
 				add_instruction_label(Cjmp,ea_label_name);
@@ -4103,9 +4086,9 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			} else {
 				/* to do eval_upd_n */
 				if (ea_label_name!=NULL)
-					fprintf(stderr, "Warning: .n %d %s\n",number_of_arguments,ea_label_name);
+					fprintf(stderr, "Warning: .n %d %s is not implemented\n",number_of_arguments,ea_label_name);
 				else
-					fprintf(stderr, "Warning: .n %d\n",number_of_arguments);
+					fprintf(stderr, "Warning: .n %d is not implemented\n",number_of_arguments);
 				add_instruction(Chalt);
 				add_label(ea_label_name);
 				add_instruction(Chalt);

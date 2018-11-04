@@ -9,7 +9,6 @@ import StdList
 import Data._Array
 import Data.Maybe
 import System._Pointer
-import System._Posix
 
 import symbols_in_program
 
@@ -92,3 +91,13 @@ free_to_false :: !Pointer -> Bool
 free_to_false p
 # n = free p
 = n == 0 && n <> 0
+
+malloc :: !Int -> Pointer
+malloc _ = code {
+	ccall malloc "I:p"
+}
+
+free :: !Pointer -> Int
+free _ = code {
+	ccall free "p:I"
+}

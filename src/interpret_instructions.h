@@ -60,6 +60,47 @@ INSTRUCTION_BLOCK(add_empty_node3):
 	asp+=1;
 	hp+=3;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(add_empty_node32): instr_arg=32; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node31): instr_arg=31; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node30): instr_arg=30; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node29): instr_arg=29; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node28): instr_arg=28; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node27): instr_arg=27; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node26): instr_arg=26; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node25): instr_arg=25; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node24): instr_arg=24; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node23): instr_arg=23; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node22): instr_arg=22; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node21): instr_arg=21; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node20): instr_arg=20; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node19): instr_arg=19; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node18): instr_arg=18; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node17): instr_arg=17; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node16): instr_arg=16; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node15): instr_arg=15; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node14): instr_arg=14; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node13): instr_arg=13; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node12): instr_arg=12; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node11): instr_arg=11; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node10): instr_arg=10; goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node9):  instr_arg=9;  goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node8):  instr_arg=8;  goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node7):  instr_arg=7;  goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node6):  instr_arg=6;  goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node5):  instr_arg=5;  goto add_empty_node_n;
+INSTRUCTION_BLOCK(add_empty_node4):  instr_arg=4;
+add_empty_node_n:
+{
+	NEED_HEAP(3);
+	pc=*(BC_WORD**)&pc[1];
+	hp[0]=(BC_WORD)&__cycle__in__spine;
+	for (int i=0; i>-instr_arg; i--)
+		asp[i+1]=asp[i];
+	asp[1-instr_arg]=(BC_WORD)hp;
+	asp+=1;
+	hp+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(andI):
 	bsp[1]=bsp[0] & bsp[1];
 	++bsp;
@@ -3708,6 +3749,52 @@ INSTRUCTION_BLOCK(push_b):
 	v=bsp[pc[1]];
 	*--bsp=v;
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(push_node_):
+{
+	BC_WORD *n,n_a;
+
+	n=(BC_WORD*)*asp;
+	n_a=pc[1];
+
+	asp+=n_a;
+
+	asp[0]=n[1];
+	pc+=2;
+	do {
+		if (n_a< 2) break; asp[ -1]=n[ 2];
+		if (n_a< 3) break; asp[ -2]=n[ 3];
+		if (n_a< 4) break; asp[ -3]=n[ 4];
+		if (n_a< 5) break; asp[ -4]=n[ 5];
+		if (n_a< 6) break; asp[ -5]=n[ 6];
+		if (n_a< 7) break; asp[ -6]=n[ 7];
+		if (n_a< 8) break; asp[ -7]=n[ 8];
+		if (n_a< 9) break; asp[ -8]=n[ 9];
+		if (n_a<10) break; asp[ -9]=n[10];
+		if (n_a<11) break; asp[-10]=n[11];
+		if (n_a<12) break; asp[-11]=n[12];
+		if (n_a<13) break; asp[-12]=n[13];
+		if (n_a<14) break; asp[-13]=n[14];
+		if (n_a<15) break; asp[-14]=n[15];
+		if (n_a<16) break; asp[-15]=n[16];
+		if (n_a<17) break; asp[-16]=n[17];
+		if (n_a<18) break; asp[-17]=n[18];
+		if (n_a<19) break; asp[-18]=n[19];
+		if (n_a<20) break; asp[-19]=n[20];
+		if (n_a<21) break; asp[-20]=n[21];
+		if (n_a<22) break; asp[-21]=n[22];
+		if (n_a<23) break; asp[-22]=n[23];
+		if (n_a<24) break; asp[-23]=n[24];
+		if (n_a<25) break; asp[-24]=n[25];
+		if (n_a<26) break; asp[-25]=n[26];
+		if (n_a<27) break; asp[-26]=n[27];
+		if (n_a<28) break; asp[-27]=n[28];
+		if (n_a<29) break; asp[-28]=n[29];
+		if (n_a<30) break; asp[-29]=n[30];
+		if (n_a<31) break; asp[-30]=n[31];
+		if (n_a<32) break; asp[-31]=n[32];
+	} while (0);
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(push_node):
@@ -7614,6 +7701,47 @@ INSTRUCTION_BLOCK(eval_upd3):
 	asp+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(eval_upd32): instr_arg=32; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd31): instr_arg=31; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd30): instr_arg=30; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd29): instr_arg=29; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd28): instr_arg=28; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd27): instr_arg=27; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd26): instr_arg=26; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd25): instr_arg=25; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd24): instr_arg=24; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd23): instr_arg=23; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd22): instr_arg=22; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd21): instr_arg=21; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd20): instr_arg=20; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd19): instr_arg=19; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd18): instr_arg=18; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd17): instr_arg=17; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd16): instr_arg=16; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd15): instr_arg=15; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd14): instr_arg=14; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd13): instr_arg=13; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd12): instr_arg=12; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd11): instr_arg=11; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd10): instr_arg=10; goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd9):  instr_arg=9;  goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd8):  instr_arg=8;  goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd7):  instr_arg=7;  goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd6):  instr_arg=6;  goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd5):  instr_arg=5;  goto eval_upd_n;
+INSTRUCTION_BLOCK(eval_upd4):  instr_arg=4;
+eval_upd_n:
+{
+	BC_WORD *n=(BC_WORD*)asp[0];
+	n[0]=(BC_WORD)&__interpreter_indirection[5];
+	asp[instr_arg-1]=n[1];
+	n[1]=asp[-1];
+	for (int i=instr_arg-2; i>=0; i--)
+		asp[i]=n[instr_arg-i];
+	pc=*(BC_WORD**)&pc[1];
+	asp+=instr_arg-1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(jsr_stack_check):
 	csp-=3;
 	csp[0]=(BC_WORD)&pc[4];
@@ -7733,97 +7861,97 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
-	jsr_eval_host_node_n_args=31;
+	instr_arg=31;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_30):
-	jsr_eval_host_node_n_args=30;
+	instr_arg=30;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_29):
-	jsr_eval_host_node_n_args=29;
+	instr_arg=29;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_28):
-	jsr_eval_host_node_n_args=28;
+	instr_arg=28;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_27):
-	jsr_eval_host_node_n_args=27;
+	instr_arg=27;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_26):
-	jsr_eval_host_node_n_args=26;
+	instr_arg=26;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_25):
-	jsr_eval_host_node_n_args=25;
+	instr_arg=25;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_24):
-	jsr_eval_host_node_n_args=24;
+	instr_arg=24;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_23):
-	jsr_eval_host_node_n_args=23;
+	instr_arg=23;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_22):
-	jsr_eval_host_node_n_args=22;
+	instr_arg=22;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_21):
-	jsr_eval_host_node_n_args=21;
+	instr_arg=21;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_20):
-	jsr_eval_host_node_n_args=20;
+	instr_arg=20;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_19):
-	jsr_eval_host_node_n_args=19;
+	instr_arg=19;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_18):
-	jsr_eval_host_node_n_args=18;
+	instr_arg=18;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_17):
-	jsr_eval_host_node_n_args=17;
+	instr_arg=17;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_16):
-	jsr_eval_host_node_n_args=16;
+	instr_arg=16;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_15):
-	jsr_eval_host_node_n_args=15;
+	instr_arg=15;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_14):
-	jsr_eval_host_node_n_args=14;
+	instr_arg=14;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_13):
-	jsr_eval_host_node_n_args=13;
+	instr_arg=13;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_12):
-	jsr_eval_host_node_n_args=12;
+	instr_arg=12;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_11):
-	jsr_eval_host_node_n_args=11;
+	instr_arg=11;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_10):
-	jsr_eval_host_node_n_args=10;
+	instr_arg=10;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_9):
-	jsr_eval_host_node_n_args=9;
+	instr_arg=9;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_8):
-	jsr_eval_host_node_n_args=8;
+	instr_arg=8;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_7):
-	jsr_eval_host_node_n_args=7;
+	instr_arg=7;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_6):
-	jsr_eval_host_node_n_args=6;
+	instr_arg=6;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_5):
-	jsr_eval_host_node_n_args=5;
+	instr_arg=5;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_4):
-	jsr_eval_host_node_n_args=4;
+	instr_arg=4;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_3):
-	jsr_eval_host_node_n_args=3;
+	instr_arg=3;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_2):
-	jsr_eval_host_node_n_args=2;
+	instr_arg=2;
 	goto jsr_eval_host_node_with_args;
 INSTRUCTION_BLOCK(jsr_eval_host_node_1):
-	jsr_eval_host_node_n_args=1;
+	instr_arg=1;
 jsr_eval_host_node_with_args:
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
@@ -7832,25 +7960,25 @@ jsr_eval_host_node_with_args:
 	int args_needed=((int16_t*)(host_node[0]))[0]>>IF_MACH_O_ELSE(4,3);
 	int node_arity=((int16_t*)(host_node[0]))[-1];
 
-	if (args_needed!=jsr_eval_host_node_n_args) {
-		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,jsr_eval_host_node_n_args);
+	if (args_needed!=instr_arg) {
+		fprintf(stderr,"Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,instr_arg);
 		exit(-1);
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
 	fprintf(stderr,"\thost node (%d: %p -> %p) arity is %d; %d needed\n",
 			host_nodeid,host_node,(void*)*host_node,node_arity,args_needed);
-	for (int i = 1; i <= jsr_eval_host_node_n_args; i++)
+	for (int i = 1; i <= instr_arg; i++)
 		fprintf(stderr,"\targ %d: %p -> %p\n",i,(void*)asp[-i],*(void**)asp[-i]);
 #endif
 
-	for (int i=jsr_eval_host_node_n_args; i>=1; i--) {
+	for (int i=instr_arg; i>=1; i--) {
 		*ie->host->host_a_ptr++ = (BC_WORD) ie->host->host_hp_ptr;
 		ie->host->host_hp_ptr = make_interpret_node(ie->host->host_hp_ptr, ie->host->clean_ie, asp[-i], 0);
 	}
 	BC_WORD *arg1, *arg2 = NULL;
 	arg1 = (BC_WORD*) *--ie->host->host_a_ptr;
-	if (jsr_eval_host_node_n_args >= 2)
+	if (instr_arg >= 2)
 		arg2 = (BC_WORD*) *--ie->host->host_a_ptr;
 
 	ie->asp = asp;
@@ -7859,8 +7987,8 @@ jsr_eval_host_node_with_args:
 	ie->hp = hp;
 	/* TODO: the calculation of lazy_entry here is probably bit-width and
 	 * platform dependent! */
-	if (jsr_eval_host_node_n_args >= 2) {
-		host_node = __interpret__evaluate__host_with_args(ie, 0, arg1, arg2, host_node, ap_addresses[jsr_eval_host_node_n_args-2]);
+	if (instr_arg >= 2) {
+		host_node = __interpret__evaluate__host_with_args(ie, 0, arg1, arg2, host_node, ap_addresses[instr_arg-2]);
 	} else if (node_arity > 0) {
 #ifdef MACH_O64
 		BC_WORD *lazy_entry = (BC_WORD*) (((BC_WORD*)(host_node[0]+6))[0]);
@@ -7881,7 +8009,7 @@ jsr_eval_host_node_with_args:
 	hp = ie->hp;
 
 	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
-	asp-=jsr_eval_host_node_n_args-1;
+	asp-=instr_arg-1;
 	asp[0] = (BC_WORD) hp;
 	hp += words_used;
 
@@ -8007,7 +8135,6 @@ INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(ccall):
-INSTRUCTION_BLOCK(eval_upd4):
 INSTRUCTION_BLOCK(instruction):
 INSTRUCTION_BLOCK(load_i):
 INSTRUCTION_BLOCK(load_si16):

@@ -8,15 +8,15 @@ Global
 		CheckIndexes:	True
 		GenerateByteCode:	False
 	Application
-		HeapSize:	20971520
-		StackSize:	512000
+		HeapSize:	209715200
+		StackSize:	2048000
 		ExtraMemory:	8192
-		IntialHeapSize:	204800
+		IntialHeapSize:	209715200
 		HeapSizeMultiplier:	4096
 		ShowExecutionTime:	False
 		ShowGC:	False
 		ShowStackSize:	False
-		MarkingCollector:	False
+		MarkingCollector:	True
 		DisableRTSFlags:	True
 		StandardRuntimeEnv:	True
 		Profile
@@ -25,7 +25,7 @@ Global
 			Time:	False
 			Stack:	False
 			Dynamics:	False
-			GenericFusion:	False
+			GenericFusion:	True
 			DescExL:	False
 		Output
 			Output:	NoConsole

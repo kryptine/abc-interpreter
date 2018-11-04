@@ -31,7 +31,19 @@ ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation
 endif
 
-BINARIES:=abcopt bcgen bclink interpret
+ifeq ($(OS),Windows_NT)
+ABCOPT:=ABCOptimiser.exe
+BCGEN:=ByteCodeGenerator.exe
+BCLINK:=ByteCodeLinker.exe
+INTERP:=interpret.exe
+else
+ABCOPT:=abcopt
+BCGEN:=bcgen
+BCLINK:=bclink
+INTERP:=interpret
+endif
+
+BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(INTERP)
 PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
 INTERPRET_LIB:=Clean\ System\ Files/interpret.a
 
@@ -48,20 +60,21 @@ GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
 	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
+ifeq ($(OS),Windows_NT)
+$(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
+else
 $(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
+endif
 	cp $< $@
 	patch < $@.patch
 
 ifeq ($(OS),Windows_NT)
-abcopt.prj: abcopt_win.prj.default
-	cp $< $@
+$(ABCOPT): abcopt_win.prj.default .FORCE
 else
-abcopt.prj: abcopt.prj.default
-	cp $< $@
+$(ABCOPT): abcopt.prj.default .FORCE
 endif
-
-abcopt: abcopt.prj .FORCE
-	$(CPM) project $@.prj build
+	cp $< abcopt.prj
+	$(CPM) project abcopt.prj build
 
 SRC_BCGEN:=\
 	abc_instructions.c\
@@ -72,7 +85,7 @@ SRC_BCGEN:=\
 	util.c
 DEP_BCGEN:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
-bcgen: $(SRC_BCGEN) $(DEP_BCGEN)
+$(BCGEN): $(SRC_BCGEN) $(DEP_BCGEN)
 	$(CC) $(CFLAGS) $(CLIBS) $(SRC_BCGEN) -DBC_GEN -o $@
 
 SRC_BCLINK:=\
@@ -84,7 +97,7 @@ SRC_BCLINK:=\
 	util.c
 DEP_BCLINK:=$(subst .c,.h,$(SRC_BCLINK)) settings.h
 
-bclink: $(SRC_BCLINK) $(DEP_BCLINK)
+$(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
@@ -113,7 +126,7 @@ DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	interpret_instructions.h\
 	settings.h
 
-interpret: $(SRC_INTERPRET) $(DEP_INTERPRET)
+$(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
 $(INTERPRET_LIB): $(OBJ_INTERPRET_LIB) interface.o
@@ -132,16 +145,13 @@ endif
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
 
-AUXILIARIES:=$(BINARIES)\
-	$(INTERPRET_LIB)\
-	CodeSharing\
-	GraphTest\
+AUXILIARIES:=$(INTERPRET_LIB)\
 	$(PATCHED)\
 	$(ASM_INTERPRET_LIB)\
 	$(OBJ_INTERPRET_LIB)
 
 clean:
-	$(RM) $(AUXILIARIES)
+	$(RM) $(BINARIES) CodeSharing GraphTest $(AUXILIARIES)
 	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
 	find . -name 'Clean System Files' -delete
 

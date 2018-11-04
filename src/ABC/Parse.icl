@@ -104,10 +104,11 @@ parseLine`{|StringLiteral|} = \i s -> case s.[i] of
 		_   -> Nothing
 	_   -> Nothing
 where
-	stringlit :: [Char] !Int !String -> (StringLiteral, Int) // TODO escaping
+	stringlit :: [Char] !Int !String -> (StringLiteral, Int)
 	stringlit cs start line
 	| start >= size line   = (StringLit (toString (reverse cs)), start)
-	| isSpace line.[start] = (StringLit (toString (reverse cs)), start)
+	| line.[start] == '\\' = stringlit [line.[start+1],line.[start]:cs] (start+2) line
+	| line.[start] == '"'  = (StringLit (toString (reverse cs)), start)
 	| otherwise            = stringlit [line.[start]:cs] (start + 1) line
 parseLine`{|StringWithSpaces|} = \i s -> Just (StringWithSpaces (s % (i,size s-1)), size s-1)
 
