@@ -1,6 +1,7 @@
 #!/bin/bash
 
 IP=../src/interpret
+[ "$OS" == "Windows_NT" ] && IP=../src/interpret.exe
 
 RED="\033[0;31m"
 GREEN="\033[0;32m"
@@ -27,6 +28,7 @@ cpprj () {
 	else
 		sed 's/OptimiseABC:.*/OptimiseABC:\tFalse/' "$1" > "$2"
 	fi
+	[ "$OS" == "Windows_NT" ] && sed -i 's:\*lib\*:*Libraries*:' "$2"
 }
 
 cpmq() {
@@ -143,7 +145,9 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 	sleep 1
 fi
 
-CFLAGS="$CFLAGS" make -BC ../src abcopt bcgen bclink interpret || exit 1
+if [ "$OS" != "Windows_NT" ]; then
+	CFLAGS="$CFLAGS" make -BC ../src all || exit 1
+fi
 
 if [ $RECOMPILE -gt 0 ]; then
 	rm -fr Clean\ System\ Files
@@ -187,8 +191,8 @@ do
 		continue
 	fi
 
-	MODULE_HEAPSIZE="$(grep -w HeapSize "$MODULE.prj" | cut -f4)"
-	MODULE_STACKSIZE="$(grep -w StackSize "$MODULE.prj" | cut -f4)"
+	MODULE_HEAPSIZE="$(grep -w HeapSize "$MODULE.prj" | cut -f4 | tr -d '\r')"
+	MODULE_STACKSIZE="$(grep -w StackSize "$MODULE.prj" | cut -f4 | tr -d '\r')"
 	MODULE_RUNFLAGS="-h $MODULE_HEAPSIZE -s $MODULE_STACKSIZE"
 
 	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
@@ -220,8 +224,10 @@ EOF
 	fi
 
 	if [ $PROFILE -ne 0 ]; then
-		google-pprof --pdf ../src/interpret /tmp/prof.out > $MODULE.prof.pdf
+		google-pprof --pdf $IP /tmp/prof.out > $MODULE.prof.pdf
 	fi
+
+	[ "$OS" == "Windows_NT" ] && dos2unix $MODULE.result
 
 	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
 		git diff --no-index --word-diff -U0 $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result

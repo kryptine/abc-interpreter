@@ -5,7 +5,7 @@ Global
 	Exec:	{Project}/abcopt
 	CodeGen
 		CheckStacks:	False
-		CheckIndexes:	False
+		CheckIndexes:	True
 		GenerateByteCode:	False
 	Application
 		HeapSize:	20971520
