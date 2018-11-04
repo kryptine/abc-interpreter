@@ -526,7 +526,7 @@ char *instruction_type (BC_WORD i) {
 		case Cexchange_a:            return "nn";
 		case CgeC:                   return "";
 		case Cjmp_b_false:           return "nl";
-		case Cjmp_eqACio:            return "?";
+		case Cjmp_eqACio:            return "nsl";
 		case Cjmp_eqC_b:             return "ncl";
 		case Cjmp_eqC_b2:            return "nclcl";
 		case Cjmp_eqD_b:             return "ll";
