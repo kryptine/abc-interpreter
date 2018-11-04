@@ -9,6 +9,13 @@ override CFLAGS+=\
 	-Werror
 override CLIBS+=-lm
 
+ifeq ($(MINGW),1)
+OS:=Windows_NT
+AS:=x86_64-w64-mingw32-as
+CC:=x86_64-w64-mingw32-gcc
+LD:=x86_64-w64-mingw32-ld
+endif
+
 USING_CLANG:=0
 ifeq ($(shell $(CC) --version | grep -o clang),clang)
 ifndef OS
@@ -131,7 +138,7 @@ $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 
 $(INTERPRET_LIB): $(OBJ_INTERPRET_LIB) interface.o
 	mkdir -p Clean\ System\ Files
-	ar cr '$@' $^
+	$(LD) -r $^ -o '$@'
 
 $(OBJ_INTERPRET_LIB) interface.o: %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
