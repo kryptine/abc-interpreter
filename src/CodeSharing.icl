@@ -16,7 +16,6 @@ import Data.Maybe
 import System.CommandLine
 import System.File
 import System._Pointer
-import System._Posix
 import Text
 
 import symbols_in_program

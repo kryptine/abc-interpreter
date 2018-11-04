@@ -16,7 +16,6 @@ import System.CommandLine
 import System.File
 import System.FilePath
 import System._Pointer
-import System._Posix
 
 import graph_copy_with_names
 import symbols_in_program
@@ -270,3 +269,8 @@ where
 	readString f
 	# (_,size,f) = freadi f
 	= freads f size
+
+malloc :: !Int -> Pointer
+malloc _ = code {
+	ccall malloc "I:p"
+}
