@@ -13,6 +13,8 @@ import System._Pointer
 import symbols_in_program
 
 import code from "interpret.a"
+import code from library "libc_library"
+import code from library "winsupport_library"
 
 OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
 

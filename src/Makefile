@@ -18,10 +18,10 @@ endif
 
 USING_CLANG:=0
 ifeq ($(shell $(CC) --version | grep -o clang),clang)
+USING_CLANG:=1
 ifndef OS
 OS:=Mac
 endif
-USING_CLANG:=1
 endif
 
 ifeq ($(OS),Mac)
@@ -31,6 +31,7 @@ override CLMFLAGS+=-no-opt-link
 endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
+override ASFLAGS+=--defsym WINDOWS=1
 else
 override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE -D_C99_SOURCE
 endif
