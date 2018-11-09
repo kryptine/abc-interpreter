@@ -94,7 +94,9 @@ opt_abc [Ipush_r_args _ 0 i0,Ipop_b i1:is] | i0 == i1 = opt_abc is
 opt_abc [Ipush_r_args _ i0 i1,Ipop_a n_a,Ipop_b n_b:is] | i0 == n_a && i1 == n_b = opt_abc is
 
 opt_abc [IpushI 1,Ipush_b n,IIns "addI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "incI":is]
+opt_abc [IpushI 2,Ipush_b n,IIns "addI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "incI",IIns "incI":is]
 opt_abc [IpushI 1,Ipush_b n,IIns "subI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "decI":is]
+opt_abc [IpushI 2,Ipush_b n,IIns "subI":is] | n > 0 = opt_abc [Ipush_b (n-1),IIns "decI",IIns "decI":is]
 
 opt_abc [IpushI 0,IIns "subI":is] = [IIns "negI":opt_abc is]
 
@@ -134,6 +136,8 @@ opt_abc1 [i0=:IpushI 1,i1=:IpushI_a n:is] = case is of
 	is                            -> [i0:opt_abc1 [i1:is]]
 opt_abc1 [i0:is] | isSimplePush i0 = case is of
 	[Iupdate_b a b:is] | a>0 && b>0 -> opt_abc1 [Iupdate_b (a-1) (b-1),i0:is]
+	[Iupdate_b 0 2:Ipop_b 1:comm:is] | isCommutativeBStackInstruction comm
+	                                -> opt_abc1 [Iupdatepop_b 0 1:i0:comm:is]
 	[Iupdatepop_b 0 a:is] | a>0     -> opt_abc1 [Ipop_b a,i0:is]
 	[i1=:Ijsr_eval _:is]            -> opt_abc1 [i1,i0:is]
 	is                              -> [i0:opt_abc1 is]
