@@ -3,12 +3,13 @@
 
 #include "copy_host_to_interpreter.h"
 #include "interpret.h"
+#include "util.h"
 
 int make_host_node(BC_WORD *heap, int shared_node_index, int args_needed) {
 	/* TODO: for now we are assuming the interpreter has enough memory */
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost to interpreter: %d -> %p\n",shared_node_index,heap);
-	fprintf(stderr,"\t[1]=%d; still %d args needed\n",shared_node_index,args_needed);
+	EPRINTF("\thost to interpreter: %d -> %p\n",shared_node_index,heap);
+	EPRINTF("\t[1]=%d; still %d args needed\n",shared_node_index,args_needed);
 #endif
 	if (args_needed == 0)
 		heap[0] = (BC_WORD) &HOST_NODE_INSTRUCTIONS[0];
@@ -60,13 +61,13 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 
 	if (host_symbol == NULL) {
 		/* TODO */
-		fprintf(stderr,"Descriptor %p not found in interpreter; this still has to be implemented\n",host_desc_label);
+		EPRINTF("Descriptor %p not found in interpreter; this still has to be implemented\n",host_desc_label);
 		exit(1);
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost to interpreter: %p -> %p\n",node,heap);
-	fprintf(stderr,"\ttranslating %p (%s) to %p\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location);
+	EPRINTF("\thost to interpreter: %p -> %p\n",node,heap);
+	EPRINTF("\ttranslating %p (%s) to %p\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location);
 #endif
 
 	BC_WORD *org_heap = heap;
@@ -107,7 +108,7 @@ BC_WORD copy_to_interpreter(struct interpretation_environment *ie, BC_WORD *heap
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
 			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
 			if (elem_host_symbol==NULL) {
-				fprintf(stderr,"error: cannot copy unboxed array of unknown records to interpreter\n");
+				EPRINTF("error: cannot copy unboxed array of unknown records to interpreter\n");
 				exit(1);
 			}
 			heap[4]=(BC_WORD)elem_host_symbol->interpreter_location;

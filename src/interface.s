@@ -45,7 +45,9 @@ __interpret__copy__node__asm:
 	save_host_status_via_rbp
 	mov	[rbp+24],rdx
 
-	# Parameters are already in the right register; see copy_interpreter_to_host.c
+	# Parameters are in the right registers; see comment on the C function
+	# NB: On Windows we need stack alignment here when compiling with /O2.
+	# But  since clang and gcc don't seem to require this, we leave it out.
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm_finish:
 	mov	rbp,rax

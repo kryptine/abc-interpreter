@@ -42,11 +42,9 @@ import ABC.Interpreter.Util
 	, ie_snodes    :: !*{a}
 	}
 
-serialize_for_interpretation :: a !FilePath !FilePath !*World -> *(!SerializedGraph, !*World)
-serialize_for_interpretation graph thisexe bcfile w
+serialize_for_interpretation :: a !FilePath !*World -> *(!SerializedGraph, !*World)
+serialize_for_interpretation graph bcfile w
 # (graph,descs,mods) = copy_to_string_with_names graph
-
-# (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # (bytecode,w) = readFile bcfile w
 | isError bytecode = abort "Failed to read the bytecode file\n"

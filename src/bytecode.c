@@ -242,102 +242,106 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 }
 
 # ifdef DEBUG_CURSES
-void print_code(WINDOW *f, struct program *pgm) {
+#  define WPRINTF(w,...) wprintw(w,__VA_ARGS__)
+void print_code(WINDOW *w, struct program *pgm) {
 # else
-void print_code(FILE *f, struct program *pgm) {
+#  define WPRINTF(w,...) PRINTF(__VA_ARGS__)
+void print_code(struct program *pgm) {
 # endif
 	uint32_t i;
 	char _tmp[256];
 	for (i = 0; i < pgm->code_size; i++) {
 		char *fmt = instruction_type(pgm->code[i]);
-		FPRINTF(f, "%d\t%s", i, instruction_name(pgm->code[i]));
+		WPRINTF(w, "%d\t%s", i, instruction_name(pgm->code[i]));
 		for (; *fmt; fmt++) {
 			i++;
 			switch (*fmt) {
 				case 'l': /* Code label */
 					print_label(_tmp, 256, 1, (BC_WORD*) pgm->code[i], pgm, NULL, 0);
-					FPRINTF(f, " %s", _tmp);
+					WPRINTF(w, " %s", _tmp);
 					break;
 				case 'i': /* Integer constant */
-					FPRINTF(f, " " BC_WORD_S_FMT, (BC_WORD_S) pgm->code[i]);
+					WPRINTF(w, " " BC_WORD_S_FMT, (BC_WORD_S) pgm->code[i]);
 					break;
 				case 'c': /* Character constant */
 					if (' ' <= pgm->code[i] && pgm->code[i] <= '~')
-						FPRINTF(f, " '%c'", (char) pgm->code[i]);
+						WPRINTF(w, " '%c'", (char) pgm->code[i]);
 					else
-						FPRINTF(f, " '\\x%02x'", (char) pgm->code[i]);
+						WPRINTF(w, " '\\x%02x'", (char) pgm->code[i]);
 					break;
 				case 'n': /* Stack index */
-					FPRINTF(f, " %d", abs((int) pgm->code[i]));
+					WPRINTF(w, " %d", abs((int) pgm->code[i]));
 					break;
 				case 'N': /* Stack index times WORD_WIDTH/8 */
-					FPRINTF(f, " %d", abs((int) pgm->code[i] / IF_INT_64_OR_32(8,4)));
+					WPRINTF(w, " %d", abs((int) pgm->code[i] / IF_INT_64_OR_32(8,4)));
 					break;
 				case 'r': /* Real constant */
-					FPRINTF(f, " %.15g", (*(BC_REAL*)&pgm->code[i]) + 0.0);
+					WPRINTF(w, " %.15g", (*(BC_REAL*)&pgm->code[i]) + 0.0);
 					break;
 				case 'a': /* Arity */
-					FPRINTF(f, " %d", abs((int16_t) ((BC_WORD_S) pgm->code[i] >> IF_INT_64_OR_32(48,16))));
+					WPRINTF(w, " %d", abs((int16_t) ((BC_WORD_S) pgm->code[i] >> IF_INT_64_OR_32(48,16))));
 					break;
 				case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
 				case 's': { /* String */
 					uint32_t *s = (uint32_t*) pgm->code[i] + (*fmt == 's' ? 0 : IF_INT_64_OR_32(2,1));
 					uint32_t length = s[0];
 					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
-					FPRINTF(f, " \"");
+					WPRINTF(w, " \"");
 					for (; length; length--) {
-						FPRINTF(f, "%s", escape(*cs++));
+						WPRINTF(w, "%s", escape(*cs++));
 					}
-					FPRINTF(f, "\"");
+					WPRINTF(w, "\"");
 					break;
 					}
 				case '?': /* Unknown instruction */
-					FPRINTF(f, " ?");
+					WPRINTF(w, " ?");
 					break;
 				default: /* Unimplemented argument type */
-					FPRINTF(f, " !!!");
+					WPRINTF(w, " !!!");
 					break;
 			}
 		}
-		FPRINTF(f, "\n");
+		WPRINTF(w, "\n");
 	}
 }
 
 # ifdef DEBUG_CURSES
-void print_data(WINDOW *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
+void print_data(WINDOW *w, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
 # else
-void print_data(FILE *f, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
+void print_data(BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
 # endif
 	uint32_t i;
 	uint8_t j;
 	for (i = 0; i < length; i++) {
-		FPRINTF(f, "%d\t", i);
-		FPRINTF(f, IF_INT_64_OR_32("%016"SCNx64"  ","%08"SCNx32"  "), data[i]);
+		WPRINTF(w, "%d\t", i);
+		WPRINTF(w, IF_INT_64_OR_32("%016"SCNx64"  ","%08"SCNx32"  "), data[i]);
 
 		for (j=0; j < IF_INT_64_OR_32(8,4); j++) {
 			char c = (data[i] >> j*8) & 0xff;
-			FPRINTF(f, "%c", c >= ' ' && c <= '~' ? c : '.');
+			WPRINTF(w, "%c", c >= ' ' && c <= '~' ? c : '.');
 		}
 
 		if (data[i] >= (BC_WORD) data && data[i] < (BC_WORD) (data + length)) {
-			FPRINTF(f, "  <data+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) data) / IF_INT_64_OR_32(8,4));
+			WPRINTF(w, "  <data+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) data) / IF_INT_64_OR_32(8,4));
 		} else if (data[i] >= (BC_WORD) code && data[i] < (BC_WORD) (code + code_length)) {
-			FPRINTF(f, "  <code+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) code) / IF_INT_64_OR_32(8,4));
+			WPRINTF(w, "  <code+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) code) / IF_INT_64_OR_32(8,4));
 		} else {
-			FPRINTF(f, "  " BC_WORD_FMT "\n", data[i]);
+			WPRINTF(w, "  " BC_WORD_FMT "\n", data[i]);
 		}
 	}
 }
 
 # ifdef DEBUG_CURSES
-void print_program(WINDOW *f, struct program *pgm) {
+void print_program(WINDOW *w, struct program *pgm) {
 # else
-void print_program(FILE *f, struct program *pgm) {
+void print_program(struct program *pgm) {
 # endif
-	print_code(f, pgm);
-# ifndef DEBUG_CURSES
-	FPRINTF(f, "\n");
-	print_data(f, pgm->data, pgm->data_size, pgm->code, pgm->code_size);
+# ifdef DEBUG_CURSES
+	print_code(w, pgm);
+# else
+	print_code(pgm);
+	PRINTF("\n");
+	print_data(pgm->data, pgm->data_size, pgm->code, pgm->code_size);
 # endif
 }
 #endif

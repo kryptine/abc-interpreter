@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "abc_instructions.h"
 #include "bytecode.h"
@@ -198,12 +197,12 @@ jmp_buf segfault_restore_point;
 
 void handle_segv(int sig) {
 	if (asp >= csp) {
-		fprintf(stderr, "A/C-stack overflow\n");
+		EPRINTF("A/C-stack overflow\n");
 	} else {
 # ifdef DEBUG_CURSES
 		siglongjmp(segfault_restore_point, SIGSEGV);
 # endif
-		fprintf(stderr, "Untracable segmentation fault\n");
+		EPRINTF("Untracable segmentation fault\n");
 	}
 	exit(1);
 }
@@ -290,11 +289,11 @@ eval_to_hnf_return:
 # endif
 # ifdef DEBUG_ALL_INSTRUCTIONS
 		if (program->data <= pc && pc < program->data + program->data_size)
-			fprintf(stderr, "D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
+			EPRINTF("D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
 		else if (program->code <= pc && pc < program->code + program->code_size)
-			fprintf(stderr, ":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
+			EPRINTF(":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
 		else
-			fprintf(stderr, ":------ %s\n", instruction_name(*pc));
+			EPRINTF(":------ %s\n", instruction_name(*pc));
 # endif
 # ifdef DEBUG_CURSES
 		debugger_update_views(pc, asp, bsp, csp);
@@ -319,11 +318,11 @@ eval_to_hnf_return:
 		debugger_set_heap(hp+heap_free-heap_size);
 #endif
 		if (heap_free <= old_heap_free) {
-			fprintf(stderr, "Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
+			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
 			exit(1);
 		} else {
 #ifdef DEBUG_GARBAGE_COLLECTOR
-			fprintf(stderr, "Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
+			EPRINTF("Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
 #endif
 		}
 	}
@@ -366,24 +365,24 @@ int main(int argc, char **argv) {
 		if (!strcmp(argv[i],"-s")) {
 			stack_size=string_to_size(argv[++i]);
 			if (stack_size==-1) {
-				fprintf(stderr, "Illegal stack size: '%s'\n", argv[i]);
-				fprintf(stderr, usage, argv[0]);
+				EPRINTF("Illegal stack size: '%s'\n", argv[i]);
+				EPRINTF(usage, argv[0]);
 				exit(-1);
 			}
 		} else if (!strcmp(argv[i],"-h")) {
 			heap_size=string_to_size(argv[++i]);
 			if (heap_size==-1) {
-				fprintf(stderr, "Illegal heap size: '%s'\n", argv[i]);
-				fprintf(stderr, usage, argv[0]);
+				EPRINTF("Illegal heap size: '%s'\n", argv[i]);
+				EPRINTF(usage, argv[0]);
 				exit(-1);
 			}
 		} else if (input) {
-			fprintf(stderr, usage, argv[0]);
+			EPRINTF(usage, argv[0]);
 			exit(-1);
 		} else {
 			input = fopen(argv[i], "rb");
 			if (!input) {
-				fprintf(stderr, "Could not open '%s'\n", argv[i]);
+				EPRINTF("Could not open '%s'\n", argv[i]);
 				exit(-1);
 			}
 		}
@@ -395,13 +394,13 @@ int main(int argc, char **argv) {
 	free_parser(&state);
 	free_char_provider(&cp);
 	if (res) {
-		fprintf(stderr, "Parsing failed (%d)\n", res);
+		EPRINTF("Parsing failed (%d)\n", res);
 		exit(res);
 	}
 
 #ifndef DEBUG_CURSES
 	if (list_program) {
-		print_program(stdout, state.program);
+		print_program(state.program);
 	}
 
 	if (!run)

@@ -41,6 +41,12 @@ BC_WORD *make_interpret_node(BC_WORD *heap,
 		BC_WORD node, int args_needed);
 extern BC_WORD *__interpret__evaluate__host(
 		struct interpretation_environment *ie, BC_WORD *node);
+#ifdef WINDOWS
+extern BC_WORD *__interpret__evaluate__host_with_args(
+		BC_WORD *arg2, BC_WORD *arg1, BC_WORD *node, void *ap_address,
+		struct interpretation_environment *ie);
+#else
 extern BC_WORD *__interpret__evaluate__host_with_args(
 		struct interpretation_environment *ie, void *dummy,
 		BC_WORD *arg2, BC_WORD *arg1, BC_WORD *node, void *ap_address);
+#endif

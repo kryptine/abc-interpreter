@@ -3,6 +3,7 @@
 
 #include "interpret.h"
 #include "traps.h"
+#include "util.h"
 
 void clean_catAC (void)
 {
@@ -59,7 +60,7 @@ void clean_readLineF (void)
 	hp=g_hp;
 
 	if ( (g_heap_free -= 2) < 0){
-		printf ("clean_readLineF gc\n");
+		EPRINTF("clean_readLineF gc\n");
 		exit (1);
 	}
 
@@ -107,7 +108,7 @@ void clean_readLineF (void)
 		s[l++]=c;
 	}
 
-	printf ("clean_readLineF gc\n");
+	EPRINTF("clean_readLineF gc\n");
 	exit (1);
 }
 
@@ -187,7 +188,7 @@ void clean_ItoAC (void)
 	lw=(l+11)>>2;
 
 	if ( (g_heap_free -= lw) < 0){
-		printf ("clean_sliceAC gc\n");
+		EPRINTF("clean_sliceAC gc\n");
 		exit (1);
 	}
 
@@ -233,7 +234,7 @@ void clean_openF (void)
 */
 	c_file_name=malloc (file_name_length+1);
 	if (c_file_name==NULL){
-		printf ("clean_openF malloc failed\n");
+		EPRINTF("clean_openF malloc failed\n");
 		exit (1);
 	}
 
@@ -246,23 +247,23 @@ void clean_openF (void)
 	if (mode==0){
 		file=fopen (c_file_name,"r");
 		if (file==NULL){
-			printf ("clean_openF could not open file %s\n",c_file_name);
+			EPRINTF("clean_openF could not open file %s\n",c_file_name);
 			exit (1);
 		}
 	} else if (mode==1){
 		file=fopen (c_file_name,"w");
 		if (file==NULL){
-			printf ("clean_openF could not create file %s\n",c_file_name);
+			EPRINTF("clean_openF could not create file %s\n",c_file_name);
 			exit (1);
 		}
 	} else if (mode==3){
 		file=fopen (c_file_name,"rb");
 		if (file==NULL){
-			printf ("clean_openF could not open file %s\n",c_file_name);
+			EPRINTF("clean_openF could not open file %s\n",c_file_name);
 			exit (1);
 		}
 	} else {
-		printf ("clean_openF mode not implemented %d\n",mode);
+		EPRINTF("clean_openF mode not implemented %d\n",mode);
 		exit (1);
 	}
 

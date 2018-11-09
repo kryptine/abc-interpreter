@@ -328,6 +328,7 @@ void load_instruction_table(void) {
 	put_instruction_name(".impdesc",              parse_directive_label,           code_impdesc );
 	put_instruction_name(".impmod",               parse_instruction_l,             code_impmod );
 	put_instruction_name(".implab",               parse_directive_implab,          code_implab );
+	put_instruction_name(".implib",               parse_directive_implib_impobj,   code_dummy );
 	put_instruction_name(".impobj",               parse_directive_implib_impobj,   code_dummy );
 	put_instruction_name(".inline",               parse_directive_label,           code_dummy );
 	put_instruction_name(".keep",                 parse_instruction_n_n,           code_dummy );

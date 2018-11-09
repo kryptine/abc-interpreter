@@ -287,7 +287,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 					return 1;
 #if 0
-				fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
+				EPRINTF(":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 #endif
 #ifdef LINKER
 				state->ptr++;
@@ -383,8 +383,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case '?':
-							fprintf(stderr, ":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
-							fprintf(stderr, "\tUnknown instruction; add to abc_instructions.c\n");
+							EPRINTF(":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
+							EPRINTF("\tUnknown instruction; add to abc_instructions.c\n");
 							exit(-1);
 						default:
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
@@ -488,7 +488,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
-					fprintf(stderr,"Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
+					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
 				} else if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
 					state->program->symbol_table[state->ptr].offset &= -2;
 # if (WORD_WIDTH == 64)
@@ -515,14 +515,14 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							/* Descriptor has a _hnf code address */
 							struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
 							if (host_sym == NULL) {
-								fprintf(stderr,"Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
+								EPRINTF("Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
 							} else {
 								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym->location;
 								host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
 							}
 						} else {
 							/* This shouldn't happen */
-							fprintf(stderr,"Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
+							EPRINTF("Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
 							exit(1);
 						}
 					}

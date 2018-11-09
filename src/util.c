@@ -5,13 +5,14 @@
 #include "util.h"
 #include "settings.h"
 
+#if defined(WINDOWS) && defined(LINK_CLEAN_RUNTIME)
+char print_buffer[PRINT_BUFFER_SIZE];
+#endif
+
 void *safe_malloc(size_t size) {
 	void *mem = malloc(size);
 	if (!mem) {
-		fprintf(stderr,
-				"Failed to malloc %d bytes: %s\n",
-				(int) size,
-				strerror(errno));
+		EPRINTF("Failed to malloc %d bytes: %s\n",(int)size,strerror(errno));
 		exit(-1);
 	}
 	return mem;
@@ -20,11 +21,7 @@ void *safe_malloc(size_t size) {
 void *safe_calloc(size_t num, size_t size) {
 	void *mem = calloc(num, size);
 	if (!mem) {
-		fprintf(stderr,
-				"Failed to calloc %d*%d bytes: %s\n",
-				(int) num,
-				(int) size,
-				strerror(errno));
+		EPRINTF("Failed to calloc %d*%d bytes: %s\n",(int)num,(int)size,strerror(errno));
 		exit(-1);
 	}
 	return mem;
@@ -33,10 +30,7 @@ void *safe_calloc(size_t num, size_t size) {
 void *safe_realloc(void *ptr, size_t size) {
 	ptr = realloc(ptr, size);
 	if (!ptr) {
-		fprintf(stderr,
-				"Failed to realloc to %d bytes: %s\n",
-				(int) size,
-				strerror(errno));
+		EPRINTF("Failed to realloc to %d bytes: %s\n",(int)size,strerror(errno));
 		exit(-1);
 	}
 	return ptr;
@@ -92,12 +86,12 @@ int provide_chars(void *ptr, size_t size, size_t nmemb, struct char_provider *st
 				if (ret < nmemb) {
 #ifdef WINDOWS
 # if (WORD_WIDTH==64)
-					fprintf(stderr, "Read %d out of %" PRIu64 " items", ret, nmemb);
+					EPRINTF("Read %d out of %" PRIu64 " items",ret,nmemb);
 # else
-					fprintf(stderr, "Read %d out of %" PRIu32 " items", ret, nmemb);
+					EPRINTF("Read %d out of %" PRIu32 " items",ret,nmemb);
 # endif
 #else
-					fprintf(stderr, "Read %d out of %zu items", ret, nmemb);
+					EPRINTF("Read %d out of %zu items",ret,nmemb);
 #endif
 					return -1;
 				}
@@ -166,6 +160,7 @@ char *escape(char c) {
 }
 
 /* https://stackoverflow.com/a/47229318 */
+#ifdef BCGEN
 ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
     size_t pos;
     int c;
@@ -235,3 +230,4 @@ char *strsep(char **stringp, const char *delim) {
 
 	return token;
 }
+#endif

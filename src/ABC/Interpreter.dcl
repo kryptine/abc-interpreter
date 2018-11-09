@@ -5,7 +5,7 @@ from System.FilePath import :: FilePath
 
 :: *SerializedGraph
 
-serialize_for_interpretation :: a !FilePath !FilePath !*World -> *(!SerializedGraph, !*World)
+serialize_for_interpretation :: a !FilePath !*World -> *(!SerializedGraph, !*World)
 
 deserialize :: !SerializedGraph !FilePath !*World -> *(a, !*World)
 

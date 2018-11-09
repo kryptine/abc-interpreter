@@ -9,12 +9,20 @@ override CFLAGS+=\
 	-Werror
 override CLIBS+=-lm
 
+ifeq ($(MINGW),1)
+OS:=Windows_NT
+AS:=x86_64-w64-mingw32-as
+CC:=x86_64-w64-mingw32-gcc
+LD:=x86_64-w64-mingw32-ld
+override LDFLAGS+=--unique=* # Clean linker does not accept split sections
+endif
+
 USING_CLANG:=0
 ifeq ($(shell $(CC) --version | grep -o clang),clang)
+USING_CLANG:=1
 ifndef OS
 OS:=Mac
 endif
-USING_CLANG:=1
 endif
 
 ifeq ($(OS),Mac)
@@ -45,36 +53,6 @@ endif
 
 BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(INTERP)
 PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
-INTERPRET_LIB:=Clean\ System\ Files/interpret.a
-
-ifneq ($(OS),Windows_NT)
-override BINARIES+=debug
-endif
-
-all: $(BINARIES)
-
-CodeSharing: $(INTERPRET_LIB) $(PATCHED) .FORCE
-	$(CLM) $(CLMFLAGS) $@ -o $@
-
-GraphTest: $(INTERPRET_LIB) $(PATCHED) .FORCE
-	$(CLM) -O -bytecode _system
-	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
-
-ifeq ($(OS),Windows_NT)
-$(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
-else
-$(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
-endif
-	cp $< $@
-	patch < $@.patch
-
-ifeq ($(OS),Windows_NT)
-$(ABCOPT): abcopt_win.prj.default .FORCE
-else
-$(ABCOPT): abcopt.prj.default .FORCE
-endif
-	cp $< abcopt.prj
-	$(CPM) project abcopt.prj build
 
 SRC_BCGEN:=\
 	abc_instructions.c\
@@ -85,9 +63,6 @@ SRC_BCGEN:=\
 	util.c
 DEP_BCGEN:=$(subst .c,.h,$(SRC_BCGEN)) settings.h
 
-$(BCGEN): $(SRC_BCGEN) $(DEP_BCGEN)
-	$(CC) $(CFLAGS) $(CLIBS) $(SRC_BCGEN) -DBC_GEN -o $@
-
 SRC_BCLINK:=\
 	abc_instructions.c\
 	bcgen_instructions.c\
@@ -96,9 +71,6 @@ SRC_BCLINK:=\
 	parse.c\
 	util.c
 DEP_BCLINK:=$(subst .c,.h,$(SRC_BCLINK)) settings.h
-
-$(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
-	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -120,23 +92,57 @@ SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
 	copy_interpreter_to_host.c\
 	finalizers.c
 ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
-OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
+OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB)) interface.o
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	gc/util.h\
 	interpret_instructions.h\
 	settings.h
 
+ifneq ($(OS),Windows_NT)
+override BINARIES+=debug
+endif
+
+all: $(BINARIES)
+
+CodeSharing: library $(PATCHED) .FORCE
+	$(CLM) $(CLMFLAGS) $@ -o $@
+
+GraphTest: library $(PATCHED) .FORCE
+	$(CLM) -O -bytecode _system
+	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
+
+ifeq ($(OS),Windows_NT)
+$(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
+else
+$(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
+endif
+	cp $< $@
+	patch < $@.patch
+
+ifeq ($(OS),Windows_NT)
+$(ABCOPT): abcopt_win.prj.default .FORCE
+else
+$(ABCOPT): abcopt.prj.default .FORCE
+endif
+	cp $< abcopt.prj
+	$(CPM) project abcopt.prj build
+
+$(BCGEN): $(SRC_BCGEN) $(DEP_BCGEN)
+	$(CC) $(CFLAGS) $(CLIBS) $(SRC_BCGEN) -DBCGEN -o $@
+
+$(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
+
 $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
-$(INTERPRET_LIB): $(OBJ_INTERPRET_LIB) interface.o
-	mkdir -p Clean\ System\ Files
-	ar cr '$@' $^
+library: $(OBJ_INTERPRET_LIB)
+	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
 
-$(OBJ_INTERPRET_LIB) interface.o: %.o: %.s
+$(OBJ_INTERPRET_LIB): %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB) $(DEP_BCGEN)
+$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -S $< -o $@
 ifeq ($(OS),Mac)
 	sed -i '' -f mac_fix_underscores.sed $@
@@ -153,7 +159,6 @@ AUXILIARIES:=$(INTERPRET_LIB)\
 clean:
 	$(RM) $(BINARIES) CodeSharing GraphTest $(AUXILIARIES)
 	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
-	find . -name 'Clean System Files' -delete
 
 .FORCE:
-.PHONY: all clean
+.PHONY: all clean library
