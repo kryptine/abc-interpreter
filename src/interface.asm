@@ -28,6 +28,13 @@ __interpret__copy__node__asm:
 	mov	[rbp+24],rdx
 
 	; Parameters are already in the right register; see copy_interpreter_to_host.c
+	test	rsp,8
+	je	__interpret__copy__node__asm_dont_align
+	sub	rsp,40
+	call	copy_interpreter_to_host
+	add	rsp,40
+	jmp	__interpret__copy__node__asm_finish
+__interpret__copy__node__asm_dont_align:
 	sub	rsp,32
 	call	copy_interpreter_to_host
 	add	rsp,32

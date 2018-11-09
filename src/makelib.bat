@@ -1,5 +1,5 @@
 @cl /nologo /c  /GS- ^
-	/O1 ^
+	/O2 ^
 	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS ^
 	abc_instructions.c ^
 	bytecode.c ^
