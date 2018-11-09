@@ -15,6 +15,7 @@ from Data.Func import hyperstrict
 import Data.Maybe
 import System.CommandLine
 import System.File
+import System.FilePath
 import System._Pointer
 import Text
 
