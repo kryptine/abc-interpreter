@@ -4,10 +4,10 @@ set -e
 make -C ../src\
 	graph_copy_with_names.dcl\
 	graph_copy_with_names.icl\
-	Clean\ System\ Files/interpret.a\
 	abcopt\
 	bcgen\
-	bclink
+	bclink\
+	library
 
 clm -O -bytecode _system
 
