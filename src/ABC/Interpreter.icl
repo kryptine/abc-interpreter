@@ -65,8 +65,7 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 # pgm = parse host_syms bytecode
 | isNothing pgm = abort "Failed to parse bytecode\n"
 # pgm = fromJust pgm
-# int_syms = getInterpreterSymbols pgm
-# int_syms = {#s \\ s <- matchSymbols [s \\ s <-: host_syms] int_syms}
+# int_syms = {#s \\ s <- getInterpreterSymbols pgm}
 # int_syms = {#lookup_symbol_value d modules int_syms \\ d <-: descinfo}
 
 # stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
@@ -83,14 +82,6 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where
-	matchSymbols :: ![Symbol] ![Symbol] -> [Symbol]
-	matchSymbols [] _ = []
-	matchSymbols [h:_] [] = abort ("Symbol " +++ h.symbol_name +++ " not present in bytecode\n")
-	matchSymbols orghs=:[h:hs] orgis=:[i:is]
-	| h.symbol_name  > i.symbol_name = matchSymbols orghs is
-	| h.symbol_name == i.symbol_name = [i:matchSymbols hs is]
-	| otherwise                      = abort ("Symbol " +++ h.symbol_name +++ " not present in bytecode\n")
-
 	getInterpreterSymbols :: !Pointer -> [Symbol]
 	getInterpreterSymbols pgm =
 		sortBy ((<) `on` (\s->s.symbol_name))
