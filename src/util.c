@@ -5,7 +5,7 @@
 #include "util.h"
 #include "settings.h"
 
-#ifdef WINDOWS
+#if defined(WINDOWS) && defined(LINK_CLEAN_RUNTIME)
 char print_buffer[PRINT_BUFFER_SIZE];
 #endif
 

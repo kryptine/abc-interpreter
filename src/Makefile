@@ -141,7 +141,7 @@ $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 $(OBJ_INTERPRET_LIB): %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB) $(DEP_BCGEN)
+$(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB)
 	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -S $< -o $@
 ifeq ($(OS),Mac)
 	sed -i '' -f mac_fix_underscores.sed $@

@@ -32,7 +32,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 char *strsep(char **stringp, const char *delim);
 #endif
 
-#ifdef WINDOWS
+#if defined(WINDOWS) && defined(LINK_CLEAN_RUNTIME)
 # define PRINT_BUFFER_SIZE 32768
 extern char print_buffer[];
 extern void ew_print_text(char*,int);
