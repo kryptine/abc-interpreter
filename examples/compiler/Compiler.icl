@@ -40,7 +40,7 @@ where
 
 testThroughFile :: a !FilePath !*World -> *(a, !*World)
 testThroughFile graph fp w
-# (graph_s,w) = serialize_for_interpretation optimise_addition "./compiler" "./compiler.bc" w
+# (graph_s,w) = serialize_for_interpretation optimise_addition "compiler.bc" w
 
 # (ok,f,w) = fopen fp FWriteData w
 # (graph_s,f) = graphToFile graph_s f
@@ -50,4 +50,4 @@ testThroughFile graph fp w
 # (Right graph_s,f) = graphFromFile f
 # (_,w) = fclose f w
 
-= deserialize graph_s "./compiler" w
+= deserialize graph_s "compiler" w

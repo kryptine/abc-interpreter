@@ -104,12 +104,10 @@ endif
 
 all: $(BINARIES)
 
-CodeSharing: $(OBJ_INTERPRET_LIB) $(PATCHED) .FORCE
-	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
+CodeSharing: library $(PATCHED) .FORCE
 	$(CLM) $(CLMFLAGS) $@ -o $@
 
-GraphTest: $(OBJ_INTERPRET_LIB) $(PATCHED) .FORCE
-	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
+GraphTest: library $(PATCHED) .FORCE
 	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
@@ -139,6 +137,7 @@ $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
 library: $(OBJ_INTERPRET_LIB)
+	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
 
 $(OBJ_INTERPRET_LIB): %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
@@ -162,4 +161,4 @@ clean:
 	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
 
 .FORCE:
-.PHONY: all clean
+.PHONY: all clean library
