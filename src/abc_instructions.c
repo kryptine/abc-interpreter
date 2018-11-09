@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "abc_instructions.h"
+#include "util.h"
 
 char *instruction_name(BC_WORD i) {
 	switch (i) {
@@ -16,7 +17,7 @@ char *instruction_name(BC_WORD i) {
 			break;
 #endif
 		default:
-			fprintf(stderr,"Unknown instruction %d\n",(int)i);
+			EPRINTF("Unknown instruction %d\n",(int)i);
 			return "";
 	}
 }
@@ -661,7 +662,7 @@ char *instruction_type (BC_WORD i) {
 		case CA_data_a:              return "a";
 
 		default:
-			fprintf(stderr,"Unknown instruction %d\n",(int)i);
+			EPRINTF("Unknown instruction %d\n",(int)i);
 			return "?";
 	}
 }

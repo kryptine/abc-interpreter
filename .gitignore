@@ -1,6 +1,7 @@
 *.s
 *.a
 *.o
+*.obj
 *.exe
 a.out
 

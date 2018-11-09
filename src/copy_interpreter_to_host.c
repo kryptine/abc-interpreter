@@ -66,7 +66,7 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->csp = csp;
 	ie->hp = hp;
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Building interpretation_environment %p\n",ie);
+	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
 	return ie;
 }
@@ -90,12 +90,12 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 	*++ptr_stack = &dummy;
 	*--a_size_stack = 1;
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"Copying from string:\n");
+	EPRINTF("Copying from string:\n");
 #endif
 	/* TODO check heap & stack space */
 #if DEBUG_CLEAN_LINKS > 2
 	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++)
-		fprintf(stderr,"%3d "BC_WORD_FMT_HEX"\n",i,(BC_WORD)s[i]);
+		EPRINTF("%3d "BC_WORD_FMT_HEX"\n",i,(BC_WORD)s[i]);
 #endif
 	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++) {
 		if (a_size_stack[0] == 0) {
@@ -115,10 +115,10 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 			desc=descriptors[desc-1];
 
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\t");
+			EPRINTF("\t");
 			for (int16_t *a=(int16_t*)ie->csp-1; a>a_size_stack; a--)
-				fprintf(stderr,"   ");
-			fprintf(stderr,"%p := %p",ie->hp,(void*)desc);
+				EPRINTF("   ");
+			EPRINTF("%p := %p",ie->hp,(void*)desc);
 #endif
 			int16_t a_arity = ((int16_t*)desc)[-1];
 			int16_t b_arity = 0;
@@ -129,7 +129,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 						desc==(BC_WORD)&BOOL+2 ||
 						desc==(BC_WORD)&REAL+2) {
 #if DEBUG_CLEAN_LINKS > 1
-					fprintf(stderr,"; basic type");
+					EPRINTF("; basic type");
 #endif
 					**ptr_stack--=(BC_WORD)ie->hp;
 					*ie->hp++=desc;
@@ -139,7 +139,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 					ie->hp[0]=desc;
 					BC_WORD len=(BC_WORD)s[i+1];
 #if DEBUG_CLEAN_LINKS > 1
-					fprintf(stderr,"; __STRING__ " BC_WORD_FMT,len);
+					EPRINTF("; __STRING__ " BC_WORD_FMT,len);
 #endif
 					ie->hp[1]=len;
 					len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
@@ -150,7 +150,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 				} else if (desc == (BC_WORD)&__ARRAY__+2) {
 					BC_WORD size=(BC_WORD)s[i+1];
 #if DEBUG_CLEAN_LINKS > 1
-					fprintf(stderr,"; __ARRAY__ " BC_WORD_FMT,size);
+					EPRINTF("; __ARRAY__ " BC_WORD_FMT,size);
 #endif
 					BC_WORD elem_desc=(BC_WORD)s[i+2];
 					elem_desc=elem_desc==0 ? 0 : descriptors[elem_desc-1];
@@ -272,7 +272,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 			*--a_size_stack = a_arity;
 
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\n");
+			EPRINTF("\n");
 #endif
 		}
 	}
@@ -283,7 +283,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 
 void interpretation_environment_finalizer(struct interpretation_environment *ie) {
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Freeing interpretation_environment %p\n",ie);
+	EPRINTF("Freeing interpretation_environment %p\n",ie);
 #endif
 	free(ie->host);
 	free_program(ie->program);
@@ -336,7 +336,7 @@ BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *cl
 		case 30: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
 		case 31: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
 		default:
-			fprintf(stderr,"Missing case in make_interpret_node\n");
+			EPRINTF("Missing case in make_interpret_node\n");
 			exit(1);
 	}
 	heap[1] = (BC_WORD) clean_ie;
@@ -354,7 +354,7 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 }
 
 #define CHECK_WORDS_NEEDED() {if (host_heap-org_host_heap!=words_needed) {\
-	fprintf(stderr,"words_needed was incorrect (%d,should be %d)\n",(int)words_needed,(int)(host_heap-org_host_heap));\
+	EPRINTF("words_needed was incorrect (%d,should be %d)\n",(int)words_needed,(int)(host_heap-org_host_heap));\
 	exit(1);}}
 
 extern void *ARRAY;
@@ -464,7 +464,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
+			EPRINTF("\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
 #endif
 			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
 				return -2;
@@ -478,26 +478,26 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 		words_needed += a_arity + b_arity - 1;
 
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr, "\tcopying (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
+	EPRINTF( "\tcopying (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
 #endif
 
 	if (host_heap_free < words_needed) {
 #if DEBUG_CLEAN_LINKS > 1
-		fprintf(stderr,"\tnot enough memory (%ld, %d)\n", host_heap_free, words_needed);
+		EPRINTF("\tnot enough memory (%ld, %d)\n", host_heap_free, words_needed);
 #endif
 		return -2;
 	}
 
 	void *host_address = ((void**)(node[0]-2))[host_address_offset];
 	if (host_address == (void*) 0) {
-		fprintf(stderr,"Not a HNF\n");
+		EPRINTF("Not a HNF\n");
 		return -3;
 	} else if (host_address == (void*) -1) {
-		fprintf(stderr,"Unresolvable descriptor\n");
+		EPRINTF("Unresolvable descriptor\n");
 		return -4;
 	}
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\thost address is %p+%d (from %p with %d; %p)\n",
+	EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
 			host_address,add_to_host_address,
 			(void*)(node[0]-2),host_address_offset,&((void**)(node[0]-2))[host_address_offset]);
 #endif
@@ -543,7 +543,7 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr, "\tReturning\n");
+	EPRINTF( "\tReturning\n");
 #endif
 
 	CHECK_WORDS_NEEDED();
@@ -560,13 +560,18 @@ void *__interpret__copy__node__asm_redirect_node;
  * - The dummies are used so that the other arguments are already in the right
  *   register.
  */
+#ifdef WINDOWS
+BC_WORD copy_interpreter_to_host(
+		struct finalizers *node_finalizer, struct InterpretationEnvironment *clean_ie) {
+#else
 BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct InterpretationEnvironment *clean_ie, struct finalizers *node_finalizer) {
+#endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Copying %p -> %p...\n", node, (void*)*node);
+	EPRINTF("Copying %p -> %p...\n", node, (void*)*node);
 #endif
 
 	if (!(node[0] & 2)) {
@@ -579,16 +584,16 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 				) {
 			__interpret__copy__node__asm_redirect_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+((BC_WORD*)node[1])[1]];
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
+			EPRINTF("\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
 #endif
 			return -3;
 		} else {
 #if DEBUG_CLEAN_LINKS > 1
-			fprintf(stderr,"\tInterpreting...\n");
+			EPRINTF("\tInterpreting...\n");
 #endif
 			*++ie->asp = (BC_WORD) node;
 			if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
-				fprintf(stderr,"Failed to interpret\n");
+				EPRINTF("Failed to interpret\n");
 				return -1;
 			}
 			node = (BC_WORD*)*ie->asp--;
@@ -609,15 +614,21 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *   variadic list; otherwise it is in order. For instance, for a function with
  *   arity 5 the arguments are passed as 2, 3, 4, 5, 1.
  */
+#ifdef WINDOWS
+BC_WORD copy_interpreter_to_host_n(
+		void *__dummy, struct finalizers *node_finalizer,
+		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+#else
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct finalizers *node_finalizer, void *__dummy_2,
 		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+#endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 	va_list arguments;
 
 #if DEBUG_CLEAN_LINKS > 0
-	fprintf(stderr,"Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
+	EPRINTF("Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
 #endif
 
 	*++ie->asp = (BC_WORD)node;
@@ -633,7 +644,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 #if DEBUG_CLEAN_LINKS > 1
-	fprintf(stderr,"\tarity is %d\n",a_arity);
+	EPRINTF("\tarity is %d\n",a_arity);
 #endif
 	if (a_arity >= 1) {
 		if (a_arity == 2) {
@@ -658,7 +669,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	}
 
 	if (interpret_ie(ie, pc) != 0) {
-		fprintf(stderr,"Failed to interpret\n");
+		EPRINTF("Failed to interpret\n");
 		return -1;
 	}
 

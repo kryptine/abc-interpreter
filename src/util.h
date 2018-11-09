@@ -1,5 +1,4 @@
-#ifndef _H_ABCINT_UTIL
-#define _H_ABCINT_UTIL
+#pragma once
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -28,19 +27,28 @@ size_t string_to_size(char*);
 
 char *escape(char);
 
+#ifdef BCGEN
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 char *strsep(char **stringp, const char *delim);
+#endif
 
-#ifdef DEBUG_CURSES
+#ifdef WINDOWS
+# define PRINT_BUFFER_SIZE 32768
+extern char print_buffer[];
+extern void ew_print_text(char*,int);
+extern void w_print_text(char*,int);
+extern void w_print_char(char);
+# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE, __VA_ARGS__))
+# define PRINTF(...)  w_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE, __VA_ARGS__))
+# define PUTCHAR      w_print_char
+#elif defined(DEBUG_CURSES)
 # include <curses.h>
 # include "debug_curses.h"
-# define FPRINTF wprintw
+# define EPRINTF debugger_printf
 # define PRINTF debugger_printf
 # define PUTCHAR debugger_putchar
 #else
-# define FPRINTF fprintf
+# define EPRINTF(...) fprintf(stderr,__VA_ARGS__)
 # define PRINTF printf
 # define PUTCHAR putchar
-#endif
-
 #endif

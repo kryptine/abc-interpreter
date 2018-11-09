@@ -70,11 +70,7 @@ __interpret__copy__node__asm_gc:
 
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
-.ifdef WINDOWS
-	lea	rbp,__interpret__copy__node__asm_redirect_node
-.else
 	mov	rbp,[__interpret__copy__node__asm_redirect_node@GOTPCREL+rip]
-.endif
 	mov	rcx,[rbp]
 	# Evaluate the node if necessary
 	test	QWORD PTR [rcx],2

@@ -12,9 +12,22 @@ import System._Pointer
 
 import symbols_in_program
 
-import code from "interpret.a"
-import code from library "libc_library"
-import code from library "winsupport_library"
+import code from "abc_instructions."
+import code from "bytecode."
+import code from "copy_host_to_interpreter."
+import code from "copy_interpreter_to_host."
+import code from "copy."
+import code from "finalizers."
+import code from "gc."
+import code from "interface."
+import code from "interpret."
+import code from "mark."
+import code from "parse."
+import code from "traps."
+import code from "util."
+import code from library "msvcrt_library"
+import code from library "kernel32_library"
+import code from library "ucrtbase_library"
 
 OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
 

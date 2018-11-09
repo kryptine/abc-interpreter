@@ -1,13 +1,13 @@
 msvcrt.dll
-___chkstk_ms
-__imp__errno
-__ms_vsnprintf
+_errno
 
+abs
 acos
 asin
 atan
 cos
 exp
+fabs
 floor
 log
 log10
@@ -29,7 +29,6 @@ strerror
 fclose
 fgetc
 fopen
-fprintf
 fputc
 fputs
 fread

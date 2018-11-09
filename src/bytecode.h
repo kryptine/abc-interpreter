@@ -48,7 +48,7 @@ struct program {
 #ifdef INTERPRETER
 	BC_WORD *code;
 	BC_WORD *data;
-#elif defined(BC_GEN) || defined(LINKER)
+#elif defined(BCGEN) || defined(LINKER)
 	uint32_t strings_size;
 	uint32_t words_in_strings;
 	uint32_t code_reloc_size;
@@ -91,6 +91,6 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 #  include <curses.h>
 void print_program(WINDOW *f, struct program *pgm);
 # else
-void print_program(FILE *f, struct program *pgm);
+void print_program(struct program *pgm);
 # endif
 #endif
