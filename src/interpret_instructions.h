@@ -7439,6 +7439,54 @@ INSTRUCTION_BLOCK(updates4_a):
 	END_INSTRUCTION_BLOCK;
 }
 
+INSTRUCTION_BLOCK(jsr_ap):
+	*--csp=(BC_WORD)&pc[2];
+INSTRUCTION_BLOCK(jmp_ap):
+{
+	BC_WORD *n,d;
+	int n_apply_args=pc[1];
+
+	n=(BC_WORD*)asp[0];
+	d=n[0];
+	if (((uint16_t*)d)[0]==n_apply_args*8){
+		BC_WORD arity;
+
+		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+(16*(n_apply_args-1))+6)) - 24);
+#else
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+(8*(n_apply_args-1))+2)) - 12);
+#endif
+		if (arity<=1){
+			if (arity<1){
+				--asp;
+			} else {
+				asp[0]=n[1];
+			}
+		} else {
+			BC_WORD *args,a1;
+
+			args=(BC_WORD*)n[2];
+			a1=n[1];
+			if (arity==2){
+				asp[0]=(BC_WORD)args;
+			} else {
+				asp[0]=args[arity-2];
+				arity-=3;
+				do {
+					*++asp = args[arity];
+					--arity;
+				} while (arity!=0);
+			}
+			*++asp = a1;
+		}
+		END_INSTRUCTION_BLOCK;
+	} else {
+		*--csp=(BC_WORD)&Fjmp_ap[(n_apply_args-2)*2];
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
+		END_INSTRUCTION_BLOCK;
+	}
+}
 INSTRUCTION_BLOCK(jsr_ap5):
 	*--csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap5):
@@ -7459,7 +7507,7 @@ INSTRUCTION_BLOCK(jmp_ap5):
 
 		arity=((uint16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+66+6)) - 24);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+64+6)) - 24);
 #else
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+32+2)) - 12);
 #endif
@@ -7488,7 +7536,7 @@ INSTRUCTION_BLOCK(jmp_ap5):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap2;
+		*--csp=(BC_WORD)&Fjmp_ap[6];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7535,7 +7583,7 @@ INSTRUCTION_BLOCK(jmp_ap4):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap3;
+		*--csp=(BC_WORD)&Fjmp_ap[4];
 		pc = *(BC_WORD**)(d+2);
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7589,7 +7637,7 @@ INSTRUCTION_BLOCK(jmp_ap3):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap2;
+		*--csp=(BC_WORD)&Fjmp_ap[2];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7643,7 +7691,7 @@ INSTRUCTION_BLOCK(jmp_ap2):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap1;
+		*--csp=(BC_WORD)&Fjmp_ap[0];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}

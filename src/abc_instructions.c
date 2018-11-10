@@ -501,11 +501,13 @@ char *instruction_type (BC_WORD i) {
 		case Cswap_a2:               return "";
 		case Cswap_a3:               return "";
 		case Cswap_a:                return "n";
+		case Cjsr_ap:                return "n";
 		case Cjsr_ap1:               return "";
 		case Cjsr_ap2:               return "";
 		case Cjsr_ap3:               return "";
 		case Cjsr_ap4:               return "";
 		case Cjsr_ap5:               return "";
+		case Cjmp_ap:                return "n";
 		case Cjmp_ap1:               return "";
 		case Cjmp_ap2:               return "";
 		case Cjmp_ap3:               return "";

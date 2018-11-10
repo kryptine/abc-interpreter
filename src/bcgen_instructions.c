@@ -2058,14 +2058,12 @@ void code_jmp(char label_name[]) {
 
 void code_jmp_ap(int n_apply_args) {
 	switch (n_apply_args) {
-		case 1: add_instruction(Cjmp_ap1); break;
-		case 2: add_instruction(Cjmp_ap2); break;
-		case 3: add_instruction(Cjmp_ap3); break;
-		case 4: add_instruction(Cjmp_ap4); break;
-		case 5: add_instruction(Cjmp_ap5); break;
-		default:
-			fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
-			exit(1);
+		case 1:  add_instruction(Cjmp_ap1); break;
+		case 2:  add_instruction(Cjmp_ap2); break;
+		case 3:  add_instruction(Cjmp_ap3); break;
+		case 4:  add_instruction(Cjmp_ap4); break;
+		case 5:  add_instruction(Cjmp_ap5); break;
+		default: add_instruction_w(Cjmp_ap,n_apply_args); break;
 	}
 }
 
@@ -2148,10 +2146,8 @@ void code_jsr_ap(int n_apply_args) {
 		case 3: add_instruction(Cjsr_ap3); return;
 		case 4: add_instruction(Cjsr_ap4); return;
 		case 5: add_instruction(Cjsr_ap5); return;
+		default: add_instruction_w(Cjsr_ap,n_apply_args); return;
 	}
-
-	fprintf(stderr, "Error: jsr_ap %d\n",n_apply_args);
-	exit(1);
 }
 
 void code_jsr_eval(int a_offset) {

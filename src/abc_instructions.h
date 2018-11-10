@@ -491,6 +491,8 @@ enum {
 	INSTRUCTION(jmp_ap2)
 	INSTRUCTION(jsr_ap1)
 	INSTRUCTION(jmp_ap1)
+	INSTRUCTION(jsr_ap)
+	INSTRUCTION(jmp_ap)
 	INSTRUCTION(add_arg0)
 	INSTRUCTION(add_arg1)
 	INSTRUCTION(add_arg2)

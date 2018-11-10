@@ -165,9 +165,40 @@ void *ap_addresses[] = {&ap_2, &ap_3, &ap_4, &ap_5, &ap_6, &ap_7, &ap_8, &ap_9,
 	&ap_28, &ap_29, &ap_30, &ap_31, &ap_32};
 #endif
 
-BC_WORD Fjmp_ap1 = Cjmp_ap1;
-BC_WORD Fjmp_ap2 = Cjmp_ap2;
-BC_WORD Fjmp_ap3 = Cjmp_ap3;
+BC_WORD Fjmp_ap[64] =
+	{ Cjmp_ap1, 0
+	, Cjmp_ap2, 0
+	, Cjmp_ap3, 0
+	, Cjmp_ap4, 0
+	, Cjmp_ap5, 0
+	, Cjmp_ap,  6
+	, Cjmp_ap,  7
+	, Cjmp_ap,  8
+	, Cjmp_ap,  9
+	, Cjmp_ap, 10
+	, Cjmp_ap, 11
+	, Cjmp_ap, 12
+	, Cjmp_ap, 13
+	, Cjmp_ap, 14
+	, Cjmp_ap, 15
+	, Cjmp_ap, 16
+	, Cjmp_ap, 17
+	, Cjmp_ap, 18
+	, Cjmp_ap, 19
+	, Cjmp_ap, 20
+	, Cjmp_ap, 21
+	, Cjmp_ap, 22
+	, Cjmp_ap, 23
+	, Cjmp_ap, 24
+	, Cjmp_ap, 25
+	, Cjmp_ap, 26
+	, Cjmp_ap, 27
+	, Cjmp_ap, 28
+	, Cjmp_ap, 29
+	, Cjmp_ap, 30
+	, Cjmp_ap, 31
+	, Cjmp_ap, 32
+	};
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
@@ -340,7 +371,7 @@ const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
 # endif
 
 int main(int argc, char **argv) {
-#ifndef DEBUG_CURSES
+#if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)
 	int list_program = 0;
 	int run = 1;
 #endif
@@ -398,7 +429,7 @@ int main(int argc, char **argv) {
 		exit(res);
 	}
 
-#ifndef DEBUG_CURSES
+#if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)
 	if (list_program) {
 		print_program(state.program);
 	}
