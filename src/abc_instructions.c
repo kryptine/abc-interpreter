@@ -357,6 +357,7 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_r_args30:         return "n";
 		case Cpush_r_args31:         return "n";
 		case Cpush_r_args40:         return "n";
+		case Cpush_r_args_a:         return "nnnn";
 		case Cpush_r_args_aa1:       return "?";
 		case Cpush_r_args_a1:        return "n";
 		case Cpush_r_args_a2l:       return "n";
@@ -415,6 +416,7 @@ char *instruction_type (BC_WORD i) {
 		case Crepl_r_args40:         return "";
 		case Crepl_r_argsa0:         return "n";
 		case Crepl_r_argsa1:         return "n";
+		case Crepl_r_args_a:         return "nnn";
 		case Crepl_r_args_aab11:     return "";
 		case Crepl_r_args_a2021:     return "";
 		case Crepl_r_args_a21:       return "";

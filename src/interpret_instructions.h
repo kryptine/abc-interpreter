@@ -4505,6 +4505,36 @@ INSTRUCTION_BLOCK(push_r_args_aa1):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_r_args_a):
+{
+	BC_WORD *n;
+	int size,arg_no,nr_args;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	size=pc[2];
+	arg_no=pc[3];
+	nr_args=pc[4];
+
+	if (size < 3) { /* must be two A elements */
+		asp[1]=n[2];
+		asp[2]=n[1];
+	} else {
+		if (arg_no==1) {
+			asp[nr_args]=n[1];
+			asp++;
+			nr_args--;
+			arg_no--;
+		} else {
+			arg_no-=2;
+		}
+		n=(BC_WORD*)n[2];
+		for (int i=arg_no; i<arg_no+nr_args; i++)
+			asp[nr_args-arg_no+i+1]=n[i];
+	}
+	asp+=nr_args;
+	pc+=5;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_r_args_b):
 {
 	BC_WORD *n,*a;
@@ -5467,6 +5497,36 @@ INSTRUCTION_BLOCK(repl_r_args_aa1):
 	a=(BC_WORD*)n[2];
 	asp[0]=*(BC_WORD*)((BC_WORD_S)a+a_o);
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(repl_r_args_a):
+{
+	BC_WORD *n;
+	int size,arg_no,nr_args;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	size=pc[2];
+	arg_no=pc[3];
+	nr_args=pc[4];
+
+	if (size < 3) { /* must be two A elements */
+		asp[0]=n[2];
+		asp[1]=n[1];
+	} else {
+		if (arg_no==1) {
+			nr_args--;
+			asp[nr_args]=n[1];
+			asp++;
+			arg_no--;
+		} else {
+			arg_no-=2;
+		}
+		n=(BC_WORD*)n[2];
+		for (int i=arg_no; i<arg_no+nr_args; i++)
+			asp[nr_args-arg_no+i]=n[i];
+	}
+	asp+=nr_args-1;
+	pc+=4;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(select):

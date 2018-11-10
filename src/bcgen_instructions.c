@@ -2734,8 +2734,7 @@ void code_push_r_args_a(int a_offset,int a_size,int b_size,int argument_number,i
 		return;
 	}
 
-	fprintf(stderr, "Error: push_r_args_a %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
-	exit(1);
+	add_instruction_w_w_w_w(Cpush_r_args_a,-a_offset,a_size+b_size,argument_number,n_arguments);
 }
 
 void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,int n_arguments) {
@@ -2982,8 +2981,7 @@ void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_argument
 		return;
 	}
 
-	fprintf(stderr, "Error: repl_r_args_a %d %d %d %d\n",a_size,b_size,argument_number,n_arguments);
-	exit(1);
+	add_instruction_w_w_w(Crepl_r_args_a,a_size+b_size,argument_number,n_arguments);
 }
 
 void code_rtn(void) {
