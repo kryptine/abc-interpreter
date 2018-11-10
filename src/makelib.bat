@@ -1,4 +1,5 @@
-@cl /nologo /c  /GS- ^
+@echo off
+cl /nologo /c  /GS- ^
 	/O2 ^
 	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS ^
 	abc_instructions.c ^
@@ -13,5 +14,5 @@
 	parse.c ^
 	traps.c ^
 	util.c
-@ml64 /nologo /c /Fo interface.obj interface.asm
-@move *.obj "Clean System Files"
+ml64 /nologo /c /Fo interface.obj interface.asm
+move *.obj "Clean System Files" >nul
