@@ -186,8 +186,8 @@ do
 		cpmq project "$MODULE.prj" build
 	fi
 
-	if [ "$MODULE" == "infprimes" ]; then
-		echo -e "${YELLOW}Skipping infprimes due to infinite result${RESET}"
+	if [ ! -f "$MODULE$EXPECTED_PREFIX.expected" ]; then
+		echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
 		continue
 	fi
 
