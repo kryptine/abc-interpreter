@@ -1809,16 +1809,20 @@ INSTRUCTION_BLOCK(divI):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(divLU):
 {
-#if WORD_WIDTH==64
-	__int128_t num=((__int128_t)bsp[0] << 64) + bsp[1];
+#if defined(WINDOWS) && WORD_WIDTH==64
+	EPRINTF("divLU is not supported on 64-bit Windows\n");
 #else
+# if WORD_WIDTH==64
+	__int128_t num=((__int128_t)bsp[0] << 64) + bsp[1];
+# else
 	int64_t num=((int64_t)bsp[0] << 32) + bsp[1];
-#endif
+# endif
 	bsp[1]=num%bsp[2];
 	bsp[2]=num/bsp[2];
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
+#endif
 }
 INSTRUCTION_BLOCK(divR):
 {
@@ -3330,15 +3334,19 @@ INSTRUCTION_BLOCK(mulR):
 }
 INSTRUCTION_BLOCK(mulUUL):
 {
-#if WORD_WIDTH==64
-	__uint128_t res=(__uint128_t)((__uint128_t)bsp[0] * (__uint128_t)bsp[1]);
+#if defined(WINDOWS) && WORD_WIDTH==64
+	EPRINTF("mulUUL is not supported on 64-bit Windows\n");
 #else
+# if WORD_WIDTH==64
+	__uint128_t res=(__uint128_t)((__uint128_t)bsp[0] * (__uint128_t)bsp[1]);
+# else
 	uint64_t res=(uint64_t)bsp[0] * (uint64_t)bsp[1];
-#endif
+# endif
 	bsp[0]=res>>WORD_WIDTH;
 	bsp[1]=(BC_WORD)res;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
+#endif
 }
 INSTRUCTION_BLOCK(negI):
 	*bsp = - *bsp;
