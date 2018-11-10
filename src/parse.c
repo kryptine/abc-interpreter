@@ -351,6 +351,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							break;
 						case 'd': /* Descriptor */
 						case 'l': /* Label */
+						case 'S': /* String label */
+						case 's': /* String label */
 							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 								return 1;
 #ifdef LINKER
@@ -382,11 +384,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							state->program->code[state->ptr++] = elem8;
 #endif
 							break;
-						case '?':
-							EPRINTF(":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
-							EPRINTF("\tUnknown instruction; add to abc_instructions.c\n");
-							exit(-1);
-						default:
+						case 'i':
 							if (provide_chars(&elem64, sizeof(elem64), 1, cp) < 0)
 								return 1;
 #ifdef LINKER
@@ -394,6 +392,14 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #else
 							state->program->code[state->ptr++] = elem64;
 #endif
+							break;
+						case '?':
+							EPRINTF(":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
+							EPRINTF("\tUnknown instruction; add to abc_instructions.c\n");
+							exit(-1);
+						default:
+							EPRINTF("\tUnknown type character '%c' in type of %s\n",*type,instruction_name(elem16));
+							exit(1);
 					}
 				}
 

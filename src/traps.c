@@ -156,8 +156,8 @@ void clean_sliceAC (void)
 void clean_ItoAC (void)
 {
 	BC_WORD *asp,*bsp,*hp;
-	int i,l,lw;
-	unsigned int ui,t;
+	BC_WORD_S i,l,lw;
+	BC_WORD ui,t;
 	unsigned char *p;
 
 	asp=g_asp;

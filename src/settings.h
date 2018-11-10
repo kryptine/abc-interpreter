@@ -22,6 +22,6 @@
 # define IF_MACH_O_ELSE(a,b) (b)
 #endif
 
-typedef int32_t CleanInt;
+typedef int64_t CleanInt;
 
 #define BCGEN_INSTRUCTION_TABLE_SIZE 512

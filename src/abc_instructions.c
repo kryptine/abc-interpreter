@@ -27,6 +27,8 @@ char *instruction_type (BC_WORD i) {
 		case CabsR:                  return "";
 		case CacosR:                 return "";
 		case CaddI:                  return "";
+		case CaddIo:                 return "";
+		case CaddLU:                 return "";
 		case CaddR:                  return "";
 		case Cadd_empty_node2:       return "l";
 		case Cadd_empty_node3:       return "l";
@@ -151,6 +153,7 @@ char *instruction_type (BC_WORD i) {
 		case Ccreate_array_r_b:      return "nl";
 		case CdecI:                  return "";
 		case CdivI:                  return "";
+		case CdivLU:                 return "";
 		case CdivR:                  return "";
 		case CentierR:               return "";
 		case CeqAC:                  return "";
@@ -173,6 +176,7 @@ char *instruction_type (BC_WORD i) {
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
 		case Cfill:                  return "?";
+		case Cfill0110:              return "n";
 		case Cfill1:                 return "nl";
 		case Cfill2:                 return "nl";
 		case Cfill3:                 return "nl";
@@ -253,8 +257,11 @@ char *instruction_type (BC_WORD i) {
 		case Clog10R:                return "";
 		case CltC:                   return "";
 		case CltI:                   return "";
+		case CltU:                   return "";
 		case CltR:                   return "";
 		case CmulI:                  return "";
+		case CmulIo:                 return "";
+		case CmulUUL:                return "";
 		case CmulR:                  return "";
 		case CnegI:                  return "";
 		case CnegR:                  return "";
@@ -440,8 +447,11 @@ char *instruction_type (BC_WORD i) {
 		case Cset_finalizers:        return "";
 		case CshiftlI:               return "";
 		case CshiftrI:               return "";
+		case CshiftrU:               return "";
 		case CsinR:                  return "";
 		case CsubI:                  return "";
+		case CsubIo:                 return "";
+		case CsubLU:                 return "";
 		case CsubR:                  return "";
 		case CsqrtR:                 return "";
 		case Crtn:                   return "";
