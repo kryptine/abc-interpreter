@@ -15,7 +15,9 @@
 
 int in_first_semispace = 1;
 
-BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free) {
+BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
+		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
+		void **cafs) {
 	BC_WORD *old_heap = in_first_semispace ? heap : heap + heap_size;
 	BC_WORD *new_heap = in_first_semispace ? heap + heap_size : heap;
 
@@ -23,6 +25,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 	init_nodes_set(&nodes_set, heap_size);
 
 	mark_a_stack(stack, asp, old_heap, heap_size, &nodes_set);
+	mark_cafs(cafs, old_heap, heap_size, &nodes_set);
 #ifdef LINK_CLEAN_RUNTIME
 	mark_host_references(old_heap, heap_size, &nodes_set);
 #endif
@@ -47,10 +50,26 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_s
 #endif
 	}
 
-#ifdef LINK_CLEAN_RUNTIME
 	/* Pass 1b: reverse pointers on the A-stack */
+#if (DEBUG_GARBAGE_COLLECTOR > 1)
+	fprintf(stderr, "Pass 1b: reverse pointers on the CAF list\n");
+#endif
+	BC_WORD **cafptr=(BC_WORD**)&cafs[1];
+	while (cafptr[-1]!=0) {
+		cafptr=(BC_WORD**)cafptr[-1];
+		int n_a=(int)(BC_WORD)cafptr[0];
+		for (; n_a>0; n_a--) {
+			BC_WORD *node = (BC_WORD*) &cafptr[n_a];
+			BC_WORD *temp = (BC_WORD*) *node;
+			*node = *temp;
+			*temp = (BC_WORD) node | 1;
+		}
+	}
+
+#ifdef LINK_CLEAN_RUNTIME
+	/* Pass 1c: reverse pointers on the A-stack */
 # if (DEBUG_GARBAGE_COLLECTOR > 1)
-	fprintf(stderr, "Pass 1b: reverse pointers from the host\n");
+	fprintf(stderr, "Pass 1c: reverse pointers from the host\n");
 # endif
 	struct finalizers *finalizers = NULL;
 	while ((finalizers = next_interpreter_finalizer(finalizers)) != NULL) {

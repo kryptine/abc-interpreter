@@ -33,6 +33,7 @@ struct interpretation_environment {
 	BC_WORD *bsp;
 	BC_WORD *csp;
 	BC_WORD *hp;
+	void *caf_list[2];
 };
 
 void interpreter_finalizer(BC_WORD interpret_node);

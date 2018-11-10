@@ -204,8 +204,6 @@ BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
 int trap_needs_gc = 0;
 
-static void *caf_list[2] = {0, &caf_list[1]}; // TODO what does this do?
-
 void* __interpreter_indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
@@ -266,6 +264,9 @@ int interpret(
 
 #ifdef LINK_CLEAN_RUNTIME
 	struct program *program = ie->program;
+	void **caf_list = ie->caf_list;
+#else
+	void *caf_list[2] = {0, &caf_list[1]};
 #endif
 	int instr_arg;
 
@@ -340,7 +341,7 @@ eval_to_hnf_return:
 	{
 #endif
 		int old_heap_free = heap_free;
-		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free
+		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free, caf_list
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, program->code, program->data
 #endif

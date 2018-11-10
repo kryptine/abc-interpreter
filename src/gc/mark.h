@@ -32,6 +32,7 @@ void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t h
 BC_WORD *get_grey_node(struct nodes_set *set);
 
 void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
+void mark_cafs(void **cafs, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
 #ifdef LINK_CLEAN_RUNTIME
 void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set);
 #endif

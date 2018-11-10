@@ -148,6 +148,16 @@ void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size,
 	}
 }
 
+void mark_cafs(void **cafs, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
+	BC_WORD **cafptr=(BC_WORD**)&cafs[1];
+	while (cafptr[-1]!=0) {
+		cafptr=(BC_WORD**)cafptr[-1];
+		int n_a=(int)(BC_WORD)cafptr[0];
+		for (; n_a>0; n_a--)
+			add_grey_node(set, cafptr[n_a], heap, heap_size);
+	}
+}
+
 #ifdef LINK_CLEAN_RUNTIME
 void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	struct finalizers *finalizers = NULL;

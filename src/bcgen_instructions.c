@@ -2380,26 +2380,26 @@ void code_pushR_a(int a_offset) {
 void code_pushcaf(char *label_name,int a_size,int b_size) {
 	if (a_size==1) {
 		if (b_size==0) {
-			add_instruction_label_offset(Cpushcaf10,label_name,4);
+			add_instruction_label(Cpushcaf10,label_name);
 			return;
 		}
 		if (b_size==1) {
-			add_instruction_label_offset(Cpushcaf11,label_name,4);
+			add_instruction_label(Cpushcaf11,label_name);
 			return;
 		}
 	} else if (a_size==2) {
 		if (b_size==0) {
-			add_instruction_label_offset(Cpushcaf20,label_name,4);
+			add_instruction_label(Cpushcaf20,label_name);
 			return;
 		}
 	} else if (a_size==3) {
 		if (b_size==1) {
-			add_instruction_label_offset(Cpushcaf31,label_name,4);
+			add_instruction_label(Cpushcaf31,label_name);
 			return;
 		}
 	}
 
-	add_instruction_w_w_label_offset(Cpushcaf,a_size,a_size+b_size,label_name,4);
+	add_instruction_w_w_label(Cpushcaf,a_size,a_size+b_size,label_name);
 }
 
 void code_push_a(int a_offset) {

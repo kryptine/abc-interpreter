@@ -3703,7 +3703,7 @@ INSTRUCTION_BLOCK(pushcaf):
 {
 	BC_WORD *n;
 	int na,ntotal,i;
-	na=pc[1];
+	na=pc[1]+1;
 	ntotal=pc[2];
 
 	n=(BC_WORD*)pc[3];
@@ -3717,14 +3717,14 @@ INSTRUCTION_BLOCK(pushcaf):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(pushcaf10):
-	*++asp=*(BC_WORD*)pc[1];
+	*++asp=*((BC_WORD*)pc[1]+1);
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pushcaf31):
 {
 	BC_WORD *n;
 
-	n=(BC_WORD*)pc[1];
+	n=(BC_WORD*)pc[1]+1;
 	asp[3]=n[0];
 	asp[2]=n[1];
 	asp[1]=n[2];
