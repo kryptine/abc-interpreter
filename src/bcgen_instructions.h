@@ -242,14 +242,14 @@ void code_jmp_eqC_b2(int value1, int value2, int b_offset, char label_name1[], c
 void code_jmp_eqD_b(char descriptor_name[], int arity, char label_name[]);
 void code_jmp_eqD_b2(char descriptor_name1[], int arity1, char label_name1[], char descriptor_name2[], int arity2, char label_name2[]);
 void code_jmp_eqI(char label_name[]);
-void code_jmp_eqI_b(int value, int b_offset, char label_name[]);
-void code_jmp_eqI_b2(int value1, int value2, int b_offset, char label_name1[], char label_name2[]);
+void code_jmp_eqI_b(CleanInt value, int b_offset, char label_name[]);
+void code_jmp_eqI_b2(CleanInt value1, CleanInt value2, int b_offset, char label_name1[], char label_name2[]);
 void code_jmp_eq_desc(char descriptor_name[], int arity, int a_offset, char label_name[]);
 void code_jmp_geI(char label_name[]);
 void code_jmp_ltI(char label_name[]);
 void code_jmp_neC_b(int value, int b_offset, char label_name[]);
 void code_jmp_neI(char label_name[]);
-void code_jmp_neI_b(int value, int b_offset, char label_name[]);
+void code_jmp_neI_b(CleanInt value, int b_offset, char label_name[]);
 void code_jmp_ne_desc(char descriptor_name[], int arity, int a_offset, char label_name[]);
 void code_jmp_o_geI(int b_offset, char label_name[]);
 void code_jmp_o_geI_arraysize_a(char element_descriptor[], int b_offset, int a_offset, char label_name[]);

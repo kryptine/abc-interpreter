@@ -3393,11 +3393,11 @@ void code_jmp_eqI(char label_name[]) {
 	add_instruction_label(Cjmp_eqI,label_name);
 }
 
-void code_jmp_eqI_b(int value,int b_offset,char label_name[]) {
+void code_jmp_eqI_b(CleanInt value,int b_offset,char label_name[]) {
 	add_instruction_w_i_label(Cjmp_eqI_b,b_offset,value,label_name);
 }
 
-void code_jmp_eqI_b2(int value1,int value2,int b_offset,char label_name1[],char label_name2[]) {
+void code_jmp_eqI_b2(CleanInt value1,CleanInt value2,int b_offset,char label_name1[],char label_name2[]) {
 	add_instruction_w_i_label_i_label(Cjmp_eqI_b2,b_offset,value1,label_name1,value2,label_name2);
 }
 
@@ -3421,7 +3421,7 @@ void code_jmp_neI(char label_name[]) {
 	add_instruction_label(Cjmp_neI,label_name);
 }
 
-void code_jmp_neI_b(int value,int b_offset,char label_name[]) {
+void code_jmp_neI_b(CleanInt value,int b_offset,char label_name[]) {
 	add_instruction_w_i_label(Cjmp_neI_b,b_offset,value,label_name);
 }
 
