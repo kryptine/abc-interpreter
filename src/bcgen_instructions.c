@@ -230,7 +230,7 @@ struct relocation *add_data_relocation(struct label *label, uint32_t offset) {
 
 void store_code_internal_label_value(struct label *label,uint32_t offset) {
 	add_code_relocation(label, pgrm.code_size);
-	store_code_elem(8, offset);
+	store_code_elem(4, offset);
 }
 
 void store_code_label_value(char *label_name,int32_t offset) {
@@ -419,9 +419,9 @@ void add_instruction_w(int16_t i,int32_t n) {
 	store_code_elem(2, n);
 }
 
-void add_instruction_w_i(int16_t i,int32_t n1,int n2) {
+void add_instruction_w_i(int16_t i,int32_t n1,int64_t n2) {
 	if (list_code || i>max_implemented_instruction_n)
-		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,n2);
+		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(2, n1);
@@ -531,7 +531,7 @@ void add_instruction_w_w(int16_t i,int32_t n1,int32_t n2) {
 	store_code_elem(2, n2);
 }
 
-void add_instruction_i_w(int16_t i,int32_t n1,int32_t n2) {
+void add_instruction_i_w(int16_t i,int64_t n1,int32_t n2) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2);
 
@@ -560,7 +560,7 @@ void add_instruction_w_w_label(int16_t i,int32_t n1,int32_t n2,char *label_name)
 	store_code_label_value(label_name,0);
 }
 
-void add_instruction_w_i_label(int16_t i,int32_t n1,int32_t n2,char *label_name) {
+void add_instruction_w_i_label(int16_t i,int32_t n1,int64_t n2,char *label_name) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name);
 
@@ -615,7 +615,7 @@ void add_instruction_w_w_label_w_label(int16_t i,int32_t n1,int32_t n2,char *lab
 	store_code_label_value(label_name2,0);
 }
 
-void add_instruction_w_i_label_i_label(int16_t i,int32_t n1,int32_t n2,char *label_name1,int32_t n3,char *label_name2) {
+void add_instruction_w_i_label_i_label(int16_t i,int32_t n1,int64_t n2,char *label_name1,int64_t n3,char *label_name2) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s %d %s\n",pgrm.code_size,instruction_name (i),(int)n1,(int)n2,label_name1,(int)n3,label_name2);
 
@@ -767,9 +767,9 @@ void add_instruction_w_w_w_w_w(int16_t i,int32_t n1,int32_t n2,int32_t n3,int32_
 	store_code_elem(2, n5);
 }
 
-void add_instruction_i(int16_t i,int n) {
+void add_instruction_i(int16_t i,int64_t n) {
 	if (list_code || i>max_implemented_instruction_n)
-		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),n);
+		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(8, n);
@@ -818,6 +818,14 @@ void code_acosR(void) {
 
 void code_addI(void) {
 	add_instruction(CaddI);
+}
+
+void code_addIo(void) {
+	add_instruction(CaddIo);
+}
+
+void code_addLU(void) {
+	add_instruction(CaddLU);
 }
 
 void code_addR(void) {
@@ -1375,6 +1383,10 @@ void code_divI(void) {
 	add_instruction(CdivI);
 }
 
+void code_divLU(void) {
+	add_instruction(CdivLU);
+}
+
 void code_divR(void) {
 	add_instruction(CdivR);
 }
@@ -1563,6 +1575,15 @@ void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 					add_instruction_w(Cfill1010,-root_offset);
 				else
 					add_instruction_w(Cfill1011,-root_offset);
+				return;
+			}
+		}
+	} else if (b_size==1) {
+		if (a_size==0) {
+			if (bits[0]=='0') {
+				if (bits[1]=='0')
+					return;
+				add_instruction_w(Cfill0110,-root_offset);
 				return;
 			}
 		}
@@ -2196,12 +2217,24 @@ void code_ltR(void) {
 	add_instruction(CltR);
 }
 
+void code_ltU(void) {
+	add_instruction(CltU);
+}
+
 void code_mulI(void) {
 	add_instruction(CmulI);
 }
 
+void code_mulIo(void) {
+	add_instruction(CmulIo);
+}
+
 void code_mulR(void) {
 	add_instruction(CmulR);
+}
+
+void code_mulUUL(void) {
+	add_instruction(CmulUUL);
 }
 
 void code_negI(void) {
@@ -3030,12 +3063,16 @@ void code_set_finalizers(void) {
 	add_instruction(Cset_finalizers);
 }
 
-void code_shiftl(void) {
+void code_shiftlI(void) {
 	add_instruction(CshiftlI);
 }
 
-void code_shiftr(void) {
+void code_shiftrI(void) {
 	add_instruction(CshiftrI);
+}
+
+void code_shiftrU(void) {
+	add_instruction(CshiftrU);
 }
 
 void code_sinR(void) {
@@ -3044,6 +3081,14 @@ void code_sinR(void) {
 
 void code_subI(void) {
 	add_instruction(CsubI);
+}
+
+void code_subIo(void) {
+	add_instruction(CsubIo);
+}
+
+void code_subLU(void) {
+	add_instruction(CsubLU);
 }
 
 void code_subR(void) {

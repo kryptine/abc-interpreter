@@ -27,7 +27,18 @@ INSTRUCTION_BLOCK(acosR):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(addI):
-	bsp[1]=bsp[0] + bsp[1];
+	bsp[1]=(BC_WORD_S)bsp[0]+(BC_WORD_S)bsp[1];
+	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(addIo):
+	bsp[1]=(BC_WORD_S)bsp[0]+(BC_WORD_S)bsp[1];
+	bsp[0]=(BC_WORD_S)bsp[1]<(BC_WORD_S)bsp[0];
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(addLU):
+	bsp[2]=(BC_WORD_S)bsp[1] + (BC_WORD_S)bsp[2];
+	bsp[1]=bsp[0]+(bsp[2]<bsp[1] ? 1 : 0);
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
@@ -1796,6 +1807,15 @@ INSTRUCTION_BLOCK(divI):
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(divLU):
+{
+	__int128_t num=((__int128_t)bsp[0] << 64) + bsp[1];
+	bsp[1]=num%bsp[2];
+	bsp[2]=num/bsp[2];
+	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(divR):
 {
 	BC_REAL d=*(BC_REAL*)&bsp[0] / *(BC_REAL*)&bsp[1];
@@ -2161,6 +2181,15 @@ INSTRUCTION_BLOCK(fillh2):
 	n[2]=asp[-1];
 	asp-=2;
 	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill0110):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[1]=*bsp++;
+	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill1010):
@@ -3269,16 +3298,41 @@ INSTRUCTION_BLOCK(ltR):
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
-INSTRUCTION_BLOCK(mulI):
-	bsp[1]=bsp[0] * bsp[1];
+INSTRUCTION_BLOCK(ltU):
+	bsp[1]=bsp[0] < bsp[1];
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(mulI):
+	bsp[1]=(BC_WORD_S)bsp[0] * (BC_WORD_S)bsp[1];
+	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(mulIo):
+{
+	BC_WORD_S x=bsp[0], y=bsp[1];
+	bsp[1]=x*y;
+	bsp[0]=x != 0 && bsp[1]/x != y;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(mulR):
 {
 	BC_REAL d=*(BC_REAL*)&bsp[0] * *(BC_REAL*)&bsp[1];
 	bsp[1]=*(BC_WORD*)&d;
 	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(mulUUL):
+{
+#if WORD_WIDTH==64
+	__uint128_t res=(__uint128_t)((__uint128_t)bsp[0] * (__uint128_t)bsp[1]);
+#else
+	uint64_t res=(uint64_t)bsp[0] * (uint64_t)bsp[1];
+#endif
+	bsp[0]=res>>WORD_WIDTH;
+	bsp[1]=(BC_WORD)res;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
@@ -3410,7 +3464,7 @@ INSTRUCTION_BLOCK(print_char):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(print_int):
-	PRINTF(BC_WORD_FMT,*bsp++);
+	PRINTF(BC_WORD_S_FMT,*bsp++);
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(print_real):
@@ -5873,6 +5927,11 @@ INSTRUCTION_BLOCK(shiftrI):
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(shiftrU):
+	bsp[1]=(BC_WORD)bsp[0] >> (BC_WORD)bsp[1];
+	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(sinR):
 {
 	BC_REAL d=sin(*(BC_REAL*)&bsp[0]);
@@ -5881,7 +5940,18 @@ INSTRUCTION_BLOCK(sinR):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(subI):
-	bsp[1]=bsp[0] - bsp[1];
+	bsp[1]=(BC_WORD_S)bsp[0]-(BC_WORD_S)bsp[1];
+	++bsp;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(subIo):
+	bsp[1]=(BC_WORD_S)bsp[0]-(BC_WORD_S)bsp[1];
+	bsp[0]=(BC_WORD_S)bsp[1]>(BC_WORD_S)bsp[0];
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(subLU):
+	bsp[2]=(BC_WORD_S)bsp[1] - (BC_WORD_S)bsp[2];
+	bsp[1]=bsp[0]+(bsp[2]>bsp[1] ? 1 : 0);
 	++bsp;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;

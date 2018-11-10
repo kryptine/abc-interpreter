@@ -10,7 +10,7 @@
 #include "interpret.h"
 #include "util.h"
 
-WINDOW *win_listing, *win_a, *win_b, *win_c, *win_heap, *win_output;
+WINDOW *win_listing, *win_a, *win_b, *win_c, *win_heap, *win_output=NULL;
 WINDOW *winh_listing, *winh_a, *winh_b, *winh_c, *winh_heap, *winh_output;
 WINDOW *win_vertical_bar;
 
@@ -646,8 +646,12 @@ void inspect_a_stack(BC_WORD *top, int up) {
 void debugger_printf(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
-	vw_printw(win_output, format, args);
-	REFRESH_OUT();
+	if (win_output==NULL) {
+		vfprintf(stderr,format,args);
+	} else {
+		vw_printw(win_output, format, args);
+		REFRESH_OUT();
+	}
 }
 
 void debugger_putchar(char c) {
