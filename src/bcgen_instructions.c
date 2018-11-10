@@ -783,6 +783,15 @@ void add_instruction_r(int16_t i,double r) {
 	store_code_elem(8, *((uint64_t*)(&r)));
 }
 
+void add_instruction_w_r(int16_t i,int32_t n,double r) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %f\n",pgrm.code_size,instruction_name (i),r);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n);
+	store_code_elem(8, *((uint64_t*)(&r)));
+}
+
 void add_instruction_internal_label(int16_t i,struct label *label) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),label->label_offset);
@@ -1458,6 +1467,10 @@ void code_eqI_a(CleanInt value,int a_offset) {
 
 void code_eqR(void) {
 	add_instruction(CeqR);
+}
+
+void code_eqR_b(double value,int b_offset) {
+	add_instruction_w_r(CeqR_b,b_offset,value);
 }
 
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
@@ -2409,8 +2422,8 @@ void code_pushcaf(char *label_name,int a_size,int b_size) {
 			return;
 		}
 	}
-	fprintf(stderr, "Error: pushcaf %s %d %d\n",label_name,a_size,b_size);
-	exit(1);
+
+	add_instruction_w_w_label_offset(Cpushcaf,a_size,a_size+b_size,label_name,4);
 }
 
 void code_push_a(int a_offset) {

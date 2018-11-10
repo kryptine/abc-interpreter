@@ -171,6 +171,7 @@ char *instruction_type (BC_WORD i) {
 		case CeqI_a:                 return "ni";
 		case CeqI_b:                 return "ni";
 		case CeqR:                   return "";
+		case CeqR_b:                 return "nr";
 		case Ceq_desc:               return "nl";
 		case Ceq_desc_b0:            return "l";
 		case Ceq_nulldesc:           return "nl";
@@ -295,6 +296,7 @@ char *instruction_type (BC_WORD i) {
 		case CpushLc:                return "";
 		case CpushR:                 return "r";
 		case CpushR_a:               return "n";
+		case Cpushcaf:               return "nnl";
 		case Cpushcaf10:             return "l";
 		case Cpushcaf11:             return "l";
 		case Cpushcaf20:             return "l";

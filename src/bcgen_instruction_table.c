@@ -92,6 +92,7 @@ void load_instruction_table(void) {
 	put_instruction_name("eqI_a",                 parse_instruction_i_n,           code_eqI_a );
 	put_instruction_name("eqI_b",                 parse_instruction_i_n,           code_eqI_b );
 	put_instruction_name("eqR",                   parse_instruction,               code_eqR );
+	put_instruction_name("eqR_b",                 parse_instruction_r_n,           code_eqR_b );
 	put_instruction_name("eq_desc",               parse_instruction_a_n_n,         code_eq_desc );
 	put_instruction_name("eq_desc_b",             parse_instruction_a_n,           code_eq_desc_b );
 	put_instruction_name("eq_nulldesc",           parse_instruction_a_n,           code_eq_nulldesc );

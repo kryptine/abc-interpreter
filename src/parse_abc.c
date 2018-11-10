@@ -1157,6 +1157,17 @@ int parse_instruction_r (instruction *instruction)
 	return 1;
 }
 
+int parse_instruction_r_n (instruction *instruction)
+{
+	double r;
+	int64_t n;
+
+	if (!parse_real (&r) || !parse_unsigned_integer (&n))
+		return 0;
+	instruction->code_function (r,(int)n);
+	return 1;
+}
+
 int parse_instruction_l (instruction *instruction)
 {
 	STRING a;

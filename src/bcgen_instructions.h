@@ -79,6 +79,7 @@ void code_eqI(void);
 void code_eqI_a(CleanInt value, int a_offset);
 void code_eqI_b(CleanInt value, int b_offset);
 void code_eqR(void);
+void code_eqR_b(double value, int b_offset);
 void code_eq_desc(char descriptor_name[], int arity, int a_offset);
 void code_eq_desc_b(char descriptor_name[], int arity);
 void code_eq_nulldesc(char descriptor_name[], int a_offset);

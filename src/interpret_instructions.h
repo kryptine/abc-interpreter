@@ -2021,6 +2021,17 @@ INSTRUCTION_BLOCK(eqI_b):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(eqR_b):
+{
+	int b;
+	BC_WORD_S bo;
+
+	bo=((BC_WORD_S*)pc)[1];
+	b=*(BC_REAL*)&bsp[bo]==*(BC_REAL*)&pc[2];
+	*--bsp=b;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(eqD_b):
 {
 	int b;
@@ -3550,6 +3561,23 @@ INSTRUCTION_BLOCK(push_r_args02):
 	bsp[-1]=n[2];
 	bsp-=2;
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(pushcaf):
+{
+	BC_WORD *n;
+	int na,ntotal,i;
+	na=pc[1];
+	ntotal=pc[2];
+
+	n=(BC_WORD*)pc[3];
+	for (i=0; i<na; i++)
+		asp[na-i]=n[i];
+	asp+=na;
+	for (; i<ntotal; i++)
+		bsp[na-ntotal+i]=n[i];
+	bsp-=ntotal-na;
+	pc+=4;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(pushcaf10):
