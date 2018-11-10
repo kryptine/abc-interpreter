@@ -1809,7 +1809,11 @@ INSTRUCTION_BLOCK(divI):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(divLU):
 {
+#if WORD_WIDTH==64
 	__int128_t num=((__int128_t)bsp[0] << 64) + bsp[1];
+#else
+	int64_t num=((int64_t)bsp[0] << 32) + bsp[1];
+#endif
 	bsp[1]=num%bsp[2];
 	bsp[2]=num/bsp[2];
 	++bsp;
