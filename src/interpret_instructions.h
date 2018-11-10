@@ -1362,6 +1362,51 @@ INSTRUCTION_BLOCK(build_u03):
 	hp+=4;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u0b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+1);
+	hp[0]=pc[2];
+	hp[1]=bsp[0];
+	hp[2]=bsp[1];
+	hp[3]=bsp[2];
+	hp[4]=bsp[3];
+	do {
+		if (n_b< 5) break; hp[ 5]=bsp[ 4];
+		if (n_b< 6) break; hp[ 6]=bsp[ 5];
+		if (n_b< 7) break; hp[ 7]=bsp[ 6];
+		if (n_b< 8) break; hp[ 8]=bsp[ 7];
+		if (n_b< 9) break; hp[ 9]=bsp[ 8];
+		if (n_b<10) break; hp[10]=bsp[ 9];
+		if (n_b<11) break; hp[11]=bsp[10];
+		if (n_b<12) break; hp[12]=bsp[11];
+		if (n_b<13) break; hp[13]=bsp[12];
+		if (n_b<14) break; hp[14]=bsp[13];
+		if (n_b<15) break; hp[15]=bsp[14];
+		if (n_b<16) break; hp[16]=bsp[15];
+		if (n_b<17) break; hp[17]=bsp[16];
+		if (n_b<18) break; hp[18]=bsp[17];
+		if (n_b<19) break; hp[19]=bsp[18];
+		if (n_b<20) break; hp[20]=bsp[19];
+		if (n_b<21) break; hp[21]=bsp[20];
+		if (n_b<22) break; hp[22]=bsp[21];
+		if (n_b<23) break; hp[23]=bsp[22];
+		if (n_b<24) break; hp[24]=bsp[23];
+		if (n_b<25) break; hp[25]=bsp[24];
+		if (n_b<26) break; hp[26]=bsp[25];
+		if (n_b<27) break; hp[27]=bsp[26];
+		if (n_b<28) break; hp[28]=bsp[27];
+		if (n_b<29) break; hp[29]=bsp[28];
+		if (n_b<30) break; hp[30]=bsp[29];
+		if (n_b<31) break; hp[31]=bsp[30];
+		if (n_b<32) break; hp[32]=bsp[31];
+	} while (0);
+	*++asp=(BC_WORD)hp;
+	bsp+=n_b;
+	hp+=n_b+1;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u11):
 	NEED_HEAP(3);
 	hp[0]=pc[1];
@@ -1394,6 +1439,51 @@ INSTRUCTION_BLOCK(build_u13):
 	hp+=5;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u1b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+2);
+	hp[0]=pc[2];
+	hp[1]=asp[0];
+	hp[2]=bsp[0];
+	hp[3]=bsp[1];
+	hp[4]=bsp[2];
+	hp[5]=bsp[3];
+	do {
+		if (n_b< 5) break; hp[ 6]=bsp[ 4];
+		if (n_b< 6) break; hp[ 7]=bsp[ 5];
+		if (n_b< 7) break; hp[ 8]=bsp[ 6];
+		if (n_b< 8) break; hp[ 9]=bsp[ 7];
+		if (n_b< 9) break; hp[10]=bsp[ 8];
+		if (n_b<10) break; hp[11]=bsp[ 9];
+		if (n_b<11) break; hp[12]=bsp[10];
+		if (n_b<12) break; hp[13]=bsp[11];
+		if (n_b<13) break; hp[14]=bsp[12];
+		if (n_b<14) break; hp[15]=bsp[13];
+		if (n_b<15) break; hp[16]=bsp[14];
+		if (n_b<16) break; hp[17]=bsp[15];
+		if (n_b<17) break; hp[18]=bsp[16];
+		if (n_b<18) break; hp[19]=bsp[17];
+		if (n_b<19) break; hp[20]=bsp[18];
+		if (n_b<20) break; hp[21]=bsp[19];
+		if (n_b<21) break; hp[22]=bsp[20];
+		if (n_b<22) break; hp[23]=bsp[21];
+		if (n_b<23) break; hp[24]=bsp[22];
+		if (n_b<24) break; hp[25]=bsp[23];
+		if (n_b<25) break; hp[26]=bsp[24];
+		if (n_b<26) break; hp[27]=bsp[25];
+		if (n_b<27) break; hp[28]=bsp[26];
+		if (n_b<28) break; hp[29]=bsp[27];
+		if (n_b<29) break; hp[30]=bsp[28];
+		if (n_b<30) break; hp[31]=bsp[29];
+		if (n_b<31) break; hp[32]=bsp[30];
+	} while (0);
+	asp[0]=(BC_WORD)hp;
+	bsp+=n_b;
+	hp+=n_b+2;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u21):
 	NEED_HEAP(4);
 	hp[0]=pc[1];
@@ -1419,6 +1509,52 @@ INSTRUCTION_BLOCK(build_u22):
 	hp+=5;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u2b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+3);
+	hp[0]=pc[2];
+	hp[1]=asp[0];
+	hp[2]=asp[-1];
+	hp[3]=bsp[0];
+	hp[4]=bsp[1];
+	hp[5]=bsp[2];
+	do {
+		if (n_b< 4) break; hp[ 6]=bsp[ 3];
+		if (n_b< 5) break; hp[ 7]=bsp[ 4];
+		if (n_b< 6) break; hp[ 8]=bsp[ 5];
+		if (n_b< 7) break; hp[ 9]=bsp[ 6];
+		if (n_b< 8) break; hp[10]=bsp[ 7];
+		if (n_b< 9) break; hp[11]=bsp[ 8];
+		if (n_b<10) break; hp[12]=bsp[ 9];
+		if (n_b<11) break; hp[13]=bsp[10];
+		if (n_b<12) break; hp[14]=bsp[11];
+		if (n_b<13) break; hp[15]=bsp[12];
+		if (n_b<14) break; hp[16]=bsp[13];
+		if (n_b<15) break; hp[17]=bsp[14];
+		if (n_b<16) break; hp[18]=bsp[15];
+		if (n_b<17) break; hp[19]=bsp[16];
+		if (n_b<18) break; hp[20]=bsp[17];
+		if (n_b<19) break; hp[21]=bsp[18];
+		if (n_b<20) break; hp[22]=bsp[19];
+		if (n_b<21) break; hp[23]=bsp[20];
+		if (n_b<22) break; hp[24]=bsp[21];
+		if (n_b<23) break; hp[25]=bsp[22];
+		if (n_b<24) break; hp[26]=bsp[23];
+		if (n_b<25) break; hp[27]=bsp[24];
+		if (n_b<26) break; hp[28]=bsp[25];
+		if (n_b<27) break; hp[29]=bsp[26];
+		if (n_b<28) break; hp[30]=bsp[27];
+		if (n_b<29) break; hp[31]=bsp[28];
+		if (n_b<30) break; hp[32]=bsp[29];
+	} while (0);
+	asp[-1]=(BC_WORD)hp;
+	asp--;
+	bsp+=n_b;
+	hp+=n_b+3;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u31):
 	NEED_HEAP(5);
 	hp[0]=pc[1];

@@ -127,11 +127,14 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_u01:             return "l";
 		case Cbuild_u02:             return "l";
 		case Cbuild_u03:             return "l";
+		case Cbuild_u0b:             return "ln";
 		case Cbuild_u11:             return "l";
 		case Cbuild_u12:             return "l";
 		case Cbuild_u13:             return "l";
+		case Cbuild_u1b:             return "ln";
 		case Cbuild_u21:             return "l";
 		case Cbuild_u22:             return "l";
+		case Cbuild_u2b:             return "ln";
 		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "nl";
 		case Cccall:                 return "";

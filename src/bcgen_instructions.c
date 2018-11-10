@@ -1190,59 +1190,35 @@ void code_build_r(char descriptor_name[],int a_size,int b_size,int a_offset,int 
 }
 
 void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) {
-	if (a_size==0) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u01,code_name);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u01,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u02,code_name); return;
+			case 3:  add_instruction_label(Cbuild_u03,code_name); return;
+			default: add_instruction_w_label(Cbuild_u0b,b_size,code_name); return;
 		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u02,code_name);
-			return;
+		case 1: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u11,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u12,code_name); return;
+			case 3:  add_instruction_label(Cbuild_u13,code_name); return;
+			default: add_instruction_w_label(Cbuild_u1b,b_size,code_name); return;
 		}
-		if (b_size==3) {
-			add_instruction_label(Cbuild_u03,code_name);
-			return;
+		case 2: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u21,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u22,code_name); return;
+			default: add_instruction_w_label(Cbuild_u2b,b_size,code_name); return;
 		}
-	} else if (a_size==1) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u11,code_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u12,code_name);
-			return;
-		}
-		if (b_size==3) {
-			add_instruction_label(Cbuild_u13,code_name);
-			return;
-		}
-	} else if (a_size==2) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u21,code_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u22,code_name);
-			return;
-		}
-	} else if (a_size==3) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u31,code_name);
-			return;
-		}
+		default:
+			if (b_size==1) {
+				if (a_size==3)
+					add_instruction_label(Cbuild_u31,code_name);
+				else
+					add_instruction_w_label(Cbuild_ua1,a_size,code_name);
+				return;
+			} else {
+				add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);
+			}
 	}
-
-	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);
-		return;
-	}
-	if (a_size>=4 && b_size==1) {
-		add_instruction_w_label(Cbuild_ua1,a_size,code_name);
-		return;
-	}
-
-	fprintf(stderr, "Error: build_u %s %d %d %s\n",descriptor_name,a_size,b_size,code_name);
-	exit(1);
 }
 
 void code_cosR(void) {
