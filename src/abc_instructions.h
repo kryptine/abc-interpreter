@@ -123,6 +123,7 @@ enum {
 	INSTRUCTION(build_u31)
 	INSTRUCTION(build_ua1)
 	INSTRUCTION(ccall)
+	INSTRUCTION(centry)
 	INSTRUCTION(cosR)
 	INSTRUCTION(create)
 	INSTRUCTION(creates)

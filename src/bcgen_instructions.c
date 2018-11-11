@@ -3287,6 +3287,11 @@ void code_ccall (char *c_function_name,char *s,int length) {
 	add_instruction(Cccall);
 }
 
+void code_centry (char *c_function_name,char *clean_function_label,char *s,int length) {
+	unsupported_instruction_warning(Ccentry);
+	add_instruction(Ccentry);
+}
+
 void code_dup_a(int a_offset) {
 	add_instruction_w(Cdup_a,-a_offset);
 }

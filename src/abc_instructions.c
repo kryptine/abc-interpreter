@@ -138,6 +138,7 @@ char *instruction_type (BC_WORD i) {
 		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "nl";
 		case Cccall:                 return "";
+		case Ccentry:                return "";
 		case CcosR:                  return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "?";

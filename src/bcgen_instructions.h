@@ -58,6 +58,7 @@ void code_buildhr(char descriptor_name[], int a_size, int b_size);
 void code_build_r(char descriptor_name[], int a_size, int b_size, int a_offset, int b_offset);
 void code_build_u(char descriptor_name[], int a_size, int b_size, char *code_name);
 void code_ccall(char *c_function_name,char *s,int length);
+void code_centry(char *c_function_name,char *clean_function_label,char *s,int length);
 void code_cosR(void);
 void code_create(int n_arguments);
 void code_create_array(char element_descriptor[], int a_size, int b_size);
