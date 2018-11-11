@@ -336,9 +336,11 @@ char *instruction_type (BC_WORD i) {
 		case Cpush_node_u01:         return "l";
 		case Cpush_node_u02:         return "l";
 		case Cpush_node_u03:         return "l";
+		case Cpush_node_u0b:         return "nl";
 		case Cpush_node_u11:         return "l";
 		case Cpush_node_u12:         return "l";
 		case Cpush_node_u13:         return "l";
+		case Cpush_node_u1b:         return "nl";
 		case Cpush_node_u21:         return "l";
 		case Cpush_node_u22:         return "l";
 		case Cpush_node_u31:         return "l";

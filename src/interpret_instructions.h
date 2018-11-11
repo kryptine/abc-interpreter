@@ -4357,6 +4357,51 @@ INSTRUCTION_BLOCK(push_node_u03):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_node_u0b):
+{
+	BC_WORD *n;
+	int n_b=pc[1];
+
+	n=(BC_WORD*)*asp;
+	n[0]=pc[2];
+	bsp-=n_b;
+	bsp[0]=n[1];
+	bsp[1]=n[2];
+	bsp[2]=n[3];
+	bsp[3]=n[4];
+	do {
+		if (n_b< 5) break; bsp[ 4]=n[ 5];
+		if (n_b< 6) break; bsp[ 5]=n[ 6];
+		if (n_b< 7) break; bsp[ 6]=n[ 7];
+		if (n_b< 8) break; bsp[ 7]=n[ 8];
+		if (n_b< 9) break; bsp[ 8]=n[ 9];
+		if (n_b<10) break; bsp[ 9]=n[10];
+		if (n_b<11) break; bsp[10]=n[11];
+		if (n_b<12) break; bsp[11]=n[12];
+		if (n_b<13) break; bsp[12]=n[13];
+		if (n_b<14) break; bsp[13]=n[14];
+		if (n_b<15) break; bsp[14]=n[15];
+		if (n_b<16) break; bsp[15]=n[16];
+		if (n_b<17) break; bsp[16]=n[17];
+		if (n_b<18) break; bsp[17]=n[18];
+		if (n_b<19) break; bsp[18]=n[19];
+		if (n_b<20) break; bsp[19]=n[20];
+		if (n_b<21) break; bsp[20]=n[21];
+		if (n_b<22) break; bsp[21]=n[22];
+		if (n_b<23) break; bsp[22]=n[23];
+		if (n_b<24) break; bsp[23]=n[24];
+		if (n_b<25) break; bsp[24]=n[25];
+		if (n_b<26) break; bsp[25]=n[26];
+		if (n_b<27) break; bsp[26]=n[27];
+		if (n_b<28) break; bsp[27]=n[28];
+		if (n_b<29) break; bsp[28]=n[29];
+		if (n_b<30) break; bsp[29]=n[30];
+		if (n_b<31) break; bsp[30]=n[31];
+		if (n_b<32) break; bsp[31]=n[32];
+	} while (0);
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_node_u11):
 {
 	BC_WORD *n;
@@ -4393,6 +4438,52 @@ INSTRUCTION_BLOCK(push_node_u13):
 	bsp[-1]=n[4];
 	bsp-=3;
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(push_node_u1b):
+{
+	BC_WORD *n;
+	int n_b=pc[1];
+
+	n=(BC_WORD*)*asp;
+	n[0]=pc[2];
+	*++asp=n[1];
+	bsp-=n_b;
+	bsp[0]=n[2];
+	bsp[1]=n[3];
+	bsp[2]=n[4];
+	bsp[3]=n[5];
+	do {
+		if (n_b< 5) break; bsp[ 4]=n[ 6];
+		if (n_b< 6) break; bsp[ 5]=n[ 7];
+		if (n_b< 7) break; bsp[ 6]=n[ 8];
+		if (n_b< 8) break; bsp[ 7]=n[ 9];
+		if (n_b< 9) break; bsp[ 8]=n[10];
+		if (n_b<10) break; bsp[ 9]=n[11];
+		if (n_b<11) break; bsp[10]=n[12];
+		if (n_b<12) break; bsp[11]=n[13];
+		if (n_b<13) break; bsp[12]=n[14];
+		if (n_b<14) break; bsp[13]=n[15];
+		if (n_b<15) break; bsp[14]=n[16];
+		if (n_b<16) break; bsp[15]=n[17];
+		if (n_b<17) break; bsp[16]=n[18];
+		if (n_b<18) break; bsp[17]=n[19];
+		if (n_b<19) break; bsp[18]=n[20];
+		if (n_b<20) break; bsp[19]=n[21];
+		if (n_b<21) break; bsp[20]=n[22];
+		if (n_b<22) break; bsp[21]=n[23];
+		if (n_b<23) break; bsp[22]=n[24];
+		if (n_b<24) break; bsp[23]=n[25];
+		if (n_b<25) break; bsp[24]=n[26];
+		if (n_b<26) break; bsp[25]=n[27];
+		if (n_b<27) break; bsp[26]=n[28];
+		if (n_b<28) break; bsp[27]=n[29];
+		if (n_b<29) break; bsp[28]=n[30];
+		if (n_b<30) break; bsp[29]=n[31];
+		if (n_b<31) break; bsp[30]=n[32];
+		if (n_b<32) break; bsp[31]=n[33];
+	} while (0);
+	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(push_node_u22):

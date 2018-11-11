@@ -2529,55 +2529,32 @@ void code_push_node(char *label_name,int n_arguments) {
 }
 
 void code_push_node_u(char *label_name,int a_size,int b_size) {
-	if (a_size==0) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u01,label_name);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u01,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u02,label_name); return;
+			case 3:  add_instruction_label(Cpush_node_u03,label_name); return;
+			default: add_instruction_w_label(Cpush_node_u0b,b_size,label_name); return;
 		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u02,label_name);
-			return;
+		case 1: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u11,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u12,label_name); return;
+			case 3:  add_instruction_label(Cpush_node_u13,label_name); return;
+			default: add_instruction_w_label(Cpush_node_u1b,b_size,label_name); return;
 		}
-		if (b_size==3) {
-			add_instruction_label(Cpush_node_u03,label_name);
-			return;
+		case 2: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u21,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u22,label_name); return;
+			default: add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size); return;
 		}
-	} else if (a_size==1) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u11,label_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u12,label_name);
-			return;
-		}
-		if (b_size==3) {
-			add_instruction_label(Cpush_node_u13,label_name);
-			return;
-		}
-	} else if (a_size==2) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u21,label_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u22,label_name);
-			return;
-		}
-	} else if (a_size==3 && b_size==1) {
-		add_instruction_label(Cpush_node_u31,label_name);
-		return;
+		default:
+			if (a_size==3 && b_size==1)
+				add_instruction_label(Cpush_node_u31,label_name);
+			else if (a_size>3 && b_size==1)
+				add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
+			else
+				add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size);
 	}
-
-	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size);
-		return;
-	} else if (a_size>=3 && b_size==1) {
-		add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
-		return;
-	}
-	fprintf(stderr, "Error: push_node_u %s %d %d\n",label_name,a_size,b_size);
-	exit(1);
 }
 
 void code_remI(void) {
