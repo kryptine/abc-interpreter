@@ -29,7 +29,7 @@ import code from library "msvcrt_library"
 import code from library "kernel32_library"
 import code from library "ucrtbase_library"
 
-OFFSET_PARSER_PROGRAM :== 8 // Offset to the program field in the parser struct (parse.h)
+OFFSET_PARSER_PROGRAM :== IF_INT_64_OR_32 8 4 // Offset to the program field in the parser struct (parse.h)
 
 parse :: !{#Symbol} !String -> Maybe Program
 parse syms s
@@ -38,7 +38,7 @@ parse syms s
 #! res = parse_program parser cp
 | free_char_provider_to_false cp || free_to_false cp = Nothing
 | res <> 0 = Nothing
-#! pgm = readInt parser OFFSET_PARSER_PROGRAM // TODO 32-bit offset?
+#! pgm = readInt parser OFFSET_PARSER_PROGRAM
 #! parser = free_parser parser parser
 | free_to_false parser = Nothing
 = Just pgm

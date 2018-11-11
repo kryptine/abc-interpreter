@@ -80,6 +80,7 @@ enum {
 	INSTRUCTION(build_r)
 	INSTRUCTION(build_ra0)
 	INSTRUCTION(build_ra1)
+	INSTRUCTION(build_r0b)
 	INSTRUCTION(buildBFALSE)
 	INSTRUCTION(buildBTRUE)
 	INSTRUCTION(buildB_b)
@@ -177,6 +178,7 @@ enum {
 	INSTRUCTION(fill2a001)
 	INSTRUCTION(fill2a002)
 	INSTRUCTION(fill2a011)
+	INSTRUCTION(fill2a012)
 	INSTRUCTION(fill2ab011)
 	INSTRUCTION(fill2ab013)
 	INSTRUCTION(fill2ab002)
@@ -185,6 +187,7 @@ enum {
 	INSTRUCTION(fill2b002)
 	INSTRUCTION(fill2b011)
 	INSTRUCTION(fill2b012)
+	INSTRUCTION(fill3)
 	INSTRUCTION(fill3a10)
 	INSTRUCTION(fill3a11)
 	INSTRUCTION(fill3a12)
@@ -662,10 +665,6 @@ enum {
 
 	INSTRUCTION(jsr_stack_check)
 	INSTRUCTION(stack_check)
-/* to do: */
-	INSTRUCTION(build_r0b)
-	INSTRUCTION(fill2a012)
-	INSTRUCTION(fill3)
 
 /* Annotations */
 	/* A number of code elems that should not be parsed intelligently (see e.g. on IIIln) */

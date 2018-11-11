@@ -31,7 +31,6 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #endif
 	evaluate_grey_nodes(old_heap, heap_size, &nodes_set);
 
-	/* Pass 1: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1: reverse pointers on the A-stack\n");
 #endif
@@ -50,7 +49,6 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #endif
 	}
 
-	/* Pass 1b: reverse pointers on the A-stack */
 #if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1b: reverse pointers on the CAF list\n");
 #endif
@@ -67,7 +65,6 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	}
 
 #ifdef LINK_CLEAN_RUNTIME
-	/* Pass 1c: reverse pointers on the A-stack */
 # if (DEBUG_GARBAGE_COLLECTOR > 1)
 	fprintf(stderr, "Pass 1c: reverse pointers from the host\n");
 # endif
