@@ -181,6 +181,7 @@ char *instruction_type (BC_WORD i) {
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
 		case Cfill:                  return "?";
+		case Cfill0:                 return "nl";
 		case Cfill0110:              return "n";
 		case Cfill1:                 return "nl";
 		case Cfill2:                 return "nl";

@@ -1481,6 +1481,10 @@ void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 		return;
 	}
 
+	if (arity==0) {
+		add_instruction_w_label(Cfill0,-a_offset,code_name);
+		return;
+	}
 	if (arity<0 || arity==1) {
 		add_instruction_w_label(Cfill1,-a_offset,code_name);
 		return;
