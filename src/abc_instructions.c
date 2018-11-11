@@ -196,6 +196,7 @@ char *instruction_type (BC_WORD i) {
 		case Cfill1011:              return "n";
 		case Cfill1101:              return "nl";
 		case Cfill2a001:             return "nn";
+		case Cfill2a002:             return "nnn";
 		case Cfill2a011:             return "nn";
 		case Cfill2a012:             return "nn";
 		case Cfill2ab002:            return "?";

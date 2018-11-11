@@ -2523,6 +2523,21 @@ INSTRUCTION_BLOCK(fill2a011):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill2a002):
+{
+	BC_WORD *n,*a;
+	BC_WORD_S ao1,ao2;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	ao1=((BC_WORD_S*)pc)[2];
+	ao2=pc[3];
+	a=(BC_WORD*)n[2];
+	a[ao1]=asp[0];
+	a[ao2]=asp[-1];
+	asp-=2;
+	pc+=4;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fill2a012):
 {
 	BC_WORD *n,*a;

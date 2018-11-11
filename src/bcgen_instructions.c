@@ -1605,15 +1605,22 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 	}
 
 	if (n_bits==2) {
-		if (bits[0]=='0' && bits[1]=='1') {
-			int bit_n;
+		if (bits[0]=='0') {
+			int bit_n1,bit_n2;
 
-			for(bit_n=2; bit_n<=arity; ++bit_n)
-				if (bits[bit_n]!='0')
+			for(bit_n1=1; bit_n1<=arity; ++bit_n1)
+				if (bits[bit_n1]!='0')
 					break;
 
-			if (arity>2) {
-				add_instruction_w_w(Cfill2a011,-a_offset,bit_n-2);
+			for(bit_n2=bit_n1+1; bit_n2<=arity; ++bit_n2)
+				if (bits[bit_n2]!='0')
+					break;
+
+			if (bit_n1==1) {
+				add_instruction_w_w(Cfill2a011,-a_offset,bit_n2-2);
+				return;
+			} else {
+				add_instruction_w_w_w(Cfill2a002,-a_offset,bit_n1-2,bit_n2-2);
 				return;
 			}
 		}
@@ -1691,6 +1698,9 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 					return;
 				} else if (bit_n2-1>=a_size) {
 					add_instruction_w_w_w(Cfill2ab002,-root_offset,bit_n1-2,bit_n2-2);
+					return;
+				} else {
+					code_fill2(descriptor_name,a_size,root_offset,bits);
 					return;
 				}
 			} else {
