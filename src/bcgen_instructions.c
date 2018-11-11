@@ -783,6 +783,15 @@ void add_instruction_r(int16_t i,double r) {
 	store_code_elem(8, *((uint64_t*)(&r)));
 }
 
+void add_instruction_w_r(int16_t i,int32_t n,double r) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %f\n",pgrm.code_size,instruction_name (i),r);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(2, n);
+	store_code_elem(8, *((uint64_t*)(&r)));
+}
+
 void add_instruction_internal_label(int16_t i,struct label *label) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),label->label_offset);
@@ -1181,59 +1190,35 @@ void code_build_r(char descriptor_name[],int a_size,int b_size,int a_offset,int 
 }
 
 void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) {
-	if (a_size==0) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u01,code_name);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u01,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u02,code_name); return;
+			case 3:  add_instruction_label(Cbuild_u03,code_name); return;
+			default: add_instruction_w_label(Cbuild_u0b,b_size,code_name); return;
 		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u02,code_name);
-			return;
+		case 1: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u11,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u12,code_name); return;
+			case 3:  add_instruction_label(Cbuild_u13,code_name); return;
+			default: add_instruction_w_label(Cbuild_u1b,b_size,code_name); return;
 		}
-		if (b_size==3) {
-			add_instruction_label(Cbuild_u03,code_name);
-			return;
+		case 2: switch (b_size) {
+			case 1:  add_instruction_label(Cbuild_u21,code_name); return;
+			case 2:  add_instruction_label(Cbuild_u22,code_name); return;
+			default: add_instruction_w_label(Cbuild_u2b,b_size,code_name); return;
 		}
-	} else if (a_size==1) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u11,code_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u12,code_name);
-			return;
-		}
-		if (b_size==3) {
-			add_instruction_label(Cbuild_u13,code_name);
-			return;
-		}
-	} else if (a_size==2) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u21,code_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cbuild_u22,code_name);
-			return;
-		}
-	} else if (a_size==3) {
-		if (b_size==1) {
-			add_instruction_label(Cbuild_u31,code_name);
-			return;
-		}
+		default:
+			if (b_size==1) {
+				if (a_size==3)
+					add_instruction_label(Cbuild_u31,code_name);
+				else
+					add_instruction_w_label(Cbuild_ua1,a_size,code_name);
+				return;
+			} else {
+				add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);
+			}
 	}
-
-	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_w(Cbuild_u,a_size+b_size,code_name,a_size);
-		return;
-	}
-	if (a_size>=4 && b_size==1) {
-		add_instruction_w_label(Cbuild_ua1,a_size,code_name);
-		return;
-	}
-
-	fprintf(stderr, "Error: build_u %s %d %d %s\n",descriptor_name,a_size,b_size,code_name);
-	exit(1);
 }
 
 void code_cosR(void) {
@@ -1460,6 +1445,10 @@ void code_eqR(void) {
 	add_instruction(CeqR);
 }
 
+void code_eqR_b(double value,int b_offset) {
+	add_instruction_w_r(CeqR_b,b_offset,value);
+}
+
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 	add_instruction_w_label_offset(Ceq_desc,-a_offset,descriptor_name,(arity<<3)+2);
 }
@@ -1492,6 +1481,10 @@ void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
 		return;
 	}
 
+	if (arity==0) {
+		add_instruction_w_label(Cfill0,-a_offset,code_name);
+		return;
+	}
 	if (arity<0 || arity==1) {
 		add_instruction_w_label(Cfill1,-a_offset,code_name);
 		return;
@@ -1526,11 +1519,23 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 			else
 				add_instruction_w_label_offset(Cfillh1,-a_offset,descriptor_name,(arity<<3)+2);
 			return;
+		} else {
+			if (bits[0]=='1')
+				add_instruction_w_label_offset(Cfillh0,-a_offset,descriptor_name,(arity<<3)+2);
+			else
+				{} /* nop */
+			return;
 		}
 	} else if (arity==2) {
 		if (bits[1]=='0') {
-			if (bits[0]=='0' && bits[2]=='1') {
-				add_instruction_w(Cfill1001,-a_offset);
+			if (bits[0]=='0') {
+				if (bits[2]=='1')
+					add_instruction_w(Cfill1001,-a_offset);
+				else
+					{} /* nop */
+				return;
+			} else if (bits[0]=='1' && bits[2]=='1') {
+				add_instruction_w_label_offset(Cfill1101,-a_offset,descriptor_name,(arity<<3)+2);
 				return;
 			}
 		} else {
@@ -1555,29 +1560,8 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 
 void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
 	if (b_size==0) {
-		if (a_size==1) {
-			if (bits[0]=='0') {
-				if (bits[1]=='0')
-					return;
-				add_instruction_w(Cfill1010,-root_offset);
-				return;
-			} else {
-				if (bits[1]=='1') {
-					add_instruction_w_label_offset(Cfillh1,-root_offset,descriptor_name,2);
-					return;
-				}
-			}
-		}
-
-		if (a_size==2) {
-			if (bits[0]=='0' && bits[1]=='1') {
-				if (bits[2]=='0')
-					add_instruction_w(Cfill1010,-root_offset);
-				else
-					add_instruction_w(Cfill1011,-root_offset);
-				return;
-			}
-		}
+		code_fill1(descriptor_name,a_size,root_offset,bits);
+		return;
 	} else if (b_size==1) {
 		if (a_size==0) {
 			if (bits[0]=='0') {
@@ -1621,15 +1605,22 @@ void code_fill2(char descriptor_name[],int arity,int a_offset,char bits[]) {
 	}
 
 	if (n_bits==2) {
-		if (bits[0]=='0' && bits[1]=='1') {
-			int bit_n;
+		if (bits[0]=='0') {
+			int bit_n1,bit_n2;
 
-			for(bit_n=2; bit_n<=arity; ++bit_n)
-				if (bits[bit_n]!='0')
+			for(bit_n1=1; bit_n1<=arity; ++bit_n1)
+				if (bits[bit_n1]!='0')
 					break;
 
-			if (arity>2) {
-				add_instruction_w_w(Cfill2a011,-a_offset,bit_n-2);
+			for(bit_n2=bit_n1+1; bit_n2<=arity; ++bit_n2)
+				if (bits[bit_n2]!='0')
+					break;
+
+			if (bit_n1==1) {
+				add_instruction_w_w(Cfill2a011,-a_offset,bit_n2-2);
+				return;
+			} else {
+				add_instruction_w_w_w(Cfill2a002,-a_offset,bit_n1-2,bit_n2-2);
 				return;
 			}
 		}
@@ -1707,6 +1698,9 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 					return;
 				} else if (bit_n2-1>=a_size) {
 					add_instruction_w_w_w(Cfill2ab002,-root_offset,bit_n1-2,bit_n2-2);
+					return;
+				} else {
+					code_fill2(descriptor_name,a_size,root_offset,bits);
 					return;
 				}
 			} else {
@@ -2058,14 +2052,12 @@ void code_jmp(char label_name[]) {
 
 void code_jmp_ap(int n_apply_args) {
 	switch (n_apply_args) {
-		case 1: add_instruction(Cjmp_ap1); break;
-		case 2: add_instruction(Cjmp_ap2); break;
-		case 3: add_instruction(Cjmp_ap3); break;
-		case 4: add_instruction(Cjmp_ap4); break;
-		case 5: add_instruction(Cjmp_ap5); break;
-		default:
-			fprintf(stderr, "Error: jmp_ap %d\n",n_apply_args);
-			exit(1);
+		case 1:  add_instruction(Cjmp_ap1); break;
+		case 2:  add_instruction(Cjmp_ap2); break;
+		case 3:  add_instruction(Cjmp_ap3); break;
+		case 4:  add_instruction(Cjmp_ap4); break;
+		case 5:  add_instruction(Cjmp_ap5); break;
+		default: add_instruction_w(Cjmp_ap,n_apply_args); break;
 	}
 }
 
@@ -2148,10 +2140,8 @@ void code_jsr_ap(int n_apply_args) {
 		case 3: add_instruction(Cjsr_ap3); return;
 		case 4: add_instruction(Cjsr_ap4); return;
 		case 5: add_instruction(Cjsr_ap5); return;
+		default: add_instruction_w(Cjsr_ap,n_apply_args); return;
 	}
-
-	fprintf(stderr, "Error: jsr_ap %d\n",n_apply_args);
-	exit(1);
 }
 
 void code_jsr_eval(int a_offset) {
@@ -2395,26 +2385,26 @@ void code_pushR_a(int a_offset) {
 void code_pushcaf(char *label_name,int a_size,int b_size) {
 	if (a_size==1) {
 		if (b_size==0) {
-			add_instruction_label_offset(Cpushcaf10,label_name,4);
+			add_instruction_label(Cpushcaf10,label_name);
 			return;
 		}
 		if (b_size==1) {
-			add_instruction_label_offset(Cpushcaf11,label_name,4);
+			add_instruction_label(Cpushcaf11,label_name);
 			return;
 		}
 	} else if (a_size==2) {
 		if (b_size==0) {
-			add_instruction_label_offset(Cpushcaf20,label_name,4);
+			add_instruction_label(Cpushcaf20,label_name);
 			return;
 		}
 	} else if (a_size==3) {
 		if (b_size==1) {
-			add_instruction_label_offset(Cpushcaf31,label_name,4);
+			add_instruction_label(Cpushcaf31,label_name);
 			return;
 		}
 	}
-	fprintf(stderr, "Error: pushcaf %s %d %d\n",label_name,a_size,b_size);
-	exit(1);
+
+	add_instruction_w_w_label(Cpushcaf,a_size,a_size+b_size,label_name);
 }
 
 void code_push_a(int a_offset) {
@@ -2544,55 +2534,32 @@ void code_push_node(char *label_name,int n_arguments) {
 }
 
 void code_push_node_u(char *label_name,int a_size,int b_size) {
-	if (a_size==0) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u01,label_name);
-			return;
+	switch (a_size) {
+		case 0: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u01,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u02,label_name); return;
+			case 3:  add_instruction_label(Cpush_node_u03,label_name); return;
+			default: add_instruction_w_label(Cpush_node_u0b,b_size,label_name); return;
 		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u02,label_name);
-			return;
+		case 1: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u11,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u12,label_name); return;
+			case 3:  add_instruction_label(Cpush_node_u13,label_name); return;
+			default: add_instruction_w_label(Cpush_node_u1b,b_size,label_name); return;
 		}
-		if (b_size==3) {
-			add_instruction_label(Cpush_node_u03,label_name);
-			return;
+		case 2: switch (b_size) {
+			case 1:  add_instruction_label(Cpush_node_u21,label_name); return;
+			case 2:  add_instruction_label(Cpush_node_u22,label_name); return;
+			default: add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size); return;
 		}
-	} else if (a_size==1) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u11,label_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u12,label_name);
-			return;
-		}
-		if (b_size==3) {
-			add_instruction_label(Cpush_node_u13,label_name);
-			return;
-		}
-	} else if (a_size==2) {
-		if (b_size==1) {
-			add_instruction_label(Cpush_node_u21,label_name);
-			return;
-		}
-		if (b_size==2) {
-			add_instruction_label(Cpush_node_u22,label_name);
-			return;
-		}
-	} else if (a_size==3 && b_size==1) {
-		add_instruction_label(Cpush_node_u31,label_name);
-		return;
+		default:
+			if (a_size==3 && b_size==1)
+				add_instruction_label(Cpush_node_u31,label_name);
+			else if (a_size>3 && b_size==1)
+				add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
+			else
+				add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size);
 	}
-
-	if (a_size>=2 && b_size>=2) {
-		add_instruction_w_label_w(Cpush_node_u,a_size,label_name,b_size);
-		return;
-	} else if (a_size>=3 && b_size==1) {
-		add_instruction_w_label(Cpush_node_ua1,a_size,label_name);
-		return;
-	}
-	fprintf(stderr, "Error: push_node_u %s %d %d\n",label_name,a_size,b_size);
-	exit(1);
 }
 
 void code_remI(void) {
@@ -2734,8 +2701,7 @@ void code_push_r_args_a(int a_offset,int a_size,int b_size,int argument_number,i
 		return;
 	}
 
-	fprintf(stderr, "Error: push_r_args_a %d %d %d %d %d\n",a_offset,a_size,b_size,argument_number,n_arguments);
-	exit(1);
+	add_instruction_w_w_w_w(Cpush_r_args_a,-a_offset,a_size+b_size,argument_number,n_arguments);
 }
 
 void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,int n_arguments) {
@@ -2982,8 +2948,7 @@ void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_argument
 		return;
 	}
 
-	fprintf(stderr, "Error: repl_r_args_a %d %d %d %d\n",a_size,b_size,argument_number,n_arguments);
-	exit(1);
+	add_instruction_w_w_w(Crepl_r_args_a,a_size+b_size,argument_number,n_arguments);
 }
 
 void code_rtn(void) {
@@ -3325,6 +3290,11 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 void code_ccall (char *c_function_name,char *s,int length) {
 	unsupported_instruction_warning(Cccall);
 	add_instruction(Cccall);
+}
+
+void code_centry (char *c_function_name,char *clean_function_label,char *s,int length) {
+	unsupported_instruction_warning(Ccentry);
+	add_instruction(Ccentry);
 }
 
 void code_dup_a(int a_offset) {

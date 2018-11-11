@@ -188,12 +188,8 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		return snprintf(s, size, "__STRING__");
 	else if (label == (BC_WORD*) ((BC_WORD)&__ARRAY__|2))
 		return snprintf(s, size, "__ARRAY__");
-	else if (label == &Fjmp_ap1)
-		return snprintf(s, size, "{jmp_ap1}");
-	else if (label == &Fjmp_ap2)
-		return snprintf(s, size, "{jmp_ap2}");
-	else if (label == &Fjmp_ap3)
-		return snprintf(s, size, "{jmp_ap3}");
+	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[63])
+		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)/2+1);
 
 	int used = 0;
 	if (include_plain_address) {

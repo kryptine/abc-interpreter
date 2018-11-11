@@ -546,7 +546,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " __STRING__");
 	else if (node[0] == (BC_WORD) &__ARRAY__+2)
 		wprintw(win, " __ARRAY__");
-	else if (node[0] == (BC_WORD) ARRAY+18)
+	else if (node[0] == (BC_WORD) ARRAY+2+IF_INT_64_OR_32(16,8))
 		wprintw(win, " ARRAY");
 	else {
 		char _tmp[256];

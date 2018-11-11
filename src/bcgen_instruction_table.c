@@ -71,6 +71,7 @@ void load_instruction_table(void) {
 	put_instruction_name("build_r",               parse_instruction_a_n_n_n_n,     code_build_r );
 	put_instruction_name("build_u",               parse_instruction_a_n_n_a,       code_build_u );
 	put_instruction_name("ccall",                 parse_instruction_l_s,           code_ccall );
+	put_instruction_name("centry",                parse_instruction_l_a_s,         code_centry );
 	put_instruction_name("cosR",                  parse_instruction,               code_cosR );
 	put_instruction_name("create",                parse_instruction_on,            code_create );
 	put_instruction_name("create_array",          parse_instruction_a_n_n,         code_create_array );
@@ -92,6 +93,7 @@ void load_instruction_table(void) {
 	put_instruction_name("eqI_a",                 parse_instruction_i_n,           code_eqI_a );
 	put_instruction_name("eqI_b",                 parse_instruction_i_n,           code_eqI_b );
 	put_instruction_name("eqR",                   parse_instruction,               code_eqR );
+	put_instruction_name("eqR_b",                 parse_instruction_r_n,           code_eqR_b );
 	put_instruction_name("eq_desc",               parse_instruction_a_n_n,         code_eq_desc );
 	put_instruction_name("eq_desc_b",             parse_instruction_a_n,           code_eq_desc_b );
 	put_instruction_name("eq_nulldesc",           parse_instruction_a_n,           code_eq_nulldesc );

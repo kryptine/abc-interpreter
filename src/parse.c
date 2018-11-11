@@ -190,9 +190,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	/* See rationale in interpret.h */
 	interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
-	Fjmp_ap1 = (BC_WORD) instruction_labels[Fjmp_ap1];
-	Fjmp_ap2 = (BC_WORD) instruction_labels[Fjmp_ap2];
-	Fjmp_ap3 = (BC_WORD) instruction_labels[Fjmp_ap3];
+	for (int i=0; i<32; i++)
+		Fjmp_ap[i*2]=(BC_WORD)instruction_labels[Fjmp_ap[i*2]];
 
 	__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[0]];
 	__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[1]];

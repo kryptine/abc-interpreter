@@ -1157,6 +1157,17 @@ int parse_instruction_r (instruction *instruction)
 	return 1;
 }
 
+int parse_instruction_r_n (instruction *instruction)
+{
+	double r;
+	int64_t n;
+
+	if (!parse_real (&r) || !parse_unsigned_integer (&n))
+		return 0;
+	instruction->code_function (r,(int)n);
+	return 1;
+}
+
 int parse_instruction_l (instruction *instruction)
 {
 	STRING a;
@@ -1176,6 +1187,20 @@ int parse_instruction_l_s (instruction *instruction)
 		return 0;
 
 	instruction->code_function (l1,s1,l);
+	return 1;
+}
+
+int parse_instruction_l_a_s (instruction *instruction)
+{
+	STRING l1,l2,s1;
+	int l;
+
+	parse_label_without_conversion (l1);
+	parse_label (l2);
+	if (!parse_string (s1,&l))
+		return 0;
+
+	instruction->code_function (l1,l2,s1,l);
 	return 1;
 }
 

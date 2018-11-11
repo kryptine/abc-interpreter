@@ -1362,6 +1362,51 @@ INSTRUCTION_BLOCK(build_u03):
 	hp+=4;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u0b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+1);
+	hp[0]=pc[2];
+	hp[1]=bsp[0];
+	hp[2]=bsp[1];
+	hp[3]=bsp[2];
+	hp[4]=bsp[3];
+	do {
+		if (n_b< 5) break; hp[ 5]=bsp[ 4];
+		if (n_b< 6) break; hp[ 6]=bsp[ 5];
+		if (n_b< 7) break; hp[ 7]=bsp[ 6];
+		if (n_b< 8) break; hp[ 8]=bsp[ 7];
+		if (n_b< 9) break; hp[ 9]=bsp[ 8];
+		if (n_b<10) break; hp[10]=bsp[ 9];
+		if (n_b<11) break; hp[11]=bsp[10];
+		if (n_b<12) break; hp[12]=bsp[11];
+		if (n_b<13) break; hp[13]=bsp[12];
+		if (n_b<14) break; hp[14]=bsp[13];
+		if (n_b<15) break; hp[15]=bsp[14];
+		if (n_b<16) break; hp[16]=bsp[15];
+		if (n_b<17) break; hp[17]=bsp[16];
+		if (n_b<18) break; hp[18]=bsp[17];
+		if (n_b<19) break; hp[19]=bsp[18];
+		if (n_b<20) break; hp[20]=bsp[19];
+		if (n_b<21) break; hp[21]=bsp[20];
+		if (n_b<22) break; hp[22]=bsp[21];
+		if (n_b<23) break; hp[23]=bsp[22];
+		if (n_b<24) break; hp[24]=bsp[23];
+		if (n_b<25) break; hp[25]=bsp[24];
+		if (n_b<26) break; hp[26]=bsp[25];
+		if (n_b<27) break; hp[27]=bsp[26];
+		if (n_b<28) break; hp[28]=bsp[27];
+		if (n_b<29) break; hp[29]=bsp[28];
+		if (n_b<30) break; hp[30]=bsp[29];
+		if (n_b<31) break; hp[31]=bsp[30];
+		if (n_b<32) break; hp[32]=bsp[31];
+	} while (0);
+	*++asp=(BC_WORD)hp;
+	bsp+=n_b;
+	hp+=n_b+1;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u11):
 	NEED_HEAP(3);
 	hp[0]=pc[1];
@@ -1394,6 +1439,51 @@ INSTRUCTION_BLOCK(build_u13):
 	hp+=5;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u1b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+2);
+	hp[0]=pc[2];
+	hp[1]=asp[0];
+	hp[2]=bsp[0];
+	hp[3]=bsp[1];
+	hp[4]=bsp[2];
+	hp[5]=bsp[3];
+	do {
+		if (n_b< 5) break; hp[ 6]=bsp[ 4];
+		if (n_b< 6) break; hp[ 7]=bsp[ 5];
+		if (n_b< 7) break; hp[ 8]=bsp[ 6];
+		if (n_b< 8) break; hp[ 9]=bsp[ 7];
+		if (n_b< 9) break; hp[10]=bsp[ 8];
+		if (n_b<10) break; hp[11]=bsp[ 9];
+		if (n_b<11) break; hp[12]=bsp[10];
+		if (n_b<12) break; hp[13]=bsp[11];
+		if (n_b<13) break; hp[14]=bsp[12];
+		if (n_b<14) break; hp[15]=bsp[13];
+		if (n_b<15) break; hp[16]=bsp[14];
+		if (n_b<16) break; hp[17]=bsp[15];
+		if (n_b<17) break; hp[18]=bsp[16];
+		if (n_b<18) break; hp[19]=bsp[17];
+		if (n_b<19) break; hp[20]=bsp[18];
+		if (n_b<20) break; hp[21]=bsp[19];
+		if (n_b<21) break; hp[22]=bsp[20];
+		if (n_b<22) break; hp[23]=bsp[21];
+		if (n_b<23) break; hp[24]=bsp[22];
+		if (n_b<24) break; hp[25]=bsp[23];
+		if (n_b<25) break; hp[26]=bsp[24];
+		if (n_b<26) break; hp[27]=bsp[25];
+		if (n_b<27) break; hp[28]=bsp[26];
+		if (n_b<28) break; hp[29]=bsp[27];
+		if (n_b<29) break; hp[30]=bsp[28];
+		if (n_b<30) break; hp[31]=bsp[29];
+		if (n_b<31) break; hp[32]=bsp[30];
+	} while (0);
+	asp[0]=(BC_WORD)hp;
+	bsp+=n_b;
+	hp+=n_b+2;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u21):
 	NEED_HEAP(4);
 	hp[0]=pc[1];
@@ -1419,6 +1509,52 @@ INSTRUCTION_BLOCK(build_u22):
 	hp+=5;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(build_u2b):
+{
+	int n_b=pc[1];
+	NEED_HEAP(n_b+3);
+	hp[0]=pc[2];
+	hp[1]=asp[0];
+	hp[2]=asp[-1];
+	hp[3]=bsp[0];
+	hp[4]=bsp[1];
+	hp[5]=bsp[2];
+	do {
+		if (n_b< 4) break; hp[ 6]=bsp[ 3];
+		if (n_b< 5) break; hp[ 7]=bsp[ 4];
+		if (n_b< 6) break; hp[ 8]=bsp[ 5];
+		if (n_b< 7) break; hp[ 9]=bsp[ 6];
+		if (n_b< 8) break; hp[10]=bsp[ 7];
+		if (n_b< 9) break; hp[11]=bsp[ 8];
+		if (n_b<10) break; hp[12]=bsp[ 9];
+		if (n_b<11) break; hp[13]=bsp[10];
+		if (n_b<12) break; hp[14]=bsp[11];
+		if (n_b<13) break; hp[15]=bsp[12];
+		if (n_b<14) break; hp[16]=bsp[13];
+		if (n_b<15) break; hp[17]=bsp[14];
+		if (n_b<16) break; hp[18]=bsp[15];
+		if (n_b<17) break; hp[19]=bsp[16];
+		if (n_b<18) break; hp[20]=bsp[17];
+		if (n_b<19) break; hp[21]=bsp[18];
+		if (n_b<20) break; hp[22]=bsp[19];
+		if (n_b<21) break; hp[23]=bsp[20];
+		if (n_b<22) break; hp[24]=bsp[21];
+		if (n_b<23) break; hp[25]=bsp[22];
+		if (n_b<24) break; hp[26]=bsp[23];
+		if (n_b<25) break; hp[27]=bsp[24];
+		if (n_b<26) break; hp[28]=bsp[25];
+		if (n_b<27) break; hp[29]=bsp[26];
+		if (n_b<28) break; hp[30]=bsp[27];
+		if (n_b<29) break; hp[31]=bsp[28];
+		if (n_b<30) break; hp[32]=bsp[29];
+	} while (0);
+	asp[-1]=(BC_WORD)hp;
+	asp--;
+	bsp+=n_b;
+	hp+=n_b+3;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(build_u31):
 	NEED_HEAP(5);
 	hp[0]=pc[1];
@@ -1495,16 +1631,46 @@ INSTRUCTION_BLOCK(create):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(creates):
 {
-	BC_WORD n_a_p_1,i;
+	BC_WORD n_a_p_1;
 
 	n_a_p_1=pc[1];
 	NEED_HEAP(n_a_p_1);
-	hp[0]=(BC_WORD)&__cycle__in__spine; /* to do */
+	hp[0]=(BC_WORD)&__cycle__in__spine; /* TODO */
 	hp[1]=(BC_WORD)hp;
 	hp[2]=(BC_WORD)hp;
 	pc+=2;
-	for (i=3; i<n_a_p_1; ++i)
-		hp[i]=(BC_WORD)hp;
+	do {
+		if (n_a_p_1< 3) break; hp[ 3]=(BC_WORD)hp;
+		if (n_a_p_1< 4) break; hp[ 4]=(BC_WORD)hp;
+		if (n_a_p_1< 5) break; hp[ 5]=(BC_WORD)hp;
+		if (n_a_p_1< 6) break; hp[ 6]=(BC_WORD)hp;
+		if (n_a_p_1< 7) break; hp[ 7]=(BC_WORD)hp;
+		if (n_a_p_1< 8) break; hp[ 8]=(BC_WORD)hp;
+		if (n_a_p_1< 9) break; hp[ 9]=(BC_WORD)hp;
+		if (n_a_p_1<10) break; hp[10]=(BC_WORD)hp;
+		if (n_a_p_1<11) break; hp[11]=(BC_WORD)hp;
+		if (n_a_p_1<12) break; hp[12]=(BC_WORD)hp;
+		if (n_a_p_1<13) break; hp[13]=(BC_WORD)hp;
+		if (n_a_p_1<14) break; hp[14]=(BC_WORD)hp;
+		if (n_a_p_1<15) break; hp[15]=(BC_WORD)hp;
+		if (n_a_p_1<16) break; hp[16]=(BC_WORD)hp;
+		if (n_a_p_1<17) break; hp[17]=(BC_WORD)hp;
+		if (n_a_p_1<18) break; hp[18]=(BC_WORD)hp;
+		if (n_a_p_1<19) break; hp[19]=(BC_WORD)hp;
+		if (n_a_p_1<20) break; hp[20]=(BC_WORD)hp;
+		if (n_a_p_1<21) break; hp[21]=(BC_WORD)hp;
+		if (n_a_p_1<22) break; hp[22]=(BC_WORD)hp;
+		if (n_a_p_1<23) break; hp[23]=(BC_WORD)hp;
+		if (n_a_p_1<24) break; hp[24]=(BC_WORD)hp;
+		if (n_a_p_1<25) break; hp[25]=(BC_WORD)hp;
+		if (n_a_p_1<26) break; hp[26]=(BC_WORD)hp;
+		if (n_a_p_1<27) break; hp[27]=(BC_WORD)hp;
+		if (n_a_p_1<28) break; hp[28]=(BC_WORD)hp;
+		if (n_a_p_1<29) break; hp[29]=(BC_WORD)hp;
+		if (n_a_p_1<30) break; hp[30]=(BC_WORD)hp;
+		if (n_a_p_1<31) break; hp[31]=(BC_WORD)hp;
+		if (n_a_p_1<32) break; hp[32]=(BC_WORD)hp;
+	} while (0);
 	*++asp=(BC_WORD)hp;
 	hp+=n_a_p_1;
 	END_INSTRUCTION_BLOCK;
@@ -1523,16 +1689,22 @@ INSTRUCTION_BLOCK(create_array):
 	asp[0]=(BC_WORD)hp;
 	hp+=3;
 	pc+=1;
-	while (s!=0){
-		hp[0] = n;
-		hp+=1;
-		--s;
+	while (s>3){
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		s-=4;
 	}
+	hp+=s;
+	while (s)
+		hp[-(s--)]=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_arrayBOOL):
 {
-	BC_WORD s,i,n,sw;
+	BC_WORD s,n,sw;
 
 	s=bsp[0];
 #if (WORD_WIDTH == 64)
@@ -1553,15 +1725,23 @@ INSTRUCTION_BLOCK(create_arrayBOOL):
 #endif
 	bsp+=2;
 	*++asp=(BC_WORD)hp;
-	for (i=0; i!=sw; ++i)
-		hp[i]=n;
+	while (sw>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		sw-=4;
+	}
 	hp+=sw;
+	while (sw)
+		hp[-(sw--)]=n;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_arrayCHAR):
 {
-	BC_WORD s,i,n,sw;
+	BC_WORD s,n,sw;
 
 	s=bsp[0];
 #if (WORD_WIDTH == 64)
@@ -1581,15 +1761,23 @@ INSTRUCTION_BLOCK(create_arrayCHAR):
 	n = (n<<24) | (n<<16) | (n<<8) | n;
 #endif
 	bsp+=2;
-	for (i=0; i!=sw; ++i)
-		hp[i]=n;
+	while (sw>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		sw-=4;
+	}
 	hp+=sw;
+	while (sw)
+		hp[-(sw--)]=n;
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_arrayINT):
 {
-	BC_WORD s,i,n;
+	BC_WORD s,n;
 
 	s=bsp[0];
 	NEED_HEAP(s+3);
@@ -1601,14 +1789,22 @@ INSTRUCTION_BLOCK(create_arrayINT):
 	n=bsp[1];
 	bsp+=2;
 	pc+=1;
-	for (i=0; i!=s; ++i)
-		hp[i]=n;
+	while (s>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		s-=4;
+	}
 	hp+=s;
+	while (s)
+		hp[-(s--)]=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_arrayREAL):
 {
-	BC_WORD s,i,n;
+	BC_WORD s,n;
 
 	s=bsp[0];
 	NEED_HEAP(s+3);
@@ -1620,14 +1816,22 @@ INSTRUCTION_BLOCK(create_arrayREAL):
 	n=bsp[1];
 	bsp+=2;
 	pc+=1;
-	for (i=0; i!=s; ++i)
-		hp[i]=n;
+	while (s>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		s-=4;
+	}
 	hp+=s;
+	while (s)
+		hp[-(s--)]=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_array_):
 {
-	BC_WORD s,i;
+	BC_WORD s;
 
 	s=bsp[0];
 	NEED_HEAP(s+3);
@@ -1638,9 +1842,18 @@ INSTRUCTION_BLOCK(create_array_):
 	*++asp=(BC_WORD)hp;
 	hp+=3;
 	pc+=1;
-	for (i=0; i!=s; ++i)
-		hp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
+	BC_WORD n=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
+	while (s>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		s-=4;
+	}
 	hp+=s;
+	while (s)
+		hp[-(s--)]=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_array_BOOL):
@@ -1708,10 +1921,17 @@ INSTRUCTION_BLOCK(create_array_r):
 	asp-=n_a-1;
 	pc+=4;
 	i=0;
-	while (i!=n_a){
-		*--bsp = asp[i];
-		++i;
+	BC_WORD *ao=asp;
+	while (i<n_a-3){
+		bsp[-1]=ao[0];
+		bsp[-2]=ao[1];
+		bsp[-3]=ao[2];
+		bsp[-4]=ao[3];
+		i+=4;
+		ao+=4;
 	}
+	for (; i!=n_a; i++)
+		*--bsp=asp[i];
 	if (n_ab>2){
 		while (s!=0){
 			hp[0] = bsp[0];
@@ -1764,7 +1984,7 @@ INSTRUCTION_BLOCK(create_array_r_):
 }
 INSTRUCTION_BLOCK(create_array_r_a):
 {
-	BC_WORD s,i,n_a,a_n_a;
+	BC_WORD s,n_a,a_n_a;
 
 	s=bsp[0];
 	n_a=pc[1];
@@ -1777,9 +1997,18 @@ INSTRUCTION_BLOCK(create_array_r_a):
 	*++asp=(BC_WORD)hp;
 	hp+=3;
 	pc+=3;
-	for (i=0; i!=a_n_a; ++i)
-		hp[i] = ((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
+	BC_WORD n=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
+	while (a_n_a>3) {
+		hp[0]=n;
+		hp[1]=n;
+		hp[2]=n;
+		hp[3]=n;
+		hp+=4;
+		a_n_a-=4;
+	}
 	hp+=a_n_a;
+	while (a_n_a)
+		hp[-(a_n_a--)]=n;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(create_array_r_b):
@@ -1875,15 +2104,23 @@ INSTRUCTION_BLOCK(eqAC):
 	n+=2;
 	s+=2;
 	for (;;){
-		// TODO make 64/32-bit agnostic
-		if (length>=4){
+		if (length>=IF_INT_64_OR_32(8,4)){
 			if (*n!=*s)
 				break;
 			++n;
 			++s;
-			length-=4;
+			length-=IF_INT_64_OR_32(8,4);
 			continue;
 		}
+#if WORD_WIDTH==64
+		if (length>=4){
+			if (*(uint32_t*)n!=*(uint32_t*)s)
+				break;
+			length-=4;
+			n=(BC_WORD*)((BC_WORD)n+4);
+			s=(BC_WORD*)((BC_WORD)s+4);
+		}
+#endif
 		if (length>=2){
 			if (*(uint16_t*)n!=*(uint16_t*)s)
 				break;
@@ -1916,15 +2153,23 @@ INSTRUCTION_BLOCK(eqAC_a):
 	n+=2;
 	s+=1;
 	for (;;){
-		// TODO make 64/32-bit agnostic
-		if (length>=4){
+		if (length>=IF_INT_64_OR_32(8,4)){
 			if (*n!=*s)
 				break;
 			++n;
 			++s;
-			length-=4;
+			length-=IF_INT_64_OR_32(8,4);
 			continue;
 		}
+#if WORD_WIDTH==64
+		if (length>=4){
+			if (*(uint32_t*)n!=*(uint32_t*)s)
+				break;
+			length-=4;
+			n=(BC_WORD*)((BC_WORD)n+4);
+			s=(BC_WORD*)((BC_WORD)s+4);
+		}
+#endif
 		if (length>=2){
 			if (*(uint16_t*)n!=*(uint16_t*)s)
 				break;
@@ -2017,6 +2262,17 @@ INSTRUCTION_BLOCK(eqI_b):
 
 	bo=((BC_WORD_S*)pc)[1];
 	b=bsp[bo]==(BC_WORD_S)pc[2];
+	*--bsp=b;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(eqR_b):
+{
+	int b;
+	BC_WORD_S bo;
+
+	bo=((BC_WORD_S*)pc)[1];
+	b=*(BC_REAL*)&bsp[bo]==*(BC_REAL*)&pc[2];
 	*--bsp=b;
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
@@ -2157,6 +2413,7 @@ INSTRUCTION_BLOCK(fillh):
 	asp-=s_m_1+1;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill0):
 INSTRUCTION_BLOCK(fillh0):
 {
 	BC_WORD *n;
@@ -2172,7 +2429,7 @@ INSTRUCTION_BLOCK(fillh1):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	n[0]=*(BC_WORD_S*)&pc[2];
+	n[0]=pc[2];
 	n[1]=asp[0];
 	--asp;
 	pc+=3;
@@ -2229,6 +2486,17 @@ INSTRUCTION_BLOCK(fill1011):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill1101):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[2]=asp[0];
+	--asp;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fill2a001):
 {
 	BC_WORD *n,*a;
@@ -2253,6 +2521,21 @@ INSTRUCTION_BLOCK(fill2a011):
 	a[ao]=asp[-1];
 	asp-=2;
 	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill2a002):
+{
+	BC_WORD *n,*a;
+	BC_WORD_S ao1,ao2;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	ao1=((BC_WORD_S*)pc)[2];
+	ao2=pc[3];
+	a=(BC_WORD*)n[2];
+	a[ao1]=asp[0];
+	a[ao2]=asp[-1];
+	asp-=2;
+	pc+=4;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill2a012):
@@ -3399,9 +3682,8 @@ INSTRUCTION_BLOCK(print):
 	pc+=2;
 	length=s[0];
 	cs=(char*)&s[1];
-	for (i=0; i<length; ++i) {
+	for (i=0; i<length; ++i)
 		PUTCHAR(*cs++);
-	}
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(printD):
@@ -3417,9 +3699,8 @@ INSTRUCTION_BLOCK(printD):
 		l=s[0];
 	}
 	cs=(char*)&s[1];
-	for (i=0; i<l; ++i) {
-		PUTCHAR(cs[i]);
-	}
+	for (i=0; i<l; ++i)
+		PUTCHAR(*cs++);
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
@@ -3429,15 +3710,15 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	d=n[0];
-	if (d==(BC_WORD)&INT+2){
+	if (d==(BC_WORD)&INT+2)
 		PRINTF(BC_WORD_S_FMT,(BC_WORD_S)n[1]);
-	} else if (d==(BC_WORD)&BOOL+2) {
-		PRINTF("%s",n[1] ? "True" : "False");
-	} else if (d==(BC_WORD)&CHAR+2){
-		PRINTF("'%c'",(int)n[1]);
-	} else if (d==(BC_WORD)&REAL+2){
-		PRINTF("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
-	} else {
+	else if (d==(BC_WORD)&BOOL+2)
+	  PRINTF("%s",n[1] ? "True" : "False");
+	else if (d==(BC_WORD)&CHAR+2)
+	  PRINTF("'%c'",(int)n[1]);
+	else if (d==(BC_WORD)&REAL+2)
+	  PRINTF("%.15g", (*(BC_REAL*)&n[1]) + 0.0);
+	else {
 		uint32_t *s;
 		int l,i;
 		char *cs;
@@ -3449,7 +3730,7 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 			int child_descriptors=0;
 			char *type_string=(char*)(d+IF_INT_64_OR_32(14,6));
 			for (int i=0; i<ts_len; i++)
-				if (type_string[i]=='{')
+				if (*type_string++=='{')
 					child_descriptors++;
 			ts_len = (ts_len+IF_INT_64_OR_32(7,3)) / IF_INT_64_OR_32(8,4);
 			ts_len += child_descriptors;
@@ -3464,9 +3745,8 @@ INSTRUCTION_BLOCK(print_symbol_sc):
 		}
 		l=s[0];
 		cs=(char*)&s[IF_INT_64_OR_32(2,1)];
-		for (i=0; i<l; ++i) {
-			PUTCHAR(cs[i]);
-		}
+		for (i=0; i<l; ++i)
+			PUTCHAR(*cs++);
 	}
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
@@ -3552,15 +3832,32 @@ INSTRUCTION_BLOCK(push_r_args02):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(pushcaf):
+{
+	BC_WORD *n;
+	int na,ntotal,i;
+	na=pc[1]+1;
+	ntotal=pc[2];
+
+	n=(BC_WORD*)pc[3];
+	for (i=0; i<na; i++)
+		asp[na-i]=*n++;
+	asp+=na;
+	for (; i<ntotal; i++)
+		bsp[na-ntotal+i]=*n++;
+	bsp-=ntotal-na;
+	pc+=4;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(pushcaf10):
-	*++asp=*(BC_WORD*)pc[1];
+	*++asp=*((BC_WORD*)pc[1]+1);
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pushcaf31):
 {
 	BC_WORD *n;
 
-	n=(BC_WORD*)pc[1];
+	n=(BC_WORD*)pc[1]+1;
 	asp[3]=n[0];
 	asp[2]=n[1];
 	asp[1]=n[2];
@@ -3644,6 +3941,7 @@ INSTRUCTION_BLOCK(push_r_args_a4):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(push_args):
+INSTRUCTION_BLOCK(push_args_u): /* no instruction reordering in the interpreter */
 INSTRUCTION_BLOCK(push_r_argsa0):
 {
 	BC_WORD *n,*a,n_a;
@@ -4086,6 +4384,51 @@ INSTRUCTION_BLOCK(push_node_u03):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_node_u0b):
+{
+	BC_WORD *n;
+	int n_b=pc[1];
+
+	n=(BC_WORD*)*asp;
+	n[0]=pc[2];
+	bsp-=n_b;
+	bsp[0]=n[1];
+	bsp[1]=n[2];
+	bsp[2]=n[3];
+	bsp[3]=n[4];
+	do {
+		if (n_b< 5) break; bsp[ 4]=n[ 5];
+		if (n_b< 6) break; bsp[ 5]=n[ 6];
+		if (n_b< 7) break; bsp[ 6]=n[ 7];
+		if (n_b< 8) break; bsp[ 7]=n[ 8];
+		if (n_b< 9) break; bsp[ 8]=n[ 9];
+		if (n_b<10) break; bsp[ 9]=n[10];
+		if (n_b<11) break; bsp[10]=n[11];
+		if (n_b<12) break; bsp[11]=n[12];
+		if (n_b<13) break; bsp[12]=n[13];
+		if (n_b<14) break; bsp[13]=n[14];
+		if (n_b<15) break; bsp[14]=n[15];
+		if (n_b<16) break; bsp[15]=n[16];
+		if (n_b<17) break; bsp[16]=n[17];
+		if (n_b<18) break; bsp[17]=n[18];
+		if (n_b<19) break; bsp[18]=n[19];
+		if (n_b<20) break; bsp[19]=n[20];
+		if (n_b<21) break; bsp[20]=n[21];
+		if (n_b<22) break; bsp[21]=n[22];
+		if (n_b<23) break; bsp[22]=n[23];
+		if (n_b<24) break; bsp[23]=n[24];
+		if (n_b<25) break; bsp[24]=n[25];
+		if (n_b<26) break; bsp[25]=n[26];
+		if (n_b<27) break; bsp[26]=n[27];
+		if (n_b<28) break; bsp[27]=n[28];
+		if (n_b<29) break; bsp[28]=n[29];
+		if (n_b<30) break; bsp[29]=n[30];
+		if (n_b<31) break; bsp[30]=n[31];
+		if (n_b<32) break; bsp[31]=n[32];
+	} while (0);
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_node_u11):
 {
 	BC_WORD *n;
@@ -4122,6 +4465,52 @@ INSTRUCTION_BLOCK(push_node_u13):
 	bsp[-1]=n[4];
 	bsp-=3;
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(push_node_u1b):
+{
+	BC_WORD *n;
+	int n_b=pc[1];
+
+	n=(BC_WORD*)*asp;
+	n[0]=pc[2];
+	*++asp=n[1];
+	bsp-=n_b;
+	bsp[0]=n[2];
+	bsp[1]=n[3];
+	bsp[2]=n[4];
+	bsp[3]=n[5];
+	do {
+		if (n_b< 5) break; bsp[ 4]=n[ 6];
+		if (n_b< 6) break; bsp[ 5]=n[ 7];
+		if (n_b< 7) break; bsp[ 6]=n[ 8];
+		if (n_b< 8) break; bsp[ 7]=n[ 9];
+		if (n_b< 9) break; bsp[ 8]=n[10];
+		if (n_b<10) break; bsp[ 9]=n[11];
+		if (n_b<11) break; bsp[10]=n[12];
+		if (n_b<12) break; bsp[11]=n[13];
+		if (n_b<13) break; bsp[12]=n[14];
+		if (n_b<14) break; bsp[13]=n[15];
+		if (n_b<15) break; bsp[14]=n[16];
+		if (n_b<16) break; bsp[15]=n[17];
+		if (n_b<17) break; bsp[16]=n[18];
+		if (n_b<18) break; bsp[17]=n[19];
+		if (n_b<19) break; bsp[18]=n[20];
+		if (n_b<20) break; bsp[19]=n[21];
+		if (n_b<21) break; bsp[20]=n[22];
+		if (n_b<22) break; bsp[21]=n[23];
+		if (n_b<23) break; bsp[22]=n[24];
+		if (n_b<24) break; bsp[23]=n[25];
+		if (n_b<25) break; bsp[24]=n[26];
+		if (n_b<26) break; bsp[25]=n[27];
+		if (n_b<27) break; bsp[26]=n[28];
+		if (n_b<28) break; bsp[27]=n[29];
+		if (n_b<29) break; bsp[28]=n[30];
+		if (n_b<30) break; bsp[29]=n[31];
+		if (n_b<31) break; bsp[30]=n[32];
+		if (n_b<32) break; bsp[31]=n[33];
+	} while (0);
+	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(push_node_u22):
@@ -4505,6 +4894,36 @@ INSTRUCTION_BLOCK(push_r_args_aa1):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(push_r_args_a):
+{
+	BC_WORD *n;
+	int size,arg_no,nr_args;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	size=pc[2];
+	arg_no=pc[3];
+	nr_args=pc[4];
+
+	if (size < 3) { /* must be two A elements */
+		asp[1]=n[2];
+		asp[2]=n[1];
+	} else {
+		if (arg_no==1) {
+			asp[nr_args]=n[1];
+			asp++;
+			nr_args--;
+			arg_no--;
+		} else {
+			arg_no-=2;
+		}
+		n=(BC_WORD*)n[2];
+		for (int i=arg_no; i<arg_no+nr_args; i++)
+			asp[nr_args-arg_no+i+1]=n[i];
+	}
+	asp+=nr_args;
+	pc+=5;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(push_r_args_b):
 {
 	BC_WORD *n,*a;
@@ -4513,9 +4932,43 @@ INSTRUCTION_BLOCK(push_r_args_b):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
-	for (int i=0; i<n_args; i++)
-		bsp[0-n_args+i]=a[i+bo-3];
+	BC_WORD *ao=&a[bo-3];
 	bsp-=n_args;
+	bsp[0]=ao[0];
+	do {
+		if (n_args< 2) break; bsp[ 1]=ao[ 1];
+		if (n_args< 3) break; bsp[ 2]=ao[ 2];
+		if (n_args< 4) break; bsp[ 3]=ao[ 3];
+		if (n_args< 5) break; bsp[ 4]=ao[ 4];
+		if (n_args< 6) break; bsp[ 5]=ao[ 5];
+		if (n_args< 7) break; bsp[ 6]=ao[ 6];
+		if (n_args< 8) break; bsp[ 7]=ao[ 7];
+		if (n_args< 9) break; bsp[ 8]=ao[ 8];
+		if (n_args<10) break; bsp[ 9]=ao[ 9];
+		if (n_args<11) break; bsp[10]=ao[10];
+		if (n_args<12) break; bsp[11]=ao[11];
+		if (n_args<13) break; bsp[12]=ao[12];
+		if (n_args<14) break; bsp[13]=ao[13];
+		if (n_args<15) break; bsp[14]=ao[14];
+		if (n_args<16) break; bsp[15]=ao[15];
+		if (n_args<17) break; bsp[16]=ao[16];
+		if (n_args<18) break; bsp[17]=ao[17];
+		if (n_args<19) break; bsp[18]=ao[18];
+		if (n_args<20) break; bsp[19]=ao[19];
+		if (n_args<21) break; bsp[20]=ao[20];
+		if (n_args<22) break; bsp[21]=ao[21];
+		if (n_args<23) break; bsp[22]=ao[22];
+		if (n_args<24) break; bsp[23]=ao[23];
+		if (n_args<25) break; bsp[24]=ao[24];
+		if (n_args<26) break; bsp[25]=ao[25];
+		if (n_args<27) break; bsp[26]=ao[26];
+		if (n_args<28) break; bsp[27]=ao[27];
+		if (n_args<29) break; bsp[28]=ao[28];
+		if (n_args<30) break; bsp[29]=ao[29];
+		if (n_args<31) break; bsp[30]=ao[30];
+		if (n_args<32) break; bsp[31]=ao[31];
+		if (n_args<33) break; bsp[32]=ao[32];
+	} while (0);
 	pc+=4;
 	END_INSTRUCTION_BLOCK;
 }
@@ -4632,15 +5085,75 @@ INSTRUCTION_BLOCK(replace_r):
 	a=&array[array_o];
 	b=a+n_a;
 
-	for (int i=0; i<n_a; i++) {
-		asp[-i]=a[i];
-		a[i]=asp[-1-i];
-	}
-	for (int i=0; i<n_b; i++) {
-		BC_WORD temp=b[i];
-		b[i]=bsp[i];
-		bsp[i]=temp;
-	}
+	do {
+		if (n_a< 1) break; asp[  0]=a[ 0]; a[ 0]=asp[-1];
+		if (n_a< 2) break; asp[ -1]=a[ 1]; a[ 1]=asp[ 0];
+		if (n_a< 3) break; asp[ -2]=a[ 2]; a[ 2]=asp[ 1];
+		if (n_a< 4) break; asp[ -3]=a[ 3]; a[ 3]=asp[ 2];
+		if (n_a< 5) break; asp[ -4]=a[ 4]; a[ 4]=asp[ 3];
+		if (n_a< 6) break; asp[ -5]=a[ 5]; a[ 5]=asp[ 4];
+		if (n_a< 7) break; asp[ -6]=a[ 6]; a[ 6]=asp[ 5];
+		if (n_a< 8) break; asp[ -7]=a[ 7]; a[ 7]=asp[ 6];
+		if (n_a< 9) break; asp[ -8]=a[ 8]; a[ 8]=asp[ 7];
+		if (n_a<10) break; asp[ -9]=a[ 9]; a[ 9]=asp[ 8];
+		if (n_a<11) break; asp[-10]=a[10]; a[10]=asp[ 9];
+		if (n_a<12) break; asp[-11]=a[11]; a[11]=asp[10];
+		if (n_a<13) break; asp[-12]=a[12]; a[12]=asp[11];
+		if (n_a<14) break; asp[-13]=a[13]; a[13]=asp[12];
+		if (n_a<15) break; asp[-14]=a[14]; a[14]=asp[13];
+		if (n_a<16) break; asp[-15]=a[15]; a[15]=asp[14];
+		if (n_a<17) break; asp[-16]=a[16]; a[16]=asp[15];
+		if (n_a<18) break; asp[-17]=a[17]; a[17]=asp[16];
+		if (n_a<19) break; asp[-18]=a[18]; a[18]=asp[17];
+		if (n_a<20) break; asp[-19]=a[19]; a[19]=asp[18];
+		if (n_a<21) break; asp[-20]=a[20]; a[20]=asp[19];
+		if (n_a<22) break; asp[-21]=a[21]; a[21]=asp[20];
+		if (n_a<23) break; asp[-22]=a[22]; a[22]=asp[21];
+		if (n_a<24) break; asp[-23]=a[23]; a[23]=asp[22];
+		if (n_a<25) break; asp[-24]=a[24]; a[24]=asp[23];
+		if (n_a<26) break; asp[-25]=a[25]; a[25]=asp[24];
+		if (n_a<27) break; asp[-26]=a[26]; a[26]=asp[25];
+		if (n_a<28) break; asp[-27]=a[27]; a[27]=asp[26];
+		if (n_a<29) break; asp[-28]=a[28]; a[28]=asp[27];
+		if (n_a<30) break; asp[-29]=a[29]; a[29]=asp[28];
+		if (n_a<31) break; asp[-30]=a[30]; a[30]=asp[29];
+		if (n_a<32) break; asp[-31]=a[31]; a[31]=asp[30];
+	} while (0);
+	do {
+		BC_WORD temp;
+		if (n_b< 1) break; temp=b[ 0]; b[ 0]=bsp[ 0]; bsp[ 0]=temp;
+		if (n_b< 2) break; temp=b[ 1]; b[ 1]=bsp[ 1]; bsp[ 1]=temp;
+		if (n_b< 3) break; temp=b[ 2]; b[ 2]=bsp[ 2]; bsp[ 2]=temp;
+		if (n_b< 4) break; temp=b[ 3]; b[ 3]=bsp[ 3]; bsp[ 3]=temp;
+		if (n_b< 5) break; temp=b[ 4]; b[ 4]=bsp[ 4]; bsp[ 4]=temp;
+		if (n_b< 6) break; temp=b[ 5]; b[ 5]=bsp[ 5]; bsp[ 5]=temp;
+		if (n_b< 7) break; temp=b[ 6]; b[ 6]=bsp[ 6]; bsp[ 6]=temp;
+		if (n_b< 8) break; temp=b[ 7]; b[ 7]=bsp[ 7]; bsp[ 7]=temp;
+		if (n_b< 9) break; temp=b[ 8]; b[ 8]=bsp[ 8]; bsp[ 8]=temp;
+		if (n_b<10) break; temp=b[ 9]; b[ 9]=bsp[ 9]; bsp[ 9]=temp;
+		if (n_b<11) break; temp=b[10]; b[10]=bsp[10]; bsp[10]=temp;
+		if (n_b<12) break; temp=b[11]; b[11]=bsp[11]; bsp[11]=temp;
+		if (n_b<13) break; temp=b[12]; b[12]=bsp[12]; bsp[12]=temp;
+		if (n_b<14) break; temp=b[13]; b[13]=bsp[13]; bsp[13]=temp;
+		if (n_b<15) break; temp=b[14]; b[14]=bsp[14]; bsp[14]=temp;
+		if (n_b<16) break; temp=b[15]; b[15]=bsp[15]; bsp[15]=temp;
+		if (n_b<17) break; temp=b[16]; b[16]=bsp[16]; bsp[16]=temp;
+		if (n_b<18) break; temp=b[17]; b[17]=bsp[17]; bsp[17]=temp;
+		if (n_b<19) break; temp=b[18]; b[18]=bsp[18]; bsp[18]=temp;
+		if (n_b<20) break; temp=b[19]; b[19]=bsp[19]; bsp[19]=temp;
+		if (n_b<21) break; temp=b[20]; b[20]=bsp[20]; bsp[20]=temp;
+		if (n_b<22) break; temp=b[21]; b[21]=bsp[21]; bsp[21]=temp;
+		if (n_b<23) break; temp=b[22]; b[22]=bsp[22]; bsp[22]=temp;
+		if (n_b<24) break; temp=b[23]; b[23]=bsp[23]; bsp[23]=temp;
+		if (n_b<25) break; temp=b[24]; b[24]=bsp[24]; bsp[24]=temp;
+		if (n_b<26) break; temp=b[25]; b[25]=bsp[25]; bsp[25]=temp;
+		if (n_b<27) break; temp=b[26]; b[26]=bsp[26]; bsp[26]=temp;
+		if (n_b<28) break; temp=b[27]; b[27]=bsp[27]; bsp[27]=temp;
+		if (n_b<29) break; temp=b[28]; b[28]=bsp[28]; bsp[28]=temp;
+		if (n_b<30) break; temp=b[29]; b[29]=bsp[29]; bsp[29]=temp;
+		if (n_b<31) break; temp=b[30]; b[30]=bsp[30]; bsp[30]=temp;
+		if (n_b<32) break; temp=b[31]; b[31]=bsp[31]; bsp[31]=temp;
+	} while (0);
 	asp[-n_a]=(BC_WORD)array;
 	END_INSTRUCTION_BLOCK;
 }
@@ -5469,6 +5982,36 @@ INSTRUCTION_BLOCK(repl_r_args_aa1):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(repl_r_args_a):
+{
+	BC_WORD *n;
+	int size,arg_no,nr_args;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	size=pc[2];
+	arg_no=pc[3];
+	nr_args=pc[4];
+
+	if (size < 3) { /* must be two A elements */
+		asp[0]=n[2];
+		asp[1]=n[1];
+	} else {
+		if (arg_no==1) {
+			nr_args--;
+			asp[nr_args]=n[1];
+			asp++;
+			arg_no--;
+		} else {
+			arg_no-=2;
+		}
+		n=(BC_WORD*)n[2];
+		for (int i=arg_no; i<arg_no+nr_args; i++)
+			asp[nr_args-arg_no+i]=n[i];
+	}
+	asp+=nr_args-1;
+	pc+=4;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(select):
 {
 	BC_WORD *array,i;
@@ -6191,9 +6734,42 @@ INSTRUCTION_BLOCK(update_r0b):
 	array_o = n * (BC_WORD_S)*bsp++;
 	array = (BC_WORD*)asp[0];
 	pc+=2;
-	element_p = &array[array_o+3];
-	for (int i=0; i<n; i++)
-		element_p[i]=bsp[i];
+	element_p=&array[array_o+3];
+	element_p[0]=bsp[0];
+	element_p[1]=bsp[1];
+	element_p[2]=bsp[2];
+	element_p[3]=bsp[3];
+	element_p[4]=bsp[4];
+	do {
+		if (n< 6) break; element_p[ 5]=bsp[ 5];
+		if (n< 7) break; element_p[ 6]=bsp[ 6];
+		if (n< 8) break; element_p[ 7]=bsp[ 7];
+		if (n< 9) break; element_p[ 8]=bsp[ 8];
+		if (n<10) break; element_p[ 9]=bsp[ 9];
+		if (n<11) break; element_p[10]=bsp[10];
+		if (n<12) break; element_p[11]=bsp[11];
+		if (n<13) break; element_p[12]=bsp[12];
+		if (n<14) break; element_p[13]=bsp[13];
+		if (n<15) break; element_p[14]=bsp[14];
+		if (n<16) break; element_p[15]=bsp[15];
+		if (n<17) break; element_p[16]=bsp[16];
+		if (n<18) break; element_p[17]=bsp[17];
+		if (n<19) break; element_p[18]=bsp[18];
+		if (n<20) break; element_p[19]=bsp[19];
+		if (n<21) break; element_p[20]=bsp[20];
+		if (n<22) break; element_p[21]=bsp[21];
+		if (n<23) break; element_p[22]=bsp[22];
+		if (n<24) break; element_p[23]=bsp[23];
+		if (n<25) break; element_p[24]=bsp[24];
+		if (n<26) break; element_p[25]=bsp[25];
+		if (n<27) break; element_p[26]=bsp[26];
+		if (n<28) break; element_p[27]=bsp[27];
+		if (n<29) break; element_p[28]=bsp[28];
+		if (n<30) break; element_p[29]=bsp[29];
+		if (n<31) break; element_p[30]=bsp[30];
+		if (n<32) break; element_p[31]=bsp[31];
+		if (n<33) break; element_p[32]=bsp[32];
+	} while (0);
 	bsp+=n;
 	END_INSTRUCTION_BLOCK;
 }
@@ -6288,8 +6864,40 @@ INSTRUCTION_BLOCK(update_r1b):
 	element_p[0]=asp[-1];
 	asp-=1;
 	asp[0]=(BC_WORD)array;
-	for (int i=0; i<n; i++)
-		element_p[i+1]=bsp[i];
+	element_p[1]=bsp[0];
+	element_p[2]=bsp[1];
+	element_p[3]=bsp[2];
+	element_p[4]=bsp[3];
+	element_p[5]=bsp[4];
+	do {
+		if (n< 6) break; element_p[ 6]=bsp[ 5];
+		if (n< 7) break; element_p[ 7]=bsp[ 6];
+		if (n< 8) break; element_p[ 8]=bsp[ 7];
+		if (n< 9) break; element_p[ 9]=bsp[ 8];
+		if (n<10) break; element_p[10]=bsp[ 9];
+		if (n<11) break; element_p[11]=bsp[10];
+		if (n<12) break; element_p[12]=bsp[11];
+		if (n<13) break; element_p[13]=bsp[12];
+		if (n<14) break; element_p[14]=bsp[13];
+		if (n<15) break; element_p[15]=bsp[14];
+		if (n<16) break; element_p[16]=bsp[15];
+		if (n<17) break; element_p[17]=bsp[16];
+		if (n<18) break; element_p[18]=bsp[17];
+		if (n<19) break; element_p[19]=bsp[18];
+		if (n<20) break; element_p[20]=bsp[19];
+		if (n<21) break; element_p[21]=bsp[20];
+		if (n<22) break; element_p[22]=bsp[21];
+		if (n<23) break; element_p[23]=bsp[22];
+		if (n<24) break; element_p[24]=bsp[23];
+		if (n<25) break; element_p[25]=bsp[24];
+		if (n<26) break; element_p[26]=bsp[25];
+		if (n<27) break; element_p[27]=bsp[26];
+		if (n<28) break; element_p[28]=bsp[27];
+		if (n<29) break; element_p[29]=bsp[28];
+		if (n<30) break; element_p[30]=bsp[29];
+		if (n<31) break; element_p[31]=bsp[30];
+		if (n<32) break; element_p[32]=bsp[31];
+	} while (0);
 	bsp+=n;
 	END_INSTRUCTION_BLOCK;
 }
@@ -6389,8 +6997,39 @@ INSTRUCTION_BLOCK(update_r2b):
 	element_p[1]=asp[-2];
 	asp-=2;
 	asp[0]=(BC_WORD)array;
-	for (int i=0; i<n; i++)
-		element_p[i+2]=bsp[i];
+	element_p[2]=bsp[0];
+	element_p[3]=bsp[1];
+	element_p[4]=bsp[2];
+	element_p[5]=bsp[3];
+	element_p[6]=bsp[4];
+	do {
+		if (n< 6) break; element_p[ 7]=bsp[ 5];
+		if (n< 7) break; element_p[ 8]=bsp[ 6];
+		if (n< 8) break; element_p[ 9]=bsp[ 7];
+		if (n< 9) break; element_p[10]=bsp[ 8];
+		if (n<10) break; element_p[11]=bsp[ 9];
+		if (n<11) break; element_p[12]=bsp[10];
+		if (n<12) break; element_p[13]=bsp[11];
+		if (n<13) break; element_p[14]=bsp[12];
+		if (n<14) break; element_p[15]=bsp[13];
+		if (n<15) break; element_p[16]=bsp[14];
+		if (n<16) break; element_p[17]=bsp[15];
+		if (n<17) break; element_p[18]=bsp[16];
+		if (n<18) break; element_p[19]=bsp[17];
+		if (n<19) break; element_p[20]=bsp[18];
+		if (n<20) break; element_p[21]=bsp[19];
+		if (n<21) break; element_p[22]=bsp[20];
+		if (n<22) break; element_p[23]=bsp[21];
+		if (n<23) break; element_p[24]=bsp[22];
+		if (n<24) break; element_p[25]=bsp[23];
+		if (n<25) break; element_p[26]=bsp[24];
+		if (n<26) break; element_p[27]=bsp[25];
+		if (n<27) break; element_p[28]=bsp[26];
+		if (n<28) break; element_p[29]=bsp[27];
+		if (n<29) break; element_p[30]=bsp[28];
+		if (n<30) break; element_p[31]=bsp[29];
+		if (n<31) break; element_p[32]=bsp[30];
+	} while (0);
 	bsp+=n;
 	END_INSTRUCTION_BLOCK;
 }
@@ -6496,8 +7135,38 @@ INSTRUCTION_BLOCK(update_r3b):
 	element_p[2]=asp[-3];
 	asp-=3;
 	asp[0]=(BC_WORD)array;
-	for (int i=0; i<n; i++)
-		element_p[i+3]=bsp[i];
+	element_p[3]=bsp[0];
+	element_p[4]=bsp[1];
+	element_p[5]=bsp[2];
+	element_p[6]=bsp[3];
+	element_p[7]=bsp[4];
+	do {
+		if (n< 6) break; element_p[ 8]=bsp[ 5];
+		if (n< 7) break; element_p[ 9]=bsp[ 6];
+		if (n< 8) break; element_p[10]=bsp[ 7];
+		if (n< 9) break; element_p[11]=bsp[ 8];
+		if (n<10) break; element_p[12]=bsp[ 9];
+		if (n<11) break; element_p[13]=bsp[10];
+		if (n<12) break; element_p[14]=bsp[11];
+		if (n<13) break; element_p[15]=bsp[12];
+		if (n<14) break; element_p[16]=bsp[13];
+		if (n<15) break; element_p[17]=bsp[14];
+		if (n<16) break; element_p[18]=bsp[15];
+		if (n<17) break; element_p[19]=bsp[16];
+		if (n<18) break; element_p[20]=bsp[17];
+		if (n<19) break; element_p[21]=bsp[18];
+		if (n<20) break; element_p[22]=bsp[19];
+		if (n<21) break; element_p[23]=bsp[20];
+		if (n<22) break; element_p[24]=bsp[21];
+		if (n<23) break; element_p[25]=bsp[22];
+		if (n<24) break; element_p[26]=bsp[23];
+		if (n<25) break; element_p[27]=bsp[24];
+		if (n<26) break; element_p[28]=bsp[25];
+		if (n<27) break; element_p[29]=bsp[26];
+		if (n<28) break; element_p[30]=bsp[27];
+		if (n<29) break; element_p[31]=bsp[28];
+		if (n<30) break; element_p[32]=bsp[29];
+	} while (0);
 	bsp+=n;
 	END_INSTRUCTION_BLOCK;
 }
@@ -6727,15 +7396,23 @@ INSTRUCTION_BLOCK(jmp_eqACio):
 	n+=2;
 	s+=1;
 	for (;;){
-		// TODO make 64/32 bit agnostic
-		if (length>=4){
+		if (length>=IF_INT_64_OR_32(8,4)){
 			if (*n!=*s)
 				break;
 			++n;
 			++s;
-			length-=4;
+			length-=IF_INT_64_OR_32(8,4);
 			continue;
 		}
+#if WORD_WIDTH==64
+		if (length>=4){
+			if (*(uint32_t*)n!=*(uint32_t*)s)
+				break;
+			length-=4;
+			n=(BC_WORD*)((BC_WORD)n+4);
+			s=(BC_WORD*)((BC_WORD)s+4);
+		}
+#endif
 		if (length>=2){
 			if (*(uint16_t*)n!=*(uint16_t*)s)
 				break;
@@ -7379,6 +8056,54 @@ INSTRUCTION_BLOCK(updates4_a):
 	END_INSTRUCTION_BLOCK;
 }
 
+INSTRUCTION_BLOCK(jsr_ap):
+	*--csp=(BC_WORD)&pc[2];
+INSTRUCTION_BLOCK(jmp_ap):
+{
+	BC_WORD *n,d;
+	int n_apply_args=pc[1];
+
+	n=(BC_WORD*)asp[0];
+	d=n[0];
+	if (((uint16_t*)d)[0]==n_apply_args*8){
+		BC_WORD arity;
+
+		arity=((uint16_t*)d)[-1];
+#if (WORD_WIDTH == 64)
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+(16*(n_apply_args-1))+6)) - 24);
+#else
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+(8*(n_apply_args-1))+2)) - 12);
+#endif
+		if (arity<=1){
+			if (arity<1){
+				--asp;
+			} else {
+				asp[0]=n[1];
+			}
+		} else {
+			BC_WORD *args,a1;
+
+			args=(BC_WORD*)n[2];
+			a1=n[1];
+			if (arity==2){
+				asp[0]=(BC_WORD)args;
+			} else {
+				asp[0]=args[arity-2];
+				arity-=3;
+				do {
+					*++asp = args[arity];
+					--arity;
+				} while (arity!=0);
+			}
+			*++asp = a1;
+		}
+		END_INSTRUCTION_BLOCK;
+	} else {
+		*--csp=(BC_WORD)&Fjmp_ap[(n_apply_args-2)*2];
+		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
+		END_INSTRUCTION_BLOCK;
+	}
+}
 INSTRUCTION_BLOCK(jsr_ap5):
 	*--csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap5):
@@ -7399,7 +8124,7 @@ INSTRUCTION_BLOCK(jmp_ap5):
 
 		arity=((uint16_t*)d)[-1];
 #if (WORD_WIDTH == 64)
-		pc = (BC_WORD*) ((*(BC_WORD*)(d+66+6)) - 24);
+		pc = (BC_WORD*) ((*(BC_WORD*)(d+64+6)) - 24);
 #else
 		pc = (BC_WORD*) ((*(BC_WORD*)(d+32+2)) - 12);
 #endif
@@ -7428,7 +8153,7 @@ INSTRUCTION_BLOCK(jmp_ap5):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap2;
+		*--csp=(BC_WORD)&Fjmp_ap[6];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7475,7 +8200,7 @@ INSTRUCTION_BLOCK(jmp_ap4):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap3;
+		*--csp=(BC_WORD)&Fjmp_ap[4];
 		pc = *(BC_WORD**)(d+2);
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7529,7 +8254,7 @@ INSTRUCTION_BLOCK(jmp_ap3):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap2;
+		*--csp=(BC_WORD)&Fjmp_ap[2];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -7583,7 +8308,7 @@ INSTRUCTION_BLOCK(jmp_ap2):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap1;
+		*--csp=(BC_WORD)&Fjmp_ap[0];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -8007,8 +8732,6 @@ jsr_eval_host_node_with_args:
 	ie->bsp = bsp;
 	ie->csp = csp;
 	ie->hp = hp;
-	/* TODO: the calculation of lazy_entry here is probably bit-width and
-	 * platform dependent! */
 	if (instr_arg >= 2) {
 #ifdef WINDOWS
 		host_node = __interpret__evaluate__host_with_args(arg2, arg1, host_node, ap_addresses[instr_arg-2], ie);
@@ -8137,7 +8860,6 @@ INSTRUCTION_BLOCK(push_r_arg_D):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(push_args_u):   // net als push_args voor de interpreter (argumenten kunnen worden geüpdate, maar in de interpreter gaan we toch niet instructies reorderen)
 
 INSTRUCTION_BLOCK(add_arg4):
 INSTRUCTION_BLOCK(add_arg5):
@@ -8169,6 +8891,7 @@ INSTRUCTION_BLOCK(add_arg30):
 INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(ccall):
+INSTRUCTION_BLOCK(centry):
 INSTRUCTION_BLOCK(instruction):
 INSTRUCTION_BLOCK(load_i):
 INSTRUCTION_BLOCK(load_si16):
