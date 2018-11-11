@@ -1515,6 +1515,12 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 			else
 				add_instruction_w_label_offset(Cfillh1,-a_offset,descriptor_name,(arity<<3)+2);
 			return;
+		} else {
+			if (bits[0]=='1')
+				add_instruction_w_label_offset(Cfillh0,-a_offset,descriptor_name,(arity<<3)+2);
+			else
+				{} /* nop */
+			return;
 		}
 	} else if (arity==2) {
 		if (bits[1]=='0') {
@@ -1544,29 +1550,8 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 
 void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
 	if (b_size==0) {
-		if (a_size==1) {
-			if (bits[0]=='0') {
-				if (bits[1]=='0')
-					return;
-				add_instruction_w(Cfill1010,-root_offset);
-				return;
-			} else {
-				if (bits[1]=='1') {
-					add_instruction_w_label_offset(Cfillh1,-root_offset,descriptor_name,2);
-					return;
-				}
-			}
-		}
-
-		if (a_size==2) {
-			if (bits[0]=='0' && bits[1]=='1') {
-				if (bits[2]=='0')
-					add_instruction_w(Cfill1010,-root_offset);
-				else
-					add_instruction_w(Cfill1011,-root_offset);
-				return;
-			}
-		}
+		code_fill1(descriptor_name,a_size,root_offset,bits);
+		return;
 	} else if (b_size==1) {
 		if (a_size==0) {
 			if (bits[0]=='0') {
