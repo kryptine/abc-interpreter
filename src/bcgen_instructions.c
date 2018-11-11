@@ -1528,8 +1528,14 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 		}
 	} else if (arity==2) {
 		if (bits[1]=='0') {
-			if (bits[0]=='0' && bits[2]=='1') {
-				add_instruction_w(Cfill1001,-a_offset);
+			if (bits[0]=='0') {
+				if (bits[2]=='1')
+					add_instruction_w(Cfill1001,-a_offset);
+				else
+					{} /* nop */
+				return;
+			} else if (bits[0]=='1' && bits[2]=='1') {
+				add_instruction_w_label_offset(Cfill1101,-a_offset,descriptor_name,(arity<<3)+2);
 				return;
 			}
 		} else {

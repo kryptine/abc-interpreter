@@ -2429,7 +2429,7 @@ INSTRUCTION_BLOCK(fillh1):
 	BC_WORD *n;
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	n[0]=*(BC_WORD_S*)&pc[2];
+	n[0]=pc[2];
 	n[1]=asp[0];
 	--asp;
 	pc+=3;
@@ -2484,6 +2484,17 @@ INSTRUCTION_BLOCK(fill1011):
 	n[2]=asp[-1];
 	asp-=2;
 	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1101):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[2]=asp[0];
+	--asp;
+	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill2a001):
