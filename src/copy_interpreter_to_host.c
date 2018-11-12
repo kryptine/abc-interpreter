@@ -432,13 +432,10 @@ BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			return build_finalizer(host_heap+3, interpreter_finalizer, (BC_WORD)node);
 		}
 	}
-
-	int words_needed = 3 + a_arity * (3+FINALIZER_SIZE_ON_HEAP);
-	if (a_arity + b_arity >= 3)
-		words_needed += a_arity + b_arity - 1;
+	int ab_arity=a_arity+b_arity;
 
 #if DEBUG_CLEAN_LINKS > 1
-	EPRINTF( "\tcopying (arities %d / %d; %d words needed)...\n", a_arity, b_arity, words_needed);
+	EPRINTF( "\tcopying (arities %d / %d)...\n", a_arity, b_arity);
 #endif
 
 	void *host_address = ((void**)(node[0]-2))[host_address_offset];
@@ -455,9 +452,8 @@ BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	BC_WORD *host_node = host_heap;
 	host_node[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+add_to_host_address);
 
-	/* TODO: pointers to outside the heap (e.g. Nil) can be translated directly here */
-	if (a_arity + b_arity < 3) {
-		host_heap += 3;
+	if (ab_arity < 3) {
+		host_heap += 1+ab_arity;
 
 		if (a_arity >= 1) {
 			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
@@ -471,8 +467,8 @@ BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			if (b_arity == 2)
 				host_node[2] = node[2];
 		}
-	} else if (a_arity + b_arity >= 3) {
-		host_heap += a_arity + b_arity + 2;
+	} else if (ab_arity >= 3) {
+		host_heap += ab_arity + 2;
 		if (a_arity >= 1)
 			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
 		else
@@ -490,6 +486,96 @@ BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 #endif
 
 	return host_heap;
+}
+
+static int copied_node_size(BC_WORD *node) {
+	if (!(node[0] & 2)) /* thunk, delay interpretation */
+		return 3+FINALIZER_SIZE_ON_HEAP;
+
+	if (node[0]==(BC_WORD)&INT+2 ||
+			node[0]==(BC_WORD)&CHAR+2 ||
+			node[0]==(BC_WORD)&BOOL+2 ||
+			node[0]==(BC_WORD)&REAL+2)
+		return 2;
+	else if (node[0]==(BC_WORD)&__STRING__+2)
+		return (node[1]+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
+	else if (node[0]==(BC_WORD)&__ARRAY__+2) {
+		int len=node[1];
+		BC_WORD desc=node[2];
+		if (desc==(BC_WORD)&BOOL+2)
+			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
+			len=len;
+		else if (desc==0) { /* boxed array */
+			int words_needed=len;
+			for (int i=0; i<len; i++)
+				words_needed+=copied_node_size((BC_WORD*)node[i+3]);
+			len=words_needed;
+		} else { /* unboxed array */
+			desc|=2;
+			int16_t elem_a_arity=*(int16_t*)desc;
+			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			int words_needed=len*elem_ab_arity;
+			node+=3;
+			for (int i=0; i<len; i++) {
+				for (int a=0; a<elem_a_arity; a++)
+					words_needed+=copied_node_size((BC_WORD*)node[a]);
+				node+=elem_ab_arity;
+			}
+			len=words_needed;
+		}
+		return len+3;
+	}
+
+	int16_t a_arity = ((int16_t*)(node[0]))[-1];
+	int16_t b_arity = 0;
+	int host_address_offset = -2 - 2*a_arity;
+	if (a_arity > 256) { /* record */
+		a_arity = ((int16_t*)(node[0]))[0];
+		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+	} else { /* may be curried */
+		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
+		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple)
+			return 3+FINALIZER_SIZE_ON_HEAP;
+	}
+	int ab_arity=a_arity+b_arity;
+
+	int words_needed=1+ab_arity;
+	if (ab_arity >= 3)
+		words_needed++;
+
+	if (a_arity>0) {
+		words_needed+=copied_node_size((BC_WORD*)node[1]);
+
+		if (ab_arity >= 3) {
+			BC_WORD **rest = (BC_WORD**) node[2];
+			for (int i=0; i < a_arity-1; i++)
+				words_needed+=copied_node_size(rest[i]);
+		} else if (a_arity == 2)
+			words_needed+=copied_node_size((BC_WORD*)node[2]);
+	}
+
+	return words_needed;
+}
+
+static inline int copy_to_host_or_garbage_collect(
+		struct InterpretationEnvironment *clean_ie,
+		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
+	int words_needed=copied_node_size(node);
+
+	if (words_needed > ie->host->host_hp_free)
+		return -2;
+
+	BC_WORD *new_heap=copy_to_host(clean_ie,host_heap,target,node);
+	int words_used=new_heap-host_heap;
+
+	if (words_used != words_needed) {
+		EPRINTF("internal error in copy_to_host: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
+		exit(1);
+	}
+
+	return words_used;
 }
 
 // Used to communicate redirect host thunks with the ASM interface; see #51
@@ -541,8 +627,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	BC_WORD *new_heap=copy_to_host(clean_ie, ie->host->host_hp_ptr, NULL, node);
-	return new_heap-ie->host->host_hp_ptr;
+	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr, NULL, node);
 }
 
 /**
@@ -617,6 +702,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	node = (BC_WORD*) *ie->asp--;
 
-	BC_WORD *new_heap=copy_to_host(clean_ie, ie->host->host_hp_ptr, NULL, node);
-	return new_heap-ie->host->host_hp_ptr;
+	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr, NULL, node);
 }
