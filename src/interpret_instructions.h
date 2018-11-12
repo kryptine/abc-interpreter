@@ -8720,9 +8720,14 @@ jsr_eval_host_node_with_args:
 #endif
 
 	for (int i=instr_arg; i>=1; i--) {
-		ie->host->host_hp_ptr = copy_to_host(
+		int added_words=copy_to_host_or_garbage_collect(
 				ie->host->clean_ie, ie->host->host_hp_ptr,
 				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i]);
+		if (added_words<0) { /* TODO: -2 is garbage collection */
+			EPRINTF("copying to host failed\n");
+			exit(1);
+		}
+		ie->host->host_hp_ptr+=added_words;
 	}
 	BC_WORD *arg1, *arg2 = NULL;
 	arg1 = (BC_WORD*) *--ie->host->host_a_ptr;

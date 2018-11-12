@@ -311,7 +311,7 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	return result;
 }
 
-BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
+static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	if (target!=NULL)
 		*target=host_heap;
@@ -558,8 +558,7 @@ static int copied_node_size(BC_WORD *node) {
 	return words_needed;
 }
 
-static inline int copy_to_host_or_garbage_collect(
-		struct InterpretationEnvironment *clean_ie,
+int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	int words_needed=copied_node_size(node);
