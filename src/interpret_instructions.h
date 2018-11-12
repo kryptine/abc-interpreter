@@ -8720,8 +8720,9 @@ jsr_eval_host_node_with_args:
 #endif
 
 	for (int i=instr_arg; i>=1; i--) {
-		*ie->host->host_a_ptr++ = (BC_WORD) ie->host->host_hp_ptr;
-		ie->host->host_hp_ptr = make_interpret_node(ie->host->host_hp_ptr, ie->host->clean_ie, asp[-i], 0);
+		ie->host->host_hp_ptr += copy_to_host(
+				ie->host->clean_ie, ie->host->host_hp_ptr,
+				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i]);
 	}
 	BC_WORD *arg1, *arg2 = NULL;
 	arg1 = (BC_WORD*) *--ie->host->host_a_ptr;

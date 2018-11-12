@@ -302,50 +302,6 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-#define CURRY_TABLE_ELEMENT_SIZE IF_MACH_O_ELSE(4,3)
-BC_WORD *make_interpret_node(BC_WORD *heap, struct InterpretationEnvironment *clean_ie, BC_WORD node, int args_needed) {
-	switch (args_needed) {
-		case 0:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__ninterpret; break;
-		case 1:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__1+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 2:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__2+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 3:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__3+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 4:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__4+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 5:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__5+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 6:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__6+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 7:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__7+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 8:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__8+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 9:  heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__9+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 10: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__10+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 11: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__11+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 12: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__12+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 13: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__13+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 14: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__14+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 15: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__15+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 16: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__16+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 17: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__17+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 18: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__18+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 19: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__19+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 20: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__20+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 21: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__21+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 22: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__22+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 23: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__23+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 24: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__24+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 25: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__25+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 26: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__26+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 27: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__27+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 28: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__28+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 29: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 30: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		case 31: heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
-		default:
-			EPRINTF("Missing case in make_interpret_node\n");
-			exit(1);
-	}
-	heap[1] = (BC_WORD) clean_ie;
-	heap[2] = (BC_WORD) &heap[3+args_needed];
-	return build_finalizer(heap+3+args_needed, interpreter_finalizer, node);
-}
-
 int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 	int result = interpret(ie,
 			ie->stack, ie->stack_size,
@@ -357,96 +313,84 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 
 #define CHECK_WORDS_NEEDED() {if (host_heap-org_host_heap!=words_needed) {\
 	EPRINTF("words_needed was incorrect (%d,should be %d)\n",(int)words_needed,(int)(host_heap-org_host_heap));\
-	exit(1);}}
+	/*exit(1);*/}}
 
-extern void *ARRAY;
-BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
+BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie,
+		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	BC_WORD *host_heap = ie->host->host_hp_ptr;
 	size_t host_heap_free = ie->host->host_hp_free;
 	BC_WORD *org_host_heap = host_heap;
+
+	if (target!=NULL)
+		*target=host_heap;
+
+	if (!(node[0] & 2)) {
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\tthunk\n");
+#endif
+		host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret;
+		host_heap[1]=(BC_WORD)clean_ie;
+		host_heap[2]=(BC_WORD)&host_heap[3];
+		host_heap=build_finalizer(&host_heap[3], interpreter_finalizer, (BC_WORD)node);
+		return host_heap - org_host_heap;
+	}
 
 	if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&CHAR+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2) {
-		if (host_heap_free < 2)
-			return -2;
 		host_heap[0] = node[0];
 		host_heap[1] = node[1];
 		return 2;
-	} else if (on_heap(node[1], ie->heap, ie->heap_size)) {
-		BC_WORD *arr=(BC_WORD*)node[1];
-		int len=arr[1];
-		int words;
-		if (arr[0] == (BC_WORD) &__STRING__+2) {
-			words=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
-			if (host_heap_free < words+2)
-				return -2;
-			host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
-			host_heap[1]=(BC_WORD) &host_heap[2];
-			memcpy(&host_heap[2],arr,words*IF_INT_64_OR_32(8,4));
-			return words+2;
-		} else if (arr[0] == (BC_WORD) &__ARRAY__+2) {
-			BC_WORD desc=arr[2];
-			if (desc == (BC_WORD) &BOOL+2)
-				words=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+3;
-			else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-				words=len+3;
-			else if (desc==0) { /* boxed array */
-				int words_needed = 5+len+(3+FINALIZER_SIZE_ON_HEAP)*len;
-				if (host_heap_free < words_needed)
-					return -2;
-				host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
-				host_heap[1]=(BC_WORD) &host_heap[2];
-				host_heap[2]=arr[0];
-				host_heap[3]=arr[1];
-				host_heap[4]=arr[2];
-				BC_WORD *new_array=&host_heap[5];
-				host_heap+=5+len;
-				for (int i=0; i<len; i++) {
-					new_array[i]=(BC_WORD)host_heap;
-					host_heap=make_interpret_node(host_heap, clean_ie, arr[i+3], 0);
-				}
-				CHECK_WORDS_NEEDED();
-				return words_needed;
-			} else { /* unboxed array */
-				desc|=2;
-				int16_t elem_a_arity=*(int16_t*)desc;
-				int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-				int words_needed=5+len*elem_ab_arity+len*elem_a_arity*(3+FINALIZER_SIZE_ON_HEAP);
-				if (host_heap_free < words_needed)
-					return -2;
-				host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
-				host_heap[1]=(BC_WORD) &host_heap[2];
-				host_heap[2]=arr[0];
-				host_heap[3]=arr[1];
-				host_heap[4]=arr[2];
-				host_heap[4]=((BC_WORD*)(desc-2))[-2];
-				arr+=3;
-				BC_WORD *new_array=&host_heap[5];
-				host_heap+=5+len*elem_ab_arity;
-				for (int i=0; i<len; i++) {
-					for (int a=0; a<elem_a_arity; a++) {
-						new_array[a]=(BC_WORD)host_heap;
-						host_heap=make_interpret_node(host_heap, clean_ie, arr[a], 0);
-					}
-					for (int b=elem_a_arity; b<elem_ab_arity; b++)
-						new_array[b]=arr[b];
-					arr+=elem_ab_arity;
-					new_array+=elem_ab_arity;
-				}
-				CHECK_WORDS_NEEDED();
-				return words_needed;
+	} else if (node[0]==(BC_WORD)&__STRING__+2) {
+		int len=node[1];
+		len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
+		memcpy(host_heap,node,len*IF_INT_64_OR_32(8,4));
+		return len;
+	} else if (node[0]==(BC_WORD)&__ARRAY__+2) {
+		int len=node[1];
+		BC_WORD desc=node[2];
+		if (desc==(BC_WORD)&BOOL+2)
+			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+3;
+		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
+			len=len+3;
+		else if (desc==0) { /* boxed array */
+			int words_needed = 3+len+(3+FINALIZER_SIZE_ON_HEAP)*len;
+			host_heap[0]=node[0];
+			host_heap[1]=node[1];
+			host_heap[2]=node[2];
+			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
+			host_heap+=3+len;
+			for (int i=0; i<len; i++)
+				host_heap+=copy_to_host(clean_ie, host_heap, (BC_WORD**)&new_array[i], (BC_WORD*)node[i+3]);
+			CHECK_WORDS_NEEDED();
+			return words_needed;
+		} else { /* unboxed array */
+			desc|=2;
+			int16_t elem_a_arity=*(int16_t*)desc;
+			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			int words_needed=3+len*elem_ab_arity+len*elem_a_arity*(3+FINALIZER_SIZE_ON_HEAP);
+			host_heap[0]=node[0];
+			host_heap[1]=node[1];
+			host_heap[2]=((BC_WORD*)(desc-2))[-2]; /* TODO check that the descriptor exists */
+			node+=3;
+			BC_WORD *new_array=&host_heap[3];
+			host_heap+=3+len*elem_ab_arity;
+			for (int i=0; i<len; i++) {
+				for (int a=0; a<elem_a_arity; a++)
+					host_heap+=copy_to_host(clean_ie, host_heap, (BC_WORD**)&new_array[a], (BC_WORD*)node[a]);
+				for (int b=elem_a_arity; b<elem_ab_arity; b++)
+					new_array[b]=node[b];
+				node+=elem_ab_arity;
+				new_array+=elem_ab_arity;
 			}
-			if (host_heap_free < words+2)
-				return -2;
-			host_heap[0]=(BC_WORD) &ARRAY+IF_INT_64_OR_32(10,6);
-			host_heap[1]=(BC_WORD) &host_heap[2];
-			memcpy(&host_heap[2],arr,words*IF_INT_64_OR_32(8,4));
-			host_heap[4]=(BC_WORD)&INT+2;
-			return words+3;
+			CHECK_WORDS_NEEDED();
+			return words_needed;
 		}
+		if (host_heap_free < len)
+			return -2;
+		memcpy(host_heap,node,len*IF_INT_64_OR_32(8,4));
+		return len;
 	}
 
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
@@ -459,18 +403,50 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 		a_arity = ((int16_t*)(node[0]))[0];
 		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 	} else { /* may be curried */
-		int args_needed = host_address_offset + 2;
-		while (((BC_WORD*)(node[0]-2))[args_needed] >> 16)
-			args_needed += 2;
-		args_needed = args_needed / 2;
-
+		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
 #endif
-			if (host_heap_free < 3 + args_needed + FINALIZER_SIZE_ON_HEAP)
-				return -2;
-			host_heap = make_interpret_node(host_heap, clean_ie, (BC_WORD) node, args_needed);
+			switch (args_needed) {
+#define CURRY_TABLE_ELEMENT_SIZE IF_MACH_O_ELSE(4,3)
+				case  0: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__ninterpret; break;
+				case  1: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__1 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  2: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__2 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  3: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__3 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  4: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__4 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  5: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__5 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  6: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__6 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  7: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__7 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  8: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__8 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case  9: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__9 +(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 10: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__10+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 11: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__11+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 12: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__12+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 13: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__13+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 14: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__14+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 15: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__15+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 16: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__16+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 17: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__17+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 18: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__18+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 19: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__19+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 20: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__20+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 21: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__21+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 22: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__22+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 23: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__23+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 24: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__24+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 25: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__25+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 26: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__26+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 27: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__27+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 28: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__28+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 29: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 30: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				case 31: host_heap[0] = (BC_WORD) &e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<CURRY_TABLE_ELEMENT_SIZE)+2; break;
+				default: EPRINTF("Missing case in copy_to_host\n"); exit(1);
+			}
+			host_heap[1] = (BC_WORD) clean_ie;
+			host_heap[2] = (BC_WORD) &host_heap[3];
+			host_heap = build_finalizer(host_heap+3, interpreter_finalizer, (BC_WORD)node);
 			return host_heap - org_host_heap;
 		}
 	}
@@ -512,15 +488,12 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 		host_heap += 3;
 
 		if (a_arity >= 1) {
-			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
+			host_heap += copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
 
-			if (a_arity == 2) {
-				host_node[2] = (BC_WORD) host_heap;
-				host_heap = make_interpret_node(host_heap, clean_ie, node[2], 0);
-			} else if (b_arity == 1) {
+			if (a_arity == 2)
+				host_heap += copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[2], (BC_WORD*)node[2]);
+			else if (b_arity == 1)
 				host_node[2] = node[2];
-			}
 		} else if (b_arity >= 1) {
 			host_node[1] = node[1];
 			if (b_arity == 2)
@@ -528,18 +501,14 @@ BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie, BC_WORD *node) 
 		}
 	} else if (a_arity + b_arity >= 3) {
 		host_heap += a_arity + b_arity + 2;
-		if (a_arity >= 1) {
-			host_node[1] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, clean_ie, node[1], 0);
-		} else {
+		if (a_arity >= 1)
+			host_heap += copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
+		else
 			host_node[1] = node[1];
-		}
 		host_node[2] = (BC_WORD) &host_node[3];
 		BC_WORD *rest = (BC_WORD*) node[2];
-		for (int i = 0; i < a_arity - 1; i++) {
-			host_node[3+i] = (BC_WORD) host_heap;
-			host_heap = make_interpret_node(host_heap, clean_ie, rest[i], 0);
-		}
+		for (int i = 0; i < a_arity - 1; i++)
+			host_heap += copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[3+i], (BC_WORD*)rest[i]);
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[3+i] = (BC_WORD) rest[i];
 	}
@@ -602,7 +571,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	return copy_to_host(clean_ie, node);
+	return copy_to_host(clean_ie, ie->host->host_hp_ptr, NULL, node);
 }
 
 /**
@@ -677,5 +646,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host(clean_ie, node);
+	return copy_to_host(clean_ie, ie->host->host_hp_ptr, NULL, node);
 }

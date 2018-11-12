@@ -16,9 +16,9 @@ struct InterpretationEnvironment {
 };
 
 struct host_status {
-	BC_WORD *host_a_ptr; /* The A-stack pointer of the host */
-	void *host_hp_ptr;   /* Heap pointer */
-	size_t host_hp_free; /* Nr. of free heap words */
+	BC_WORD *host_a_ptr;  /* The A-stack pointer of the host */
+	BC_WORD *host_hp_ptr; /* Heap pointer */
+	size_t host_hp_free;  /* Nr. of free heap words */
 	struct InterpretationEnvironment *clean_ie; /* Clean InterpretationEnvironment */
 };
 
@@ -37,9 +37,8 @@ struct interpretation_environment {
 };
 
 void interpreter_finalizer(BC_WORD interpret_node);
-BC_WORD *make_interpret_node(BC_WORD *heap,
-		struct InterpretationEnvironment *clean_ie,
-		BC_WORD node, int args_needed);
+BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie,
+		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node);
 extern BC_WORD *__interpret__evaluate__host(
 		struct interpretation_environment *ie, BC_WORD *node);
 #ifdef WINDOWS
