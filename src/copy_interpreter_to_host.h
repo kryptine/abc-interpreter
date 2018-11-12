@@ -37,7 +37,7 @@ struct interpretation_environment {
 };
 
 void interpreter_finalizer(BC_WORD interpret_node);
-BC_WORD copy_to_host(struct InterpretationEnvironment *clean_ie,
+BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node);
 extern BC_WORD *__interpret__evaluate__host(
 		struct interpretation_environment *ie, BC_WORD *node);
