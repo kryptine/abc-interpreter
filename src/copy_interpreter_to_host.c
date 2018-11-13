@@ -479,11 +479,12 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			host_node[1] = node[1];
 		host_node[2] = (BC_WORD) &host_node[3];
 		BC_WORD *rest = (BC_WORD*) node[2];
+		host_node+=3;
 		for (int i = 0; i < a_arity - 1; i++) {
-			host_node[3+i]=(BC_WORD)host_heap;
+			host_node[i]=(BC_WORD)host_heap;
 			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)rest[i]);
 		} for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
-			host_node[3+i] = (BC_WORD) rest[i];
+			host_node[i] = (BC_WORD) rest[i];
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
@@ -510,7 +511,7 @@ static int copied_node_size(BC_WORD *node) {
 		if (desc==(BC_WORD)&BOOL+2)
 			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-			len=len;
+			{} /* len is correct */
 		else if (desc==0) { /* boxed array */
 			int words_needed=len;
 			for (int i=0; i<len; i++)
@@ -666,9 +667,9 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	va_start(arguments,n_args);
 	for (int i = 0; i <= n_args; i++) {
-		int hostid = va_arg(arguments, int);
+		BC_WORD *host_node = va_arg(arguments, BC_WORD*);
 		ie->asp[i == n_args ? n_args+1 : n_args-i] = (BC_WORD) ie->hp;
-		ie->hp += make_host_node(ie->hp, hostid, 0);
+		ie->hp=copy_to_interpreter(ie, ie->hp, host_node);
 	}
 	ie->asp += n_args+1;
 	va_end(arguments);

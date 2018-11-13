@@ -94,50 +94,24 @@ __interpret__copy__node__asm__n:
 	push	rbp
 __interpret__copy__node__asm__n_dont_align:
 
-	# Temporarily store int argument in host_status
-	mov	rbp,[rbp]
-	mov	[rbp],rax
-
-	# Add arguments to shared nodes array in InterpretationEnvironment
-	# Simultaneously, push the indices to the stack as variadic arguments
+	# Push Clean arguments to the C stack
 	mov	r9,rax
-	shl	r9,3
-	mov	[rsi],rcx
-	mov	[rsi+8],rdx
-	mov	[rsi+16],r8
-	add	rsi,24
-	mov	rbp,[r8+16]
-	mov	rdx,[rbp]
-	mov	rax,[rbp+8]
+	shl	rax,3
+	push	rcx
 __interpret__copy__node__asm__n_adding_shared_nodes:
-	push	r9
-	call	e__ABC_PInterpreter_PInternal__sadd__shared__node
-	pop	r9
-	push	rbx
-	test	r9,r9
+	test	rax,rax
 	je	__interpret__copy__node__asm__n_added_shared_nodes
-	sub	r9,8
-	mov	rdx,rcx
 	mov	rbp,rsi
-	sub	rbp,r9
-	mov	rcx,[rbp-32]
+	sub	rbp,rax
+	push	[rbp]
+	sub	rax,8
 	jmp	__interpret__copy__node__asm__n_adding_shared_nodes
 __interpret__copy__node__asm__n_added_shared_nodes:
-	sub	rsi,24
-	mov	r8,[rsi+16]
-	mov	rbp,[r8+16]
-	mov	[rbp],rcx
-	mov	[rbp+8],rax
-	mov	rdx,[rsi+8]
 
 	# Get interpretation_environment
 	mov	rbp,[r8+8]
 	mov	rbp,[rbp+16]
 	mov	rbp,[rbp+8]
-
-	# Retrieve int argument from host_status
-	mov	r9,[rbp]
-	mov	r9,[r9]
 
 	# Prepare for calling C function
 	mov	rax,r9

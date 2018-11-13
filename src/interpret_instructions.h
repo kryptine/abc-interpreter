@@ -8594,15 +8594,12 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 #endif
 	}
 
-	/* TODO: if possible, it is more efficient to not create the new object at
-	 * all.
-	 */
-	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
-	n[0] = hp[0];
-	n[1] = hp[1];
+	BC_WORD *old_hp=hp;
+	hp=copy_to_interpreter(ie, hp, host_node);
+	n[0]=old_hp[0];
+	n[1]=old_hp[1];
 	if (((int16_t*)(n[0]))[-1] >= 2)
-		n[2] = hp[2];
-	hp += words_used;
+		n[2]=old_hp[2];
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -8771,10 +8768,9 @@ jsr_eval_host_node_with_args:
 	}
 	hp = ie->hp;
 
-	BC_WORD words_used = copy_to_interpreter(ie, hp, heap_free, host_node);
-	asp-=instr_arg-1;
-	asp[0] = (BC_WORD) hp;
-	hp += words_used;
+	asp-=instr_arg;
+	asp[0]=(BC_WORD)hp;
+	hp=copy_to_interpreter(ie, hp, host_node);
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
