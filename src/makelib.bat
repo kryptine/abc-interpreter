@@ -2,7 +2,6 @@
 cl /nologo /c  /GS- ^
 	/O2 ^
 	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS ^
-	abc_instructions.c ^
 	bytecode.c ^
 	copy_host_to_interpreter.c ^
 	copy_interpreter_to_host.c ^
@@ -14,5 +13,6 @@ cl /nologo /c  /GS- ^
 	parse.c ^
 	traps.c ^
 	util.c
+cl /nologo /c /GS- /DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS abc_instructions.c
 ml64 /nologo /c /Fo interface.obj interface.asm
 move *.obj "Clean System Files" >nul

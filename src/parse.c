@@ -301,7 +301,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #ifdef DEBUG_CURSES
 				state->program->nr_instructions++;
 #endif
-				char *type = instruction_type(elem16);
+				const char *type = instruction_type(elem16);
 				for (; *type; type++) {
 #ifdef LINKER
 					state->ptr++;
