@@ -11,7 +11,6 @@ import StdString
 
 import Data._Array
 import Data.Error
-from Data.Func import hyperstrict
 import Data.Maybe
 import System.CommandLine
 import System.File

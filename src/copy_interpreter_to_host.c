@@ -67,6 +67,7 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->hp = hp;
 	ie->caf_list[0] = 0;
 	ie->caf_list[1] = &ie->caf_list[1];
+	ie->in_first_semispace=1;
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
@@ -317,12 +318,24 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 
 	if (!(node[0] & 2)) {
 #if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tthunk\n");
+		EPRINTF("\tthunk %p\n",node);
 #endif
-		host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret;
-		host_heap[1]=(BC_WORD)clean_ie;
-		host_heap[2]=(BC_WORD)&host_heap[3];
-		return build_finalizer(&host_heap[3], interpreter_finalizer, (BC_WORD)node);
+		if (*((BC_WORD*)node[0]) ==
+#ifdef COMPUTED_GOTOS
+				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
+#else
+				Cjsr_eval_host_node
+#endif
+				) {
+			struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
+			*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+((BC_WORD*)node[1])[1]];
+			return host_heap;
+		} else {
+			host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret;
+			host_heap[1]=(BC_WORD)clean_ie;
+			host_heap[2]=(BC_WORD)&host_heap[3];
+			return build_finalizer(&host_heap[3], interpreter_finalizer, (BC_WORD)node);
+		}
 	}
 
 	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2) {
@@ -394,7 +407,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
 		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
-			EPRINTF("\tstill %d argument(s) needed (%d present)\n",args_needed,a_arity);
+			EPRINTF("\tstill %d argument(s) needed for %p (%d present)\n",args_needed,node,a_arity);
 #endif
 			switch (args_needed) {
 				case  1: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__1 +(2<<IF_MACH_O_ELSE(4,3))+2; break;
@@ -493,8 +506,18 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 }
 
 static int copied_node_size(BC_WORD *node) {
-	if (!(node[0] & 2)) /* thunk, delay interpretation */
-		return 3+FINALIZER_SIZE_ON_HEAP;
+	if (!(node[0] & 2)) { /* thunk, delay interpretation */
+		if (*((BC_WORD*)node[0]) ==
+#ifdef COMPUTED_GOTOS
+				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
+#else
+				Cjsr_eval_host_node
+#endif
+				)
+			return 0;
+		else
+			return 3+FINALIZER_SIZE_ON_HEAP;
+	}
 
 	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2)
 		return 0;
@@ -667,14 +690,22 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	*++ie->asp = (BC_WORD)node;
 
 	va_start(arguments,n_args);
+	for (int i=1; i<=n_args+1; i++)
+		ie->asp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
+	ie->asp += n_args+1;
 	for (int i = 0; i <= n_args; i++) {
 		BC_WORD *host_node = va_arg(arguments, BC_WORD*);
-		ie->asp[i == n_args ? n_args+1 : n_args-i] = (BC_WORD) ie->hp;
-		ie->hp=copy_to_interpreter(ie, ie->hp, host_node);
+		int words_used=copy_to_interpreter_or_garbage_collect(ie, host_node);
+		if (words_used<0) {
+			EPRINTF("Interpreter is out of memory\n");
+			return -1;
+		}
+		ie->asp[i == n_args ? 0 : -i-1] = (BC_WORD) ie->hp;
+		ie->hp+=words_used;
 	}
-	ie->asp += n_args+1;
 	va_end(arguments);
 
+	node=(BC_WORD*)ie->asp[-n_args-1];
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\tarity is %d\n",a_arity);
@@ -709,5 +740,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	node = (BC_WORD*) *ie->asp--;
 
 	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr,
-			__interpret__copy__node__asm_redirect_node, node);
+			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
 }
