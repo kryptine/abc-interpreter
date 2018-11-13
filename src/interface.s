@@ -56,7 +56,7 @@ __interpret__copy__node__asm_finish:
 	restore_registers
 	cmp	rbp,-2 # Out of memory
 	je	__interpret__copy__node__asm_gc
-	cmp	rbp,-3 # Redirect to host node
+	cmp	rbp,0 # Redirect to host node
 	je	__interpret__copy__node__asm_redirect
 
 	mov	rcx,rdi

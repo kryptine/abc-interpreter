@@ -104,10 +104,12 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 	}
 	int ab_arity=a_arity+b_arity;
 
-	if (host_symbol == NULL) {
-		/* TODO */
-		EPRINTF("Descriptor %p not found in interpreter; this still has to be implemented\n",host_desc_label);
-		exit(1);
+	if (host_symbol==NULL) {
+		/* The host symbol does not exist in the interpreter; wrap it as a HNF indirection */
+		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+		heap[0]=(BC_WORD)&HOST_NODE_HNF+2;
+		heap[1]=nodeid;
+		return &heap[2];
 	}
 
 #if DEBUG_CLEAN_LINKS > 1

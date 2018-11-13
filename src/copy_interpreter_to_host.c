@@ -312,7 +312,9 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 }
 
 static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
-		BC_WORD *host_heap, BC_WORD *node) {
+		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
+	*target=host_heap;
+
 	if (!(node[0] & 2)) {
 #if DEBUG_CLEAN_LINKS > 1
 		EPRINTF("\tthunk\n");
@@ -323,7 +325,11 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return build_finalizer(&host_heap[3], interpreter_finalizer, (BC_WORD)node);
 	}
 
-	if (node[0]==(BC_WORD)&INT+2 ||
+	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2) {
+		struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
+		*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
+		return host_heap;
+	} else if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&CHAR+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2) {
@@ -348,10 +354,8 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			host_heap[2]=node[2];
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
-			for (int i=0; i<len; i++) {
-				new_array[i]=host_heap;
-				host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)node[i+3]);
-			}
+			for (int i=0; i<len; i++)
+				host_heap=copy_to_host(clean_ie, host_heap, &new_array[i], (BC_WORD*)node[i+3]);
 			return host_heap;
 		} else { /* unboxed array */
 			desc|=2;
@@ -364,10 +368,8 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			BC_WORD *new_array=&host_heap[3];
 			host_heap+=3+len*elem_ab_arity;
 			for (int i=0; i<len; i++) {
-				for (int a=0; a<elem_a_arity; a++) {
-					new_array[a]=(BC_WORD)host_heap;
-					host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)node[a]);
-				}
+				for (int a=0; a<elem_a_arity; a++)
+					host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&new_array[a], (BC_WORD*)node[a]);
 				for (int b=elem_a_arity; b<elem_ab_arity; b++)
 					new_array[b]=node[b];
 				node+=elem_ab_arity;
@@ -457,13 +459,11 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		host_heap += 1+ab_arity;
 
 		if (a_arity >= 1) {
-			host_node[1]=(BC_WORD)host_heap;
-			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)node[1]);
+			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
 
-			if (a_arity == 2) {
-				host_node[2]=(BC_WORD)host_heap;
-				host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)node[2]);
-			} else if (b_arity == 1)
+			if (a_arity == 2)
+				host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[2], (BC_WORD*)node[2]);
+			else if (b_arity == 1)
 				host_node[2] = node[2];
 		} else if (b_arity >= 1) {
 			host_node[1] = node[1];
@@ -472,18 +472,16 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		}
 	} else if (ab_arity >= 3) {
 		host_heap += ab_arity + 2;
-		if (a_arity >= 1) {
-			host_node[1]=(BC_WORD)host_heap;
-			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)node[1]);
-		} else
+		if (a_arity >= 1)
+			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[1], (BC_WORD*)node[1]);
+		else
 			host_node[1] = node[1];
 		host_node[2] = (BC_WORD) &host_node[3];
 		BC_WORD *rest = (BC_WORD*) node[2];
 		host_node+=3;
-		for (int i = 0; i < a_arity - 1; i++) {
-			host_node[i]=(BC_WORD)host_heap;
-			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD*)rest[i]);
-		} for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
+		for (int i = 0; i < a_arity - 1; i++)
+			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[i], (BC_WORD*)rest[i]);
+		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[i] = (BC_WORD) rest[i];
 	}
 
@@ -498,7 +496,9 @@ static int copied_node_size(BC_WORD *node) {
 	if (!(node[0] & 2)) /* thunk, delay interpretation */
 		return 3+FINALIZER_SIZE_ON_HEAP;
 
-	if (node[0]==(BC_WORD)&INT+2 ||
+	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2)
+		return 0;
+	else if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&CHAR+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2)
@@ -565,14 +565,14 @@ static int copied_node_size(BC_WORD *node) {
 }
 
 int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
-		BC_WORD *host_heap, BC_WORD *node) {
+		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	int words_needed=copied_node_size(node);
 
 	if (words_needed > ie->host->host_hp_free)
 		return -2;
 
-	BC_WORD *new_heap=copy_to_host(clean_ie,host_heap,node);
+	BC_WORD *new_heap=copy_to_host(clean_ie,host_heap,target,node);
 	int words_used=new_heap-host_heap;
 
 	if (words_used != words_needed) {
@@ -618,7 +618,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\tTarget is a host node (%p); returning immediately\n", (void*)node[1]);
 #endif
-			return -3;
+			return 0;
 		} else {
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\tInterpreting...\n");
@@ -632,7 +632,8 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr, node);
+	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr,
+			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
 }
 
 /**
@@ -707,5 +708,6 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr, node);
+	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr,
+			__interpret__copy__node__asm_redirect_node, node);
 }
