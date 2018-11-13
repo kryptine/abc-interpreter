@@ -247,7 +247,7 @@ void print_code(struct program *pgm) {
 	uint32_t i;
 	char _tmp[256];
 	for (i = 0; i < pgm->code_size; i++) {
-		char *fmt = instruction_type(pgm->code[i]);
+		const char *fmt = instruction_type(pgm->code[i]);
 		WPRINTF(w, "%d\t%s", i, instruction_name(pgm->code[i]));
 		for (; *fmt; fmt++) {
 			i++;

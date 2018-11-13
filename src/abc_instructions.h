@@ -726,7 +726,7 @@ enum {
 #ifndef _COMPUTED_GOTO_LABELS
 # include "bytecode.h"
 char *instruction_name(BC_WORD i);
-char *instruction_type(BC_WORD i);
+const char *instruction_type(BC_WORD i);
 #endif
 
 #endif

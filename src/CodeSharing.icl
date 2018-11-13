@@ -50,7 +50,7 @@ where
 		-> [Int]
 	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map =
 		[ intsquare 6 + intsquare 1
-		, sub5 (last [1..47]) 1 2 3 (square 2)
+		, sub5 (last [1..470000]/10000) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
 		, sumints [1,1,2,3,4,5,6,7,8]
 		, last (rev [37,36..0])
