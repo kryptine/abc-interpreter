@@ -141,7 +141,7 @@ __interpret__copy__node__asm__n_dont_align_2:
 	jmp	__interpret__copy__node__asm_finish
 
 public __interpret__evaluate__host
-	; Call as __interpret__evaluate__host(ie, node)
+	; Call as __interpret__evaluate__host(node, ie)
 __interpret__evaluate__host:
 	mov	[rsp+8],rbx
 	mov	[rsp+16],rbp
@@ -181,8 +181,7 @@ __interpret__evaluate__host:
 	ret
 
 public __interpret__evaluate__host_with_args
-	; Call as __interpret__evaluate__host_with_args(ie, _, arg1, arg2, node, ap_address)
-	; or (arg2, arg1, node, ap_address, ie) on Windows
+	; Call as __interpret__evaluate__host_with_args(arg2, arg1, node, ap_address, ie)
 __interpret__evaluate__host_with_args:
 	mov	[rsp+8],rbx
 	mov	[rsp+16],rbp

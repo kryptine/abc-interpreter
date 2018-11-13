@@ -7,6 +7,7 @@
 #include "util.h"
 
 extern void *__Tuple;
+extern int __interpret__add__shared__node(void *clean_InterpretationEnvironment, void *node);
 
 static int copied_node_size(struct program *program, BC_WORD *node) {
 	if (!(node[0] & 2)) /* thunk, delay interpretation */
@@ -90,10 +91,11 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		BC_WORD *heap, BC_WORD *node) {
 	BC_WORD *org_heap = heap;
 	struct program *program = ie->program;
-	/* TODO: check if we need garbage collection */
 
 	if (!(node[0] & 2)) {
+		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
 		heap[1]=(BC_WORD)&heap[2];
 		heap[2]=(BC_WORD)&INT+2;
@@ -174,7 +176,9 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
 		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
+			*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 			int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+			ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
 			heap[1]=(BC_WORD)&heap[2];
 			heap[2]=(BC_WORD)&INT+2;
@@ -186,7 +190,9 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 
 	if (host_symbol==NULL || host_symbol->interpreter_location==(BC_WORD*)-1) {
 		/* The host symbol does not exist in the interpreter; wrap it as a HNF indirection */
+		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		heap[0]=(BC_WORD)&HOST_NODE_HNF+2;
 		heap[1]=nodeid;
 		return &heap[2];

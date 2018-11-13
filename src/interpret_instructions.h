@@ -8587,7 +8587,9 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		ie->bsp = bsp;
 		ie->csp = csp;
 		ie->hp = hp;
+		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 		host_node = __interpret__evaluate__host(ie, host_node);
+		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		hp = ie->hp;
 #if DEBUG_CLEAN_LINKS > 1
 		EPRINTF("\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
@@ -8727,6 +8729,8 @@ jsr_eval_host_node_with_args:
 		EPRINTF("\targ %d: %p -> %p\n",i,(void*)asp[-i],*(void**)asp[-i]);
 #endif
 
+	*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
+
 	for (int i=instr_arg; i>=1; i--) {
 		int added_words=copy_to_host_or_garbage_collect(
 				ie->host->clean_ie, ie->host->host_hp_ptr,
@@ -8778,6 +8782,8 @@ jsr_eval_host_node_with_args:
 #endif
 	}
 	hp = ie->hp;
+
+	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
 	asp-=instr_arg+1;
 	ie->asp = asp;

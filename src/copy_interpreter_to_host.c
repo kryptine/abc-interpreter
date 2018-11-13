@@ -655,7 +655,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr,
+	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
 			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
 }
 
@@ -739,6 +739,6 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	node = (BC_WORD*) *ie->asp--;
 
-	return copy_to_host_or_garbage_collect(clean_ie, ie->host->host_hp_ptr,
+	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
 			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
 }
