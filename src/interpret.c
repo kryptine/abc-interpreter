@@ -98,7 +98,8 @@ void build_host_nodes(void) {
 # define INSTR(i) i
 #endif
 		if (arity == 1) {
-			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node);
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = (BC_WORD)1 << IF_INT_64_OR_32(48,16);
+			HOST_NODE_INSTRUCTIONS[6*arity-5] = INSTR(Cjsr_eval_host_node);
 		} else if (arity <= 5) {
 			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1);
 			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(
@@ -268,6 +269,7 @@ int interpret(
 	void **caf_list = ie->caf_list;
 #else
 	void *caf_list[2] = {0, &caf_list[1]};
+	int in_first_semispace=1;
 #endif
 	int instr_arg;
 
@@ -277,7 +279,7 @@ int interpret(
 	csp = _csp;
 	hp = _hp;
 	heap_size /= 2; /* copying garbage collector */
-	BC_WORD_S heap_free = heap + heap_size - hp;
+	BC_WORD_S heap_free = heap + heap_size - hp; /* TODO check semispace */
 
 	BC_WORD ret = EVAL_TO_HNF_LABEL;
 
@@ -343,6 +345,11 @@ eval_to_hnf_return:
 #endif
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free, caf_list
+#ifdef LINK_CLEAN_RUNTIME
+				, &ie->in_first_semispace
+#else
+				, &in_first_semispace
+#endif
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, program->code, program->data
 #endif
@@ -353,8 +360,8 @@ eval_to_hnf_return:
 		if (heap_free <= old_heap_free) {
 			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
 			exit(1);
-		} else {
 #ifdef DEBUG_GARBAGE_COLLECTOR
+		} else {
 			EPRINTF("Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
 #endif
 		}

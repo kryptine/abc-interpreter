@@ -13,13 +13,11 @@
 # include "../finalizers.h"
 #endif
 
-int in_first_semispace = 1;
-
 BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
-		void **cafs) {
-	BC_WORD *old_heap = in_first_semispace ? heap : heap + heap_size;
-	BC_WORD *new_heap = in_first_semispace ? heap + heap_size : heap;
+		void **cafs, int *in_first_semispace) {
+	BC_WORD *old_heap = *in_first_semispace ? heap : heap + heap_size;
+	BC_WORD *new_heap = *in_first_semispace ? heap + heap_size : heap;
 
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
@@ -73,6 +71,8 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 # if (DEBUG_GARBAGE_COLLECTOR > 2)
 		fprintf(stderr, "\t%p -> %p\n", (void*)finalizers->cur->arg, ((void**)finalizers->cur->arg)[1]);
 # endif
+		if (!on_heap(finalizers->cur->arg, old_heap, heap_size))
+			continue;
 		BC_WORD *temp = (BC_WORD*) finalizers->cur->arg;
 		finalizers->cur->arg = *temp;
 		*temp = (BC_WORD) (&finalizers->cur->arg) | 1;
@@ -318,8 +318,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 			/* No pointer arguments */
 			*new_heap = node[0];
 			node[0] = (BC_WORD) new_heap;
-			new_heap++;
-			new_heap += 2;
+			new_heap+=3;
 		} else { /* Thunk, 3+ places and perhaps pointer to rest */
 			int16_t arity = ((int16_t*)(node[0]))[-1];
 			int8_t a_arity, b_arity;
@@ -363,13 +362,13 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 
 	free_nodes_set(&nodes_set);
 
-	if (in_first_semispace) {
+	if (*in_first_semispace) {
 		*heap_free = heap + 2 * heap_size - new_heap;
 	} else {
 		*heap_free = heap + heap_size - new_heap;
 	}
 
-	in_first_semispace = 1 - in_first_semispace;
+	*in_first_semispace = 1 - *in_first_semispace;
 
 	return new_heap;
 }
