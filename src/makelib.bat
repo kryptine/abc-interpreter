@@ -1,6 +1,5 @@
 @echo off
-cl /nologo /c  /GS- ^
-	/O2 ^
+cl /nologo /c /O2 /GS- ^
 	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS ^
 	bytecode.c ^
 	copy_host_to_interpreter.c ^
@@ -13,6 +12,5 @@ cl /nologo /c  /GS- ^
 	parse.c ^
 	traps.c ^
 	util.c
-cl /nologo /c /GS- /DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS abc_instructions.c
 ml64 /nologo /c /Fo interface.obj interface.asm
 move *.obj "Clean System Files" >nul
