@@ -91,7 +91,8 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
 	copy_host_to_interpreter.c\
 	copy_interpreter_to_host.c\
-	finalizers.c
+	finalizers.c\
+	strip.c
 ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
 OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB)) interface.o
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\

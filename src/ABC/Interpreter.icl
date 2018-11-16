@@ -50,6 +50,10 @@ serialize_for_interpretation graph bcfile w
 | isError bytecode = abort "Failed to read the bytecode file\n"
 # bytecode = fromOk bytecode
 
+#! bytecodep = strip_bytecode bytecode {#symbol_name di mods \\ di <-: descs}
+#! bytecode = derefString bytecodep
+| free_to_false bytecodep = abort "cannot happen\n"
+
 # rec =
 	{ graph    = graph
 	, descinfo = descs
@@ -57,6 +61,20 @@ serialize_for_interpretation graph bcfile w
 	, bytecode = bytecode
 	}
 = (rec, w)
+where
+	symbol_name :: !DescInfo !{#String} -> String
+	symbol_name {di_prefix_arity_and_mod,di_name} mod_a
+	# prefix_n = di_prefix_arity_and_mod bitand 0xff
+	# module_n = (di_prefix_arity_and_mod >> 8)-1
+	# module_name = mod_a.[module_n]
+	= make_symbol_name module_name di_name (min prefix_n PREFIX_D)
+	where
+		PREFIX_D = 4
+
+	strip_bytecode :: !String !{#String} -> Pointer
+	strip_bytecode bytecode descriptors = code {
+		ccall strip_bytecode "sA:VIp"
+	}
 
 deserialize :: !SerializedGraph !FilePath !*World -> *(a, !*World)
 deserialize {graph,descinfo,modules,bytecode} thisexe w
