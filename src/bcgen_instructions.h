@@ -109,6 +109,7 @@ void code_fillI_b(int b_offset, int a_offset);
 void code_fillR_b(int b_offset, int a_offset);
 void code_fillcaf(char *label_name, int a_stack_size, int b_stack_size);
 void code_fill_a(int from_offset, int to_offset);
+void code_fill_u(char descriptor_name[], int a_size, int b_size, char code_name[], int a_offset);
 void code_fill_r(char descriptor_name[], int a_size, int b_size, int root_offset, int a_offset, int b_offset);
 void code_get_node_arity(int a_offset);
 void code_gtI(void);

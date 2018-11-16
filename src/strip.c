@@ -374,8 +374,10 @@ static void activate_label(struct s_label *label) {
 						break;
 					case 'l': /* Label */
 						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
-						add_label_to_queue(&labels[reloc->relocation_label]);
-						add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+						if (instr<CA_data_IIIla || reloc!=NULL) { /* labels in .n/.nu directives may be NULL */
+							add_label_to_queue(&labels[reloc->relocation_label]);
+							add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+						}
 						store_code_elem(4, *(uint32_t*)code_block);
 						code_block+=4;
 						break;

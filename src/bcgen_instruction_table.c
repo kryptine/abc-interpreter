@@ -130,6 +130,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fillcaf",               parse_instruction_a_n_n,         code_fillcaf );
 	put_instruction_name("fillh",                 parse_instruction_a_n_n,         code_fillh );
 	put_instruction_name("fill_a",                parse_instruction_n_n,           code_fill_a );
+	put_instruction_name("fill_u",                parse_instruction_a_n_n_a_n,     code_fill_u );
 	put_instruction_name("fill_r",                parse_instruction_a_n_n_n_n_n,   code_fill_r );
 	put_instruction_name("get_node_arity",        parse_instruction_n,             code_get_node_arity );
 	put_instruction_name("getWL",                 parse_instruction_n,             code_dummy );

@@ -13,6 +13,7 @@ int parse_instruction_a_n_a_a_n_a(struct instruction*);
 int parse_instruction_a_n_a_n(struct instruction*);
 int parse_instruction_a_n_n(struct instruction*);
 int parse_instruction_a_n_n_a(struct instruction*);
+int parse_instruction_a_n_n_a_n(struct instruction*);
 int parse_instruction_a_n_n_n(struct instruction*);
 int parse_instruction_a_n_n_b(struct instruction*);
 int parse_instruction_a_n_n_n_b(struct instruction*);

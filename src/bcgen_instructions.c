@@ -1564,18 +1564,53 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 }
 
 void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
-	if (b_size==0) {
-		code_fill1(descriptor_name,a_size,root_offset,bits);
-		return;
-	} else if (b_size==1) {
-		if (a_size==0) {
-			if (bits[0]=='0') {
-				if (bits[1]=='0')
-					return;
-				add_instruction_w(Cfill0110,-root_offset);
+	switch (a_size+b_size) {
+		case 1:
+			if (bits[0]=='0' && bits[1]=='0') {
+				/* nop */
 				return;
 			}
-		}
+			if (b_size==1) {
+				if (bits[0]=='0' && bits[1]=='1') {
+					add_instruction_w(Cfill1_r0101,-root_offset);
+					return;
+				}
+			} else {
+				if (bits[0]=='0' && bits[1]=='1') {
+					add_instruction_w(Cfill1_r1001,-root_offset);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1') {
+					add_instruction_w_label_offset(Cfill1_r1011,-root_offset,descriptor_name,2);
+					return;
+				}
+			}
+			break;
+		case 2:
+			if (bits[0]=='0' && bits[1]=='0' && bits[2]=='0') {
+				/* nop */
+				return;
+			}
+			if (a_size==2) {
+				if (bits[0]=='0' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r20001,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w(Cfill1_r20010,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r20011,-root_offset);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1_r20111,-root_offset,descriptor_name,2);
+					return;
+				}
+			} else if (b_size==1 && a_size==1) {
+				if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1_r11111,-root_offset,descriptor_name,2);
+					return;
+				}
+			}
+			break;
 	}
 
 	fprintf(stderr, "Error: fill1_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
@@ -1704,9 +1739,6 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 				} else if (bit_n2-1>=a_size) {
 					add_instruction_w_w_w(Cfill2ab002,-root_offset,bit_n1-2,bit_n2-2);
 					return;
-				} else {
-					code_fill2(descriptor_name,a_size,root_offset,bits);
-					return;
 				}
 			} else {
 				int bit_n;
@@ -1797,8 +1829,11 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 		}
 	}
 
-	fprintf(stderr, "Error: fill2_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
-	exit(1);
+	uint32_t bitvec=0;
+	for (i=0; i<ab_size; i++)
+		bitvec=(bitvec<<1)|(bits[i]=='1' ? 1 : 0);
+
+	add_instruction_w_label_offset_w_w_w(Cfill2_r,-root_offset,descriptor_name,2,a_size,b_size,bitvec);
 }
 
 void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
@@ -1836,9 +1871,22 @@ void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 	for(i=0; i<ab_size; ++i)
 		 n_bits += bits[i]-'0';
 
-	if (n_bits==1 && bits[0]=='1' && ab_size>2) {
-		if (a_size>=1) {
+	if (n_bits==1 && ab_size>2) {
+		if (bits[0]=='1' && a_size>=1) {
 			add_instruction_w_label_offset(Cfill3a10,-root_offset,descriptor_name,2);
+			return;
+		}
+
+		int bit_n;
+		for(bit_n=1; bit_n<ab_size; ++bit_n)
+			if (bits[bit_n]!='0')
+				break;
+
+		if (bit_n>=a_size) {
+			add_instruction_w_label_offset_w(Cfill3_r01b,-root_offset,descriptor_name,2,bit_n);
+			return;
+		} else {
+			add_instruction_w_label_offset_w(Cfill3_r01a,-root_offset,descriptor_name,2,bit_n);
 			return;
 		}
 	}
@@ -1877,8 +1925,11 @@ void code_fill3_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 		}
 	}
 
-	fprintf(stderr, "Error: fill3_r %s %d %d %d %s\n",descriptor_name,a_size,b_size,root_offset,bits);
-	exit(1);
+	uint32_t bitvec=0;
+	for (i=0; i<ab_size; i++)
+		bitvec=(bitvec<<1)|(bits[i]=='1' ? 1 : 0);
+
+	add_instruction_w_label_offset_w_w_w(Cfill3_r,-root_offset,descriptor_name,2,a_size,b_size,bitvec);
 }
 
 void code_fillcaf(char *label_name,int a_stack_size,int b_stack_size) {
@@ -1934,6 +1985,15 @@ void code_fillR_b(int b_offset,int a_offset) {
 
 void code_fill_a(int from_offset,int to_offset) {
 	add_instruction_w_w(Cfill_a,-from_offset,-to_offset);
+}
+
+void code_fill_u(char descriptor_name[], int a_size, int b_size, char code_name[], int a_offset) {
+	if (!(descriptor_name[0]=='_' && descriptor_name[1]=='_' && descriptor_name[2]=='\0')) {
+		fprintf(stderr,"Error: fill_u %s %d %d %s %d\n",descriptor_name,a_size,b_size,code_name,a_offset);
+		exit(1);
+	}
+
+	add_instruction_w_w_label_offset_w(Cfill_u,a_size,b_size,code_name,0,a_offset);
 }
 
 void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,int a_offset,int b_offset) {
@@ -4432,12 +4492,6 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	((uint32_t*)bytecode)[6]=pgrm.code_reloc_size;
 	((uint32_t*)bytecode)[7]=pgrm.data_reloc_size;
 	((uint32_t*)bytecode)[8]=start_label==NULL ? -1 : start_label->label_id;
-
-	/*EPRINTF("\t%d %d\n\t%d %d\n\t%d %d\n\t%d %d\n",
-			pgrm.code_size, pgrm.data_size,
-			pgrm.words_in_strings, pgrm.strings_size,
-			label_id, global_label_string_count,
-			pgrm.code_reloc_size, pgrm.data_reloc_size);*/
 
 	char *ptr=(char*)&((uint32_t*)bytecode)[9];
 	for (int i=0; i<pgrm.code_size; i++) {

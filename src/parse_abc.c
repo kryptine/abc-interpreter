@@ -936,6 +936,23 @@ int parse_instruction_a_n_n_a (instruction *instruction)
 	return 1;
 }
 
+int parse_instruction_a_n_n_a_n (instruction *instruction)
+{
+	STRING a1,a2;
+	int64_t n1,n2,n3;
+
+	parse_label (a1);
+	if (!parse_integer (&n1))
+		return 0;
+	if (!parse_integer (&n2))
+		return 0;
+	parse_label (a2);
+	if (!parse_integer (&n3))
+		return 0;
+	instruction->code_function (a1,(int)n1,(int)n2,a2,(int)n3);
+	return 1;
+}
+
 int parse_instruction_a_n_n_n (instruction *instruction)
 {
 	STRING a;
