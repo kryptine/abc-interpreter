@@ -4373,3 +4373,19 @@ void write_program(FILE *program_file) {
 		exit(1);
 	}
 }
+
+void free_label_node(struct label_node *node) {
+	free(node->label_node_label_p->label_name);
+	free(node->label_node_label_p);
+	if (node->label_node_left!=NULL)
+		free_label_node(node->label_node_left);
+	if (node->label_node_right!=NULL)
+		free_label_node(node->label_node_right);
+	free(node);
+}
+
+void free_generated_program(void) {
+	free_program(&pgrm);
+	if (labels!=NULL)
+		free_label_node(labels);
+}

@@ -20,6 +20,11 @@ void free_program(struct program *pgm) {
 	if (pgm->host_symbols_strings != NULL)
 		free(pgm->host_symbols_strings);
 #endif
+#if defined(BCGEN) || defined(LINKER)
+	free(pgm->strings);
+	free(pgm->code_relocations);
+	free(pgm->data_relocations);
+#endif
 }
 
 #ifdef INTERPRETER

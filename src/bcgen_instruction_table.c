@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "bcgen_instructions.h"
@@ -8,6 +9,20 @@
 
 // Global instruction table
 inst_element** inst_table;
+
+void free_inst_element(inst_element *elem) {
+	if (elem->next!=NULL)
+		free_inst_element(elem->next);
+	free(elem->instruction);
+	free(elem);
+}
+
+void free_instruction_table(void) {
+	for (int i=0; i<BCGEN_INSTRUCTION_TABLE_SIZE; i++)
+		if (inst_table[i]!=NULL)
+			free_inst_element(inst_table[i]);
+	free(inst_table);
+}
 
 // Calculate "hash" of string
 static unsigned int instruction_hash(char *s) {

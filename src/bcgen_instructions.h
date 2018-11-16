@@ -20,6 +20,7 @@ void initialize_code(void);
 void code_next_module(void);
 struct word *add_add_arg_labels(void);
 void write_program(FILE*);
+void free_generated_program(void);
 void add_code_and_data_offsets(void);
 
 struct label *enter_label(char *label_name);

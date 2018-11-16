@@ -68,9 +68,11 @@ int main(int argc, char **argv) {
 
 		free_program(parser.program);
 		free(parser.program);
+		fclose(f);
 	}
 
 	write_program(output_file);
+	free_generated_program();
 
 	return 0;
 }

@@ -59,6 +59,7 @@ SRC_BCGEN:=\
 	bcgen.c\
 	bcgen_instructions.c\
 	bcgen_instruction_table.c\
+	bytecode.c\
 	parse_abc.c\
 	util.c
 DEP_BCGEN:=$(subst .c,.h,$(SRC_BCGEN)) settings.h

@@ -17,3 +17,4 @@ typedef struct inst_element {
 void load_instruction_table(void);
 instruction* instruction_lookup(char*);
 void init_instruction_table(void);
+void free_instruction_table(void);

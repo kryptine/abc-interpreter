@@ -31,7 +31,10 @@ void parse_files(FILE **abc_files, unsigned int nr_abc_files) {
 	unsigned int i;
 	for(i = 0; i < nr_abc_files; i++) {
 		parse_file(abc_files[i]);
+		fclose(abc_files[i]);
 	}
+
+	free_instruction_table();
 }
 
 int main (int argc, char *argv[]) {
@@ -73,6 +76,7 @@ int main (int argc, char *argv[]) {
 
 	add_add_arg_labels();
 	write_program(output_file);
+	free_generated_program();
 
 	return 0;
 }
