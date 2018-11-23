@@ -50,14 +50,14 @@ serialize_for_interpretation graph bcfile w
 | isError bytecode = abort "Failed to read the bytecode file\n"
 # bytecode = fromOk bytecode
 
-#! bytecodep = strip_bytecode bytecode {#symbol_name di mods \\ di <-: descs}
-#! bytecode = derefString bytecodep
+#! (len,bytecodep) = strip_bytecode bytecode {#symbol_name di mods \\ di <-: descs}
+#! bytecode = derefCharArray bytecodep len
 | free_to_false bytecodep = abort "cannot happen\n"
 
 # rec =
 	{ graph    = graph
-	, descinfo = descs
-	, modules  = mods
+	, descinfo = {}//descs // TODO
+	, modules  = {}//mods
 	, bytecode = bytecode
 	}
 = (rec, w)
@@ -71,7 +71,7 @@ where
 	where
 		PREFIX_D = 4
 
-	strip_bytecode :: !String !{#String} -> Pointer
+	strip_bytecode :: !String !{#String} -> (!Int, !Pointer)
 	strip_bytecode bytecode descriptors = code {
 		ccall strip_bytecode "sA:VIp"
 	}

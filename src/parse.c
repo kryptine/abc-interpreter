@@ -26,7 +26,7 @@ void init_parser(struct parser *state
 		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
 #endif
 		) {
-	state->state = PS_init_code;
+	state->state = PS_init;
 	state->program = safe_calloc(1, sizeof(struct program));
 
 	state->ptr = 0;
@@ -112,25 +112,7 @@ void next_state(struct parser *state) {
 	state->symbols_ptr = 0;
 
 	switch (state->state) {
-		case PS_init_code:
-			state->state = PS_init_words_in_strings;
-			return;
-		case PS_init_words_in_strings:
-			state->state = PS_init_strings;
-			return;
-		case PS_init_strings:
-			state->state = PS_init_data;
-			return;
-		case PS_init_data:
-			state->state = PS_init_symbol_table;
-			return;
-		case PS_init_symbol_table:
-			state->state = PS_init_code_reloc;
-			return;
-		case PS_init_code_reloc:
-			state->state = PS_init_data_reloc;
-			return;
-		case PS_init_data_reloc:
+		case PS_init:
 			state->state = PS_code;
 #ifdef LINKER
 			if (state->code_size > 0)
@@ -209,7 +191,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 	while (state->state != PS_end) {
 		switch (state->state) {
-			case PS_init_code:
+			case PS_init:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
@@ -218,9 +200,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->program->code_size = elem32;
 #endif
 				state->program->code = safe_malloc(sizeof(BC_WORD) * elem32);
-				next_state(state);
-				break;
-			case PS_init_words_in_strings:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
@@ -230,9 +210,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->words_in_strings = elem32;
 # endif
 #endif
-				next_state(state);
-				break;
-			case PS_init_strings:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->strings_size = elem32;
@@ -241,9 +219,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->strings = safe_malloc(sizeof(uint32_t*) * (elem32+1));
 				state->strings[elem32] = 0;
 #endif
-				next_state(state);
-				break;
-			case PS_init_data:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
@@ -258,9 +234,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
 #endif
-				next_state(state);
-				break;
-			case PS_init_symbol_table:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table_size = elem32;
@@ -268,18 +242,15 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
-				next_state(state);
-				break;
-			case PS_init_code_reloc:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->code_reloc_size = elem32;
-				next_state(state);
-				break;
-			case PS_init_data_reloc:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->data_reloc_size = elem32;
+
 				next_state(state);
 				break;
 			case PS_code: {
@@ -348,7 +319,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
 #endif
 							break;
-						case 'd': /* Descriptor */
 						case 'l': /* Label */
 						case 'S': /* String label */
 						case 's': /* String label */
@@ -573,6 +543,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					if (provide_chars(&sym_i, sizeof(sym_i), 1, cp) < 0)
 						return 1;
 					struct symbol *sym = &state->program->symbol_table[sym_i];
+
+					EPRINTF("code reloc %d %d %ld\n",code_i,sym_i,sym->offset);
 
 #ifdef LINKER
 					struct label *label;

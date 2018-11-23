@@ -3830,7 +3830,7 @@ struct label *code_descriptor
 	int n;
 
 	/* Resolve descriptor address */
-	store_data_l(-1); /* TODO check that this is correct in all cases */
+	store_data_l(-1);
 
 	if (list_code) {
 		printf("\t.data\n");
