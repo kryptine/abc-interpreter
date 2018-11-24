@@ -89,6 +89,7 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	settings.h
 
 SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
+	bcgen_instructions.c\
 	copy_host_to_interpreter.c\
 	copy_interpreter_to_host.c\
 	finalizers.c\

@@ -2,48 +2,100 @@
 #include <string.h>
 
 #include "abc_instructions.h"
+#include "bcgen_instructions.h"
 #include "bytecode.h"
 #include "strip.h"
 #include "util.h"
 
-struct label {
+enum data_label_type {
+	DLT_NORMAL,
+	DLT_STRING,
+	DLT_STRING_WITH_DESCRIPTOR
+};
+
+struct s_label { /* source label */
 	int32_t offset;
 	char *name;
-
-	int8_t copy_offset;
-	uint32_t active_bytes;
-
-	uint32_t new_label_id;
-	int32_t new_offset;
+	struct label *bcgen_label;
+	enum data_label_type label_type;
 };
 
-struct relocation {
+struct s_relocation { /* source relocation */
 	int32_t relocation_offset;
 	uint32_t relocation_label;
-	struct label *relocation_belongs_to_label;
+	struct s_label *relocation_belongs_to_label;
 };
 
-static uint32_t code_size;
+struct label_queue { /* source labels that are to be activated */
+	uint32_t writer;
+	uint32_t reader;
+	uint32_t size;
+	struct s_label *labels[0];
+};
+
+struct incoming_labels {
+	uint32_t label_id;
+	struct incoming_labels *next;
+};
+
+struct code_index { /* auxiliary information about code indices */
+	int32_t byte_index; /* index in width-optimised bytecode */
+	struct incoming_labels *incoming_labels;
+};
+
+static struct program *pgrm;
+
 static uint8_t *code;
-static int32_t *code_indices;
-static uint32_t data_size;
+static struct code_index *code_indices;
 static uint64_t *data;
 
 static uint32_t n_labels;
-static struct label *labels;
+static struct s_label *labels;
 
 static uint32_t code_reloc_size;
-static struct relocation *code_relocations;
+static struct s_relocation *code_relocations;
 static uint32_t data_reloc_size;
-static struct relocation *data_relocations;
+static struct s_relocation *data_relocations;
 
-static uint32_t new_code_size;
-static uint32_t new_data_size;
-static uint32_t new_n_code_relocs;
-static uint32_t new_n_data_relocs;
+struct label_queue *queue;
 
-static void activate_code_relocation(struct label *belongs_to, uint32_t offset);
-static void activate_data_relocation(struct label *belongs_to, uint32_t offset);
+void init_label_queue(void) {
+	queue=safe_malloc(sizeof(struct label_queue)+2*sizeof(char*));
+	queue->writer=0;
+	queue->reader=0;
+	queue->size=2;
+}
+
+static uint32_t glob_lab_id=0;
+void add_label_to_queue(struct s_label *label) {
+	if (label->bcgen_label!=NULL)
+		return;
+
+	if (label->name[0]!='\0') {
+		label->bcgen_label=enter_label(label->name);
+		make_label_global(label->bcgen_label);
+	} else
+		label->bcgen_label=new_label(glob_lab_id++);
+
+	queue->labels[queue->writer++]=label;
+	queue->writer%=queue->size;
+
+	if (queue->writer==queue->reader) {
+		queue->writer=queue->size;
+		queue->size*=2;
+		queue->reader=0;
+		queue=safe_realloc(queue, sizeof(struct label_queue)+queue->size*sizeof(struct s_label*));
+	}
+}
+
+struct s_label *next_label_from_queue(void) {
+	if (queue->reader==queue->writer)
+		return NULL;
+	struct s_label *label=queue->labels[queue->reader];
+	queue->reader++;
+	queue->reader%=queue->size;
+	return label;
+}
 
 static inline int instruction_ends_block(int16_t instr) {
 	switch (instr) {
@@ -107,83 +159,210 @@ static inline int instruction_ends_block(int16_t instr) {
 	}
 }
 
-static void activate_label(struct label *label) {
-	/* TODO: it would be better if this were not recursive */
-	if (label->active_bytes>0) {
-		EPRINTF("%s already active\n",label->name);
-		return;
+struct s_relocation *find_relocation_by_offset(struct s_relocation *relocs, uint32_t n_relocs, uint32_t offset) {
+	int l=0;
+	int r=n_relocs-1;
+	while (l<=r) {
+		int i=(l+r)/2;
+		if (relocs[i].relocation_offset<offset)
+			l=i+1;
+		else if (relocs[i].relocation_offset>offset)
+			r=i-1;
+		else
+			return &relocs[i];
 	}
+	EPRINTF("error in find_relocation_by_offset\n");
+	exit(1);
+}
 
-	EPRINTF("activating 0x%x %s\n",label->offset,label->name);
+static void activate_label(struct s_label *label) {
+	struct s_relocation *reloc;
 
 	if (label->offset & 1) { /* data */
-		uint32_t arity=data[(label->offset-1)>>2];
-		if ((arity & 0xffff) > 256) { /* record */
-			uint32_t type_string_length=*((uint32_t*)&data[((label->offset-1)>>2)+1]);
-			uint32_t name_length=*((uint32_t*)&data[((label->offset-1)>>2)+2+(type_string_length+sizeof(uint64_t)-1)/sizeof(uint64_t)]);
-			EPRINTF("\trecord with lengths %d/%d\n",type_string_length,name_length);
+		uint64_t *block=&data[(label->offset-1)>>2];
+		uint32_t arity=block[0];
 
-			/* TODO records with unboxed records */
+		switch (label->label_type) {
+			case DLT_NORMAL:
+				if ((arity & 0xffff) > 256) { /* record */
+					uint64_t *type_string_start=&block[2];
+					uint64_t *name_string_start=&block[3+(type_string_start[-1]+sizeof(uint64_t)-1)/sizeof(uint64_t)];
 
-			label->copy_offset=(int8_t)(-2*sizeof(uint64_t));
-			label->active_bytes=5*sizeof(uint64_t) +
-				(type_string_length+sizeof(uint64_t)-1)/sizeof(uint64_t) +
-				(name_length+sizeof(uint64_t)-1)/sizeof(uint64_t);
-		} else { /* no record */
-			arity>>=3+16;
-			uint32_t name_length=*((uint32_t*)&data[((label->offset-1)>>2)+arity*2+3]);
-			EPRINTF("\tarity %d, name %d\n",arity,name_length);
+					/* TODO records with unboxed records */
 
-			if (arity==0) { /* desc0 */
-				label->copy_offset=(int8_t)(-3*sizeof(uint64_t));
-				label->active_bytes=3*sizeof(uint64_t) + 2*sizeof(uint64_t)*arity + 4*sizeof(uint64_t) + name_length;
-			} else {
-				label->copy_offset=(int8_t)(-2*sizeof(uint64_t));
-				label->active_bytes=2*sizeof(uint64_t) + 2*sizeof(uint64_t)*arity + 4*sizeof(uint64_t) + name_length;
+					store_data_l(block[-2]);
+					store_data_l(block[-1]);
+					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+					store_data_l(block[0]);
+					store_string((char*)type_string_start,type_string_start[-1],1);
+					store_string((char*)name_string_start,name_string_start[-1],0);
+				} else { /* no record */
+					arity>>=3+16;
 
-				for (int i=0; i<arity; i++) {
-					activate_data_relocation(label, ((label->offset-1)>>2)+1+2*i);
+					if (arity==0) { /* desc0 or descn */
+						store_data_l(block[-3]);
+						store_data_l(block[-2]);
+						reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[-1]-data);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+						store_data_l(block[-1]);
+						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+						store_data_l(block[0]);
+						store_data_l(block[1]);
+						if (block[0]) { /* descn */
+							store_string((char*)&block[3], block[2], 0);
+						} else { /* desc0 */
+							store_data_l(block[2]);
+							store_string((char*)&block[4], block[3], 0);
+						}
+					} else { /* normal descriptor */
+						store_data_l(block[-2]);
+						reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[-1]-data);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+						store_data_l(block[-1]);
+						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+
+						for (int i=0; i<arity; i++) {
+							store_data_l(block[i*2]);
+							reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[i*2+1]-data);
+							add_label_to_queue(&labels[reloc->relocation_label]);
+							add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+							store_data_l(block[i*2+1]);
+						}
+
+						store_data_l(block[2*arity]);
+						store_data_l(block[2*arity+1]);
+						store_data_l(block[2*arity+2]);
+						store_string((char*)&block[2*arity+4],block[2*arity+3],0);
+					}
 				}
-			}
+				break;
+			case DLT_STRING:
+				label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+				store_string((char*)&block[1], block[0], 0);
+				break;
+			case DLT_STRING_WITH_DESCRIPTOR:
+				label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+				reloc=find_relocation_by_offset(data_relocations, data_reloc_size, block-data);
+				add_label_to_queue(&labels[reloc->relocation_label]);
+				add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+				store_data_l(block[0]);
+				store_string((char*)&block[2], block[1], 0);
+				break;
 		}
-
-		new_data_size+=(label->active_bytes+sizeof(uint64_t)-1)/sizeof(uint64_t);
-	} else {
+	} else { /* code */
 		int ci=label->offset>>2;
-		uint8_t *code_block=&code[code_indices[ci]];
-		uint8_t *start_code_block=code_block;
+		uint8_t *code_block=&code[code_indices[ci].byte_index];
 		int in_block=1;
 
-		label->active_bytes=1; /* prevent infinite recursion */
+		/* TODO: is there a better way to recognise node entry points? */
+		if (*(int16_t*)&code_block[-14]==CA_data_IIIla) {
+			store_code_elem(2, *(uint16_t*)&code_block[-14]);
+			store_code_elem(2, *(uint16_t*)&code_block[-12]);
+			store_code_elem(2, *(uint16_t*)&code_block[-10]);
+			store_code_elem(2, *(uint16_t*)&code_block[-8]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-6]);
+			store_code_elem(2, *(uint16_t*)&code_block[-2]);
+		} else if (*(int16_t*)&code_block[-10]==CA_data_IIl) {
+			store_code_elem(2, *(uint16_t*)&code_block[-10]);
+			store_code_elem(2, *(uint16_t*)&code_block[-8]);
+			store_code_elem(2, *(uint16_t*)&code_block[-6]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-1);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-4]);
+		} else if (*(int16_t*)&code_block[-10]==CA_data_IlI) {
+			store_code_elem(2, *(uint16_t*)&code_block[-10]);
+			store_code_elem(2, *(uint16_t*)&code_block[-8]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-6]);
+			store_code_elem(2, *(uint16_t*)&code_block[-2]);
+		} else if (*(int16_t*)&code_block[-16]==CA_data_IlIla) {
+			store_code_elem(2, *(uint16_t*)&code_block[-16]);
+			store_code_elem(2, *(uint16_t*)&code_block[-14]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-4);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-12]);
+			store_code_elem(2, *(uint16_t*)&code_block[-8]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-6]);
+			store_code_elem(2, *(uint16_t*)&code_block[-2]);
+		} else if (*(int16_t*)&code_block[-8]==CA_data_la) {
+			store_code_elem(2, *(uint16_t*)&code_block[-8]);
+			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
+			add_label_to_queue(&labels[reloc->relocation_label]);
+			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+			store_code_elem(4, *(uint32_t*)&code_block[-6]);
+			store_code_elem(2, *(uint16_t*)&code_block[-2]);
+		} else if (*(int16_t*)&code_block[-4]==CA_data_a) {
+			store_code_elem(2, *(uint16_t*)&code_block[-4]);
+			store_code_elem(2, *(uint16_t*)&code_block[-2]);
+		}
 
 		while (in_block) {
+			struct incoming_labels *ilabs=code_indices[ci].incoming_labels;
+			while (ilabs!=NULL) {
+				struct s_label *lab=&labels[ilabs->label_id];
+				if (lab->bcgen_label==NULL) {
+					if (lab->name[0] != '\0') {
+						lab->bcgen_label=enter_label(lab->name);
+						make_label_global(label->bcgen_label);
+					} else
+						lab->bcgen_label=new_label(pgrm->code_size<<2);
+				} else if (lab->bcgen_label->label_offset!=-1) {
+					EPRINTF("Warning: overwriting label '%s'\n",lab->bcgen_label->label_name);
+					/* TODO: make sure this does not happen */
+				}
+				lab->bcgen_label->label_offset=pgrm->code_size<<2;
+				ilabs=ilabs->next;
+			}
+
 			int16_t instr=*(int16_t*)code_block;
+			store_code_elem(2, instr);
 			code_block+=2;
 			const char *type=instruction_type(instr);
-			EPRINTF("\t%s %s\n",instruction_name(instr),type);
 			ci++;
 			for (; *type; type++) {
 				switch (*type) {
 					case 'c': /* Char */
+						store_code_elem(1, *(uint8_t*)code_block);
 						code_block+=1;
 						break;
 					case 'I': /* Instruction */
 					case 'n': /* Stack index */
 					case 'N': /* Stack index, optimised to byte width */
 					case 'a': /* Arity */
+						store_code_elem(2, *(uint16_t*)code_block);
 						code_block+=2;
 						break;
 					case 'l': /* Label */
-						activate_code_relocation(label, ci);
+						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+						store_code_elem(4, *(uint32_t*)code_block);
 						code_block+=4;
 						break;
-					case 'S': /* String label */
-					case 's': /* String label */
-						/* TODO: activate */
+					case 'S': /* String with __STRING__ label */
+					case 's': /* Plain string label */
+						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						labels[reloc->relocation_label].label_type=*type=='S' ? DLT_STRING_WITH_DESCRIPTOR : DLT_STRING;
+						add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+						store_code_elem(4, *(uint32_t*)code_block);
 						code_block+=4;
 						break;
 					case 'r': /* Real */
 					case 'i': /* Int */
+						store_code_elem(8, *(uint64_t*)code_block);
 						code_block+=8;
 						break;
 					default:
@@ -194,166 +373,54 @@ static void activate_label(struct label *label) {
 			}
 			in_block=!instruction_ends_block(instr);
 		}
-
-		label->active_bytes=code_block-start_code_block;
-		new_code_size+=ci-(label->offset>>2);
 	}
 }
 
-static void activate_code_relocation(struct label *belongs_to, uint32_t offset) {
-	for (int i=0; i<code_reloc_size; i++) { /* TODO log search */
-		if (code_relocations[i].relocation_offset==offset) {
-			code_relocations[i].relocation_belongs_to_label=belongs_to;
-			new_n_code_relocs++;
-			activate_label(&labels[code_relocations[i].relocation_label]);
-			return;
-		}
+static struct s_label *find_label_by_name(const char *name) {
+	int l=0;
+	int r=n_labels-1;
+	while (l<=r) {
+		int i=(l+r)/2;
+		struct s_label *label=&labels[i];
+		int c=strcmp(label->name, name);
+		if (c<0)
+			l=i+1;
+		else if (c>0)
+			r=i-1;
+		else
+			return label;
 	}
-	EPRINTF("reloc %d not found!\n",offset);
-}
-
-static void activate_data_relocation(struct label *belongs_to, uint32_t offset) {
-	for (int i=0; i<data_reloc_size; i++) { /* TODO log search */
-		if (data_relocations[i].relocation_offset==offset) {
-			code_relocations[i].relocation_belongs_to_label=belongs_to;
-			new_n_data_relocs++;
-			activate_label(&labels[data_relocations[i].relocation_label]);
-			return;
-		}
-	}
-	EPRINTF("reloc %d not found!\n",offset);
-}
-
-static void activate_label_by_name(const char *name, int name_length) {
-	for (int i=0; i<n_labels; i++) {
-		struct label *label=&labels[i];
-		if (!strncmp(label->name, name, name_length) && label->name[name_length]=='\0') {
-			activate_label(label);
-			return;
-		}
-	}
-	EPRINTF("not found!\n");
-}
-
-static uint32_t count_active_labels(void) {
-	uint32_t id=0;
-	for (int i=0; i<n_labels; i++) {
-		if (labels[i].active_bytes==0)
-			continue;
-		labels[i].new_label_id=id++;
-	}
-	return id;
-}
-
-static uint32_t *write_active_relocations(struct relocation *relocs, uint32_t n_relocs, uint32_t *bytecode) {
-	for (int i=0; i<n_relocs; i++) {
-		struct relocation *reloc=&relocs[i];
-		if (reloc->relocation_belongs_to_label==NULL)
-			continue;
-		bytecode[0]=reloc->relocation_offset-
-			(reloc->relocation_belongs_to_label->offset>>2)+
-			(reloc->relocation_belongs_to_label->new_offset>>2);
-		EPRINTF("offset %d, label %s, old label %d, new label %d, new offset %d\n",
-				reloc->relocation_offset,
-				reloc->relocation_belongs_to_label->name,
-				reloc->relocation_belongs_to_label->offset,
-				reloc->relocation_belongs_to_label->new_offset,
-				bytecode[0]);
-		bytecode[1]=labels[reloc->relocation_label].new_label_id;
-		bytecode+=2;
-	}
-	return bytecode;
-}
-
-static char *collect_active_labels(uint32_t *bytecode_size) {
-	uint32_t n_new_labels=count_active_labels();
-
-	char *new_bytecode=safe_malloc(1000000); /* TODO */
-	((uint32_t*)new_bytecode)[0]=new_code_size;
-	((uint32_t*)new_bytecode)[1]=0; /* TODO */
-	((uint32_t*)new_bytecode)[2]=0; /* TODO */
-	((uint32_t*)new_bytecode)[3]=new_data_size;
-
-	EPRINTF("new data size is %d; new code size %d\n",new_data_size,new_code_size);
-
-	((uint32_t*)new_bytecode)[4]=n_new_labels;
-	((uint32_t*)new_bytecode)[5]=0; /* filled in while adding labels below */
-
-	((uint32_t*)new_bytecode)[6]=new_n_code_relocs;
-	((uint32_t*)new_bytecode)[7]=new_n_data_relocs;
-
-	char *new_code=&new_bytecode[8*sizeof(uint32_t)];
-	char *start_code=new_code;
-	for (int i=0; i<n_labels; i++) {
-		struct label *label=&labels[i];
-		if (label->active_bytes==0 || (label->offset & 1))
-			continue;
-		label->new_offset=((new_code-start_code-label->copy_offset)/sizeof(uint64_t))<<2;
-		fprintf(stderr,"copying code: %s %x+%d, %d bytes\n",label->name,label->offset>>2,label->copy_offset,label->active_bytes);
-		memcpy(new_code, ((uint8_t*)&code[code_indices[label->offset>>2]])+label->copy_offset, label->active_bytes);
-		new_code+=label->active_bytes;
-	}
-
-	/* TODO strings */
-
-	char *new_data=new_code;
-	for (int i=0; i<n_labels; i++) {
-		struct label *label=&labels[i];
-		if (label->active_bytes==0 || !(label->offset & 1))
-			continue;
-		label->new_offset=(((new_data-new_code-label->copy_offset)/sizeof(uint64_t))<<2)+1;
-		fprintf(stderr,"copying data: %s %x to %x\n",label->name,(label->offset-1)>>2,label->new_offset);
-		memcpy(new_data, ((uint8_t*)&data[(label->offset-1)>>2])+label->copy_offset, label->active_bytes);
-		new_data+=(label->active_bytes+sizeof(uint64_t)-1)/sizeof(uint64_t)*sizeof(uint64_t);
-	}
-
-	char *new_labels=new_data;
-	for (int i=0; i<n_labels; i++) {
-		struct label *label=&labels[i];
-		if (label->active_bytes==0)
-			continue;
-		//fprintf(stderr,"copying label: %s\n",label->name);
-		int len=strlen(labels[i].name);
-		memcpy(new_labels, &labels[i].new_offset, sizeof(uint32_t));
-		memcpy(new_labels+sizeof(uint32_t), labels[i].name, len+1);
-		new_labels+=sizeof(uint32_t)+len+1;
-		((uint32_t*)new_bytecode)[5]+=len;
-	}
-
-	uint32_t *new_relocs=(uint32_t*)new_labels;
-	new_relocs=write_active_relocations(code_relocations, code_reloc_size, new_relocs);
-	new_relocs=write_active_relocations(data_relocations, data_reloc_size, new_relocs);
-
-	*bytecode_size=(char*)new_relocs-new_bytecode;
-	EPRINTF("new bytecode at %p is %d bytes long\n",new_bytecode,*bytecode_size);
-	return new_bytecode;
+	EPRINTF("error in find_label_by_name\n");
+	exit(1);
 }
 
 void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 		uint32_t *result_size, char **result) {
-	code_size=bytecode[0];
+	uint32_t code_size=bytecode[0];
 	/*uint32_t words_in_strings=bytecode[1];*/
 	uint32_t strings_size=bytecode[2];
-	data_size=bytecode[3];
+	uint32_t data_size=bytecode[3];
 	n_labels=bytecode[4];
 	/*uint32_t global_label_string_count=bytecode[5];*/
 	code_reloc_size=bytecode[6];
 	data_reloc_size=bytecode[7];
 
-	fprintf(stderr,"%x %x %x %x %x\n",code_size,data_size,n_labels,code_reloc_size,data_reloc_size);
-
-	code_indices=safe_malloc(sizeof(uint32_t)*code_size);
+	code_indices=safe_malloc(sizeof(struct code_index)*code_size);
 	code=(uint8_t*)&bytecode[8];
 
 	int ci=0;
 	int i=0;
 	while (ci<code_size) {
 		uint16_t instr=*(uint16_t*)&code[i];
-		code_indices[ci++]=i;
+		code_indices[ci].byte_index=i;
+		code_indices[ci].incoming_labels=NULL;
+		ci++;
 		i+=2;
 		const char *type=instruction_type(instr);
 		for (; *type; type++) {
-			code_indices[ci++]=-1;
+			code_indices[ci].byte_index=-1;
+			code_indices[ci].incoming_labels=NULL;
+			ci++;
 			switch (*type) {
 				case 'c': /* Char */
 					i+=1;
@@ -386,48 +453,49 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 	bytecode=(uint32_t*)&data[data_size];
 
 	char *labels_in_bytecode=(char*)bytecode;
-	labels=safe_malloc(sizeof(struct label)*n_labels);
+	labels=safe_malloc(sizeof(struct s_label)*n_labels);
 	for (int i=0; i<n_labels; i++) {
 		labels[i].offset=*(int32_t*)labels_in_bytecode;
 		labels[i].name=&labels_in_bytecode[4];
-		labels[i].copy_offset=0;
-		labels[i].active_bytes=0;
-		labels[i].new_label_id=0;
-		labels[i].new_offset=-1;
-		//EPRINTF("label %d:\t%d %s\n",i,labels[i].offset,labels[i].name);
+		labels[i].bcgen_label=NULL;
+		labels[i].label_type=DLT_NORMAL;
+		if (!(labels[i].offset & 1)) {
+			struct incoming_labels *ilabs=safe_malloc(sizeof(struct incoming_labels));
+			ilabs->next=code_indices[labels[i].offset>>2].incoming_labels;
+			ilabs->label_id=i;
+			code_indices[labels[i].offset>>2].incoming_labels=ilabs;
+		}
 		labels_in_bytecode+=4;
 		while (*labels_in_bytecode++);
 	}
 	bytecode=(uint32_t*)labels_in_bytecode;
 
-	code_relocations=safe_malloc(sizeof(struct relocation)*code_reloc_size);
+	code_relocations=safe_malloc(sizeof(struct s_relocation)*code_reloc_size);
 	for (int i=0; i<code_reloc_size; i++) {
 		code_relocations[i].relocation_offset=bytecode[0];
 		code_relocations[i].relocation_label=bytecode[1];
 		code_relocations[i].relocation_belongs_to_label=NULL;
-		//EPRINTF("code reloc %d %s\n",bytecode[0],labels[bytecode[1]].name);
 		bytecode+=2;
 	}
-	data_relocations=safe_malloc(sizeof(struct relocation)*data_reloc_size);
+	data_relocations=safe_malloc(sizeof(struct s_relocation)*data_reloc_size);
 	for (int i=0; i<data_reloc_size; i++) {
 		data_relocations[i].relocation_offset=bytecode[0];
 		data_relocations[i].relocation_label=bytecode[1];
 		data_relocations[i].relocation_belongs_to_label=NULL;
-		//EPRINTF("data reloc %d %s\n",bytecode[0],labels[bytecode[1]].name);
 		bytecode+=2;
 	}
 
-	new_code_size=0;
-	new_data_size=0;
-	new_n_code_relocs=0;
-	new_n_data_relocs=0;
+	pgrm=initialize_code();
+	init_label_queue();
 
-	fprintf(stderr,"%ld descriptors\n",((BC_WORD*)descriptors)[-2]);
 	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++) {
-		activate_label_by_name(descriptors[i]->cs_characters, descriptors[i]->cs_size);
+		struct s_label *label=find_label_by_name(descriptors[i]->cs_characters);
+		add_label_to_queue(label);
 	}
 
-	*result=collect_active_labels(result_size);
+	struct s_label *label;
+	while ((label=next_label_from_queue())!=NULL)
+		activate_label(label);
 
-	fprintf(stderr,"done\n");
+	*result=write_program_to_string(result_size);
 }

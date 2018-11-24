@@ -1,5 +1,6 @@
 #pragma once
 
+#define BCGEN
 #include "bytecode.h"
 
 struct label {
@@ -16,10 +17,11 @@ typedef struct relocation {
 
 extern uint32_t list_code;
 
-void initialize_code(void);
+struct program *initialize_code(void);
 void code_next_module(void);
 struct word *add_add_arg_labels(void);
 void write_program(FILE*);
+char *write_program_to_string(uint32_t *bytes_needed);
 void free_generated_program(void);
 void add_code_and_data_offsets(void);
 
@@ -30,6 +32,7 @@ struct relocation *add_code_relocation(struct label *label, uint32_t offset);
 struct relocation *add_data_relocation(struct label *label, uint32_t offset);
 void add_words_in_strings(uint32_t val);
 void add_string_information(uint32_t data_offset);
+void store_string(char *string,int string_length,int include_terminator);
 
 void store_code_elem(uint8_t bytewidth, uint64_t value);
 void store_data_l(uint64_t v);

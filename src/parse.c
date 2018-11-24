@@ -544,8 +544,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					struct symbol *sym = &state->program->symbol_table[sym_i];
 
-					EPRINTF("code reloc %d %d %ld\n",code_i,sym_i,sym->offset);
-
 #ifdef LINKER
 					struct label *label;
 					if (sym->name[0] == '\0')

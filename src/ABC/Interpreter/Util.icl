@@ -13,6 +13,7 @@ import System._Pointer
 import symbols_in_program
 
 import code from "abc_instructions."
+import code from "bcgen_instructions."
 import code from "bytecode."
 import code from "copy_host_to_interpreter."
 import code from "copy_interpreter_to_host."

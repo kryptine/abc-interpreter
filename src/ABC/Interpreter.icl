@@ -25,8 +25,8 @@ import ABC.Interpreter.Util
 
 :: *SerializedGraph =
 	{ graph    :: !*String
-	, descinfo :: !*{#DescInfo}
-	, modules  :: !*{#String}
+	, descinfo :: !{#DescInfo}
+	, modules  :: !{#String}
 	, bytecode :: !String
 	}
 
@@ -56,8 +56,8 @@ serialize_for_interpretation graph bcfile w
 
 # rec =
 	{ graph    = graph
-	, descinfo = {}//descs // TODO
-	, modules  = {}//mods
+	, descinfo = descs
+	, modules  = mods
 	, bytecode = bytecode
 	}
 = (rec, w)
@@ -67,7 +67,7 @@ where
 	# prefix_n = di_prefix_arity_and_mod bitand 0xff
 	# module_n = (di_prefix_arity_and_mod >> 8)-1
 	# module_name = mod_a.[module_n]
-	= make_symbol_name module_name di_name (min prefix_n PREFIX_D)
+	= make_symbol_name module_name di_name (min prefix_n PREFIX_D) +++ "\0"
 	where
 		PREFIX_D = 4
 
@@ -212,13 +212,11 @@ graphToFile {graph,descinfo,modules,bytecode} f
 # f = f <<< graph_size
 # f = f <<< {#c \\ c <- graph_cpy}
 
-# (descinfo_cpy,descinfo,descinfo_size) = copy descinfo
-# f = f <<< descinfo_size
-# f = writeList (\di f -> f <<< di.di_prefix_arity_and_mod <<< size di.di_name <<< di.di_name) descinfo_cpy f
+# f = f <<< size descinfo
+# f = writeArray (\di f -> f <<< di.di_prefix_arity_and_mod <<< size di.di_name <<< di.di_name) descinfo (size descinfo-1) f
 
-# (modules_cpy,modules,modules_size) = copy modules
-# f = f <<< modules_size
-# f = writeList (\m f -> f <<< size m <<< m) modules_cpy f
+# f = f <<< size modules
+# f = writeArray (\m f -> f <<< size m <<< m) modules (size modules-1) f
 
 # f = f <<< size bytecode
 # f = f <<< bytecode
@@ -237,9 +235,9 @@ where
 		# (x,arr) = arr![i]
 		= copy (i-1) arr [x:cpy]
 
-	writeList :: !(a *File -> *File) ![a] !*File -> *File
-	writeList write [x:xs] f = writeList write xs (write x f)
-	writeList _ [] f = f
+	writeArray :: !(e *File -> *File) !(arr e) !Int !*File -> *File | Array arr e
+	writeArray write xs -1 f = f
+	writeArray write xs i f = writeArray write xs (i-1) (write xs.[i] f)
 
 graphFromFile :: !*File -> *(!Either String *SerializedGraph, !*File)
 graphFromFile f
