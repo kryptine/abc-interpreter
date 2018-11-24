@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef BCGEN
 #define BCGEN
+#endif
 #include "bytecode.h"
 
 struct label {
