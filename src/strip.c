@@ -404,9 +404,10 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 	/*uint32_t global_label_string_count=bytecode[5];*/
 	code_reloc_size=bytecode[6];
 	data_reloc_size=bytecode[7];
+	/*uint32_t start_label_id=bytecode[8];*/
 
 	code_indices=safe_malloc(sizeof(struct code_index)*code_size);
-	code=(uint8_t*)&bytecode[8];
+	code=(uint8_t*)&bytecode[9];
 
 	int ci=0;
 	int i=0;

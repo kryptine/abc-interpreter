@@ -63,6 +63,7 @@ struct program {
 	uint32_t symbol_table_size;
 	struct symbol *symbol_table;
 	char *symbols;
+	uint32_t start_symbol_id;
 #if defined(LINK_CLEAN_RUNTIME) && !defined(BCGEN)
 	char *host_symbols_strings;
 	int host_symbols_n;

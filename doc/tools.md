@@ -53,15 +53,13 @@ generate bytecode for every tool separately and link them together with `link`.
 ### bclink
 
 Links bytecode files together.
-Since there is no `start` field in the bytecode, execution always starts at
-address 0. Thus, the first OBC file should be that of the main module.
+The first OBC file is supposed to be that of the main module.
 
 Usage: `bclink OBC [OBC ...] -o BC`
 
 ### interpret
 
-Interprets bytecode. There is no `.start` directive; execution starts at
-address 0.
+Interprets bytecode.
 
 Usage: `interpret BC`
 

@@ -52,6 +52,7 @@ struct parser {
 	uint32_t data_size;
 	uint32_t code_offset;
 	uint32_t data_offset;
+	int is_main_module:1;
 #endif
 };
 

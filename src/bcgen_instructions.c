@@ -26,6 +26,7 @@ struct label_node *labels;
 uint32_t label_id;
 uint32_t global_label_count;
 uint32_t global_label_string_count;
+static struct label *start_label;
 
 uint32_t module_n;
 
@@ -4188,7 +4189,10 @@ void code_start(char *label_name) {
 	if (strcmp ("__nostart__",label_name)==0)
 		return;
 
-	add_instruction_label(Cjmp,label_name);
+	if (start_label!=NULL)
+		fprintf(stderr,"Warning: overriding start label from '%s' to '%s'\n",start_label->label_name,label_name);
+
+	start_label=enter_label(label_name);
 }
 
 void code_record(char record_label_name[],char type[],int a_size,int b_size,char record_name[],int record_name_length) {
@@ -4381,6 +4385,13 @@ void write_program(FILE *program_file) {
 	fwrite(&pgrm.code_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 	fwrite(&pgrm.data_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 
+	if (start_label!=NULL) {
+		fwrite(&start_label->label_id, sizeof(uint32_t), 1, program_file);
+	} else {
+		uint32_t nil=-1;
+		fwrite(&nil, sizeof(nil), 1, program_file);
+	}
+
 	print_code(pgrm.code_size,pgrm.code,program_file);
 	print_strings(pgrm.strings_size,pgrm.strings,program_file);
 	print_data(pgrm.data_size,pgrm.data,program_file);
@@ -4400,7 +4411,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	count_and_renumber_labels(labels, 0);
 
 	*bytes_needed =
-			8*sizeof(uint32_t) +
+			9*sizeof(uint32_t) +
 			pgrm.code_byte_size +
 			sizeof(uint32_t)*pgrm.strings_size +
 			sizeof(uint64_t)*pgrm.data_size +
@@ -4417,6 +4428,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	((uint32_t*)bytecode)[5]=global_label_string_count;
 	((uint32_t*)bytecode)[6]=pgrm.code_reloc_size;
 	((uint32_t*)bytecode)[7]=pgrm.data_reloc_size;
+	((uint32_t*)bytecode)[8]=start_label==NULL ? -1 : start_label->label_id;
 
 	/*EPRINTF("\t%d %d\n\t%d %d\n\t%d %d\n\t%d %d\n",
 			pgrm.code_size, pgrm.data_size,
@@ -4424,7 +4436,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 			label_id, global_label_string_count,
 			pgrm.code_reloc_size, pgrm.data_reloc_size);*/
 
-	char *ptr=(char*)&((uint32_t*)bytecode)[8];
+	char *ptr=(char*)&((uint32_t*)bytecode)[9];
 	for (int i=0; i<pgrm.code_size; i++) {
 		memcpy(ptr, &pgrm.code[i].value, pgrm.code[i].width);
 		ptr+=pgrm.code[i].width;

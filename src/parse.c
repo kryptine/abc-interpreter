@@ -89,6 +89,7 @@ void init_parser(struct parser *state
 	state->data_size = 0;
 	state->code_offset = 0;
 	state->data_offset = 0;
+	state->is_main_module = 0;
 #endif
 
 #ifdef DEBUG_CURSES
@@ -250,6 +251,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->data_reloc_size = elem32;
+
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->start_symbol_id = elem32;
 
 				next_state(state);
 				break;
@@ -530,6 +535,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						label->label_offset = state->program->symbol_table[state->ptr].offset;
 					make_label_global(label);
 				}
+
+				if (state->is_main_module && state->program->start_symbol_id==state->ptr)
+					code_start(state->program->symbol_table[state->ptr].name);
 #endif
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);

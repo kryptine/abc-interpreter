@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
 
 		new_file_char_provider(&cp, f);
 		init_parser(&parser);
+		parser.is_main_module = i == 0;
 		parser.code_offset = g_code_offset;
 		parser.data_offset = g_data_offset;
 		code_next_module();

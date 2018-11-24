@@ -3427,7 +3427,6 @@ INSTRUCTION_BLOCK(halt):
 	debugger_graceful_end();
 #endif
 	return 0;
-/*				exit (1); */
 INSTRUCTION_BLOCK(incI):
 	bsp[0]=bsp[0] + 1;
 	pc+=1;

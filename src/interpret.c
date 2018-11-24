@@ -273,7 +273,7 @@ int interpret(
 #endif
 	int instr_arg;
 
-	BC_WORD *pc = program->code;
+	BC_WORD *pc;
 	asp = _asp;
 	bsp = _bsp;
 	csp = _csp;
@@ -308,6 +308,11 @@ eval_to_hnf_return:
 #endif
 			return 0;
 		}
+	} else if (program->start_symbol_id == -1) {
+		EPRINTF("error in interpret: no start symbol and no program counter given\n");
+		exit(1);
+	} else {
+		pc = (BC_WORD*)program->symbol_table[program->start_symbol_id].offset;
 	}
 
 #ifdef COMPUTED_GOTOS
