@@ -10,6 +10,7 @@ stages:
     - ln -s "$PWD/src/abcopt" /opt/clean/lib/exe/abcopt
     - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
     - ln -s "$PWD/src/bclink" /opt/clean/lib/exe/bclink
+    - ln -s "$PWD/src/bcstrip" /opt/clean/lib/exe/bcstrip
     - make -C src
 
 build:

@@ -43,15 +43,17 @@ ifeq ($(OS),Windows_NT)
 ABCOPT:=ABCOptimiser.exe
 BCGEN:=ByteCodeGenerator.exe
 BCLINK:=ByteCodeLinker.exe
+BCSTRIP:=ByteCodeStripper.exe
 INTERP:=interpret.exe
 else
 ABCOPT:=abcopt
 BCGEN:=bcgen
 BCLINK:=bclink
+BCSTRIP:=bcstrip
 INTERP:=interpret
 endif
 
-BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(INTERP)
+BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCSTRIP) $(INTERP)
 PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
 
 SRC_BCGEN:=\
@@ -73,6 +75,16 @@ SRC_BCLINK:=\
 	util.c
 DEP_BCLINK:=$(subst .c,.h,$(SRC_BCLINK)) settings.h
 
+SRC_BCSTRIP:=\
+	abc_instructions.c\
+	bcgen_instructions.c\
+	bcstrip.c\
+	bytecode.c\
+	parse.c\
+	strip.c\
+	util.c
+DEP_BCSTRIP:=$(subst .c,.h,$(SRC_BCSTRIP)) settings.h
+
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
@@ -89,9 +101,11 @@ DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	settings.h
 
 SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
+	bcgen_instructions.c\
 	copy_host_to_interpreter.c\
 	copy_interpreter_to_host.c\
-	finalizers.c
+	finalizers.c\
+	strip.c
 ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
 OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB)) interface.o
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
@@ -133,6 +147,9 @@ $(BCGEN): $(SRC_BCGEN) $(DEP_BCGEN)
 
 $(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
+
+$(BCSTRIP): $(SRC_BCSTRIP) $(DEP_BCSTRIP)
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCSTRIP) -o $@
 
 $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@

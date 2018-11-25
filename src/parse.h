@@ -5,13 +5,7 @@
 #include "util.h"
 
 enum parse_state {
-	PS_init_code,
-	PS_init_words_in_strings,
-	PS_init_strings,
-	PS_init_data,
-	PS_init_symbol_table,
-	PS_init_code_reloc,
-	PS_init_data_reloc,
+	PS_init,
 	PS_code,
 	PS_strings,
 	PS_data,
@@ -58,6 +52,7 @@ struct parser {
 	uint32_t data_size;
 	uint32_t code_offset;
 	uint32_t data_offset;
+	int is_main_module:1;
 #endif
 };
 

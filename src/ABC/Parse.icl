@@ -126,7 +126,7 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 		first_char = case instr.[0] of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
-parseLine`{|OBJECT|} fx = \i s -> appFst OBJECT <$> fx i s
+parseLine`{|OBJECT|} fx = \i s -> appFst (\x->OBJECT x) <$> fx i s
 parseLine`{|EITHER|} fl fr = \i s -> case fl i s of
 	Just (l,i) -> Just (LEFT l,i)
 	Nothing    -> case fr i s of

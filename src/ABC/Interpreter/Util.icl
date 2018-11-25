@@ -13,6 +13,7 @@ import System._Pointer
 import symbols_in_program
 
 import code from "abc_instructions."
+import code from "bcgen_instructions."
 import code from "bytecode."
 import code from "copy_host_to_interpreter."
 import code from "copy_interpreter_to_host."
@@ -23,6 +24,7 @@ import code from "interface."
 import code from "interpret."
 import code from "mark."
 import code from "parse."
+import code from "strip."
 import code from "traps."
 import code from "util."
 import code from library "msvcrt_library"

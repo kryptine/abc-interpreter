@@ -76,7 +76,7 @@ struct interpretation_environment *build_interpretation_environment(
 
 BC_WORD *build_start_node(struct interpretation_environment *ie) {
 	BC_WORD *hp = ie->hp;
-	*ie->hp = ((BC_WORD*)ie->program->code[1])[1];
+	*ie->hp = ((BC_WORD*)ie->program->symbol_table[ie->program->start_symbol_id].offset)[1];
 	ie->hp += 3;
 	return hp;
 }

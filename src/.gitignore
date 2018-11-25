@@ -1,6 +1,7 @@
 abcopt
 bcgen
 bclink
+bcstrip
 debug
 interpret
 

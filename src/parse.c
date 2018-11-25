@@ -26,7 +26,7 @@ void init_parser(struct parser *state
 		, int host_symbols_n, int host_symbols_string_length, char *host_symbols
 #endif
 		) {
-	state->state = PS_init_code;
+	state->state = PS_init;
 	state->program = safe_calloc(1, sizeof(struct program));
 
 	state->ptr = 0;
@@ -89,6 +89,7 @@ void init_parser(struct parser *state
 	state->data_size = 0;
 	state->code_offset = 0;
 	state->data_offset = 0;
+	state->is_main_module = 0;
 #endif
 
 #ifdef DEBUG_CURSES
@@ -112,25 +113,7 @@ void next_state(struct parser *state) {
 	state->symbols_ptr = 0;
 
 	switch (state->state) {
-		case PS_init_code:
-			state->state = PS_init_words_in_strings;
-			return;
-		case PS_init_words_in_strings:
-			state->state = PS_init_strings;
-			return;
-		case PS_init_strings:
-			state->state = PS_init_data;
-			return;
-		case PS_init_data:
-			state->state = PS_init_symbol_table;
-			return;
-		case PS_init_symbol_table:
-			state->state = PS_init_code_reloc;
-			return;
-		case PS_init_code_reloc:
-			state->state = PS_init_data_reloc;
-			return;
-		case PS_init_data_reloc:
+		case PS_init:
 			state->state = PS_code;
 #ifdef LINKER
 			if (state->code_size > 0)
@@ -209,7 +192,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 	while (state->state != PS_end) {
 		switch (state->state) {
-			case PS_init_code:
+			case PS_init:
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
@@ -218,38 +201,30 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				state->program->code_size = elem32;
 #endif
 				state->program->code = safe_malloc(sizeof(BC_WORD) * elem32);
-				next_state(state);
-				break;
-			case PS_init_words_in_strings:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
 				add_words_in_strings(elem32);
-#else
-# if (WORD_WIDTH == 32)
+#elif defined(INTERPRETER) && WORD_WIDTH==32
 				state->words_in_strings = elem32;
-# endif
 #endif
-				next_state(state);
-				break;
-			case PS_init_strings:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->strings_size = elem32;
-#if !defined(LINKER) && WORD_WIDTH == 32
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 				/* Allocate one more to prevent reading out of bounds in PS_data */
 				state->strings = safe_malloc(sizeof(uint32_t*) * (elem32+1));
 				state->strings[elem32] = 0;
 #endif
-				next_state(state);
-				break;
-			case PS_init_data:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 #ifdef LINKER
 				state->data_size = elem32;
 #else
-# if (WORD_WIDTH == 32)
+# if defined(INTERPRETER) && WORD_WIDTH==32
 				state->data_n_words = elem32;
 				/* Allocate extra space because strings take more words on 32-bit */
 				state->program->data_size = elem32 + state->words_in_strings;
@@ -258,9 +233,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
 #endif
-				next_state(state);
-				break;
-			case PS_init_symbol_table:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbol_table_size = elem32;
@@ -268,18 +241,19 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
-				next_state(state);
-				break;
-			case PS_init_code_reloc:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->code_reloc_size = elem32;
-				next_state(state);
-				break;
-			case PS_init_data_reloc:
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->data_reloc_size = elem32;
+
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				state->program->start_symbol_id = elem32;
+
 				next_state(state);
 				break;
 			case PS_code: {
@@ -348,8 +322,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
 #endif
 							break;
-						case 'd': /* Descriptor */
 						case 'l': /* Label */
+						case 'C': /* CAF label */
 						case 'S': /* String label */
 						case 's': /* String label */
 							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
@@ -416,7 +390,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					return 1;
 #ifdef LINKER
 				add_string_information(elem32 + state->data_offset);
-#elif WORD_WIDTH == 32
+#elif defined(INTERPRETER) && WORD_WIDTH==32
 				state->strings[state->ptr] = elem32;
 #endif
 				if (++state->ptr >= state->strings_size)
@@ -431,7 +405,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #else
 				state->program->data[state->ptr++] = elem64;
 #endif
-#if (!defined(LINKER) && WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH==32
 				/* On 64-bit, strings can be read as-is. On 32-bit, we need to
 				 * read 64 bits and store them in two words. */
 				if (state->strings[state->strings_ptr] == state->read_n) {
@@ -560,6 +534,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						label->label_offset = state->program->symbol_table[state->ptr].offset;
 					make_label_global(label);
 				}
+
+				if (state->is_main_module && state->program->start_symbol_id==state->ptr)
+					code_start(state->program->symbol_table[state->ptr].name);
 #endif
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
@@ -614,7 +591,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					shift_address(&state->program->data[data_i]);
 # endif
 
-# if (WORD_WIDTH == 32)
+# if defined(INTERPRETER) && WORD_WIDTH==32
 					/* data_i is an offset to the abstract data segment. We need to
 					 * fix it up for the extra length of strings on 32-bit. */
 					while (data_i >= state->strings[state->strings_ptr]) {

@@ -26,6 +26,7 @@ struct label_node *labels;
 uint32_t label_id;
 uint32_t global_label_count;
 uint32_t global_label_string_count;
+static struct label *start_label;
 
 uint32_t module_n;
 
@@ -49,7 +50,7 @@ void unsupported_instruction_warning(int16_t instruction) {
 	fprintf(stderr,"Warning: instruction %s is not supported by the interpreter\n",instruction_name(instruction));
 }
 
-void initialize_code(void) {
+struct program *initialize_code(void) {
 	int i;
 	for(i = 0; i < N_ADD_ARG_LABELS; ++i)
 		Fadd_arg_label_used[i] = 0;
@@ -68,6 +69,7 @@ void initialize_code(void) {
 		0,
 		0,
 		0,
+		0,
 		(struct word*) safe_malloc(512 * sizeof(struct word)),
 		(uint32_t*) safe_malloc(512 * sizeof(uint32_t)),
 		(uint64_t*) safe_malloc(512 * sizeof(uint64_t)),
@@ -80,6 +82,8 @@ void initialize_code(void) {
 	allocated_strings_size = 512;
 	allocated_code_relocations_size = 512;
 	allocated_data_relocations_size = 512;
+
+	return &pgrm;
 }
 
 void code_next_module(void) {
@@ -109,6 +113,7 @@ void store_code_elem(uint8_t bytewidth, uint64_t value) {
 		realloc_code();
 
 	pgrm.code[pgrm.code_size++] = (struct word) {bytewidth, value};
+	pgrm.code_byte_size+=bytewidth;
 }
 
 struct label *enter_label(char *label_name) {
@@ -3774,7 +3779,7 @@ void code_algtype(int n_constructors) {
 
 void code_caf(char *label_name,int a_size,int b_size) {
 	struct label *label;
-	int s;
+	int s=a_size+b_size+1;
 
 	if (list_code) {
 		printf("\t.data\n");
@@ -3782,6 +3787,10 @@ void code_caf(char *label_name,int a_size,int b_size) {
 	}
 
 	label=enter_label(label_name);
+
+	if (list_code)
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,s);
+	store_data_l(s);
 
 	if (a_size>0) {
 		if (list_code)
@@ -3795,7 +3804,6 @@ void code_caf(char *label_name,int a_size,int b_size) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	s=a_size+b_size+1;
 	while(s!=0) {
 		if (list_code)
 			printf("%d\t.data4 %d\n",pgrm.data_size<<2,0);
@@ -3830,7 +3838,7 @@ struct label *code_descriptor
 	int n;
 
 	/* Resolve descriptor address */
-	store_data_l(-1); /* TODO check that this is correct in all cases */
+	store_data_l(-1);
 
 	if (list_code) {
 		printf("\t.data\n");
@@ -4184,7 +4192,10 @@ void code_start(char *label_name) {
 	if (strcmp ("__nostart__",label_name)==0)
 		return;
 
-	add_instruction_label(Cjmp,label_name);
+	if (start_label!=NULL)
+		fprintf(stderr,"Warning: overriding start label from '%s' to '%s'\n",start_label->label_name,label_name);
+
+	start_label=enter_label(label_name);
 }
 
 void code_record(char record_label_name[],char type[],int a_size,int b_size,char record_name[],int record_name_length) {
@@ -4346,6 +4357,24 @@ static void print_global_labels(struct label_node *node, FILE *program_file) {
 		print_global_labels(node->label_node_right, program_file);
 }
 
+static char *print_global_labels_to_string(struct label_node *node, char *ptr) {
+	if (node->label_node_left != NULL)
+		ptr=print_global_labels_to_string(node->label_node_left, ptr);
+
+	struct label *label = node->label_node_label_p;
+	memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
+	ptr+=sizeof(label->label_offset);
+	if (label->label_module_n == - 1 || label->label_offset < 0)
+		for (char *name_ptr=label->label_name; *name_ptr; name_ptr++)
+			*ptr++=*name_ptr;
+	*ptr++='\0';
+
+	if (node->label_node_right != NULL)
+		ptr=print_global_labels_to_string(node->label_node_right, ptr);
+
+	return ptr;
+}
+
 void write_program(FILE *program_file) {
 	fwrite(&pgrm.code_size, sizeof(pgrm.code_size), 1, program_file);
 	fwrite(&pgrm.words_in_strings, sizeof(pgrm.words_in_strings), 1, program_file);
@@ -4358,6 +4387,13 @@ void write_program(FILE *program_file) {
 
 	fwrite(&pgrm.code_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
 	fwrite(&pgrm.data_reloc_size, sizeof(pgrm.code_reloc_size), 1, program_file);
+
+	if (start_label!=NULL) {
+		fwrite(&start_label->label_id, sizeof(uint32_t), 1, program_file);
+	} else {
+		uint32_t nil=-1;
+		fwrite(&nil, sizeof(nil), 1, program_file);
+	}
 
 	print_code(pgrm.code_size,pgrm.code,program_file);
 	print_strings(pgrm.strings_size,pgrm.strings,program_file);
@@ -4372,6 +4408,68 @@ void write_program(FILE *program_file) {
 		fprintf(stderr, "Error writing program file\n");
 		exit(1);
 	}
+}
+
+char *write_program_to_string(uint32_t *bytes_needed) {
+	count_and_renumber_labels(labels, 0);
+
+	*bytes_needed =
+			9*sizeof(uint32_t) +
+			pgrm.code_byte_size +
+			sizeof(uint32_t)*pgrm.strings_size +
+			sizeof(uint64_t)*pgrm.data_size +
+			(sizeof(uint32_t)+1)*label_id +
+			global_label_string_count +
+			sizeof(uint32_t)*2*(pgrm.code_reloc_size+pgrm.data_reloc_size);
+	char *bytecode=safe_malloc(*bytes_needed);
+
+	((uint32_t*)bytecode)[0]=pgrm.code_size;
+	((uint32_t*)bytecode)[1]=pgrm.words_in_strings;
+	((uint32_t*)bytecode)[2]=pgrm.strings_size;
+	((uint32_t*)bytecode)[3]=pgrm.data_size;
+	((uint32_t*)bytecode)[4]=label_id;
+	((uint32_t*)bytecode)[5]=global_label_string_count;
+	((uint32_t*)bytecode)[6]=pgrm.code_reloc_size;
+	((uint32_t*)bytecode)[7]=pgrm.data_reloc_size;
+	((uint32_t*)bytecode)[8]=start_label==NULL ? -1 : start_label->label_id;
+
+	/*EPRINTF("\t%d %d\n\t%d %d\n\t%d %d\n\t%d %d\n",
+			pgrm.code_size, pgrm.data_size,
+			pgrm.words_in_strings, pgrm.strings_size,
+			label_id, global_label_string_count,
+			pgrm.code_reloc_size, pgrm.data_reloc_size);*/
+
+	char *ptr=(char*)&((uint32_t*)bytecode)[9];
+	for (int i=0; i<pgrm.code_size; i++) {
+		memcpy(ptr, &pgrm.code[i].value, pgrm.code[i].width);
+		ptr+=pgrm.code[i].width;
+	}
+
+	for (int i=0; i<pgrm.strings_size; i++) {
+		memcpy(ptr, &pgrm.strings[i], sizeof(uint32_t));
+		ptr+=sizeof(uint32_t);
+	}
+
+	for (int i=0; i<pgrm.data_size; i++) {
+		memcpy(ptr, &pgrm.data[i], sizeof(uint64_t));
+		ptr+=sizeof(uint64_t);
+	}
+
+	ptr=print_global_labels_to_string(labels, ptr);
+
+	for (int i=0; i<pgrm.code_reloc_size; i++) {
+		memcpy(ptr, &pgrm.code_relocations[i].relocation_offset, sizeof(uint32_t));
+		memcpy(ptr+4, &pgrm.code_relocations[i].relocation_label->label_id, sizeof(uint32_t));
+		ptr+=8;
+	}
+
+	for (int i=0; i<pgrm.data_reloc_size; i++) {
+		memcpy(ptr, &pgrm.data_relocations[i].relocation_offset, sizeof(uint32_t));
+		memcpy(ptr+4, &pgrm.data_relocations[i].relocation_label->label_id, sizeof(uint32_t));
+		ptr+=8;
+	}
+
+	return bytecode;
 }
 
 void free_label_node(struct label_node *node) {

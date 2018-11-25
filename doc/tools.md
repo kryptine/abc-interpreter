@@ -24,6 +24,9 @@ bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOM
 # Link bytecode
 bclink "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.obc -o fsieve.bc
 
+# Strip bytecode (optional)
+bcstrip fsive.bc -o fsieve.bc
+
 # Interpret bytecode
 interpret fsieve.bc
 
@@ -53,15 +56,20 @@ generate bytecode for every tool separately and link them together with `link`.
 ### bclink
 
 Links bytecode files together.
-Since there is no `start` field in the bytecode, execution always starts at
-address 0. Thus, the first OBC file should be that of the main module.
+The first OBC file is supposed to be that of the main module.
 
 Usage: `bclink OBC [OBC ...] -o BC`
 
+### bcstrip
+
+Strips bytecode, leaving only the `Start` rule and all code reachable from
+there.
+
+Usage: `bcstrip BC -o BC`
+
 ### interpret
 
-Interprets bytecode. There is no `.start` directive; execution starts at
-address 0.
+Interprets bytecode.
 
 Usage: `interpret BC`
 
