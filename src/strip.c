@@ -185,37 +185,53 @@ static void activate_label(struct s_label *label) {
 		switch (label->label_type) {
 			case DLT_NORMAL:
 				if ((arity & 0xffff) > 256) { /* record */
-					uint64_t *type_string_start=&block[2];
-					uint64_t *name_string_start=&block[3+(type_string_start[-1]+sizeof(uint64_t)-1)/sizeof(uint64_t)];
-
-					/* TODO records with unboxed records */
+					uint64_t *type_string=&block[2];
 
 					store_data_l(block[-2]);
 					store_data_l(block[-1]);
 					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 					store_data_l(block[0]);
-					store_string((char*)type_string_start,type_string_start[-1],1);
-					store_string((char*)name_string_start,name_string_start[-1],0);
+
+					store_string((char*)type_string,type_string[-1],1);
+
+					int n_desc_labels=0;
+					for (char *ts=(char*)type_string; *ts; ts++)
+						if (*ts=='{')
+							n_desc_labels++;
+					uint64_t *desc_labels=&block[2+(type_string[-1]+sizeof(uint64_t)-1)/sizeof(uint64_t)];
+					for (; n_desc_labels; n_desc_labels--) {
+						reloc=find_relocation_by_offset(data_relocations, data_reloc_size, desc_labels-data);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+						store_data_l(*desc_labels++);
+					}
+
+					uint64_t *name_string=desc_labels+1;
+					store_string((char*)name_string,name_string[-1],0);
 				} else { /* no record */
 					arity>>=3+16;
 
-					if (arity==0) { /* desc0 or descn */
-						store_data_l(block[-3]);
-						store_data_l(block[-2]);
-						reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[-1]-data);
-						add_label_to_queue(&labels[reloc->relocation_label]);
-						add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
-						store_data_l(block[-1]);
-						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
-						store_data_l(block[0]);
-						store_data_l(block[1]);
-						if (block[2]!=0) { /* descn */
-							store_string((char*)&block[3], block[2], 0);
-						} else { /* desc0 */
-							store_data_l(block[2]);
-							store_string((char*)&block[4], block[3], 0);
+					if (arity==0) { /* desc0, descn or string */
+						if (block[0]==0 || block[0]==1 || (block[0]>>16)>0) { /* desc0 or descn */
+							store_data_l(block[-3]);
+							store_data_l(block[-2]);
+							reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[-1]-data);
+							add_label_to_queue(&labels[reloc->relocation_label]);
+							add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+							store_data_l(block[-1]);
+							label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+							store_data_l(block[0]);
+							store_data_l(block[1]);
+							if (block[2]!=0) { /* descn */
+								store_string((char*)&block[3], block[2], 0);
+							} else { /* desc0 */
+								store_data_l(block[2]);
+								store_string((char*)&block[4], block[3], 0);
+							}
+						} else { /* string */
+							store_string((char*)&block[1], block[0], 0);
 						}
-					} else { /* normal descriptor */
+					} else { /* descs or normal descriptor */
 						store_data_l(block[-2]);
 						reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[-1]-data);
 						add_label_to_queue(&labels[reloc->relocation_label]);
@@ -223,12 +239,17 @@ static void activate_label(struct s_label *label) {
 						store_data_l(block[-1]);
 						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 
-						for (int i=0; i<arity; i++) {
-							store_data_l(block[i*2]);
-							reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[i*2+1]-data);
-							add_label_to_queue(&labels[reloc->relocation_label]);
-							add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
-							store_data_l(block[i*2+1]);
+						if (arity==1 && (block[1]>>2) > 0) { /* descs */
+							store_data_l(block[0]);
+							store_data_l(block[1]);
+						} else {
+							for (int i=0; i<arity; i++) {
+								store_data_l(block[i*2]);
+								reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[i*2+1]-data);
+								add_label_to_queue(&labels[reloc->relocation_label]);
+								add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
+								store_data_l(block[i*2+1]);
+							}
 						}
 
 						store_data_l(block[2*arity]);
