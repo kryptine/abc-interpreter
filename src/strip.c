@@ -179,7 +179,9 @@ static void activate_label(struct s_label *label) {
 	if (label->bcgen_label->label_offset!=-1)
 		return;
 
-	if (label->offset & 1) { /* data */
+	if (label->offset==-1) {
+		return;
+	} else if (label->offset & 1) { /* data */
 		uint64_t *block=&data[(label->offset-1)>>2];
 		uint32_t arity=block[0];
 
