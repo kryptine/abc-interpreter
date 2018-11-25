@@ -209,7 +209,7 @@ static void activate_label(struct s_label *label) {
 						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 						store_data_l(block[0]);
 						store_data_l(block[1]);
-						if (block[0]) { /* descn */
+						if (block[2]!=0) { /* descn */
 							store_string((char*)&block[3], block[2], 0);
 						} else { /* desc0 */
 							store_data_l(block[2]);
@@ -394,8 +394,7 @@ static struct s_label *find_label_by_name(const char *name) {
 	exit(1);
 }
 
-void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
-		uint32_t *result_size, char **result) {
+void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 	uint32_t code_size=bytecode[0];
 	/*uint32_t words_in_strings=bytecode[1];*/
 	uint32_t strings_size=bytecode[2];
@@ -404,7 +403,7 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 	/*uint32_t global_label_string_count=bytecode[5];*/
 	code_reloc_size=bytecode[6];
 	data_reloc_size=bytecode[7];
-	/*uint32_t start_label_id=bytecode[8];*/
+	uint32_t start_label_id=bytecode[8];
 
 	code_indices=safe_malloc(sizeof(struct code_index)*code_size);
 	code=(uint8_t*)&bytecode[9];
@@ -453,6 +452,9 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 	data=(uint64_t*)bytecode;
 	bytecode=(uint32_t*)&data[data_size];
 
+	init_label_queue();
+	pgrm=initialize_code();
+
 	char *labels_in_bytecode=(char*)bytecode;
 	labels=safe_malloc(sizeof(struct s_label)*n_labels);
 	for (int i=0; i<n_labels; i++) {
@@ -465,6 +467,10 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 			ilabs->next=code_indices[labels[i].offset>>2].incoming_labels;
 			ilabs->label_id=i;
 			code_indices[labels[i].offset>>2].incoming_labels=ilabs;
+		}
+		if (activate_start_label && i==start_label_id) {
+			add_label_to_queue(&labels[i]);
+			code_start(labels[i].name);
 		}
 		labels_in_bytecode+=4;
 		while (*labels_in_bytecode++);
@@ -485,18 +491,22 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 		data_relocations[i].relocation_belongs_to_label=NULL;
 		bytecode+=2;
 	}
+}
 
-	pgrm=initialize_code();
-	init_label_queue();
-
-	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++) {
-		struct s_label *label=find_label_by_name(descriptors[i]->cs_characters);
-		add_label_to_queue(label);
-	}
-
+char *finish_strip_bytecode(uint32_t *result_size) {
 	struct s_label *label;
 	while ((label=next_label_from_queue())!=NULL)
 		activate_label(label);
 
-	*result=write_program_to_string(result_size);
+	return write_program_to_string(result_size);
+}
+
+void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
+		uint32_t *result_size, char **result) {
+	prepare_strip_bytecode(bytecode, 0);
+
+	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++)
+		add_label_to_queue(find_label_by_name(descriptors[i]->cs_characters));
+
+	*result=finish_strip_bytecode(result_size);
 }

@@ -2,6 +2,9 @@
 
 #include "bytecode.h"
 
+void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label);
+char *finish_strip_bytecode(uint32_t *result_size);
+
 struct clean_string {
 	void *cs_desc;
 	BC_WORD cs_size;
