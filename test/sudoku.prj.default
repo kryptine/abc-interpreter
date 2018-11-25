@@ -43,6 +43,7 @@ Global
 		ResourceSource:	
 		GenerateDLL:	False
 		ExportedNames:	
+		StripByteCode:	True
 	Paths
 		Path:	{Project}
 		Path:	{Application}*lib*Platform
