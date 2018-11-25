@@ -170,8 +170,7 @@ struct s_relocation *find_relocation_by_offset(struct s_relocation *relocs, uint
 		else
 			return &relocs[i];
 	}
-	EPRINTF("error in find_relocation_by_offset\n");
-	exit(1);
+	return NULL;
 }
 
 static void activate_label(struct s_label *label) {
@@ -209,7 +208,7 @@ static void activate_label(struct s_label *label) {
 
 					uint64_t *name_string=desc_labels+1;
 					store_string((char*)name_string,name_string[-1],0);
-				} else if ((arity & 0xffff) > 0) { /* string */
+				} else if ((arity & 0xffff) > 0 && (arity>>16)==0) { /* string */
 					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 					store_string((char*)&block[1], block[0], 0);
 				} else { /* no record */
@@ -243,6 +242,8 @@ static void activate_label(struct s_label *label) {
 						store_data_l(block[-1]);
 						label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 
+						int include_last_words=1;
+
 						if (arity==1 && (block[1]>>2) > 0) { /* descs */
 							store_data_l(block[0]);
 							store_data_l(block[1]);
@@ -250,16 +251,24 @@ static void activate_label(struct s_label *label) {
 							for (int i=0; i<arity; i++) {
 								store_data_l(block[i*2]);
 								reloc=find_relocation_by_offset(data_relocations, data_reloc_size, &block[i*2+1]-data);
+								if (reloc==NULL && i==0) { /* descn */
+									store_data_l(block[1]);
+									store_string((char*)&block[3], block[2], 0);
+									include_last_words=0;
+									break;
+								}
 								add_label_to_queue(&labels[reloc->relocation_label]);
 								add_data_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->data_size);
 								store_data_l(block[i*2+1]);
 							}
 						}
 
-						store_data_l(block[2*arity]);
-						store_data_l(block[2*arity+1]);
-						store_data_l(block[2*arity+2]);
-						store_string((char*)&block[2*arity+4],block[2*arity+3],0);
+						if (include_last_words) {
+							store_data_l(block[2*arity]);
+							store_data_l(block[2*arity+1]);
+							store_data_l(block[2*arity+2]);
+							store_string((char*)&block[2*arity+4],block[2*arity+3],0);
+						}
 					}
 				}
 				break;
