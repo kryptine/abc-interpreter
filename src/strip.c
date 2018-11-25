@@ -193,7 +193,7 @@ static void activate_label(struct s_label *label) {
 					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
 					store_data_l(block[0]);
 
-					store_string((char*)type_string,type_string[-1],1);
+					store_string((char*)type_string,type_string[-1]-1,1);
 
 					int n_desc_labels=0;
 					for (char *ts=(char*)type_string; *ts; ts++)
@@ -281,9 +281,11 @@ static void activate_label(struct s_label *label) {
 
 		do {
 			do { ci--; } while (ci>=0 && code_indices[ci].byte_index==-1);
-		} while (ci!=0 && !instruction_ends_block(*(int16_t*)&code[code_indices[ci].byte_index]));
-		if (ci!=0)
+		} while (ci>0 && !instruction_ends_block(*(int16_t*)&code[code_indices[ci].byte_index]));
+		if (ci>0)
 			do { ci++; } while (code_indices[ci].byte_index==-1);
+		else
+			ci=0;
 
 		uint8_t *code_block=&code[code_indices[ci].byte_index];
 		int in_block=1;
