@@ -74,8 +74,10 @@ void add_label_to_queue(struct s_label *label) {
 	if (label->name[0]!='\0') {
 		label->bcgen_label=enter_label(label->name);
 		make_label_global(label->bcgen_label);
-	} else
+	} else {
 		label->bcgen_label=new_label(glob_lab_id++);
+		label->bcgen_label->label_offset=-1;
+	}
 
 	queue->labels[queue->writer++]=label;
 	queue->writer%=queue->size;
@@ -177,6 +179,8 @@ struct s_relocation *find_relocation_by_offset(struct s_relocation *relocs, uint
 
 static void activate_label(struct s_label *label) {
 	struct s_relocation *reloc;
+	if (label->bcgen_label->label_offset!=-1)
+		return;
 
 	if (label->offset & 1) { /* data */
 		uint64_t *block=&data[(label->offset-1)>>2];
@@ -208,6 +212,9 @@ static void activate_label(struct s_label *label) {
 
 					uint64_t *name_string=desc_labels+1;
 					store_string((char*)name_string,name_string[-1],0);
+				} else if ((arity & 0xffff) > 0) { /* string */
+					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+					store_string((char*)&block[1], block[0], 0);
 				} else { /* no record */
 					arity>>=3+16;
 
@@ -274,60 +281,15 @@ static void activate_label(struct s_label *label) {
 		}
 	} else { /* code */
 		int ci=label->offset>>2;
+
+		do {
+			do { ci--; } while (ci>=0 && code_indices[ci].byte_index==-1);
+		} while (ci!=0 && !instruction_ends_block(*(int16_t*)&code[code_indices[ci].byte_index]));
+		if (ci!=0)
+			do { ci++; } while (code_indices[ci].byte_index==-1);
+
 		uint8_t *code_block=&code[code_indices[ci].byte_index];
 		int in_block=1;
-
-		/* TODO: is there a better way to recognise node entry points? */
-		if (*(int16_t*)&code_block[-14]==CA_data_IIIla) {
-			store_code_elem(2, *(uint16_t*)&code_block[-14]);
-			store_code_elem(2, *(uint16_t*)&code_block[-12]);
-			store_code_elem(2, *(uint16_t*)&code_block[-10]);
-			store_code_elem(2, *(uint16_t*)&code_block[-8]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-6]);
-			store_code_elem(2, *(uint16_t*)&code_block[-2]);
-		} else if (*(int16_t*)&code_block[-10]==CA_data_IIl) {
-			store_code_elem(2, *(uint16_t*)&code_block[-10]);
-			store_code_elem(2, *(uint16_t*)&code_block[-8]);
-			store_code_elem(2, *(uint16_t*)&code_block[-6]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-1);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-4]);
-		} else if (*(int16_t*)&code_block[-10]==CA_data_IlI) {
-			store_code_elem(2, *(uint16_t*)&code_block[-10]);
-			store_code_elem(2, *(uint16_t*)&code_block[-8]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-6]);
-			store_code_elem(2, *(uint16_t*)&code_block[-2]);
-		} else if (*(int16_t*)&code_block[-16]==CA_data_IlIla) {
-			store_code_elem(2, *(uint16_t*)&code_block[-16]);
-			store_code_elem(2, *(uint16_t*)&code_block[-14]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-4);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-12]);
-			store_code_elem(2, *(uint16_t*)&code_block[-8]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-6]);
-			store_code_elem(2, *(uint16_t*)&code_block[-2]);
-		} else if (*(int16_t*)&code_block[-8]==CA_data_la) {
-			store_code_elem(2, *(uint16_t*)&code_block[-8]);
-			reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci-2);
-			add_label_to_queue(&labels[reloc->relocation_label]);
-			add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
-			store_code_elem(4, *(uint32_t*)&code_block[-6]);
-			store_code_elem(2, *(uint16_t*)&code_block[-2]);
-		} else if (*(int16_t*)&code_block[-4]==CA_data_a) {
-			store_code_elem(2, *(uint16_t*)&code_block[-4]);
-			store_code_elem(2, *(uint16_t*)&code_block[-2]);
-		}
 
 		while (in_block) {
 			struct incoming_labels *ilabs=code_indices[ci].incoming_labels;
@@ -340,8 +302,8 @@ static void activate_label(struct s_label *label) {
 					} else
 						lab->bcgen_label=new_label(pgrm->code_size<<2);
 				} else if (lab->bcgen_label->label_offset!=-1) {
-					EPRINTF("Warning: overwriting label '%s'\n",lab->bcgen_label->label_name);
-					/* TODO: make sure this does not happen */
+					EPRINTF("Error: overwriting label '%s'\n",lab->bcgen_label->label_name);
+					exit(1);
 				}
 				lab->bcgen_label->label_offset=pgrm->code_size<<2;
 				ilabs=ilabs->next;
