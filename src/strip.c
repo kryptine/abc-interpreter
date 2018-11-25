@@ -10,7 +10,8 @@
 enum data_label_type {
 	DLT_NORMAL,
 	DLT_STRING,
-	DLT_STRING_WITH_DESCRIPTOR
+	DLT_STRING_WITH_DESCRIPTOR,
+	DLT_CAF
 };
 
 struct s_label { /* source label */
@@ -284,6 +285,19 @@ static void activate_label(struct s_label *label) {
 				store_data_l(block[0]);
 				store_string((char*)&block[2], block[1], 0);
 				break;
+			case DLT_CAF:
+				{
+					int s=block[-1];
+					if (s==0) {
+						s=block[-2];
+						store_data_l(block[-2]);
+					}
+					store_data_l(block[-1]);
+					label->bcgen_label->label_offset=(pgrm->data_size<<2)+1;
+					for (; s; s--)
+						store_data_l(0);
+				}
+				break;
 		}
 	} else { /* code */
 		int ci=label->offset>>2;
@@ -338,6 +352,14 @@ static void activate_label(struct s_label *label) {
 					case 'l': /* Label */
 						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
 						add_label_to_queue(&labels[reloc->relocation_label]);
+						add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
+						store_code_elem(4, *(uint32_t*)code_block);
+						code_block+=4;
+						break;
+					case 'C': /* CAF label */
+						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
+						add_label_to_queue(&labels[reloc->relocation_label]);
+						labels[reloc->relocation_label].label_type=DLT_CAF;
 						add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
 						store_code_elem(4, *(uint32_t*)code_block);
 						code_block+=4;
@@ -423,6 +445,7 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 					i+=2;
 					break;
 				case 'l': /* Label */
+				case 'C': /* CAF label */
 				case 'S': /* String label */
 				case 's': /* String label */
 					i+=4;

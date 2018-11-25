@@ -134,7 +134,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuild_u1b:             return "ln";
 		case Cbuild_u21:             return "l";
 		case Cbuild_u22:             return "l";
-		case Cbuild_u2b:             return "ln";
+		case Cbuild_u2b:             return "nl";
 		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "nl";
 		case Cccall:                 return "";
@@ -219,7 +219,7 @@ const char *instruction_type (BC_WORD i) {
 		case CfillI:                 return "in";
 		case CfillI_b:               return "nn";
 		case CfillR_b:               return "nn";
-		case Cfillcaf:               return "lnn";
+		case Cfillcaf:               return "Cnn";
 		case Cfill_a:                return "nn";
 		case Cfill_r:                return "nnnlnn";
 		case Cfill_ra0:              return "nnnl";
@@ -303,11 +303,11 @@ const char *instruction_type (BC_WORD i) {
 		case CpushLc:                return "";
 		case CpushR:                 return "r";
 		case CpushR_a:               return "n";
-		case Cpushcaf:               return "nnl";
-		case Cpushcaf10:             return "l";
-		case Cpushcaf11:             return "l";
-		case Cpushcaf20:             return "l";
-		case Cpushcaf31:             return "l";
+		case Cpushcaf:               return "nnC";
+		case Cpushcaf10:             return "C";
+		case Cpushcaf11:             return "C";
+		case Cpushcaf20:             return "C";
+		case Cpushcaf31:             return "C";
 		case Cpush_a:                return "n";
 		case Cpush_a_r_args:         return "";
 		case Cpush_arg:              return "nn";
@@ -469,7 +469,7 @@ const char *instruction_type (BC_WORD i) {
 		case CsqrtR:                 return "";
 		case Crtn:                   return "";
 		case CtanR:                  return "";
-		case Ctestcaf:               return "l";
+		case Ctestcaf:               return "C";
 		case Cupdate:                return "";
 		case CupdateBOOL:            return "";
 		case CupdateCHAR:            return "";

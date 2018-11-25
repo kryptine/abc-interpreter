@@ -3779,7 +3779,7 @@ void code_algtype(int n_constructors) {
 
 void code_caf(char *label_name,int a_size,int b_size) {
 	struct label *label;
-	int s;
+	int s=a_size+b_size+1;
 
 	if (list_code) {
 		printf("\t.data\n");
@@ -3787,6 +3787,10 @@ void code_caf(char *label_name,int a_size,int b_size) {
 	}
 
 	label=enter_label(label_name);
+
+	if (list_code)
+		printf("%d\t.data4 %d\n",pgrm.data_size<<2,s);
+	store_data_l(s);
 
 	if (a_size>0) {
 		if (list_code)
@@ -3800,7 +3804,6 @@ void code_caf(char *label_name,int a_size,int b_size) {
 	}
 	label->label_offset=(pgrm.data_size<<2)+1;
 
-	s=a_size+b_size+1;
 	while(s!=0) {
 		if (list_code)
 			printf("%d\t.data4 %d\n",pgrm.data_size<<2,0);

@@ -323,6 +323,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case 'l': /* Label */
+						case 'C': /* CAF label */
 						case 'S': /* String label */
 						case 's': /* String label */
 							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
