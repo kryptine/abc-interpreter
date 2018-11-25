@@ -66,7 +66,6 @@ void init_label_queue(void) {
 	queue->size=2;
 }
 
-static uint32_t glob_lab_id=0;
 void add_label_to_queue(struct s_label *label) {
 	if (label->bcgen_label!=NULL)
 		return;
@@ -74,10 +73,8 @@ void add_label_to_queue(struct s_label *label) {
 	if (label->name[0]!='\0') {
 		label->bcgen_label=enter_label(label->name);
 		make_label_global(label->bcgen_label);
-	} else {
-		label->bcgen_label=new_label(glob_lab_id++);
-		label->bcgen_label->label_offset=-1;
-	}
+	} else
+		label->bcgen_label=new_internal_label();
 
 	queue->labels[queue->writer++]=label;
 	queue->writer%=queue->size;
