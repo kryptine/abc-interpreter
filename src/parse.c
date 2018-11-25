@@ -206,16 +206,14 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					return 1;
 #ifdef LINKER
 				add_words_in_strings(elem32);
-#else
-# if (WORD_WIDTH == 32)
+#elif defined(INTERPRETER) && WORD_WIDTH==32
 				state->words_in_strings = elem32;
-# endif
 #endif
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
 				state->strings_size = elem32;
-#if !defined(LINKER) && WORD_WIDTH == 32
+#if defined(INTERPRETER) && WORD_WIDTH == 32
 				/* Allocate one more to prevent reading out of bounds in PS_data */
 				state->strings = safe_malloc(sizeof(uint32_t*) * (elem32+1));
 				state->strings[elem32] = 0;
@@ -226,7 +224,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #ifdef LINKER
 				state->data_size = elem32;
 #else
-# if (WORD_WIDTH == 32)
+# if defined(INTERPRETER) && WORD_WIDTH==32
 				state->data_n_words = elem32;
 				/* Allocate extra space because strings take more words on 32-bit */
 				state->program->data_size = elem32 + state->words_in_strings;
@@ -391,7 +389,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					return 1;
 #ifdef LINKER
 				add_string_information(elem32 + state->data_offset);
-#elif WORD_WIDTH == 32
+#elif defined(INTERPRETER) && WORD_WIDTH==32
 				state->strings[state->ptr] = elem32;
 #endif
 				if (++state->ptr >= state->strings_size)
@@ -406,7 +404,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #else
 				state->program->data[state->ptr++] = elem64;
 #endif
-#if (!defined(LINKER) && WORD_WIDTH == 32)
+#if defined(INTERPRETER) && WORD_WIDTH==32
 				/* On 64-bit, strings can be read as-is. On 32-bit, we need to
 				 * read 64 bits and store them in two words. */
 				if (state->strings[state->strings_ptr] == state->read_n) {
@@ -592,7 +590,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					shift_address(&state->program->data[data_i]);
 # endif
 
-# if (WORD_WIDTH == 32)
+# if defined(INTERPRETER) && WORD_WIDTH==32
 					/* data_i is an offset to the abstract data segment. We need to
 					 * fix it up for the extra length of strings on 32-bit. */
 					while (data_i >= state->strings[state->strings_ptr]) {
