@@ -58,7 +58,28 @@ static struct s_relocation *code_relocations;
 static uint32_t data_reloc_size;
 static struct s_relocation *data_relocations;
 
+static int export_exported_labels;
+
 struct label_queue *queue;
+
+static int export_label(const char *label) {
+	if (export_exported_labels)
+		return 1;
+	else if (!strcmp(label, "__ARRAY__"))
+		return 1;
+	else if (!strcmp(label, "__STRING__"))
+		return 1;
+	else if (!strcmp(label, "INT") || !strcmp(label, "dINT"))
+		return 1;
+	else if (!strcmp(label, "BOOL"))
+		return 1;
+	else if (!strcmp(label, "CHAR"))
+		return 1;
+	else if (!strcmp(label, "REAL"))
+		return 1;
+	else
+		return 0;
+}
 
 void init_label_queue(void) {
 	queue=safe_malloc(sizeof(struct label_queue)+2*sizeof(char*));
@@ -73,7 +94,8 @@ void add_label_to_queue(struct s_label *label) {
 
 	if (label->name[0]!='\0') {
 		label->bcgen_label=enter_label(label->name);
-		make_label_global(label->bcgen_label);
+		if (export_label(label->name))
+			make_label_global(label->bcgen_label);
 	} else
 		label->bcgen_label=new_internal_label();
 
@@ -321,7 +343,8 @@ static void activate_label(struct s_label *label) {
 				if (lab->bcgen_label==NULL) {
 					if (lab->name[0] != '\0') {
 						lab->bcgen_label=enter_label(lab->name);
-						make_label_global(label->bcgen_label);
+						if (export_label(lab->name))
+							make_label_global(label->bcgen_label);
 					} else
 						lab->bcgen_label=new_label(pgrm->code_size<<2);
 				} else if (lab->bcgen_label->label_offset!=-1 && lab->bcgen_label->label_offset!=(pgrm->code_size<<2)) {
@@ -408,6 +431,8 @@ static struct s_label *find_label_by_name(const char *name) {
 }
 
 void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
+	export_exported_labels=0;
+
 	uint32_t code_size=bytecode[0];
 	/*uint32_t words_in_strings=bytecode[1];*/
 	uint32_t strings_size=bytecode[2];
@@ -535,6 +560,7 @@ char *finish_strip_bytecode(uint32_t *result_size) {
 void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 		uint32_t *result_size, char **result) {
 	prepare_strip_bytecode(bytecode, 0);
+	export_exported_labels=1;
 
 	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++)
 		add_label_to_queue(find_label_by_name(descriptors[i]->cs_characters));
