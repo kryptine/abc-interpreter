@@ -316,8 +316,7 @@ static void activate_label(struct s_label *label) {
 		int in_block=1;
 
 		while (in_block) {
-			struct incoming_labels *ilabs=code_indices[ci].incoming_labels;
-			while (ilabs!=NULL) {
+			for (struct incoming_labels *ilabs=code_indices[ci].incoming_labels; ilabs!=NULL; ilabs=ilabs->next) {
 				struct s_label *lab=&labels[ilabs->label_id];
 				if (lab->bcgen_label==NULL) {
 					if (lab->name[0] != '\0') {
@@ -325,12 +324,11 @@ static void activate_label(struct s_label *label) {
 						make_label_global(label->bcgen_label);
 					} else
 						lab->bcgen_label=new_label(pgrm->code_size<<2);
-				} else if (lab->bcgen_label->label_offset!=-1) {
+				} else if (lab->bcgen_label->label_offset!=-1 && lab->bcgen_label->label_offset!=(pgrm->code_size<<2)) {
 					EPRINTF("Error: overwriting label '%s'\n",lab->bcgen_label->label_name);
 					exit(1);
 				}
 				lab->bcgen_label->label_offset=pgrm->code_size<<2;
-				ilabs=ilabs->next;
 			}
 
 			int16_t instr=*(int16_t*)code_block;
@@ -405,7 +403,7 @@ static struct s_label *find_label_by_name(const char *name) {
 		else
 			return label;
 	}
-	EPRINTF("error in find_label_by_name\n");
+	EPRINTF("error in find_label_by_name (%s)\n",name);
 	exit(1);
 }
 
@@ -506,6 +504,23 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 		data_relocations[i].relocation_label=bytecode[1];
 		data_relocations[i].relocation_belongs_to_label=NULL;
 		bytecode+=2;
+	}
+
+	/* Give unnamed labels a name when there is a label with the same offset to
+	 * avoid generating superfluous labels. */
+	for (int ci=0; ci<code_size; ci++) {
+		if (code_indices[ci].byte_index==-1)
+			continue;
+		char *name=NULL;
+		for (struct incoming_labels *ilabs=code_indices[ci].incoming_labels; ilabs!=NULL; ilabs=ilabs->next)
+			if (labels[ilabs->label_id].name[0]!='\0') {
+				name=labels[ilabs->label_id].name;
+				break;
+			}
+		if (name!=NULL)
+			for (struct incoming_labels *ilabs=code_indices[ci].incoming_labels; ilabs!=NULL; ilabs=ilabs->next)
+				if (labels[ilabs->label_id].name[0]=='\0')
+					labels[ilabs->label_id].name=name;
 	}
 }
 
