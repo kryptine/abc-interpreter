@@ -2457,6 +2457,129 @@ INSTRUCTION_BLOCK(fill1_r0101):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill1_r0111):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[1]=*bsp++;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02001):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[2]=*bsp++;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02010):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[1]=*bsp++;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02011):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[1]=bsp[0];
+	n[2]=bsp[1];
+	bsp+=2;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02101):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[2]=*bsp++;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02110):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[1]=*bsp++;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r02111):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[1]=bsp[0];
+	n[2]=bsp[1];
+	bsp+=2;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r11001):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[2]=*bsp++;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r11011):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[1]=*asp--;
+	n[2]=*bsp++;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r11101):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[2]=*bsp++;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r11111):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[1]=*asp--;
+	n[2]=*bsp++;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill1_r20111):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	n[1]=asp[0];
+	n[2]=asp[-1];
+	asp-=2;
+	pc+=3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fill1010):
 {
 	BC_WORD *n;
@@ -8921,13 +9044,6 @@ INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(ccall):
 INSTRUCTION_BLOCK(centry):
-INSTRUCTION_BLOCK(fill1_r1001):
-INSTRUCTION_BLOCK(fill1_r1011):
-INSTRUCTION_BLOCK(fill1_r11111):
-INSTRUCTION_BLOCK(fill1_r20001):
-INSTRUCTION_BLOCK(fill1_r20010):
-INSTRUCTION_BLOCK(fill1_r20011):
-INSTRUCTION_BLOCK(fill1_r20111):
 INSTRUCTION_BLOCK(fill2_r):
 INSTRUCTION_BLOCK(fill3_r):
 INSTRUCTION_BLOCK(fill3_r01a):

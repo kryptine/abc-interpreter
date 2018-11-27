@@ -1564,6 +1564,11 @@ void code_fill1(char descriptor_name[],int arity,int a_offset,char bits[]) {
 }
 
 void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,char bits[]) {
+	if (b_size==0 && bits[0]=='0') {
+		code_fill1(descriptor_name,a_size,root_offset,bits);
+		return;
+	}
+
 	switch (a_size+b_size) {
 		case 1:
 			if (bits[0]=='0' && bits[1]=='0') {
@@ -1574,13 +1579,16 @@ void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 				if (bits[0]=='0' && bits[1]=='1') {
 					add_instruction_w(Cfill1_r0101,-root_offset);
 					return;
+				} else if (bits[0]=='1' && bits[1]=='1') {
+					add_instruction_w_label_offset(Cfill1_r0111,-root_offset,descriptor_name,2);
+					return;
 				}
 			} else {
 				if (bits[0]=='0' && bits[1]=='1') {
-					add_instruction_w(Cfill1_r1001,-root_offset);
+					add_instruction_w(Cfill1010,-root_offset);
 					return;
 				} else if (bits[0]=='1' && bits[1]=='1') {
-					add_instruction_w_label_offset(Cfill1_r1011,-root_offset,descriptor_name,2);
+					add_instruction_w_label_offset(Cfill1,-root_offset,descriptor_name,2);
 					return;
 				}
 			}
@@ -1591,22 +1599,63 @@ void code_fill1_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 				return;
 			}
 			if (a_size==2) {
-				if (bits[0]=='0' && bits[1]=='0' && bits[2]=='1') {
-					add_instruction_w(Cfill1_r20001,-root_offset);
+				if (bits[0]=='1' && bits[1]=='0' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill0,-root_offset,descriptor_name,2);
 					return;
-				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='0') {
-					add_instruction_w(Cfill1_r20010,-root_offset);
+				} else if (bits[0]=='1' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1101,-root_offset,descriptor_name,2);
 					return;
-				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='1') {
-					add_instruction_w(Cfill1_r20011,-root_offset);
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill1,-root_offset,descriptor_name,2);
 					return;
 				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
 					add_instruction_w_label_offset(Cfill1_r20111,-root_offset,descriptor_name,2);
 					return;
 				}
 			} else if (b_size==1 && a_size==1) {
-				if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
+				if (bits[0]=='0' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r11001,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w(Cfill1010,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r11011,-root_offset);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='0' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill0,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1_r11101,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill1,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
 					add_instruction_w_label_offset(Cfill1_r11111,-root_offset,descriptor_name,2);
+					return;
+				}
+			} else if (b_size==2) {
+				if (bits[0]=='0' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r02001,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w(Cfill1_r02010,-root_offset);
+					return;
+				} else if (bits[0]=='0' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w(Cfill1_r02011,-root_offset);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='0' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill0,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='0' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1_r02101,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='0') {
+					add_instruction_w_label_offset(Cfill1_r02110,-root_offset,descriptor_name,2);
+					return;
+				} else if (bits[0]=='1' && bits[1]=='1' && bits[2]=='1') {
+					add_instruction_w_label_offset(Cfill1_r02111,-root_offset,descriptor_name,2);
 					return;
 				}
 			}

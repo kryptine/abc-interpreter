@@ -1,3 +1,3 @@
-[(True,(UT2 5)),(True,(UT1 10)),(False,(UT1 15)),(True,(UT2 20))]
+[(True,(UT11 1)),(False,(UT10 1)),(True,(UT10 1)),(True,(UT11 1)),(True,(UT211 2 1)),(False,(UT201 1 1)),(False,(UT201 2 1)),(True,(UT211 2 2))]
 halt at 4
-56 524232 524288
+112 524176 524288
