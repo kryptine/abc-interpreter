@@ -43,7 +43,7 @@ Global
 		ResourceSource:	
 		GenerateDLL:	False
 		ExportedNames:	
-		StripByteCode:	True
+		StripByteCode:	False
 	Paths
 		Path:	{Project}
 	Precompile:	
