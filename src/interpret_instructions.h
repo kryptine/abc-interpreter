@@ -2803,62 +2803,61 @@ INSTRUCTION_BLOCK(fill2ab013):
 }
 INSTRUCTION_BLOCK(fill2_r0):
 {
-	BC_WORD *n,*args_min_1,bits;
-	int a_size,b_size;
+	BC_WORD *n,*args,bits;
+	int a_size;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	args_min_1=(BC_WORD*)n[2]-1;
+	args=(BC_WORD*)n[2];
 	a_size=pc[2];
-	b_size=pc[3];
-	bits=pc[4];
-	int i=a_size+b_size-1;
+	bits=pc[3];
+	if (bits&1) {
+		if (a_size==0)
+			n[1]=*bsp++;
+		else
+			n[1]=*asp--;
+	}
+	a_size--;
+	bits>>=1;
+	int i=0;
 	for (; bits>0; bits>>=1) {
 		if (bits&1) {
-			if (i>0) {
-				if (i>=a_size)
-					args_min_1[i]=*bsp++;
-				else
-					args_min_1[i]=*asp--;
-			} else {
-				if (a_size==0)
-					n[1]=*bsp++;
-				else
-					n[1]=*asp--;
-			}
+			if (i>=a_size)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
 		}
-		i--;
+		i++;
 	}
-	pc+=5;
+	pc+=4;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill2_r1):
 {
-	BC_WORD *n,*args_min_1,bits;
-	int a_size,b_size;
+	BC_WORD *n,*args,bits;
+	int a_size;
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	n[0]=pc[2];
-	args_min_1=(BC_WORD*)n[2]-1;
+	args=(BC_WORD*)n[2];
 	a_size=pc[3];
-	b_size=pc[4];
-	bits=pc[5];
-	int i=a_size+b_size-1;
-	EPRINTF("\t%d %d %lx\n",a_size,b_size,bits);
+	bits=pc[4];
+	if (bits&1) {
+		if (a_size==0)
+			n[1]=*bsp++;
+		else
+			n[1]=*asp--;
+	}
+	a_size--;
+	bits>>=1;
+	int i=0;
 	for (; bits>0; bits>>=1) {
 		if (bits&1) {
-			if (i>0) {
-				if (i>=a_size)
-					args_min_1[i]=*bsp++;
-				else
-					args_min_1[i]=*asp--;
-			} else {
-				if (a_size==0)
-					n[1]=*bsp++;
-				else
-					n[1]=*asp--;
-			}
+			if (i>=a_size)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
 		}
-		i--;
+		i++;
 	}
-	pc+=6;
+	pc+=5;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(fill3a10):

@@ -220,7 +220,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cfill2b011:             return "nn";
 		case Cfill2b012:             return "nn";
 		case Cfill2_r0:              return "nnnn";
-		case Cfill2_r1:              return "nlnnn";
+		case Cfill2_r1:              return "nlnn";
 		case Cfill3_r:               return "nlnnn";
 		case Cfill3_r01a:            return "nln";
 		case Cfill3_r01b:            return "nln";
