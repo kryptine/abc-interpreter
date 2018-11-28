@@ -4067,6 +4067,27 @@ INSTRUCTION_BLOCK(pushcaf10):
 	*++asp=*((BC_WORD*)pc[1]+1);
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+INSTRUCTION_BLOCK(pushcaf11):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)pc[1]+1;
+	*++asp=n[0];
+	*--bsp=n[1];
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(pushcaf20):
+{
+	BC_WORD *n;
+
+	n=(BC_WORD*)pc[1]+1;
+	asp[2]=n[0];
+	asp[1]=n[1];
+	asp+=2;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(pushcaf31):
 {
 	BC_WORD *n;
@@ -8616,6 +8637,85 @@ INSTRUCTION_BLOCK(add_arg3):
 	hp+=6;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(add_arg32): instr_arg=32; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg31): instr_arg=31; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg30): instr_arg=30; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg29): instr_arg=29; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg28): instr_arg=28; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg27): instr_arg=27; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg26): instr_arg=26; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg25): instr_arg=25; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg24): instr_arg=24; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg23): instr_arg=23; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg22): instr_arg=22; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg21): instr_arg=21; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg20): instr_arg=20; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg19): instr_arg=19; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg18): instr_arg=18; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg17): instr_arg=17; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg16): instr_arg=16; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg15): instr_arg=15; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg14): instr_arg=14; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg13): instr_arg=13; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg12): instr_arg=12; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg11): instr_arg=11; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg10): instr_arg=10; goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg9):  instr_arg=9;  goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg8):  instr_arg=8;  goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg7):  instr_arg=7;  goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg6):  instr_arg=6;  goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg5):  instr_arg=5;  goto add_arg_n;
+INSTRUCTION_BLOCK(add_arg4):  instr_arg=4;
+add_arg_n:
+{
+	BC_WORD *n,*a;
+
+	NEED_HEAP(instr_arg+3);
+	n=(BC_WORD*)asp[0];
+	hp[5]=asp[-1];
+	pc=(BC_WORD*)*csp++;
+	a=(BC_WORD*)n[2];
+	hp[1]=n[1];
+	hp[2]=(BC_WORD)&hp[3];
+	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
+	hp[3]=a[0];
+	hp[4]=a[1];
+	hp[5]=a[2];
+	do {
+		if (instr_arg< 5) break; hp[ 6]=a[ 3];
+		if (instr_arg< 6) break; hp[ 7]=a[ 4];
+		if (instr_arg< 7) break; hp[ 8]=a[ 5];
+		if (instr_arg< 8) break; hp[ 9]=a[ 6];
+		if (instr_arg< 9) break; hp[10]=a[ 7];
+		if (instr_arg<10) break; hp[11]=a[ 8];
+		if (instr_arg<11) break; hp[12]=a[ 9];
+		if (instr_arg<12) break; hp[13]=a[10];
+		if (instr_arg<13) break; hp[14]=a[11];
+		if (instr_arg<14) break; hp[15]=a[12];
+		if (instr_arg<15) break; hp[16]=a[13];
+		if (instr_arg<16) break; hp[17]=a[14];
+		if (instr_arg<17) break; hp[18]=a[15];
+		if (instr_arg<18) break; hp[19]=a[16];
+		if (instr_arg<19) break; hp[20]=a[17];
+		if (instr_arg<20) break; hp[21]=a[18];
+		if (instr_arg<21) break; hp[22]=a[19];
+		if (instr_arg<22) break; hp[23]=a[20];
+		if (instr_arg<23) break; hp[24]=a[21];
+		if (instr_arg<24) break; hp[25]=a[22];
+		if (instr_arg<25) break; hp[26]=a[23];
+		if (instr_arg<26) break; hp[27]=a[24];
+		if (instr_arg<27) break; hp[28]=a[25];
+		if (instr_arg<28) break; hp[29]=a[26];
+		if (instr_arg<29) break; hp[30]=a[27];
+		if (instr_arg<30) break; hp[31]=a[28];
+		if (instr_arg<31) break; hp[32]=a[29];
+		if (instr_arg<32) break; hp[33]=a[30];
+	} while (0);
+	asp[-1]=(BC_WORD)hp;
+	--asp;
+	hp+=instr_arg+3;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(eval_upd0):
 {
 	BC_WORD *n;
@@ -9084,35 +9184,6 @@ INSTRUCTION_BLOCK(push_r_arg_D):
 	END_INSTRUCTION_BLOCK;
 }
 
-INSTRUCTION_BLOCK(add_arg4):
-INSTRUCTION_BLOCK(add_arg5):
-INSTRUCTION_BLOCK(add_arg6):
-INSTRUCTION_BLOCK(add_arg7):
-INSTRUCTION_BLOCK(add_arg8):
-INSTRUCTION_BLOCK(add_arg9):
-INSTRUCTION_BLOCK(add_arg10):
-INSTRUCTION_BLOCK(add_arg11):
-INSTRUCTION_BLOCK(add_arg12):
-INSTRUCTION_BLOCK(add_arg13):
-INSTRUCTION_BLOCK(add_arg14):
-INSTRUCTION_BLOCK(add_arg15):
-INSTRUCTION_BLOCK(add_arg16):
-INSTRUCTION_BLOCK(add_arg17):
-INSTRUCTION_BLOCK(add_arg18):
-INSTRUCTION_BLOCK(add_arg19):
-INSTRUCTION_BLOCK(add_arg20):
-INSTRUCTION_BLOCK(add_arg21):
-INSTRUCTION_BLOCK(add_arg22):
-INSTRUCTION_BLOCK(add_arg23):
-INSTRUCTION_BLOCK(add_arg24):
-INSTRUCTION_BLOCK(add_arg25):
-INSTRUCTION_BLOCK(add_arg26):
-INSTRUCTION_BLOCK(add_arg27):
-INSTRUCTION_BLOCK(add_arg28):
-INSTRUCTION_BLOCK(add_arg29):
-INSTRUCTION_BLOCK(add_arg30):
-INSTRUCTION_BLOCK(add_arg31):
-INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(ccall):
 INSTRUCTION_BLOCK(centry):
 INSTRUCTION_BLOCK(fill3_r):
@@ -9127,8 +9198,6 @@ INSTRUCTION_BLOCK(load_ui8):
 INSTRUCTION_BLOCK(push_finalizers):
 INSTRUCTION_BLOCK(pushL):
 INSTRUCTION_BLOCK(pushLc):
-INSTRUCTION_BLOCK(pushcaf11):
-INSTRUCTION_BLOCK(pushcaf20):
 INSTRUCTION_BLOCK(set_finalizers):
 INSTRUCTION_BLOCK(A_data_IIIla):
 INSTRUCTION_BLOCK(A_data_IIl):
