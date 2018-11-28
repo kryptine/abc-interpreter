@@ -87,11 +87,11 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuildh2:               return "l";
 		case Cbuildh3:               return "l";
 		case Cbuildh4:               return "l";
-		case Cbuildhr:               return "?";
-		case Cbuildhra0:             return "?";
-		case Cbuildhra1:             return "?";
-		case Cbuildhr0b:             return "?";
-		case Cbuildhr1b:             return "?";
+		case Cbuildhr:               return "nln";
+		case Cbuildhra0:             return "nl";
+		case Cbuildhra1:             return "nl";
+		case Cbuildhr0b:             return "nl";
+		case Cbuildhr1b:             return "nl";
 		case Cbuildhr01:             return "l";
 		case Cbuildhr02:             return "l";
 		case Cbuildhr03:             return "l";
@@ -141,7 +141,7 @@ const char *instruction_type (BC_WORD i) {
 		case Ccentry:                return "";
 		case CcosR:                  return "";
 		case Ccreate:                return "";
-		case Ccreates:               return "?";
+		case Ccreates:               return "n";
 		case Ccreate_array:          return "";
 		case Ccreate_arrayBOOL:      return "";
 		case Ccreate_arrayCHAR:      return "";
@@ -180,7 +180,7 @@ const char *instruction_type (BC_WORD i) {
 		case Ceq_desc_b0:            return "l";
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
-		case Cfill:                  return "?";
+		case Cfill:                  return "nnl";
 		case Cfill0:                 return "nl";
 		case Cfill1_r0101:           return "n";
 		case Cfill1_r0111:           return "nl";
@@ -211,22 +211,25 @@ const char *instruction_type (BC_WORD i) {
 		case Cfill2a002:             return "nnn";
 		case Cfill2a011:             return "nn";
 		case Cfill2a012:             return "nn";
-		case Cfill2ab002:            return "?";
-		case Cfill2ab003:            return "?";
-		case Cfill2ab013:            return "?";
-		case Cfill2ab011:            return "?";
+		case Cfill2ab002:            return "nnn";
+		case Cfill2ab003:            return "nnnn";
+		case Cfill2ab013:            return "nnnn";
+		case Cfill2ab011:            return "nn";
 		case Cfill2b001:             return "nn";
-		case Cfill2b002:             return "nn";
+		case Cfill2b002:             return "nnn";
 		case Cfill2b011:             return "nn";
-		case Cfill2b012:             return "nn";
-		case Cfill2_r:               return "nlnnn";
+		case Cfill2b012:             return "nnn";
+		case Cfill2_r00:             return "nnnn";
+		case Cfill2_r01:             return "nnnn";
+		case Cfill2_r10:             return "nlnn";
+		case Cfill2_r11:             return "nlnn";
 		case Cfill3_r:               return "nlnnn";
 		case Cfill3_r01a:            return "nln";
 		case Cfill3_r01b:            return "nln";
 		case Cfill3a10:              return "nl";
 		case Cfill3a11:              return "nln";
 		case Cfill3a12:              return "nlnn";
-		case Cfill3aaab13:           return "?";
+		case Cfill3aaab13:           return "nlnnn";
 		case Cfillh3:                return "nl";
 		case Cfillh4:                return "nl";
 		case CfillB_b:               return "nn";
@@ -457,7 +460,7 @@ const char *instruction_type (BC_WORD i) {
 		case CselectCHAR:            return "";
 		case CselectINT:             return "";
 		case CselectREAL:            return "";
-		case Cselect_r:              return "?";
+		case Cselect_r:              return "nn";
 		case Cselect_r01:            return "";
 		case Cselect_r02:            return "";
 		case Cselect_r03:            return "";
@@ -610,7 +613,7 @@ const char *instruction_type (BC_WORD i) {
 		case Ceval_upd32:            return "";
 		case Cfill_a01_pop_rtn:      return "";
 
-		case CaddIi:                 return "?";
+		case CaddIi:                 return "i";
 		case CandIi:                 return "i";
 		case CandIio:                return "ni";
 		case Cbuildh0_dup_a:         return "ln";
@@ -620,7 +623,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuildh0_put_a_jsr:     return "lnl";
 		case Cbuildho2:              return "nnl";
 		case Cbuildo1:               return "nl";
-		case Cbuildo2:               return "?";
+		case Cbuildo2:               return "nnl";
 		case Cdup_a:                 return "n";
 		case Cdup2_a:                return "n";
 		case Cdup3_a:                return "n";
@@ -645,7 +648,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cjmp_ne_desc:           return "nll";
 		case Cjmp_o_geI:             return "nl";
 		case Cjmp_o_geI_arraysize_a: return "nnl";
-		case CltIi:                  return "?";
+		case CltIi:                  return "i";
 		case Cswap_b1:               return "";
 		case Cpop_a_jmp:             return "Nl";
 		case Cpop_a_jsr:             return "Nl";
@@ -693,9 +696,6 @@ const char *instruction_type (BC_WORD i) {
 		case Cupdates3pop_a:         return "nnnn";
 		case Cupdates3pop_b:         return "nnnn";
 		case Cupdates4_a:            return "nnnnn";
-
-		case Cjsr_stack_check:       return "?";
-		case Cstack_check:           return "?";
 
 		case CA_data_IIIla:          return "IIIla";
 		case CA_data_IIl:            return "IIl";

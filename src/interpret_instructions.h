@@ -2801,6 +2801,98 @@ INSTRUCTION_BLOCK(fill2ab013):
 	pc+=5;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(fill2_r00):
+{
+	BC_WORD *n,*args;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	args=(BC_WORD*)n[2];
+	int a_size_minus_one=pc[2];
+	BC_WORD bits=pc[3];
+	int i=0;
+	for (; bits>0; bits>>=1) {
+		if (bits&1) {
+			if (i>=a_size_minus_one)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
+		}
+		i++;
+	}
+	pc+=4;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill2_r01):
+{
+	BC_WORD *n,*args;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	args=(BC_WORD*)n[2];
+	int a_size=pc[2];
+	BC_WORD bits=pc[3];
+	if (a_size==0)
+		n[1]=*bsp++;
+	else
+		n[1]=*asp--;
+	a_size--;
+	int i=0;
+	for (; bits>0; bits>>=1) {
+		if (bits&1) {
+			if (i>=a_size)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
+		}
+		i++;
+	}
+	pc+=4;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill2_r10):
+{
+	BC_WORD *n,*args;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	args=(BC_WORD*)n[2];
+	int a_size_minus_one=pc[3];
+	BC_WORD bits=pc[4];
+	int i=0;
+	for (; bits>0; bits>>=1) {
+		if (bits&1) {
+			if (i>=a_size_minus_one)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
+		}
+		i++;
+	}
+	pc+=5;
+	END_INSTRUCTION_BLOCK;
+}
+INSTRUCTION_BLOCK(fill2_r11):
+{
+	BC_WORD *n,*args;
+	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
+	n[0]=pc[2];
+	args=(BC_WORD*)n[2];
+	int a_size=pc[3];
+	BC_WORD bits=pc[4];
+	if (a_size==0)
+		n[1]=*bsp++;
+	else
+		n[1]=*asp--;
+	a_size--;
+	int i=0;
+	for (; bits>0; bits>>=1) {
+		if (bits&1) {
+			if (i>=a_size)
+				args[i]=*bsp++;
+			else
+				args[i]=*asp--;
+		}
+		i++;
+	}
+	pc+=5;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(fill3a10):
 {
 	BC_WORD *ns,*nd;
@@ -8614,27 +8706,6 @@ eval_upd_n:
 	asp+=instr_arg-1;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(jsr_stack_check):
-	csp-=3;
-	csp[0]=(BC_WORD)&pc[4];
-	csp[1]=(BC_WORD)&asp[(BC_WORD)pc[2]];
-	csp[2]=(BC_WORD)&bsp[-(BC_WORD)pc[3]];
-	pc=(BC_WORD*)pc[1];
-	END_INSTRUCTION_BLOCK;
-INSTRUCTION_BLOCK(stack_check):
-	if (csp[0]!=(BC_WORD)asp){
-		PRINTF("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
-		exit (1);
-	}
-	if (csp[1]!=(BC_WORD)bsp){
-		PRINTF("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
-		exit (1);
-	}
-	csp+=2;
-	++pc;
-	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(jesr):
 	g_asp=asp;
 	g_bsp=bsp;
@@ -9044,7 +9115,6 @@ INSTRUCTION_BLOCK(add_arg31):
 INSTRUCTION_BLOCK(add_arg32):
 INSTRUCTION_BLOCK(ccall):
 INSTRUCTION_BLOCK(centry):
-INSTRUCTION_BLOCK(fill2_r):
 INSTRUCTION_BLOCK(fill3_r):
 INSTRUCTION_BLOCK(fill3_r01a):
 INSTRUCTION_BLOCK(fill3_r01b):

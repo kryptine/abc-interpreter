@@ -1879,10 +1879,20 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 	}
 
 	uint32_t bitvec=0;
-	for (i=0; i<ab_size; i++)
+	for (i=ab_size; i>1; i--)
 		bitvec=(bitvec<<1)|(bits[i]=='1' ? 1 : 0);
 
-	add_instruction_w_label_offset_w_w_w(Cfill2_r,-root_offset,descriptor_name,2,a_size,b_size,bitvec);
+	if (bits[0]=='0') {
+		if (bits[1]=='0')
+			add_instruction_w_w_w(Cfill2_r00,-root_offset,a_size-1,bitvec);
+		else
+			add_instruction_w_w_w(Cfill2_r01,-root_offset,a_size,bitvec);
+	} else {
+		if (bits[1]=='0')
+			add_instruction_w_label_offset_w_w(Cfill2_r10,-root_offset,descriptor_name,2,a_size-1,bitvec);
+		else
+			add_instruction_w_label_offset_w_w(Cfill2_r11,-root_offset,descriptor_name,2,a_size,bitvec);
+	}
 }
 
 void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
@@ -4284,15 +4294,6 @@ void code_o(int oa,int ob,uint32_t vector[]) {
 				exit(1);
 			}
 		}
-#if 0
-		code[pgrm.code_size-2]=Cjsr_stack_check;
-		if (list_code)
-			printf("%d\t%d %d\n",pgrm.code_size,oa-last_da,ob-last_db);
-		store_code_elem(8, oa-last_da);
-		store_code_elem(8, ob-last_db);
-
-		add_instruction(Cstack_check);
-#endif
 	}
 	last_jsr_with_d=0;
 }

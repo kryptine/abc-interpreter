@@ -199,7 +199,10 @@ enum {
 	INSTRUCTION(fill2b002)
 	INSTRUCTION(fill2b011)
 	INSTRUCTION(fill2b012)
-	INSTRUCTION(fill2_r)
+	INSTRUCTION(fill2_r00)
+	INSTRUCTION(fill2_r01)
+	INSTRUCTION(fill2_r10)
+	INSTRUCTION(fill2_r11)
 	INSTRUCTION(fill3)
 	INSTRUCTION(fill3a10)
 	INSTRUCTION(fill3a11)
@@ -679,9 +682,6 @@ enum {
 	INSTRUCTION(updates3pop_a)
 	INSTRUCTION(updates3pop_b)
 	INSTRUCTION(updates4_a)
-
-	INSTRUCTION(jsr_stack_check)
-	INSTRUCTION(stack_check)
 
 /* Annotations */
 	/* A number of code elems that should not be parsed intelligently (see e.g. on IIIln) */
