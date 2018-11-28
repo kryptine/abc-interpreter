@@ -4294,15 +4294,6 @@ void code_o(int oa,int ob,uint32_t vector[]) {
 				exit(1);
 			}
 		}
-#if 0
-		code[pgrm.code_size-2]=Cjsr_stack_check;
-		if (list_code)
-			printf("%d\t%d %d\n",pgrm.code_size,oa-last_da,ob-last_db);
-		store_code_elem(8, oa-last_da);
-		store_code_elem(8, ob-last_db);
-
-		add_instruction(Cstack_check);
-#endif
 	}
 	last_jsr_with_d=0;
 }

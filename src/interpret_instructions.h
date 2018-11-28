@@ -8706,27 +8706,6 @@ eval_upd_n:
 	asp+=instr_arg-1;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(jsr_stack_check):
-	csp-=3;
-	csp[0]=(BC_WORD)&pc[4];
-	csp[1]=(BC_WORD)&asp[(BC_WORD)pc[2]];
-	csp[2]=(BC_WORD)&bsp[-(BC_WORD)pc[3]];
-	pc=(BC_WORD*)pc[1];
-	END_INSTRUCTION_BLOCK;
-INSTRUCTION_BLOCK(stack_check):
-	if (csp[0]!=(BC_WORD)asp){
-		PRINTF("Cstack_check asp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
-		exit (1);
-	}
-	if (csp[1]!=(BC_WORD)bsp){
-		PRINTF("Cstack_check bsp incorrect " BC_WORD_FMT " %p " BC_WORD_FMT " %p\n",csp[0],(void*)asp,csp[1],(void*)bsp);
-		PRINTF(BC_WORD_FMT " %d %d %d\n",*pc,(int)(pc-program->code),(int)(asp-stack),(int)(&stack[stack_size]-bsp));
-		exit (1);
-	}
-	csp+=2;
-	++pc;
-	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(jesr):
 	g_asp=asp;
 	g_bsp=bsp;

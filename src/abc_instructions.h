@@ -683,9 +683,6 @@ enum {
 	INSTRUCTION(updates3pop_b)
 	INSTRUCTION(updates4_a)
 
-	INSTRUCTION(jsr_stack_check)
-	INSTRUCTION(stack_check)
-
 /* Annotations */
 	/* A number of code elems that should not be parsed intelligently (see e.g. on IIIln) */
 	INSTRUCTION(A_data_IIIla) /* Three instruction-width elems, a label-width elem, and an arity */
