@@ -1879,13 +1879,20 @@ void code_fill2_r(char descriptor_name[],int a_size,int b_size,int root_offset,c
 	}
 
 	uint32_t bitvec=0;
-	for (i=ab_size; i>0; i--)
+	for (i=ab_size; i>1; i--)
 		bitvec=(bitvec<<1)|(bits[i]=='1' ? 1 : 0);
 
-	if (bits[0]=='0')
-		add_instruction_w_w_w(Cfill2_r0,-root_offset,a_size,bitvec);
-	else
-		add_instruction_w_label_offset_w_w(Cfill2_r1,-root_offset,descriptor_name,2,a_size,bitvec);
+	if (bits[0]=='0') {
+		if (bits[1]=='0')
+			add_instruction_w_w_w(Cfill2_r00,-root_offset,a_size-1,bitvec);
+		else
+			add_instruction_w_w_w(Cfill2_r01,-root_offset,a_size,bitvec);
+	} else {
+		if (bits[1]=='0')
+			add_instruction_w_label_offset_w_w(Cfill2_r10,-root_offset,descriptor_name,2,a_size-1,bitvec);
+		else
+			add_instruction_w_label_offset_w_w(Cfill2_r11,-root_offset,descriptor_name,2,a_size,bitvec);
+	}
 }
 
 void code_fill3(char descriptor_name[],int arity,int a_offset,char bits[]) {
