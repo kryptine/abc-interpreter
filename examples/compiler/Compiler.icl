@@ -5,6 +5,7 @@ import StdList
 
 import Data.Either
 import Data.Maybe
+import System.OS
 
 import ABC.Interpreter
 
@@ -50,4 +51,4 @@ testThroughFile graph fp w
 # (Right graph_s,f) = graphFromFile f
 # (_,w) = fclose f w
 
-= deserialize graph_s "compiler" w
+= deserialize graph_s (IF_WINDOWS "Compiler.exe" "compiler") w

@@ -81,14 +81,14 @@ static int export_label(const char *label) {
 		return 0;
 }
 
-void init_label_queue(void) {
+static void init_label_queue(void) {
 	queue=safe_malloc(sizeof(struct label_queue)+2*sizeof(char*));
 	queue->writer=0;
 	queue->reader=0;
 	queue->size=2;
 }
 
-void add_label_to_queue(struct s_label *label) {
+static void add_label_to_queue(struct s_label *label) {
 	if (label->bcgen_label!=NULL)
 		return;
 
@@ -110,7 +110,7 @@ void add_label_to_queue(struct s_label *label) {
 	}
 }
 
-struct s_label *next_label_from_queue(void) {
+static struct s_label *next_label_from_queue(void) {
 	if (queue->reader==queue->writer)
 		return NULL;
 	struct s_label *label=queue->labels[queue->reader];
@@ -181,7 +181,7 @@ static inline int instruction_ends_block(int16_t instr) {
 	}
 }
 
-struct s_relocation *find_relocation_by_offset(struct s_relocation *relocs, uint32_t n_relocs, uint32_t offset) {
+static struct s_relocation *find_relocation_by_offset(struct s_relocation *relocs, uint32_t n_relocs, uint32_t offset) {
 	int l=0;
 	int r=n_relocs-1;
 	while (l<=r) {

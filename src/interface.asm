@@ -92,7 +92,7 @@ __interpret__copy__node__asm__n:
 	push	rbp
 
 	test	rax,1
-	jne	__interpret__copy__node__asm__n_dont_align
+	je	__interpret__copy__node__asm__n_dont_align
 	push	rbp
 __interpret__copy__node__asm__n_dont_align:
 
@@ -134,7 +134,7 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	add	rsp,32
 	add	rsp,rbx
 	test	rbx,8
-	jne	__interpret__copy__node__asm__n_dont_align_2
+	je	__interpret__copy__node__asm__n_dont_align_2
 	pop	rbp
 __interpret__copy__node__asm__n_dont_align_2:
 	add	rsp,8

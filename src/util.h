@@ -28,7 +28,13 @@ size_t string_to_size(char*);
 char *escape(char);
 
 #ifdef BCGEN
-ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+# ifdef MICROSOFT_C
+#  include <BaseTsd.h>
+SSIZE_T
+# else
+ssize_t
+# endif
+	getline(char **lineptr, size_t *n, FILE *stream);
 char *strsep(char **stringp, const char *delim);
 #endif
 

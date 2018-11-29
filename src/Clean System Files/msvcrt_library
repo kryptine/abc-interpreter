@@ -34,11 +34,13 @@ fputs
 fread
 fwrite
 getc
+memset
 printf
 putc
 putchar
 puts
 strcmp
+strcpy
 strlen
 strncmp
 ungetc

@@ -40,6 +40,7 @@ uint32_t allocated_data_relocations_size;
 
 static uint32_t Fadd_arg_label_used[N_ADD_ARG_LABELS];
 
+#ifndef LINK_CLEAN_RUNTIME
 int16_t warned_unsupported_instructions[128]={-1};
 int warned_unsupported_instructions_i=0;
 void unsupported_instruction_warning(int16_t instruction) {
@@ -49,6 +50,7 @@ void unsupported_instruction_warning(int16_t instruction) {
 	warned_unsupported_instructions[warned_unsupported_instructions_i++] = instruction;
 	fprintf(stderr,"Warning: instruction %s is not supported by the interpreter\n",instruction_name(instruction));
 }
+#endif
 
 struct program *initialize_code(void) {
 	int i;
@@ -86,12 +88,14 @@ struct program *initialize_code(void) {
 	return &pgrm;
 }
 
+#ifndef LINK_CLEAN_RUNTIME
 void code_next_module(void) {
 	module_n++;
 
 	last_d = 0;
 	last_jsr_with_d = 0;
 }
+#endif
 
 static void realloc_code(void) {
 	allocated_code_size *= 2;
@@ -233,6 +237,7 @@ struct relocation *add_data_relocation(struct label *label, uint32_t offset) {
 	return relocation_p;
 }
 
+#ifndef LINK_CLEAN_RUNTIME
 void store_code_internal_label_value(struct label *label,uint32_t offset) {
 	add_code_relocation(label, pgrm.code_size);
 	store_code_elem(4, offset);
@@ -924,14 +929,15 @@ void code_buildB(int value) {
 	else
 		add_instruction(CbuildBTRUE);
 }
+#endif
 
 void print_string_directive(char *string,int string_length) {
 	int i;
 
-	printf("%d\t.string \"",pgrm.data_size<<2);
+	PRINTF("%d\t.string \"",pgrm.data_size<<2);
 	for(i=0; i<string_length; ++i)
 		putchar(string[i]);
-	printf("\"\n");
+	PRINTF("\"\n");
 }
 
 void add_words_in_strings(uint32_t val) {
@@ -949,7 +955,7 @@ void store_string(char *string,int string_length,int include_terminator) {
 	add_string_information(pgrm.data_size);
 
 	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
+		PRINTF("%d\t.data4 %d\n",pgrm.data_size<<2,string_length);
 	store_data_l(string_length+include_terminator);
 
 	if (list_code)
@@ -985,6 +991,7 @@ void store_string(char *string,int string_length,int include_terminator) {
 	pgrm.words_in_strings += string_length / 8 + (string_length % 8 == 0 ? 0 : 1);
 }
 
+#ifndef LINK_CLEAN_RUNTIME
 void code_buildAC(char *string,int string_length) {
 	struct label *string_label;
 
@@ -4297,17 +4304,19 @@ void code_o(int oa,int ob,uint32_t vector[]) {
 	}
 	last_jsr_with_d=0;
 }
+#endif
 
 void code_start(char *label_name) {
 	if (strcmp ("__nostart__",label_name)==0)
 		return;
 
 	if (start_label!=NULL)
-		fprintf(stderr,"Warning: overriding start label from '%s' to '%s'\n",start_label->label_name,label_name);
+		EPRINTF("Warning: overriding start label from '%s' to '%s'\n",start_label->label_name,label_name);
 
 	start_label=enter_label(label_name);
 }
 
+#ifndef LINK_CLEAN_RUNTIME
 void code_record(char record_label_name[],char type[],int a_size,int b_size,char record_name[],int record_name_length) {
 	struct label *record_label;
 
@@ -4394,7 +4403,26 @@ void code_string(char label_name[],char string[],int string_length) {
 
 void code_dummy(void) {
 }
+#endif
 
+static int count_and_renumber_labels(struct label_node *node, int start) {
+	if (node->label_node_left != NULL)
+		start = count_and_renumber_labels(node->label_node_left, start);
+
+	struct label *label = node->label_node_label_p;
+	label->label_id = start++;
+	if (label->label_offset < 0) {
+		global_label_count++;
+		global_label_string_count+=strlen(label->label_name);
+	}
+
+	if (node->label_node_right != NULL)
+		start = count_and_renumber_labels(node->label_node_right, start);
+
+	return start;
+}
+
+#ifndef LINK_CLEAN_RUNTIME
 static void print_code(int segment_size,struct word *segment,FILE *program_file) {
 	if (segment_size <= 0)
 		return;
@@ -4436,23 +4464,6 @@ static void print_relocations(int n_relocations, struct relocation *relocations,
 	}
 }
 
-static int count_and_renumber_labels(struct label_node *node, int start) {
-	if (node->label_node_left != NULL)
-		start = count_and_renumber_labels(node->label_node_left, start);
-
-	struct label *label = node->label_node_label_p;
-	label->label_id = start++;
-	if (label->label_offset < 0) {
-		global_label_count++;
-		global_label_string_count+=strlen(label->label_name);
-	}
-
-	if (node->label_node_right != NULL)
-		start = count_and_renumber_labels(node->label_node_right, start);
-
-	return start;
-}
-
 static void print_global_labels(struct label_node *node, FILE *program_file) {
 	if (node->label_node_left != NULL)
 		print_global_labels(node->label_node_left, program_file);
@@ -4465,24 +4476,6 @@ static void print_global_labels(struct label_node *node, FILE *program_file) {
 
 	if (node->label_node_right != NULL)
 		print_global_labels(node->label_node_right, program_file);
-}
-
-static char *print_global_labels_to_string(struct label_node *node, char *ptr) {
-	if (node->label_node_left != NULL)
-		ptr=print_global_labels_to_string(node->label_node_left, ptr);
-
-	struct label *label = node->label_node_label_p;
-	memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
-	ptr+=sizeof(label->label_offset);
-	if (label->label_module_n == - 1 || label->label_offset < 0)
-		for (char *name_ptr=label->label_name; *name_ptr; name_ptr++)
-			*ptr++=*name_ptr;
-	*ptr++='\0';
-
-	if (node->label_node_right != NULL)
-		ptr=print_global_labels_to_string(node->label_node_right, ptr);
-
-	return ptr;
 }
 
 void write_program(FILE *program_file) {
@@ -4518,6 +4511,25 @@ void write_program(FILE *program_file) {
 		fprintf(stderr, "Error writing program file\n");
 		exit(1);
 	}
+}
+#endif
+
+static char *print_global_labels_to_string(struct label_node *node, char *ptr) {
+	if (node->label_node_left != NULL)
+		ptr=print_global_labels_to_string(node->label_node_left, ptr);
+
+	struct label *label = node->label_node_label_p;
+	memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
+	ptr+=sizeof(label->label_offset);
+	if (label->label_module_n == - 1 || label->label_offset < 0)
+		for (char *name_ptr=label->label_name; *name_ptr; name_ptr++)
+			*ptr++=*name_ptr;
+	*ptr++='\0';
+
+	if (node->label_node_right != NULL)
+		ptr=print_global_labels_to_string(node->label_node_right, ptr);
+
+	return ptr;
 }
 
 char *write_program_to_string(uint32_t *bytes_needed) {

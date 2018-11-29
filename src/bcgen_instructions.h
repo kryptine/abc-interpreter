@@ -40,6 +40,7 @@ void store_string(char *string,int string_length,int include_terminator);
 void store_code_elem(uint8_t bytewidth, uint64_t value);
 void store_data_l(uint64_t v);
 
+#ifndef LINK_CLEAN_RUNTIME
 void code_absR(void);
 void code_acosR(void);
 void code_addI(void);
@@ -343,7 +344,10 @@ void code_record(char *s1, char *s2, int n1, int n2, char *s3, int s3_length);
 void code_record_start(char record_label_name[], char type[], int a_size, int b_size);
 void code_record_descriptor_label(char descriptor_name[]);
 void code_record_end(char record_name[], int record_name_length);
+#endif
 void code_start(char *label_name);
+#ifndef LINK_CLEAN_RUNTIME
 void code_string(char label_name[], char string[], int string_length);
 
 void code_dummy(void);
+#endif
