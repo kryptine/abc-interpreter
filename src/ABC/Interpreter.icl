@@ -244,10 +244,10 @@ graphFromFile f
 # (graph,f) = readString f
 
 # (_,descinfo_size,f) = freadi f
-# (descinfo,f) = readArray readDescInfo 0 descinfo_size (unsafeCreateArray descinfo_size) f
+# (descinfo,f) = readArray readDescInfo (descinfo_size-1) (unsafeCreateArray descinfo_size) f
 
 # (_,modules_size,f) = freadi f
-# (modules,f) = readArray readString 0 modules_size (unsafeCreateArray modules_size) f
+# (modules,f) = readArray readString (modules_size-1) (unsafeCreateArray modules_size) f
 
 # (bytecode,f) = readString f
 
@@ -258,11 +258,11 @@ graphFromFile f
 
 = (Right {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
 where
-	readArray :: !(*File -> *(a, *File)) !Int !Int !*(arr a) !*File -> *(!*arr a, !*File) | Array arr a
-	readArray _ i end xs f | i == end = (xs,f)
-	readArray read i end xs f
+	readArray :: !(*File -> *(a, *File)) !Int !*(arr a) !*File -> *(!*arr a, !*File) | Array arr a
+	readArray _ -1 xs f = (xs,f)
+	readArray read i xs f
 	# (x,f) = read f
-	= readArray read (i+1) end {xs & [i]=x} f
+	= readArray read (i-1) {xs & [i]=x} f
 
 	readDescInfo :: !*File -> *(!DescInfo, !*File)
 	readDescInfo f
