@@ -102,7 +102,7 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
-	getInterpreterSymbols pgm = filter (\s -> s.symbol_name <> "")
+	getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
 		[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
 	where
 		symbol_table = get_symbol_table pgm
