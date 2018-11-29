@@ -51,6 +51,7 @@ static struct code_index *code_indices;
 static uint64_t *data;
 
 static uint32_t n_labels;
+static uint32_t n_global_labels;
 static struct s_label *labels;
 
 static uint32_t code_reloc_size;
@@ -416,7 +417,7 @@ static void activate_label(struct s_label *label) {
 
 static struct s_label *find_label_by_name(const char *name) {
 	int l=0;
-	int r=n_labels-1;
+	int r=n_global_labels-1;
 	while (l<=r) {
 		int i=(l+r)/2;
 		struct s_label *label=&labels[i];
@@ -501,6 +502,8 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 	for (int i=0; i<n_labels; i++) {
 		labels[i].offset=*(int32_t*)labels_in_bytecode;
 		labels[i].name=&labels_in_bytecode[4];
+		if (labels[i].name[0]!='\0')
+			n_global_labels=i;
 		labels[i].bcgen_label=NULL;
 		labels[i].label_type=DLT_NORMAL;
 		if (!(labels[i].offset & 1)) {

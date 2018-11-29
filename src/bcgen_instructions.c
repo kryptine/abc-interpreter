@@ -4405,21 +4405,25 @@ void code_dummy(void) {
 }
 #endif
 
-static int count_and_renumber_labels(struct label_node *node, int start) {
+static void count_and_renumber_labels(struct label_node *node, int *start, int *end) {
 	if (node->label_node_left != NULL)
-		start = count_and_renumber_labels(node->label_node_left, start);
+		count_and_renumber_labels(node->label_node_left, start, end);
 
 	struct label *label = node->label_node_label_p;
-	label->label_id = start++;
+	if (label->label_offset < 0 || label->label_module_n < 0) {
+		label->label_id=*start;
+		*start=*start+1;
+	} else {
+		label->label_id=*end;
+		*end=*end-1;
+	}
 	if (label->label_offset < 0) {
 		global_label_count++;
 		global_label_string_count+=strlen(label->label_name);
 	}
 
 	if (node->label_node_right != NULL)
-		start = count_and_renumber_labels(node->label_node_right, start);
-
-	return start;
+		count_and_renumber_labels(node->label_node_right, start, end);
 }
 
 #ifndef LINK_CLEAN_RUNTIME
@@ -4469,13 +4473,28 @@ static void print_global_labels(struct label_node *node, FILE *program_file) {
 		print_global_labels(node->label_node_left, program_file);
 
 	struct label *label = node->label_node_label_p;
-	fwrite(&label->label_offset, sizeof(label->label_offset), 1, program_file);
-	if (label->label_module_n == - 1 || label->label_offset < 0)
+	if (label->label_module_n == - 1 || label->label_offset < 0) {
+		fwrite(&label->label_offset, sizeof(label->label_offset), 1, program_file);
 		fprintf(program_file, "%s", label->label_name);
-	fputc('\0', program_file);
+		fputc('\0', program_file);
+	}
 
 	if (node->label_node_right != NULL)
 		print_global_labels(node->label_node_right, program_file);
+}
+
+static void print_local_labels(struct label_node *node, FILE *program_file) {
+	if (node->label_node_right != NULL)
+		print_local_labels(node->label_node_right, program_file);
+
+	struct label *label = node->label_node_label_p;
+	if (!(label->label_module_n == - 1 || label->label_offset < 0)) {
+		fwrite(&label->label_offset, sizeof(label->label_offset), 1, program_file);
+		fputc('\0', program_file);
+	}
+
+	if (node->label_node_left != NULL)
+		print_local_labels(node->label_node_left, program_file);
 }
 
 void write_program(FILE *program_file) {
@@ -4484,7 +4503,8 @@ void write_program(FILE *program_file) {
 	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 
-	count_and_renumber_labels(labels, 0);
+	int start=0, end=label_id-1;
+	count_and_renumber_labels(labels, &start, &end);
 	fwrite(&label_id, sizeof(label_id), 1, program_file);
 	fwrite(&global_label_string_count, sizeof(global_label_string_count), 1, program_file);
 
@@ -4503,6 +4523,7 @@ void write_program(FILE *program_file) {
 	print_data(pgrm.data_size,pgrm.data,program_file);
 
 	print_global_labels(labels, program_file);
+	print_local_labels(labels, program_file);
 
 	print_relocations(pgrm.code_reloc_size,pgrm.code_relocations,program_file);
 	print_relocations(pgrm.data_reloc_size,pgrm.data_relocations,program_file);
@@ -4519,12 +4540,13 @@ static char *print_global_labels_to_string(struct label_node *node, char *ptr) {
 		ptr=print_global_labels_to_string(node->label_node_left, ptr);
 
 	struct label *label = node->label_node_label_p;
-	memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
-	ptr+=sizeof(label->label_offset);
-	if (label->label_module_n == - 1 || label->label_offset < 0)
+	if (label->label_module_n == - 1 || label->label_offset < 0) {
+		memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
+		ptr+=sizeof(label->label_offset);
 		for (char *name_ptr=label->label_name; *name_ptr; name_ptr++)
 			*ptr++=*name_ptr;
-	*ptr++='\0';
+		*ptr++='\0';
+	}
 
 	if (node->label_node_right != NULL)
 		ptr=print_global_labels_to_string(node->label_node_right, ptr);
@@ -4532,8 +4554,26 @@ static char *print_global_labels_to_string(struct label_node *node, char *ptr) {
 	return ptr;
 }
 
+static char *print_local_labels_to_string(struct label_node *node, char *ptr) {
+	if (node->label_node_right != NULL)
+		ptr=print_local_labels_to_string(node->label_node_right, ptr);
+
+	struct label *label = node->label_node_label_p;
+	if (!(label->label_module_n == - 1 || label->label_offset < 0)) {
+		memcpy(ptr, &label->label_offset, sizeof(label->label_offset));
+		ptr+=sizeof(label->label_offset);
+		*ptr++='\0';
+	}
+
+	if (node->label_node_left != NULL)
+		ptr=print_local_labels_to_string(node->label_node_left, ptr);
+
+	return ptr;
+}
+
 char *write_program_to_string(uint32_t *bytes_needed) {
-	count_and_renumber_labels(labels, 0);
+	int start=0, end=label_id-1;
+	count_and_renumber_labels(labels, &start, &end);
 
 	*bytes_needed =
 			9*sizeof(uint32_t) +
@@ -4572,6 +4612,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	}
 
 	ptr=print_global_labels_to_string(labels, ptr);
+	ptr=print_local_labels_to_string(labels, ptr);
 
 	for (int i=0; i<pgrm.code_reloc_size; i++) {
 		memcpy(ptr, &pgrm.code_relocations[i].relocation_offset, sizeof(uint32_t));
