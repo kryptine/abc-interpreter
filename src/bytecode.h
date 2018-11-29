@@ -78,8 +78,8 @@ void free_program(struct program *pgm);
 
 #ifdef INTERPRETER
 # ifdef LINK_CLEAN_RUNTIME
-int get_host_symbols_n(struct program *pgm);
-struct host_symbol *get_host_symbols(struct program *pgm);
+int get_symbol_table_size(struct program *pgm);
+struct symbol *get_symbol_table(struct program *pgm);
 /* Assumes the symbols are sorted by name */
 struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name);
 /* Assumes the symbols are sorted by (host) address */

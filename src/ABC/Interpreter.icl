@@ -4,6 +4,7 @@ import StdArray
 import StdClass
 import StdFile
 import StdInt
+import StdList
 import StdMisc
 import StdOrdList
 
@@ -101,27 +102,26 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
-	getInterpreterSymbols pgm =
-		sortBy ((<) `on` (\s->s.symbol_name))
-			[getSymbol i \\ i <- [0..get_host_symbols_n pgm-1]]
+	getInterpreterSymbols pgm = filter (\s -> s.symbol_name <> "")
+		[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
 	where
-		host_symbols = get_host_symbols pgm
+		symbol_table = get_symbol_table pgm
 
 		getSymbol :: !Int -> Symbol
 		getSymbol i
-		#! offset = host_symbols + i * IF_INT_64_OR_32 24 12 /* size of struct host_symbol */
+		#! offset = symbol_table + i * IF_INT_64_OR_32 16 8 /* size of struct host_symbol */
+		#! loc = derefInt offset
 		#! name = derefString (derefInt (offset + IF_INT_64_OR_32 8 4))
-		#! loc = derefInt (offset + IF_INT_64_OR_32 16 8)
 		= {symbol_name=name, symbol_value=loc}
 
-		get_host_symbols_n :: !Pointer -> Int
-		get_host_symbols_n pgm = code {
-			ccall get_host_symbols_n "p:I"
+		get_symbol_table_size :: !Pointer -> Int
+		get_symbol_table_size pgm = code {
+			ccall get_symbol_table_size "p:I"
 		}
 
-		get_host_symbols :: !Pointer -> Pointer
-		get_host_symbols pgm = code {
-			ccall get_host_symbols "p:p"
+		get_symbol_table :: !Pointer -> Pointer
+		get_symbol_table pgm = code {
+			ccall get_symbol_table "p:p"
 		}
 
 	string_to_interpreter :: !{#Int} !String !Pointer -> Pointer
@@ -139,15 +139,15 @@ where
 			# symbol_value = get_symbol_value symbol_name symbols
 			| prefix_n<=1
 				| symbol_value== -1
-					= abort ("lookup_desc_info not found "+++symbol_name)
+					= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
 					= symbol_value
 				| symbol_value== -1
-					= abort ("lookup_desc_info not found "+++symbol_name)
+					= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
 					= symbol_value+2
 			# symbol_name = make_symbol_name module_name di_name PREFIX_D
 			# symbol_value = get_symbol_value symbol_name symbols
 			| symbol_value== -1
-				= abort ("lookup_desc_info not found "+++symbol_name)
+				= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
 				# arity = prefix_n - PREFIX_D
 				= symbol_value+(arity*8*2)+2
 	where
