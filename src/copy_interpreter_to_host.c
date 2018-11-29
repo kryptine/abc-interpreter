@@ -456,8 +456,9 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 
 	void *host_address = ((void**)(node[0]-2))[host_address_offset];
 	if (host_address==(void*)-1) {
-		EPRINTF("Unresolvable descriptor\n"); /* TODO: copy descriptor */
-		return (BC_WORD*)-4;
+		EPRINTF("Unresolvable descriptor %p\n",(void*)node[0]); /* TODO: copy descriptor */
+		*target=(BC_WORD*)-4;
+		return host_heap;
 	}
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
@@ -687,7 +688,15 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	EPRINTF("Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
 #endif
 
-	*++ie->asp = (BC_WORD)node;
+	int16_t a_arity = ((int16_t*)(node[0]))[-1];
+	if (n_args+a_arity==0) {
+		*++ie->asp=(BC_WORD)node;
+	} else {
+		*++ie->asp=(BC_WORD)ie->hp;
+		for (int i=0; i<=a_arity; i++)
+			ie->hp[i]=node[i];
+		ie->hp+=a_arity+1;
+	}
 
 	va_start(arguments,n_args);
 	for (int i=1; i<=n_args+1; i++)
@@ -705,8 +714,6 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	}
 	va_end(arguments);
 
-	node=(BC_WORD*)ie->asp[-n_args-1];
-	int16_t a_arity = ((int16_t*)(node[0]))[-1];
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\tarity is %d\n",a_arity);
 #endif
