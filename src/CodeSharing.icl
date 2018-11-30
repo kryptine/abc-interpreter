@@ -59,15 +59,18 @@ where
 		, ap1 (flip (-) 5)
 		, ap3 (\x y z -> 10*x + 3*y + z)
 		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
-		, toInt (last (rev [TestA,TestB]))
+		, toInt (last (rev [TestA,TestB 0,TestA,TestB 1]))
+		, toInt (last (rev [TestB -5,TestA,TestC 7 15,TestB 0]))
+		, toInt (last (rev [TestC 15 7,TestB 0,TestA]))
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
-:: TestT = TestA | TestB
+:: TestT = TestA | TestB Int | TestC !Int Int
 instance toInt TestT
 where
 	toInt TestA = 37
-	toInt TestB = 42
+	toInt (TestB i) = 42 + i
+	toInt (TestC a b) = 2 * a + b
 
 square :: Int -> Int
 square x = x * x

@@ -40,6 +40,11 @@ struct host_symbol {
 	char *name;
 	BC_WORD *interpreter_location;
 };
+
+struct host_symbols_list {
+	struct host_symbol host_symbol;
+	struct host_symbols_list *next;
+};
 #endif
 
 struct program {
@@ -68,6 +73,7 @@ struct program {
 	char *host_symbols_strings;
 	int host_symbols_n;
 	struct host_symbol *host_symbols;
+	struct host_symbols_list *extra_host_symbols;
 #endif
 #ifdef DEBUG_CURSES
 	unsigned int nr_instructions;

@@ -17,6 +17,13 @@ void free_program(struct program *pgm) {
 #ifdef LINK_CLEAN_RUNTIME
 	if (pgm->host_symbols != NULL)
 		free(pgm->host_symbols);
+	struct host_symbols_list *extra_host_symbols=pgm->extra_host_symbols;
+	while (extra_host_symbols != NULL) {
+		struct host_symbols_list *next=extra_host_symbols->next;
+		free(extra_host_symbols->host_symbol.interpreter_location);
+		free(extra_host_symbols);
+		extra_host_symbols=next;
+	}
 	if (pgm->host_symbols_strings != NULL)
 		free(pgm->host_symbols_strings);
 #endif
@@ -70,6 +77,13 @@ struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr)
 			end = i-1;
 		else
 			return &pgm->host_symbols[i];
+	}
+
+	struct host_symbols_list *extra_host_symbols=pgm->extra_host_symbols;
+	while (extra_host_symbols!=NULL) {
+		if (extra_host_symbols->host_symbol.location==addr)
+			return &extra_host_symbols->host_symbol;
+		extra_host_symbols=extra_host_symbols->next;
 	}
 
 	return NULL;
