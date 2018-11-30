@@ -4353,7 +4353,7 @@ void code_record_start(char record_label_name[],char type[],int a_size,int b_siz
 		printf("\t.data\n");
 
 	/* Resolve descriptor address */
-	store_data_l(0);
+	store_data_l(-1);
 	store_data_l(0);
 
 	record_label=enter_label(record_label_name);
