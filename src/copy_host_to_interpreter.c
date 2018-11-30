@@ -91,32 +91,31 @@ static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symb
 		data[0]=(BC_WORD)descriptor;
 		data[1]=0;
 		data[2]=descriptor[0];
-		data[3]=0; /* TODO type string; child descriptors */
-		data[4]=0; /* TODO name string */
+		data[3]=0; /* no need for a type string or child descriptors */
+		data[4]=0; /* no need for a name string */
 		host_symbol->interpreter_location=&data[2];
 		host_symbol->location=descriptor;
-	} else if (arity==0) {
-		/* assuming desc0 for now; TODO */
+	} else if (arity==0) { /* desc0 */
+		/* assuming desc0 for now; TODO can descn occur here? */
 		BC_WORD *data=safe_malloc(6*sizeof(BC_WORD));
 		data[0]=descriptor[-2];
 		data[1]=(BC_WORD)descriptor;
 		data[2]=(BC_WORD)&data[3]+2;
 		data[3]=descriptor[0];
 		data[4]=descriptor[1];
-		data[5]=0; /* TODO name string */
+		data[5]=0; /* no need for a name string */
 		host_symbol->interpreter_location=&data[3];
 		host_symbol->location=descriptor;
 	} else {
 		BC_WORD *data=safe_malloc((arity*2+6)*sizeof(BC_WORD));
 		data[0]=(BC_WORD)(descriptor-arity*2+1);
 		data[1]=(BC_WORD)&data[2]+2;
-		for (int i=0; i<=arity; i++) {
-			data[2+2*i]=i+((arity-i)<<3<<16);
-			/* These descriptors are never used for currying, so no need for code labels */
-		}
+		/* These descriptors are never used for currying, so we only need the
+		 * last element of the curry table. */
+		data[2+2*arity]=arity;
 		data[arity*2+3]=descriptor[arity*2+1];
 		data[arity*2+4]=descriptor[arity*2+2];
-		data[arity*2+5]=0; /* TODO name string */
+		data[arity*2+5]=0; /* no need for a name string */
 		host_symbol->interpreter_location=&data[2];
 		host_symbol->location=descriptor-arity*2+1;
 	}
