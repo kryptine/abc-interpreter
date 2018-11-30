@@ -495,6 +495,8 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		host_node+=3;
 		for (int i = 0; i < a_arity - 1; i++)
 			host_heap=copy_to_host(clean_ie, host_heap, (BC_WORD**)&host_node[i], (BC_WORD*)rest[i]);
+		host_node+=a_arity-1;
+		rest+=a_arity-1;
 		for (int i = 0; i < (a_arity ? b_arity : b_arity - 1); i++)
 			host_node[i] = (BC_WORD) rest[i];
 	}

@@ -237,6 +237,8 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 			org_heap[i]=(BC_WORD)heap;
 			heap=copy_to_interpreter(ie,heap,(BC_WORD*)rest[i]);
 		}
+		org_heap+=a_arity-1;
+		rest+=a_arity-1;
 		for (int i=0; i < (a_arity ? b_arity : b_arity-1); i++)
 			org_heap[i] = (BC_WORD) rest[i];
 	}
