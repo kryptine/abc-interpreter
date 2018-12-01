@@ -81,7 +81,6 @@ void **HOST_NODES[32] = {NULL};
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
 BC_WORD ADD_ARG[33];
 BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
-void *HOST_NODE_HNF[] = {0, 0, &m____system, (void*)4, _4chars2int('H','O','S','T')};
 
 void build_host_nodes(void) {
 	if (HOST_NODES[0] != NULL)

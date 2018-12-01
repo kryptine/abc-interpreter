@@ -314,6 +314,7 @@ int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
 
 static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	*target=host_heap;
 
 	if (!(node[0] & 2)) {
@@ -327,7 +328,6 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 				Cjsr_eval_host_node
 #endif
 				) {
-			struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 			*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+((BC_WORD*)node[1])[1]];
 			return host_heap;
 		} else {
@@ -338,11 +338,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		}
 	}
 
-	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2) {
-		struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-		*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
-		return host_heap;
-	} else if (node[0]==(BC_WORD)&INT+2 ||
+	if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&CHAR+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2) {
@@ -454,20 +450,29 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	EPRINTF( "\tcopying (arities %d / %d)...\n", a_arity, b_arity);
 #endif
 
-	void *host_address = ((void**)(node[0]-2))[host_address_offset];
-	if (host_address==(void*)-1) {
-		EPRINTF("Unresolvable descriptor %p\n",(void*)node[0]); /* TODO: copy descriptor */
-		*target=(BC_WORD*)-4;
-		return host_heap;
-	}
+	BC_WORD *host_address=(BC_WORD*)node[0];
+	if (ie->program->data<=host_address && host_address<=ie->program->data+ie->program->data_size) {
+		host_address = ((void**)(node[0]-2))[host_address_offset];
+		if (host_address==(void*)-1) {
+			EPRINTF("Unresolvable descriptor %p\n",(void*)node[0]); /* TODO: copy descriptor */
+			*target=(BC_WORD*)-4;
+			return host_heap;
+		}
 #if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
-			host_address,add_to_host_address,
-			(void*)(node[0]-2),host_address_offset,&((void**)(node[0]-2))[host_address_offset]);
+		EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
+				host_address,add_to_host_address,
+				(void*)(node[0]-2),host_address_offset,&((void**)(node[0]-2))[host_address_offset]);
 #endif
+		host_address+=add_to_host_address;
+		host_address=(BC_WORD*)((BC_WORD)host_address+2);
+	} else {
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\tnot attempting to resolve non-data descriptor %p\n",host_address);
+#endif
+	}
 
-	BC_WORD *host_node = host_heap;
-	host_node[0] = (BC_WORD)(((BC_WORD*)((BC_WORD)host_address+2))+add_to_host_address);
+	BC_WORD *host_node=host_heap;
+	host_node[0]=(BC_WORD)host_address;
 
 	if (ab_arity < 3) {
 		host_heap += 1+ab_arity;
@@ -522,9 +527,7 @@ static int copied_node_size(BC_WORD *node) {
 			return 3+FINALIZER_SIZE_ON_HEAP;
 	}
 
-	if (node[0]==(BC_WORD)&HOST_NODE_HNF+2)
-		return 0;
-	else if (node[0]==(BC_WORD)&INT+2 ||
+	if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&CHAR+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2)

@@ -81,44 +81,23 @@ static int copied_node_size(struct program *program, BC_WORD *node) {
 	return words_needed;
 }
 
+static const char new_host_symbol_name[]="_unknown_descriptor";
 static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
+#ifdef MACH_O64
+	EPRINTF("Copying descriptors has not been implemented yet on MACHO_64\n");
+	exit(1);
+#else
+	/* Just use the host descriptor, since we're never going to use code addresses anyway */
 	int16_t arity=*(int16_t*)descriptor;
-#if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("Copying descriptor %p with arity %d\n",descriptor,arity);
-#endif
-	if (arity>256) { /* record */
-		BC_WORD *data=safe_malloc(5*sizeof(BC_WORD));
-		data[0]=(BC_WORD)descriptor;
-		data[1]=0;
-		data[2]=descriptor[0];
-		data[3]=0; /* no need for a type string or child descriptors */
-		data[4]=0; /* no need for a name string */
-		host_symbol->interpreter_location=&data[2];
+	if (arity>=256) { /* record; no curry table */
 		host_symbol->location=descriptor;
-	} else if (arity==0) { /* desc0 */
-		/* assuming desc0 for now; TODO can descn occur here? */
-		BC_WORD *data=safe_malloc(6*sizeof(BC_WORD));
-		data[0]=descriptor[-2];
-		data[1]=(BC_WORD)descriptor;
-		data[2]=(BC_WORD)&data[3]+2;
-		data[3]=descriptor[0];
-		data[4]=descriptor[1];
-		data[5]=0; /* no need for a name string */
-		host_symbol->interpreter_location=&data[3];
-		host_symbol->location=descriptor;
+		host_symbol->interpreter_location=descriptor;
 	} else {
-		BC_WORD *data=safe_malloc((arity*2+6)*sizeof(BC_WORD));
-		data[0]=(BC_WORD)(descriptor-arity*2+1);
-		data[1]=(BC_WORD)&data[2]+2;
-		/* These descriptors are never used for currying, so we only need the
-		 * last element of the curry table. */
-		data[2+2*arity]=arity;
-		data[arity*2+3]=descriptor[arity*2+1];
-		data[arity*2+4]=descriptor[arity*2+2];
-		data[arity*2+5]=0; /* no need for a name string */
-		host_symbol->interpreter_location=&data[2];
-		host_symbol->location=descriptor-arity*2+1;
+		host_symbol->location=descriptor-arity;
+		host_symbol->interpreter_location=descriptor-2*arity;
 	}
+	host_symbol->name=(char*)new_host_symbol_name;
+#endif
 }
 
 BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,

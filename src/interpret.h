@@ -22,7 +22,6 @@ extern BC_WORD __cycle__in__spine;
 void build_host_nodes(void);
 extern void **HOST_NODES[];
 extern BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
-extern void *HOST_NODE_HNF[];
 #endif
 
 extern BC_WORD *g_asp, *g_bsp, *g_hp;
