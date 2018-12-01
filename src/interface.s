@@ -189,7 +189,8 @@ __interpret__evaluate__host_with_args:
 	ret
 
 .global __interpret__add__shared__node
-	# Call as __interpret__add__shared__node(Clean_IE, node)
+	# Call as __interpret__add__shared__node(Clean_IE, node);
+	# Clean_IE should be on top of the A-stack as well.
 __interpret__add__shared__node:
 	push	rbx
 	push	rbp
@@ -202,7 +203,6 @@ __interpret__add__shared__node:
 	mov	rbp,[rdi+16]
 	mov	rdx,[rbp]
 	mov	rax,[rbp+8]
-	push	rbp
 
 	mov	rcx,rsi
 
@@ -218,7 +218,8 @@ __interpret__add__shared__node:
 	pop	rbp
 	save_host_status_via_rbp
 
-	pop	rbp
+	mov	rbp,[rsi-8]
+	mov	rbp,[rbp+16]
 	mov	[rbp],rcx
 	mov	[rbp+8],rax
 	mov	rax,rbx

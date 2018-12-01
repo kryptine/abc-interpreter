@@ -220,7 +220,8 @@ __interpret__evaluate__host_with_args:
 	ret
 
 public __interpret__add__shared__node
-	; Call as __interpret__add__shared__node(Clean_IE, node)
+	; Call as __interpret__add__shared__node(Clean_IE, node);
+	; Clean_IE should be on top of the A-stack as well.
 __interpret__add__shared__node:
 	mov	[rsp+8],rbx
 	mov	[rsp+16],rbp
@@ -237,7 +238,6 @@ __interpret__add__shared__node:
 	mov	rbp,[rdi+16]
 	mov	rdx,[rbp]
 	mov	rax,[rbp+8]
-	push	rbp
 
 	; Get interpretation_environment from InterpretationEnvironment
 	mov	rdi,[rdi+8]
@@ -257,7 +257,8 @@ __interpret__add__shared__node:
 	mov	[rbp+8],rdi  ; set heap pointer
 	mov	[rbp+16],r15 ; set nr. of free words
 
-	pop	rbp
+	mov	rbp,[rsi-8]
+	mov	rbp,[rbp+16]
 	mov	[rbp],rcx
 	mov	[rbp+8],rax
 	mov	rax,rbx

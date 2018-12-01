@@ -8873,7 +8873,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	int host_nodeid = ((BC_WORD*)n[1])[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 #if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("\t%p -> [%d; %p -> %p]\n",(void*)asp[0],host_nodeid,host_node,(void*)*host_node);
+	EPRINTF("\t%p -> [%d; %p -> %p]\n",n,host_nodeid,host_node,(void*)*host_node);
 #endif
 	if (!(host_node[0] & 2)) {
 		ie->asp = asp;

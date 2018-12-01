@@ -101,13 +101,14 @@ static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symb
 }
 
 BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
-		BC_WORD *heap, BC_WORD *node) {
+		BC_WORD *heap, BC_WORD **node_ptr) {
 	BC_WORD *org_heap = heap;
 	struct program *program = ie->program;
+	BC_WORD descriptor=(*node_ptr)[0];
 
-	if (!(node[0] & 2)) {
+	if (!(descriptor & 2)) {
 		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
-		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
 		heap[1]=(BC_WORD)&heap[2];
@@ -116,24 +117,24 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		return &heap[4];
 	}
 
-	if (node[0]==(BC_WORD)&INT+2 ||
-			node[0]==(BC_WORD)&CHAR+2 ||
-			node[0]==(BC_WORD)&REAL+2 ||
-			node[0]==(BC_WORD)&BOOL+2) {
-		heap[0]=node[0];
-		heap[1]=node[1];
+	if (descriptor==(BC_WORD)&INT+2 ||
+			descriptor==(BC_WORD)&CHAR+2 ||
+			descriptor==(BC_WORD)&REAL+2 ||
+			descriptor==(BC_WORD)&BOOL+2) {
+		heap[0]=(*node_ptr)[0];
+		heap[1]=(*node_ptr)[1];
 		return &heap[2];
-	} else if (node[0]==(BC_WORD)&__STRING__+2) {
-		int length=node[1];
+	} else if (descriptor==(BC_WORD)&__STRING__+2) {
+		int length=(*node_ptr)[1];
 		length=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		memcpy(heap, node, (2+length)*IF_INT_64_OR_32(8,4));
+		memcpy(heap, *node_ptr, (2+length)*IF_INT_64_OR_32(8,4));
 		return &heap[length+2];
-	} else if (node[0]==(BC_WORD)&__ARRAY__+2) {
-		heap[0]=node[0];
-		heap[1]=node[1];
-		heap[2]=node[2];
-		int length=node[1];
-		BC_WORD desc=node[2];
+	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
+		heap[0]=(*node_ptr)[0];
+		heap[1]=(*node_ptr)[1];
+		heap[2]=(*node_ptr)[2];
+		int length=(*node_ptr)[1];
+		BC_WORD desc=(*node_ptr)[2];
 
 		if (desc==(BC_WORD)&BOOL+2)
 			length=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
@@ -144,7 +145,9 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 			heap+=3+length;
 			for (int i=0; i<length; i++) {
 				new_array[i]=(BC_WORD)heap;
-				heap=copy_to_interpreter(ie,heap,(BC_WORD*)node[i+3]);
+				*ie->host->host_a_ptr++=(*node_ptr)[i+3];
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+				ie->host->host_a_ptr--;
 			}
 			return heap;
 		} else {
@@ -156,43 +159,46 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 				exit(1);
 			}
 			heap[2]=(BC_WORD)elem_host_symbol->interpreter_location;
-			node+=3;
+			BC_WORD *elements=*node_ptr+3;
 			BC_WORD *new_array=&heap[3];
 			heap+=3+length*elem_ab_arity;
 			for (int i=0; i<length; i++) {
 				for (int a=0; a<elem_a_arity; a++) {
 					new_array[a]=(BC_WORD)heap;
-					heap=copy_to_interpreter(ie,heap,(BC_WORD*)node[a]);
+					*ie->host->host_a_ptr++=elements[a];
+					heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+					ie->host->host_a_ptr--;
 				}
 				for (int b=elem_a_arity; b<elem_ab_arity; b++)
-					new_array[b]=node[b];
-				node+=elem_ab_arity;
+					new_array[b]=elements[b];
+				elements+=elem_ab_arity;
 				new_array+=elem_ab_arity;
 			}
 			return heap;
 		}
 
-		memcpy(&heap[3], &node[3], length*IF_INT_64_OR_32(8,4));
+		memcpy(&heap[3], node_ptr+3, length*IF_INT_64_OR_32(8,4));
 		return &heap[length+3];
 	}
 
-	int16_t a_arity = ((int16_t*)(node[0]))[-1];
+	int16_t a_arity = ((int16_t*)descriptor)[-1];
 	int16_t b_arity = 0;
 	int is_record = 0;
-	BC_WORD *host_desc_label=(BC_WORD*)(node[0]-2);
+	BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2);
 	struct host_symbol *host_symbol;
 	if (a_arity > 256) { /* record */
-		a_arity = ((int16_t*)(node[0]))[0];
-		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
+		a_arity = ((int16_t*)descriptor)[0];
+		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
 		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 		is_record = 1;
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0] >> IF_MACH_O_ELSE(4,3);
+		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
 		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
 			*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
-			int nodeid = __interpret__add__shared__node(ie->host->clean_ie, node);
+			int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
+			EPRINTF("\t%d args needed for %d at %p\n",args_needed,nodeid,heap);
 			ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
 			heap[1]=(BC_WORD)&heap[2];
@@ -213,11 +219,11 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 	}
 	if (host_symbol->interpreter_location==(BC_WORD*)-1) {
 		/* Copy descriptor to interpreter */
-		copy_descriptor_to_interpreter((BC_WORD*)(*node-2), host_symbol);
+		copy_descriptor_to_interpreter((BC_WORD*)(descriptor-2), host_symbol);
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("\thost to interpreter: %p -> %p; %d %d\n",node,heap,a_arity,b_arity);
+	EPRINTF("\thost to interpreter: %p -> %p; %d %d\n",*node_ptr,heap,a_arity,b_arity);
 	EPRINTF("\ttranslating %p (%s) to %p\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location);
 #endif
 	if (is_record)
@@ -230,36 +236,43 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 
 		if (a_arity >= 1) {
 			org_heap[1]=(BC_WORD)heap;
-			heap=copy_to_interpreter(ie,heap,(BC_WORD*)node[1]);
+			*ie->host->host_a_ptr++=(*node_ptr)[1];
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			ie->host->host_a_ptr--;
 
 			if (a_arity == 2) {
 				org_heap[2]=(BC_WORD)heap;
-				heap=copy_to_interpreter(ie,heap,(BC_WORD*)node[2]);
+				*ie->host->host_a_ptr++=(*node_ptr)[2];
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+				ie->host->host_a_ptr--;
 			} else if (b_arity == 1) {
-				org_heap[2] = node[2];
+				org_heap[2] = (*node_ptr)[2];
 			}
 		} else if (b_arity >= 1) {
-			org_heap[1] = node[1];
+			org_heap[1] = (*node_ptr)[1];
 			if (b_arity == 2)
-				org_heap[2] = node[2];
+				org_heap[2] = (*node_ptr)[2];
 		}
 	} else {
 		heap+=2+ab_arity;
 		if (a_arity >= 1) {
 			org_heap[1]=(BC_WORD)heap;
-			heap=copy_to_interpreter(ie,heap,(BC_WORD*)node[1]);
+			*ie->host->host_a_ptr++=(*node_ptr)[1];
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			ie->host->host_a_ptr--;
 		} else {
-			org_heap[1]=node[1];
+			org_heap[1]=(*node_ptr)[1];
 		}
 		org_heap[2]=(BC_WORD)&org_heap[3];
-		BC_WORD *rest=(BC_WORD*) node[2];
 		org_heap+=3;
 		for (int i=0; i<a_arity-1; i++) {
 			org_heap[i]=(BC_WORD)heap;
-			heap=copy_to_interpreter(ie,heap,(BC_WORD*)rest[i]);
+			*ie->host->host_a_ptr++=((BC_WORD*)(*node_ptr)[2])[i];
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			ie->host->host_a_ptr--;
 		}
 		org_heap+=a_arity-1;
-		rest+=a_arity-1;
+		BC_WORD *rest=&((BC_WORD*)((*node_ptr)[2]))[a_arity-1];
 		for (int i=0; i < (a_arity ? b_arity : b_arity-1); i++)
 			org_heap[i] = (BC_WORD) rest[i];
 	}
@@ -282,7 +295,9 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 			return -1;
 	}
 
-	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, node);
+	*ie->host->host_a_ptr++=(BC_WORD)node;
+	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, (BC_WORD**)ie->host->host_a_ptr-1);
+	ie->host->host_a_ptr--;
 	int words_used=new_heap-ie->hp;
 
 	if (words_used != words_needed) {
