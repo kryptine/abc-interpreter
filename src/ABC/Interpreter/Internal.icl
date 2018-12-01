@@ -13,16 +13,16 @@ add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize, {copy 0 arraysize nodes (unsafeCreateArray (arraysize+100)) & [arraysize]=node}, arraysize+1)
+	= (arraysize, {copy (arraysize-1) nodes (unsafeCreateArray (arraysize+100)) & [arraysize]=node}, arraysize+1)
 | otherwise
 	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where
-	copy :: !Int !Int !*{a} !*{a} -> *{a}
-	copy i end fr to
-	| i == end = to
+	copy :: !Int !*{a} !*{a} -> *{a}
+	copy -1 _ to = to
+	copy i fr to
 	# (x,fr) = fr![i]
 	# to & [i] = x
-	= copy (i+1) end fr to
+	= copy (i-1) fr to
 
 	find_empty_spot :: !Int !*{a} -> (!Int, !*{a})
 	find_empty_spot start nodes = code {
@@ -57,8 +57,6 @@ where
 		pushI -1
 	:find_empty_spot_found
 		updatepop_b 0 2
-		.d 1 1 i
-		rtn
 	}
 
 interpret :: InterpretationEnvironment !InterpretedExpression -> .a
