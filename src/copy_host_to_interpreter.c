@@ -124,7 +124,6 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		return &heap[4];
 	}
 
-	/* TODO don't create nodes for small integers and characters */
 	if (descriptor==(BC_WORD)&INT+2 && (*node_ptr)[1]<33) {
 		*target=small_integers+2*(*node_ptr)[1];
 		return heap;

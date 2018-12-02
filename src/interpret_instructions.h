@@ -8911,6 +8911,10 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
+	n[0]=((BC_WORD*)asp[0])[0];
+	n[1]=((BC_WORD*)asp[0])[1];
+	if (((int16_t*)n[0])[-1]>=2)
+		n[2]=((BC_WORD*)asp[0])[2];
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
 
@@ -9046,6 +9050,7 @@ jsr_eval_host_node_with_args:
 	if (instr_arg >= 2)
 		arg2 = (BC_WORD*) *--ie->host->host_a_ptr;
 
+	asp-=instr_arg+1;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
@@ -9085,7 +9090,6 @@ jsr_eval_host_node_with_args:
 
 	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
-	asp-=instr_arg+1;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
@@ -9096,9 +9100,8 @@ jsr_eval_host_node_with_args:
 		return -1;
 	}
 	asp++;
-	hp=ie->hp;
+	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
-	hp+=words_used;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
