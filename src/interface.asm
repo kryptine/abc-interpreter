@@ -3,7 +3,7 @@
 _TEXT segment
 
 extrn copy_interpreter_to_host:near
-extrn collect_3:near
+extrn collect_0:near
 extrn e__ABC_PInterpreter_PInternal__sadd__shared__node:near
 extrn copy_interpreter_to_host_n:near
 
@@ -51,8 +51,6 @@ __interpret__copy__node__asm_finish:
 	pop	r8
 	pop	rax
 	pop	rcx
-	cmp	rbp,-2 ; Out of memory
-	je	__interpret__copy__node__asm_gc
 	cmp	rbp,0 ; Redirect to host node
 	je	__interpret__copy__node__asm_redirect
 
@@ -62,10 +60,6 @@ __interpret__copy__node__asm_finish:
 	add	rdi,rbp
 
 	ret
-
-__interpret__copy__node__asm_gc:
-	call	collect_3
-	jmp	__interpret__copy__node__asm
 
 extrn	__interpret__copy__node__asm_redirect_node:near
 __interpret__copy__node__asm_redirect:
@@ -139,6 +133,41 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 __interpret__copy__node__asm__n_dont_align_2:
 	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
+
+public __interpret__garbage__collect
+	; Call as __interpret__garbage__collect(ie)
+__interpret__garbage__collect:
+	mov	[rsp+8],rbx
+	mov	[rsp+16],rbp
+	mov	[rsp+24],r12
+	mov	[rsp+32],r13
+	push	r14
+	push	r15
+	push	rdi
+	push	rsi
+
+	push	rdi
+	mov	rdi,[rdi]
+	mov	rsi,[rdi]
+	mov	r15,[rdi+16]
+	mov	rdi,[rdi+8]
+	call	collect_0
+	pop	rbp
+	mov	rbp,[rbp]
+	mov	[rbp],rsi
+	mov	[rbp+8],rdi
+	mov	[rbp+16],r15
+
+	pop	rsi
+	pop	rdi
+	pop	r15
+	pop	r14
+	mov	r13,[rsp+32]
+	mov	r12,[rsp+24]
+	mov	rbp,[rsp+16]
+	mov	rbx,[rsp+8]
+
+	ret
 
 public __interpret__evaluate__host
 	; Call as __interpret__evaluate__host(node, ie)

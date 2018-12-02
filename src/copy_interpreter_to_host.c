@@ -593,13 +593,22 @@ static int copied_node_size(BC_WORD *node) {
 	return words_needed;
 }
 
+extern void __interpret__garbage__collect(struct interpretation_environment*);
 int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	int words_needed=copied_node_size(node);
 
-	if (words_needed > ie->host->host_hp_free)
-		return -2;
+	if (words_needed > ie->host->host_hp_free) {
+		*ie->host->host_a_ptr++=(BC_WORD)clean_ie;
+		__interpret__garbage__collect(ie);
+		ie->host->clean_ie=clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
+		host_heap=ie->host->host_hp_ptr;
+		if (words_needed > ie->host->host_hp_free) {
+			EPRINTF("not enough memory to copy node back to host\n");
+			exit(1);
+		}
+	}
 
 	BC_WORD *new_heap=copy_to_host(clean_ie,host_heap,target,node);
 	int words_used=new_heap-host_heap;

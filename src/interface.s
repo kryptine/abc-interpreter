@@ -54,8 +54,6 @@ __interpret__copy__node__asm_finish:
 	pop	rdi
 	restore_host_status_via_rdi
 	restore_registers
-	cmp	rbp,-2 # Out of memory
-	je	__interpret__copy__node__asm_gc
 	cmp	rbp,0 # Redirect to host node
 	je	__interpret__copy__node__asm_redirect
 
@@ -65,10 +63,6 @@ __interpret__copy__node__asm_finish:
 	add	rdi,rbp
 
 	ret
-
-__interpret__copy__node__asm_gc:
-	call	collect_3
-	jmp	__interpret__copy__node__asm
 
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
@@ -132,6 +126,31 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 __interpret__copy__node__asm__n_dont_align_2:
 	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
+
+.global __interpret__garbage__collect
+	# Call as __interpret__garbage__collect(ie)
+__interpret__garbage__collect:
+	push	rbx
+	push	rbp
+	push	r12
+	push	r13
+	push	r14
+	push	r15
+
+	push	rdi
+	restore_host_status_via_rdi
+	call	collect_0
+	pop	rbp
+	save_host_status_via_rbp
+
+	pop	r15
+	pop	r14
+	pop	r13
+	pop	r12
+	pop	rbp
+	pop	rbx
+
+	ret
 
 .global __interpret__evaluate__host
 	# Call as __interpret__evaluate__host(ie, node)
