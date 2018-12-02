@@ -225,7 +225,6 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 	int ab_arity=a_arity+b_arity;
 
 	if (host_symbol==NULL) {
-		EPRINTF("new host symbol\n");
 		struct host_symbols_list *extra_host_symbols=safe_malloc(sizeof(struct host_symbols_list));
 		extra_host_symbols->host_symbol.interpreter_location=(BC_WORD*)-1;
 		extra_host_symbols->next=program->extra_host_symbols;
