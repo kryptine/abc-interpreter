@@ -723,12 +723,11 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	ie->asp += n_args+1;
 	for (int i = 0; i <= n_args; i++) {
 		BC_WORD *host_node=(BC_WORD*)*--ie->host->host_a_ptr;
-		int words_used=copy_to_interpreter_or_garbage_collect(ie, host_node);
+		int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)&ie->asp[-i], host_node);
 		if (words_used<0) {
 			EPRINTF("Interpreter is out of memory\n");
 			return -1;
 		}
-		ie->asp[-i]=(BC_WORD)ie->hp;
 		ie->hp+=words_used;
 	}
 
