@@ -11,6 +11,7 @@ s/___cycle__in__spine/__cycle__in__spine/g
 s/_ap_\([[:digit:]]\)/ap_\1/g
 s/_e____system__kFinalizer/e____system__kFinalizer/g
 s/_finalizer_list/finalizer_list/g
+s/___interpret__garbage__collect/__interpret__garbage__collect/g
 s/___interpret__add__shared__node/__interpret__add__shared__node/g
 s/___interpret__evaluate__host/__interpret__evaluate__host/g
 s/___interpret__evaluate__host__with__args/__interpret__evaluate__host__with__args/g
