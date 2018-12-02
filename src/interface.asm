@@ -146,8 +146,8 @@ __interpret__garbage__collect:
 	push	rdi
 	push	rsi
 
-	push	rdi
-	mov	rdi,[rdi]
+	push	rcx
+	mov	rdi,[rcx]
 	mov	rsi,[rdi]
 	mov	r15,[rdi+16]
 	mov	rdi,[rdi+8]
