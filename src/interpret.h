@@ -17,6 +17,9 @@ extern void* REAL[];
 
 extern BC_WORD __cycle__in__spine;
 
+extern BC_WORD small_integers[];
+extern BC_WORD static_characters[];
+
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
 void build_host_nodes(void);

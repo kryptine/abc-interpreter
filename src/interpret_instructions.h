@@ -478,21 +478,34 @@ INSTRUCTION_BLOCK(buildF_b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildI):
+{
+	BC_WORD_S i=pc[1];
+	if (0<=i && i<=32) {
+		*++asp=(BC_WORD)(small_integers+2*i);
+		pc+=2;
+		END_INSTRUCTION_BLOCK;
+	}
 	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&INT+2;
-	hp[1]=pc[1];
+	hp[1]=i;
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(buildI_b):
 {
-	BC_WORD_S bo;
+	BC_WORD_S i;
+	i=bsp[pc[1]];
 
+	if (0<=i && i<=32) {
+		*++asp=(BC_WORD)(small_integers+2*i);
+		pc+=2;
+		END_INSTRUCTION_BLOCK;
+	}
 	NEED_HEAP(2);
-	bo = pc[1];
 	hp[0]=(BC_WORD)&INT+2;
-	hp[1]=bsp[bo];
+	hp[1]=i;
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	pc+=2;

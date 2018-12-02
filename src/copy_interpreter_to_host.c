@@ -338,8 +338,13 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		}
 	}
 
-	if (node[0]==(BC_WORD)&INT+2 ||
-			node[0]==(BC_WORD)&CHAR+2 ||
+	if (node[0]==(BC_WORD)&INT+2 && node[1]<33) {
+		*target=(BC_WORD*)(small_integers+2*node[1]);
+		return host_heap;
+	} else if (node[0]==(BC_WORD)&CHAR+2) {
+		*target=(BC_WORD*)(static_characters+2*node[1]);
+		return host_heap;
+	} else if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2) {
 		host_heap[0]=node[0];
@@ -527,8 +532,9 @@ static int copied_node_size(BC_WORD *node) {
 			return 3+FINALIZER_SIZE_ON_HEAP;
 	}
 
-	if (node[0]==(BC_WORD)&INT+2 ||
-			node[0]==(BC_WORD)&CHAR+2 ||
+	if ((node[0]==(BC_WORD)&INT+2 && node[1]<33) || node[0]==(BC_WORD)&CHAR+2)
+		return 0;
+	else if (node[0]==(BC_WORD)&INT+2 ||
 			node[0]==(BC_WORD)&BOOL+2 ||
 			node[0]==(BC_WORD)&REAL+2)
 		return 2;

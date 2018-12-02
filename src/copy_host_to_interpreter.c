@@ -101,7 +101,7 @@ static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symb
 }
 
 BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
-		BC_WORD *heap, BC_WORD **node_ptr) {
+		BC_WORD *heap, BC_WORD **node_ptr, int *saved_words) {
 	BC_WORD *org_heap = heap;
 	struct program *program = ie->program;
 	BC_WORD descriptor=(*node_ptr)[0];
@@ -111,12 +111,18 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
+		if (nodeid<33) {
+			heap[1]=(BC_WORD)(small_integers+nodeid*2);
+			*saved_words+=1;
+			return &heap[3];
+		}
 		heap[1]=(BC_WORD)&heap[2];
 		heap[2]=(BC_WORD)&INT+2;
 		heap[3]=nodeid;
 		return &heap[4];
 	}
 
+	/* TODO don't create nodes for small integers and characters */
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&REAL+2 ||
@@ -146,7 +152,7 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 			for (int i=0; i<length; i++) {
 				new_array[i]=(BC_WORD)heap;
 				*ie->host->host_a_ptr++=(*node_ptr)[i+3];
-				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 				ie->host->host_a_ptr--;
 			}
 			return heap;
@@ -166,7 +172,7 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 				for (int a=0; a<elem_a_arity; a++) {
 					new_array[a]=(BC_WORD)heap;
 					*ie->host->host_a_ptr++=elements[a];
-					heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+					heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 					ie->host->host_a_ptr--;
 				}
 				for (int b=elem_a_arity; b<elem_ab_arity; b++)
@@ -200,6 +206,11 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 			int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
 			ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
+			if (nodeid<33) {
+				heap[1]=(BC_WORD)(small_integers+nodeid*2);
+				*saved_words+=1;
+				return &heap[3];
+			}
 			heap[1]=(BC_WORD)&heap[2];
 			heap[2]=(BC_WORD)&INT+2;
 			heap[3]=nodeid;
@@ -236,13 +247,13 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		if (a_arity >= 1) {
 			org_heap[1]=(BC_WORD)heap;
 			*ie->host->host_a_ptr++=(*node_ptr)[1];
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 			ie->host->host_a_ptr--;
 
 			if (a_arity == 2) {
 				org_heap[2]=(BC_WORD)heap;
 				*ie->host->host_a_ptr++=(*node_ptr)[2];
-				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 				ie->host->host_a_ptr--;
 			} else if (b_arity == 1) {
 				org_heap[2] = (*node_ptr)[2];
@@ -257,7 +268,7 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		if (a_arity >= 1) {
 			org_heap[1]=(BC_WORD)heap;
 			*ie->host->host_a_ptr++=(*node_ptr)[1];
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 			ie->host->host_a_ptr--;
 		} else {
 			org_heap[1]=(*node_ptr)[1];
@@ -267,7 +278,7 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		for (int i=0; i<a_arity-1; i++) {
 			org_heap[i]=(BC_WORD)heap;
 			*ie->host->host_a_ptr++=((BC_WORD*)(*node_ptr)[2])[i];
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)ie->host->host_a_ptr-1,saved_words);
 			ie->host->host_a_ptr--;
 		}
 		org_heap+=a_arity-1;
@@ -295,7 +306,9 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 	}
 
 	*ie->host->host_a_ptr++=(BC_WORD)node;
-	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, (BC_WORD**)ie->host->host_a_ptr-1);
+	int saved_words=0;
+	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, (BC_WORD**)ie->host->host_a_ptr-1,&saved_words);
+	words_needed-=saved_words;
 	ie->host->host_a_ptr--;
 	int words_used=new_heap-ie->hp;
 
