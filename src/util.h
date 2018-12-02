@@ -44,8 +44,8 @@ extern char print_buffer[];
 extern void ew_print_text(char*,int);
 extern void w_print_text(char*,int);
 extern void w_print_char(char);
-# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE, __VA_ARGS__))
-# define PRINTF(...)  w_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE, __VA_ARGS__))
+# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
+# define PRINTF(...)  w_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
 # define PUTCHAR      w_print_char
 #elif defined(DEBUG_CURSES)
 # include <curses.h>
