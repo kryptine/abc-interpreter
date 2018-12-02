@@ -72,6 +72,19 @@ void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N
 extern BC_WORD __cycle__in__spine;
 #else
 BC_WORD __cycle__in__spine = Chalt;
+BC_WORD small_integers[66];
+BC_WORD static_characters[512];
+
+void prepare_static_nodes(void) {
+	for (int i=0; i<33; i++) {
+		small_integers[2*i]=(BC_WORD)&INT+2;
+		small_integers[2*i+1]=i;
+	}
+	for (int i=0; i<256; i++) {
+		static_characters[2*i]=(BC_WORD)&CHAR+2;
+		static_characters[2*i+1]=i;
+	}
+}
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
@@ -464,6 +477,7 @@ int main(int argc, char **argv) {
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
 #endif
 
+	prepare_static_nodes();
 	interpret(state.program,
 			stack, stack_size,
 			heap, heap_size,

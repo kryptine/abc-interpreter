@@ -478,21 +478,34 @@ INSTRUCTION_BLOCK(buildF_b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(buildI):
+{
+	BC_WORD_S i=pc[1];
+	if (0<=i && i<=32) {
+		*++asp=(BC_WORD)(small_integers+2*i);
+		pc+=2;
+		END_INSTRUCTION_BLOCK;
+	}
 	NEED_HEAP(2);
 	hp[0]=(BC_WORD)&INT+2;
-	hp[1]=pc[1];
+	hp[1]=i;
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(buildI_b):
 {
-	BC_WORD_S bo;
+	BC_WORD_S i;
+	i=bsp[pc[1]];
 
+	if (0<=i && i<=32) {
+		*++asp=(BC_WORD)(small_integers+2*i);
+		pc+=2;
+		END_INSTRUCTION_BLOCK;
+	}
 	NEED_HEAP(2);
-	bo = pc[1];
 	hp[0]=(BC_WORD)&INT+2;
-	hp[1]=bsp[bo];
+	hp[1]=i;
 	*++asp=(BC_WORD)hp;
 	hp+=2;
 	pc+=2;
@@ -8893,19 +8906,17 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	ie->bsp = bsp;
 	ie->csp = csp;
 	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, host_node);
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	BC_WORD *old_hp=ie->hp;
+	n[0]=((BC_WORD*)asp[0])[0];
+	n[1]=((BC_WORD*)asp[0])[1];
+	if (((int16_t*)n[0])[-1]>=2)
+		n[2]=((BC_WORD*)asp[0])[2];
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
-	n=(BC_WORD*)asp[0];
-	n[0]=old_hp[0];
-	n[1]=old_hp[1];
-	if (((int16_t*)(n[0]))[-1] >= 2)
-		n[2]=old_hp[2];
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -9039,6 +9050,7 @@ jsr_eval_host_node_with_args:
 	if (instr_arg >= 2)
 		arg2 = (BC_WORD*) *--ie->host->host_a_ptr;
 
+	asp-=instr_arg+1;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
@@ -9078,20 +9090,18 @@ jsr_eval_host_node_with_args:
 
 	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
-	asp-=instr_arg+1;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
 	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, host_node);
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp+1, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	hp=ie->hp;
+	asp++;
+	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
-	*++asp=(BC_WORD)hp;
-	hp+=words_used;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;

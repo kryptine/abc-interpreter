@@ -87,7 +87,7 @@ new_string_char_provider s
 where
 	init :: !Pointer !String !Int !Int !Pointer -> Pointer
 	init _ _ _ _ _ = code {
-		ccall new_string_char_provider "IsII:V:I"
+		ccall new_string_char_provider "psII:V:p"
 	}
 
 free_char_provider_to_false :: !Pointer -> Bool
