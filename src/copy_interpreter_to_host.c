@@ -688,15 +688,14 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #ifdef WINDOWS
 BC_WORD copy_interpreter_to_host_n(
 		void *__dummy, struct finalizers *node_finalizer,
-		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+		struct InterpretationEnvironment *clean_ie, int n_args) {
 #else
 BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct finalizers *node_finalizer, void *__dummy_2,
-		struct InterpretationEnvironment *clean_ie, int n_args, ...) {
+		struct InterpretationEnvironment *clean_ie, int n_args) {
 #endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
-	va_list arguments;
 
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
@@ -706,27 +705,26 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	if (n_args+a_arity==0) {
 		*++ie->asp=(BC_WORD)node;
 	} else {
+		/* TODO check heap space */
 		*++ie->asp=(BC_WORD)ie->hp;
 		for (int i=0; i<=a_arity; i++)
 			ie->hp[i]=node[i];
-		ie->hp+=a_arity+1;
+		ie->hp+=a_arity>2 ? a_arity+1 : 3;
 	}
 
-	va_start(arguments,n_args);
 	for (int i=1; i<=n_args+1; i++)
 		ie->asp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
 	ie->asp += n_args+1;
 	for (int i = 0; i <= n_args; i++) {
-		BC_WORD *host_node = va_arg(arguments, BC_WORD*);
+		BC_WORD *host_node=(BC_WORD*)*--ie->host->host_a_ptr;
 		int words_used=copy_to_interpreter_or_garbage_collect(ie, host_node);
 		if (words_used<0) {
 			EPRINTF("Interpreter is out of memory\n");
 			return -1;
 		}
-		ie->asp[i == n_args ? 0 : -i-1] = (BC_WORD) ie->hp;
+		ie->asp[-i]=(BC_WORD)ie->hp;
 		ie->hp+=words_used;
 	}
-	va_end(arguments);
 
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\tarity is %d\n",a_arity);

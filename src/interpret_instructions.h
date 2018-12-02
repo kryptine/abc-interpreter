@@ -9028,7 +9028,7 @@ jsr_eval_host_node_with_args:
 		int added_words=copy_to_host_or_garbage_collect(
 				ie->host->clean_ie, ie->host->host_hp_ptr,
 				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i]);
-		if (added_words<0) { /* TODO: -2 is garbage collection */
+		if (added_words<0) {
 			EPRINTF("copying to host failed\n");
 			exit(1);
 		}

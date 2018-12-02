@@ -198,7 +198,6 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
 			*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 			int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
-			EPRINTF("\t%d args needed for %d at %p\n",args_needed,nodeid,heap);
 			ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
 			heap[1]=(BC_WORD)&heap[2];

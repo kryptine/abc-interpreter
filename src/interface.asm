@@ -85,24 +85,8 @@ __interpret__copy__node__asm__n:
 	mov	rbp,[rbp+8]
 	push	rbp
 
-	test	rax,1
-	je	__interpret__copy__node__asm__n_dont_align
-	push	rbp
-__interpret__copy__node__asm__n_dont_align:
-
-	; Push Clean arguments to the C stack
-	mov	r9,rax
-	shl	rax,3
-	push	rcx
-__interpret__copy__node__asm__n_adding_shared_nodes:
-	test	rax,rax
-	je	__interpret__copy__node__asm__n_added_shared_nodes
-	mov	rbp,rsi
-	sub	rbp,rax
-	push	[rbp]
-	sub	rax,8
-	jmp	__interpret__copy__node__asm__n_adding_shared_nodes
-__interpret__copy__node__asm__n_added_shared_nodes:
+	mov	[rsi],rcx
+	add	rsi,8
 
 	; Get interpretation_environment
 	mov	rbp,[r8+8]
@@ -110,10 +94,7 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	rbp,[rbp+8]
 
 	; Prepare for calling C function
-	mov	rax,r9
-	shl	rax,3
-	mov	rbx,rax
-	sub	rsi,rax
+	mov	r9,rax
 
 	mov	rbp,[rbp]    ; first member of ie: host_status
 	mov	[rbp],rsi    ; set astack pointer
@@ -122,16 +103,9 @@ __interpret__copy__node__asm__n_added_shared_nodes:
 	mov	[rbp+24],r8
 
 	; Parameters are already in the right register; see copy_interpreter_to_host.c
-	mov	rax,0
 	sub	rsp,32
 	call	copy_interpreter_to_host_n
 	add	rsp,32
-	add	rsp,rbx
-	test	rbx,8
-	je	__interpret__copy__node__asm__n_dont_align_2
-	pop	rbp
-__interpret__copy__node__asm__n_dont_align_2:
-	add	rsp,8
 	jmp	__interpret__copy__node__asm_finish
 
 public __interpret__garbage__collect
