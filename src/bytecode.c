@@ -257,71 +257,89 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 
 # ifdef DEBUG_CURSES
 #  define WPRINTF(w,...) wprintw(w,__VA_ARGS__)
+unsigned int print_instruction(WINDOW *w, struct program *pgm, uint32_t i) {
+# else
+#  define WPRINTF(w,...) {if (to_stderr) {EPRINTF(__VA_ARGS__);} else {PRINTF(__VA_ARGS__);}}
+unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i) {
+# endif
+	char _tmp[256];
+	uint32_t org_i=i;
+	const char *fmt = instruction_type((int16_t)pgm->code[i]);
+	WPRINTF(w, "%d\t%s", i, instruction_name((int16_t)pgm->code[i]));
+	for (; *fmt; fmt++) {
+		i++;
+		switch (*fmt) {
+			case 'l': /* Code label */
+				print_label(_tmp, 256, 1, (BC_WORD*)pgm->code[i], pgm, NULL, 0);
+				WPRINTF(w, " %s", _tmp);
+				break;
+			case 'i': /* Integer constant */
+				WPRINTF(w, " " BC_WORD_S_FMT, (BC_WORD_S)pgm->code[i]);
+				break;
+			case 'c': /* Character constant */
+				if (' '<=pgm->code[i] && pgm->code[i]<='~') {
+					WPRINTF(w, " '%c'", (char)pgm->code[i]);
+				} else {
+					WPRINTF(w, " '\\x%02x'", (char)pgm->code[i]);
+				}
+				break;
+			case 'n': /* Stack index */
+				WPRINTF(w, " %d", abs((int)pgm->code[i]));
+				break;
+			case 'N': /* Stack index times WORD_WIDTH/8 */
+				WPRINTF(w, " %d", abs((int)pgm->code[i] / IF_INT_64_OR_32(8,4)));
+				break;
+			case 'r': /* Real constant */
+				WPRINTF(w, " %.15g", (*(BC_REAL*)&pgm->code[i]) + 0.0);
+				break;
+			case 'a': /* Arity */
+				WPRINTF(w, " %d", abs((int16_t) ((BC_WORD_S)pgm->code[i] >> IF_INT_64_OR_32(48,16))));
+				break;
+			case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
+			case 's': { /* String */
+				uint32_t *s = (uint32_t*)pgm->code[i] + (*fmt == 's' ? 0 : IF_INT_64_OR_32(2,1));
+				uint32_t length = s[0];
+				char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
+				WPRINTF(w, " \"");
+				for (; length; length--) {
+					WPRINTF(w, "%s", escape(*cs++));
+				}
+				WPRINTF(w, "\"");
+				break;
+				}
+			case '?': /* Unknown instruction */
+				WPRINTF(w, " ?");
+				break;
+			default: /* Unimplemented argument type */
+				WPRINTF(w, " !!!");
+				break;
+		}
+	}
+	WPRINTF(w, "\n");
+	return i-org_i;
+}
+
+# ifdef DEBUG_CURSES
 void print_code(WINDOW *w, struct program *pgm) {
 # else
-#  define WPRINTF(w,...) PRINTF(__VA_ARGS__)
 void print_code(struct program *pgm) {
 # endif
 	uint32_t i;
-	char _tmp[256];
-	for (i = 0; i < pgm->code_size; i++) {
-		const char *fmt = instruction_type(pgm->code[i]);
-		WPRINTF(w, "%d\t%s", i, instruction_name(pgm->code[i]));
-		for (; *fmt; fmt++) {
-			i++;
-			switch (*fmt) {
-				case 'l': /* Code label */
-					print_label(_tmp, 256, 1, (BC_WORD*) pgm->code[i], pgm, NULL, 0);
-					WPRINTF(w, " %s", _tmp);
-					break;
-				case 'i': /* Integer constant */
-					WPRINTF(w, " " BC_WORD_S_FMT, (BC_WORD_S) pgm->code[i]);
-					break;
-				case 'c': /* Character constant */
-					if (' ' <= pgm->code[i] && pgm->code[i] <= '~')
-						WPRINTF(w, " '%c'", (char) pgm->code[i]);
-					else
-						WPRINTF(w, " '\\x%02x'", (char) pgm->code[i]);
-					break;
-				case 'n': /* Stack index */
-					WPRINTF(w, " %d", abs((int) pgm->code[i]));
-					break;
-				case 'N': /* Stack index times WORD_WIDTH/8 */
-					WPRINTF(w, " %d", abs((int) pgm->code[i] / IF_INT_64_OR_32(8,4)));
-					break;
-				case 'r': /* Real constant */
-					WPRINTF(w, " %.15g", (*(BC_REAL*)&pgm->code[i]) + 0.0);
-					break;
-				case 'a': /* Arity */
-					WPRINTF(w, " %d", abs((int16_t) ((BC_WORD_S) pgm->code[i] >> IF_INT_64_OR_32(48,16))));
-					break;
-				case 'S': /* {#Char} array (string with _ARRAY_ descriptor) */
-				case 's': { /* String */
-					uint32_t *s = (uint32_t*) pgm->code[i] + (*fmt == 's' ? 0 : IF_INT_64_OR_32(2,1));
-					uint32_t length = s[0];
-					char *cs = (char*) &s[IF_INT_64_OR_32(2,1)];
-					WPRINTF(w, " \"");
-					for (; length; length--) {
-						WPRINTF(w, "%s", escape(*cs++));
-					}
-					WPRINTF(w, "\"");
-					break;
-					}
-				case '?': /* Unknown instruction */
-					WPRINTF(w, " ?");
-					break;
-				default: /* Unimplemented argument type */
-					WPRINTF(w, " !!!");
-					break;
-			}
-		}
-		WPRINTF(w, "\n");
-	}
+	for (i = 0; i < pgm->code_size; i++)
+		i+=print_instruction(
+# ifdef DEBUG_CURSES
+				w,
+# else
+				0,
+# endif
+				pgm, i);
 }
 
 # ifdef DEBUG_CURSES
 void print_data(WINDOW *w, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
 # else
+#  undef WPRINTF
+#  define WPRINTF(w,...) PRINTF(__VA_ARGS__)
 void print_data(BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
 # endif
 	uint32_t i;

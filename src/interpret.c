@@ -339,11 +339,11 @@ eval_to_hnf_return:
 		evaluate_grey_nodes(heap, heap_size, &nodes_set);
 		free_nodes_set(&nodes_set);
 # endif
-# ifdef DEBUG_ALL_INSTRUCTIONS
+# if defined(DEBUG_ALL_INSTRUCTIONS) && !defined(DEBUG_CURSES)
 		if (program->data <= pc && pc < program->data + program->data_size)
 			EPRINTF("D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));
 		else if (program->code <= pc && pc < program->code + program->code_size)
-			EPRINTF(":%d\t%s\n", (int) (pc-program->code), instruction_name(*pc));
+			print_instruction(1, program, pc-program->code);
 		else
 			EPRINTF(":------ %s\n", instruction_name(*pc));
 # endif

@@ -99,6 +99,7 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 #  include <curses.h>
 void print_program(WINDOW *f, struct program *pgm);
 # else
+unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i);
 void print_program(struct program *pgm);
 # endif
 #endif
