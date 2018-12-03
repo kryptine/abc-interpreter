@@ -711,7 +711,21 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	if (n_args+a_arity==0) {
 		*++ie->asp=(BC_WORD)node;
 	} else {
-		/* TODO check heap space */
+		BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->in_first_semispace ? 2 : 1) - ie->hp;
+		if (heap_free<a_arity+1) {
+			ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
+					, &ie->in_first_semispace
+#ifdef DEBUG_GARBAGE_COLLECTOR
+					, ie->program->code, ie->program->data
+#endif
+					);
+			if (heap_free<a_arity+1) {
+				EPRINTF("Interpreter is out of memory\n");
+				return -1;
+			}
+			/* Update address after garbage collection */
+			node = (BC_WORD*) node_finalizer->cur->arg;
+		}
 		*++ie->asp=(BC_WORD)ie->hp;
 		for (int i=0; i<=a_arity; i++)
 			ie->hp[i]=node[i];
@@ -723,13 +737,18 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	ie->asp += n_args+1;
 	for (int i = 0; i <= n_args; i++) {
 		BC_WORD *host_node=(BC_WORD*)*--ie->host->host_a_ptr;
+		*ie->host->host_a_ptr++=(BC_WORD)node_finalizer;
 		int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)&ie->asp[-i], host_node);
+		node_finalizer=(struct finalizers*)*--ie->host->host_a_ptr;
 		if (words_used<0) {
 			EPRINTF("Interpreter is out of memory\n");
 			return -1;
 		}
 		ie->hp+=words_used;
 	}
+
+	/* Update address since garbage collection may have run during copying */
+	node = (BC_WORD*) node_finalizer->cur->arg;
 
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\tarity is %d\n",a_arity);

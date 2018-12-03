@@ -1,8 +1,8 @@
 #include "gc.h"
 #include "gc/copy.h"
 
-#if (DEBUG_GARBAGE_COLLECTOR > 0)
-# include <stdio.h>
+#if DEBUG_GARBAGE_COLLECTOR > 0
+# include "util.h"
 #endif
 
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
@@ -12,8 +12,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 		, BC_WORD *code, BC_WORD *data
 #endif
 		) {
-#if (DEBUG_GARBAGE_COLLECTOR > 0)
-	fprintf(stderr, "Collecting trash... stack @ %p; heap @ %p; code @ %p; data @ %p\n",
+#if DEBUG_GARBAGE_COLLECTOR > 0
+	EPRINTF("Collecting trash... stack @ %p; heap @ %p; code @ %p; data @ %p\n",
 			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
 
