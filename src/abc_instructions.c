@@ -395,15 +395,15 @@ const char *instruction_type (BC_WORD i) {
 		case Cpush_r_args_a2l:       return "n";
 		case Cpush_r_args_a3:        return "n";
 		case Cpush_r_args_a4:        return "n";
-		case Cpush_r_args_b:         return "nnn";
+		case Cpush_r_args_b:         return "nNn";
 		case Cpush_r_args_b0b11:     return "n";
 		case Cpush_r_args_b0221:     return "n";
 		case Cpush_r_args_b1111:     return "n";
-		case Cpush_r_args_b1:        return "nn";
+		case Cpush_r_args_b1:        return "nN";
 		case Cpush_r_args_b2l1:      return "n";
 		case Cpush_r_args_b31:       return "n";
 		case Cpush_r_args_b41:       return "n";
-		case Cpush_r_args_b2:        return "nn";
+		case Cpush_r_args_b2:        return "nN";
 		case Cpush_r_args_b1l2:      return "n";
 		case Cpush_r_args_b22:       return "n";
 		case Cpush_t_r_a:            return "n";
@@ -454,7 +454,7 @@ const char *instruction_type (BC_WORD i) {
 		case Crepl_r_args_a21:       return "";
 		case Crepl_r_args_a31:       return "";
 		case Crepl_r_args_a41:       return "";
-		case Crepl_r_args_aa1:       return "n";
+		case Crepl_r_args_aa1:       return "N";
 		case Cselect:                return "";
 		case CselectBOOL:            return "";
 		case CselectCHAR:            return "";

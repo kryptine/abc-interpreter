@@ -5180,7 +5180,7 @@ INSTRUCTION_BLOCK(push_r_args_b):
 
 	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
 	a=(BC_WORD*)n[2];
-	BC_WORD *ao=&a[bo-3];
+	BC_WORD *ao=(BC_WORD*)((BC_WORD)a+bo);
 	bsp-=n_args;
 	bsp[0]=ao[0];
 	do {

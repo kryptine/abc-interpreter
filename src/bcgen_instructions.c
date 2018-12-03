@@ -2828,7 +2828,7 @@ void code_push_r_args_a(int a_offset,int a_size,int b_size,int argument_number,i
 			add_instruction_w(Cpush_r_args_a4,-a_offset);
 			return;
 		}
-		add_instruction_w_w(Cpush_r_args_aa1,-a_offset,(argument_number-2)<<2);
+		add_instruction_w_w(Cpush_r_args_aa1,-a_offset,argument_number-2);
 		return;
 	}
 
@@ -2870,7 +2870,7 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 				return;
 			}
 			if (a_size+argument_number>=5) {
-				add_instruction_w_w(Cpush_r_args_b1,-a_offset,(a_size+argument_number-1-1)<<2);
+				add_instruction_w_w(Cpush_r_args_b1,-a_offset,a_size+argument_number-1-1);
 				return;
 			}
 		}
@@ -2887,13 +2887,13 @@ void code_push_r_args_b(int a_offset,int a_size,int b_size,int argument_number,i
 				return;
 			}
 			if (a_size+argument_number>=5) {
-				add_instruction_w_w(Cpush_r_args_b2,-a_offset,(a_size+argument_number-1-1)<<2);
+				add_instruction_w_w(Cpush_r_args_b2,-a_offset,a_size+argument_number-1-1);
 				return;
 			}
 		}
 	}
 
-	add_instruction_w_w_w(Cpush_r_args_b,-a_offset,(a_size+argument_number-1-1)<<2,n_arguments);
+	add_instruction_w_w_w(Cpush_r_args_b,-a_offset,a_size+argument_number-1-1,n_arguments);
 }
 
 void code_push_r_args_u(int a_offset,int a_size,int b_size) {
@@ -2971,7 +2971,7 @@ void code_repl_arg(int arity,int argument_n) {
 		add_instruction(Crepl_r_args_a41);
 		return;
 	}
-	add_instruction_w(Crepl_r_args_aa1,(argument_n-2)<<2);
+	add_instruction_w(Crepl_r_args_aa1,argument_n-2);
 	return;
 }
 
@@ -3075,7 +3075,7 @@ void code_repl_r_args_a(int a_size,int b_size,int argument_number,int n_argument
 			add_instruction(Crepl_r_args_a41);
 			return;
 		}
-		add_instruction_w(Crepl_r_args_aa1,(argument_number-2)<<2);
+		add_instruction_w(Crepl_r_args_aa1,argument_number-2);
 		return;
 	}
 
