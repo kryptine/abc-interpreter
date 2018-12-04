@@ -8919,7 +8919,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
 
 	extern void *__Nil;
-	ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid]=(BC_WORD*)((BC_WORD)&__Nil+2);
+	ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid]=(BC_WORD*)&__Nil-1;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;

@@ -363,7 +363,7 @@ eval_to_hnf_return:
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free, caf_list
 #ifdef LINK_CLEAN_RUNTIME
-				, &ie->in_first_semispace
+				, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #else
 				, &in_first_semispace
 #endif

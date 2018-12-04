@@ -23,7 +23,8 @@ extern BC_WORD static_characters[];
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
 void build_host_nodes(void);
-extern void **HOST_NODES[];
+extern void **HOST_NODES[32];
+extern BC_WORD HOST_NODE_DESCRIPTORS[1216];
 extern BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 #endif
 

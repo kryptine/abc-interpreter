@@ -290,7 +290,7 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 
 	if (heap_free<words_needed) {
 		ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
-				, &ie->in_first_semispace
+				, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, ie->program->code, ie->program->data
 #endif

@@ -15,7 +15,11 @@
 
 BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
-		void **cafs, int *in_first_semispace) {
+		void **cafs, int *in_first_semispace
+#ifdef LINK_CLEAN_RUNTIME
+		, BC_WORD **shared_nodes_of_host
+#endif
+		) {
 	BC_WORD *old_heap = *in_first_semispace ? heap : heap + heap_size;
 	BC_WORD *new_heap = *in_first_semispace ? heap + heap_size : heap;
 
@@ -211,6 +215,14 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 				fprintf(stderr, "\t\t(HNF with arity %d/%d)\n", a_arity,b_arity);
 #endif
+
+#ifdef LINK_CLEAN_RUNTIME
+				if ((BC_WORD)HOST_NODE_DESCRIPTORS<=node[0] && node[0]<=(BC_WORD)HOST_NODE_DESCRIPTORS+sizeof(HOST_NODE_DESCRIPTORS)) {
+					int host_nodeid=((BC_WORD*)node[1])[1];
+					(BC_WORD)shared_nodes_of_host[host_nodeid]|=1;
+				}
+#endif
+
 				*new_heap = node[0];
 				node[0] = (BC_WORD) new_heap;
 				new_heap++;
@@ -332,6 +344,12 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #if (DEBUG_GARBAGE_COLLECTOR > 2)
 			fprintf(stderr, "\t\t(thunk with arity %d/%d)\n", a_arity, b_arity);
 #endif
+#ifdef LINK_CLEAN_RUNTIME
+				if (node[0]==(BC_WORD)&HOST_NODE_INSTRUCTIONS[1]) {
+					int host_nodeid=node[1];
+					(BC_WORD)shared_nodes_of_host[host_nodeid]|=1;
+				}
+#endif
 			*new_heap = node[0];
 			node[0] = (BC_WORD) new_heap;
 			new_heap++;
@@ -361,6 +379,16 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	}
 
 	free_nodes_set(&nodes_set);
+
+#ifdef LINK_CLEAN_RUNTIME
+	extern void *__Nil;
+	for (int host_nodeid=(BC_WORD)shared_nodes_of_host[-2]-1; host_nodeid>=0; host_nodeid--) {
+		if ((BC_WORD)shared_nodes_of_host[host_nodeid]&1)
+			(BC_WORD)shared_nodes_of_host[host_nodeid]^=1;
+		else
+			shared_nodes_of_host[host_nodeid]=(BC_WORD*)&__Nil-1;
+	}
+#endif
 
 	if (*in_first_semispace) {
 		*heap_free = heap + 2 * heap_size - new_heap;

@@ -7,9 +7,9 @@ extern void *e____system__kFinalizer;
 
 struct finalizers *next_interpreter_finalizer(struct finalizers *now) {
 	now = now == NULL ? finalizer_list : now->next;
-	while (((BC_WORD) now != (BC_WORD) &__Nil-8) && now->cur->fun != interpreter_finalizer)
+	while (((BC_WORD) now != (BC_WORD)(&__Nil-1)) && now->cur->fun != interpreter_finalizer)
 		now = now->next;
-	return ((BC_WORD) now == (BC_WORD) &__Nil-8) ? NULL : now;
+	return ((BC_WORD) now == (BC_WORD)(&__Nil-1)) ? NULL : now;
 }
 
 BC_WORD *build_finalizer(BC_WORD *heap, void (*fun)(BC_WORD), BC_WORD arg) {

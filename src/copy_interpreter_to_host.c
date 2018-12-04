@@ -714,7 +714,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->in_first_semispace ? 2 : 1) - ie->hp;
 		if (heap_free<a_arity+1) {
 			ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
-					, &ie->in_first_semispace
+					, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #ifdef DEBUG_GARBAGE_COLLECTOR
 					, ie->program->code, ie->program->data
 #endif

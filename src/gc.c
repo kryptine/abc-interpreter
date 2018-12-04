@@ -8,6 +8,9 @@
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
 		void **cafs, int *in_first_semispace
+#ifdef LINK_CLEAN_RUNTIME
+		, BC_WORD **shared_nodes_of_host
+#endif
 #ifdef DEBUG_GARBAGE_COLLECTOR
 		, BC_WORD *code, BC_WORD *data
 #endif
@@ -17,5 +20,9 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
 
-	return collect_copy(stack, asp, heap, heap_size, heap_free, cafs, in_first_semispace);
+	return collect_copy(stack, asp, heap, heap_size, heap_free, cafs, in_first_semispace
+#ifdef LINK_CLEAN_RUNTIME
+			, shared_nodes_of_host
+#endif
+			);
 }
