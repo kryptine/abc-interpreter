@@ -11,7 +11,7 @@ extern int __interpret__add__shared__node(void *clean_InterpretationEnvironment,
 
 static int copied_node_size(struct program *program, BC_WORD *node) {
 	if (!(node[0] & 2)) /* thunk, delay interpretation */
-		return 4;
+		return 3;
 
 	if ((node[0]==(BC_WORD)&INT+2 && node[1]<33) || node[0]==(BC_WORD)&CHAR+2)
 		return 0;
@@ -113,15 +113,8 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		int nodeid = __interpret__add__shared__node(ie->host->clean_ie, *node_ptr);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
-		if (nodeid<33) {
-			heap[1]=(BC_WORD)(small_integers+nodeid*2);
-			*saved_words+=1;
-			return &heap[3];
-		}
-		heap[1]=(BC_WORD)&heap[2];
-		heap[2]=(BC_WORD)&INT+2;
-		heap[3]=nodeid;
-		return &heap[4];
+		heap[1]=nodeid;
+		return &heap[3];
 	}
 
 	if (descriptor==(BC_WORD)&INT+2 && (*node_ptr)[1]<33) {

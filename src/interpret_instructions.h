@@ -8883,7 +8883,7 @@ case EVAL_TO_HNF_LABEL:
 INSTRUCTION_BLOCK(jsr_eval_host_node):
 {
 	BC_WORD *n=(BC_WORD*)asp[0];
-	int host_nodeid = ((BC_WORD*)n[1])[1];
+	int host_nodeid=n[1];
 	BC_WORD *host_node = ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid];
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\t%p -> [%d; %p -> %p]\n",n,host_nodeid,host_node,(void*)*host_node);
