@@ -219,7 +219,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #ifdef LINK_CLEAN_RUNTIME
 				if ((BC_WORD)HOST_NODE_DESCRIPTORS<=node[0] && node[0]<=(BC_WORD)HOST_NODE_DESCRIPTORS+sizeof(HOST_NODE_DESCRIPTORS)) {
 					int host_nodeid=((BC_WORD*)node[1])[1];
-					(BC_WORD)shared_nodes_of_host[host_nodeid]|=1;
+					shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]|1);
 				}
 #endif
 
@@ -347,7 +347,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #ifdef LINK_CLEAN_RUNTIME
 				if (node[0]==(BC_WORD)&HOST_NODE_INSTRUCTIONS[1]) {
 					int host_nodeid=node[1];
-					(BC_WORD)shared_nodes_of_host[host_nodeid]|=1;
+					shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]|1);
 				}
 #endif
 			*new_heap = node[0];
@@ -384,7 +384,7 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	extern void *__Nil;
 	for (int host_nodeid=(BC_WORD)shared_nodes_of_host[-2]-1; host_nodeid>=0; host_nodeid--) {
 		if ((BC_WORD)shared_nodes_of_host[host_nodeid]&1)
-			(BC_WORD)shared_nodes_of_host[host_nodeid]^=1;
+			shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]^1);
 		else
 			shared_nodes_of_host[host_nodeid]=(BC_WORD*)&__Nil-1;
 	}
