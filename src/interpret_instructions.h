@@ -3990,14 +3990,6 @@ INSTRUCTION_BLOCK(print_real):
 	PRINTF("%.15g",(*(BC_REAL*)bsp++)+0.0);
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
-INSTRUCTION_BLOCK(pushA_a):
-{
-	BC_WORD *n;
-	n=(BC_WORD*)asp[((BC_WORD_S*)pc)[1]];
-	*++asp=n[1];
-	pc+=2;
-	END_INSTRUCTION_BLOCK;
-}
 INSTRUCTION_BLOCK(pushBFALSE):
 	*--bsp=0;
 	pc+=1;
@@ -4138,6 +4130,7 @@ INSTRUCTION_BLOCK(push_args1):
 INSTRUCTION_BLOCK(push_array):
 INSTRUCTION_BLOCK(push_r_args10):
 INSTRUCTION_BLOCK(push_r_args_a1):
+INSTRUCTION_BLOCK(pushA_a):
 {
 	BC_WORD *n;
 
