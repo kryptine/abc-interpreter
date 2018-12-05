@@ -28,17 +28,12 @@ __interpret__copy__node__asm:
 	mov	[rbp+24],rdx
 
 	; Parameters are already in the right register; see copy_interpreter_to_host.c
-	test	rsp,8
-	je	__interpret__copy__node__asm_dont_align
-	sub	rsp,40
-	call	copy_interpreter_to_host
-	add	rsp,40
-	jmp	__interpret__copy__node__asm_finish
-__interpret__copy__node__asm_dont_align:
+	mov	rbx,rsp
 	sub	rsp,32
+	and	rsp,-16
 	call	copy_interpreter_to_host
-	add	rsp,32
 __interpret__copy__node__asm_finish:
+	mov	rsp,rbx
 	mov	rbp,rax
 	pop	rdi
 	mov	rdi,[rdi]
@@ -63,6 +58,7 @@ __interpret__copy__node__asm_finish:
 
 extrn	__interpret__copy__node__asm_redirect_node:near
 __interpret__copy__node__asm_redirect:
+	; TODO: overwrite the node on the heap
 	lea	rbp,__interpret__copy__node__asm_redirect_node
 	mov	rcx,[rbp]
 	; Evaluate the node if necessary
@@ -103,16 +99,10 @@ __interpret__copy__node__asm__n:
 	mov	[rbp+24],r8
 
 	; Parameters are already in the right register; see copy_interpreter_to_host.c
-	test	rsp,8
-	je	__interpret__copy__node__asm__n_no_align
-	sub	rsp,40
-	call	copy_interpreter_to_host_n
-	add	rsp,40
-	jmp	__interpret__copy__node__asm_finish
-__interpret__copy__node__asm__n_no_align:
+	mov	rbx,rsp
 	sub	rsp,32
+	and	rsp,-16
 	call	copy_interpreter_to_host_n
-	add	rsp,32
 	jmp	__interpret__copy__node__asm_finish
 
 public __interpret__garbage__collect

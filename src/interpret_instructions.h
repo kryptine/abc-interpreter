@@ -9047,6 +9047,7 @@ jsr_eval_host_node_with_args:
 			exit(1);
 		}
 		ie->host->host_hp_ptr+=added_words;
+		ie->host->host_hp_free-=added_words;
 	}
 	BC_WORD *arg1, *arg2 = NULL;
 	arg1 = (BC_WORD*) *--ie->host->host_a_ptr;

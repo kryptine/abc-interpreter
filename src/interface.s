@@ -46,10 +46,11 @@ __interpret__copy__node__asm:
 	mov	[rbp+24],rdx
 
 	# Parameters are in the right registers; see comment on the C function
-	# NB: On Windows we need stack alignment here when compiling with /O2.
-	# But since clang and gcc don't seem to require this, we leave it out.
+	mov	rbx,rsp
+	and	rsp,-16
 	call	copy_interpreter_to_host
 __interpret__copy__node__asm_finish:
+	mov	rsp,rbx
 	mov	rbp,rax
 	pop	rdi
 	restore_host_status_via_rdi
@@ -66,6 +67,7 @@ __interpret__copy__node__asm_finish:
 
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
+	# TODO: overwrite the node on the heap
 	mov	rbp,[__interpret__copy__node__asm_redirect_node@GOTPCREL+rip]
 	mov	rcx,[rbp]
 	# Evaluate the node if necessary
@@ -98,6 +100,8 @@ __interpret__copy__node__asm__n:
 	mov	[rbp+24],r8
 
 	# Parameters are already in the right register; see copy_interpreter_to_host.c
+	mov	rbx,rsp
+	and	rsp,-16
 	call	copy_interpreter_to_host_n
 	jmp	__interpret__copy__node__asm_finish
 
