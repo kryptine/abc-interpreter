@@ -3669,7 +3669,20 @@ INSTRUCTION_BLOCK(halt):
 #ifdef DEBUG_CURSES
 	debugger_graceful_end();
 #endif
+#ifdef LINK_CLEAN_RUNTIME
+	{
+		EPRINTF("Stack trace:\n");
+		BC_WORD *start_csp = &stack[stack_size >> 1];
+		char _tmp[256];
+		for (; csp<start_csp; csp++) {
+			print_label(_tmp, 256, 1, (BC_WORD*)*csp, program, ie->heap, ie->heap_size);
+			EPRINTF("%s\n",_tmp);
+		}
+	}
+	interpreter_exit(1);
+#else
 	return 0;
+#endif
 INSTRUCTION_BLOCK(incI):
 	bsp[0]=bsp[0] + 1;
 	pc+=1;
