@@ -270,7 +270,7 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		init_symbols_matching(pgm);
 
 	uint32_t *symbols_matching;
-	BC_WORD i;
+	BC_WORD_S i;
 	if (pgm->data<=label && label<pgm->data+pgm->data_size) {
 		symbols_matching=pgm->data_symbols_matching;
 		i=label-pgm->data;
