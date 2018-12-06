@@ -86,7 +86,7 @@ static const char new_host_symbol_name[]="_unknown_descriptor";
 static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
 #ifdef MACH_O64
 	EPRINTF("Copying descriptors has not been implemented yet on MACHO_64\n");
-	exit(1);
+	interpreter_exit(1);
 #else
 	/* Just use the host descriptor, since we're never going to use code addresses anyway */
 	int16_t arity=*(int16_t*)descriptor;
@@ -160,7 +160,7 @@ BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
 			if (elem_host_symbol==NULL) {
 				EPRINTF("error: cannot copy unboxed array of unknown records to interpreter\n");
-				exit(1);
+				interpreter_exit(1);
 			}
 			heap[2]=(BC_WORD)elem_host_symbol->interpreter_location;
 			BC_WORD *elements=*node_ptr+3;
@@ -308,7 +308,7 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 
 	if (words_used != words_needed) {
 		EPRINTF("internal error in copy_to_interpreter: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
-		exit(1);
+		interpreter_exit(1);
 	}
 
 	return words_used;

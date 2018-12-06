@@ -1,6 +1,6 @@
 @echo off
 cl /nologo /c /O2 /GS- ^
-	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS /DMICROSOFT_C ^
+	/DINTERPRETER /DLINK_CLEAN_RUNTIME /DWINDOWS /DMICROSOFT_C /DSTDERR_TO_FILE ^
 	abc_instructions.c ^
 	bcgen_instructions.c ^
 	bytecode.c ^

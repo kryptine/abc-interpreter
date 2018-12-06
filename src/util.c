@@ -7,6 +7,15 @@
 
 #if defined(WINDOWS) && defined(LINK_CLEAN_RUNTIME)
 char print_buffer[PRINT_BUFFER_SIZE];
+
+# ifdef STDERR_TO_FILE
+static FILE *stderr_to_file=NULL;
+void stderr_print(int n) {
+	if (stderr_to_file==NULL)
+		stderr_to_file=fopen("stderr","w");
+	fwrite(print_buffer,1,n,stderr_to_file);
+}
+# endif
 #endif
 
 void *safe_malloc(size_t size) {
@@ -34,6 +43,14 @@ void *safe_realloc(void *ptr, size_t size) {
 		exit(-1);
 	}
 	return ptr;
+}
+
+void interpreter_exit(int code) {
+#ifdef STDERR_TO_FILE
+	if (stderr_to_file!=NULL)
+		fclose(stderr_to_file);
+#endif
+	exit(code);
 }
 
 void new_file_char_provider(struct char_provider *cp, FILE *f) {

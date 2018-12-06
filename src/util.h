@@ -7,6 +7,8 @@ void *safe_malloc(size_t);
 void *safe_calloc(size_t, size_t);
 void *safe_realloc(void *, size_t);
 
+void interpreter_exit(int);
+
 enum char_provider_type {
 	CPT_FILE,
 	CPT_STRING
@@ -41,10 +43,15 @@ char *strsep(char **stringp, const char *delim);
 #if defined(WINDOWS) && defined(LINK_CLEAN_RUNTIME)
 # define PRINT_BUFFER_SIZE 32768
 extern char print_buffer[];
+# ifdef STDERR_TO_FILE
+void stderr_print(int);
+# define EPRINTF(...) stderr_print(snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
+# else
 extern void ew_print_text(char*,int);
+# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
+# endif
 extern void w_print_text(char*,int);
 extern void w_print_char(char);
-# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
 # define PRINTF(...)  w_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
 # define PUTCHAR      w_print_char
 #elif defined(DEBUG_CURSES)

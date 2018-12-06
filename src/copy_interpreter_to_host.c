@@ -442,7 +442,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 				case 29: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<IF_MACH_O_ELSE(4,3))+2; break;
 				case 30: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<IF_MACH_O_ELSE(4,3))+2; break;
 				case 31: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<IF_MACH_O_ELSE(4,3))+2; break;
-				default: EPRINTF("Missing case in copy_to_host (%d)\n",args_needed); exit(1);
+				default: EPRINTF("Missing case in copy_to_host (%d)\n",args_needed); interpreter_exit(1);
 			}
 			host_heap[1]=(BC_WORD)clean_ie;
 			host_heap[2]=(BC_WORD)&host_heap[3];
@@ -612,7 +612,7 @@ int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		host_heap=ie->host->host_hp_ptr;
 		if (words_needed > ie->host->host_hp_free) {
 			EPRINTF("not enough memory to copy node back to host\n");
-			exit(1);
+			interpreter_exit(1);
 		}
 	}
 
@@ -621,7 +621,7 @@ int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 
 	if (words_used != words_needed) {
 		EPRINTF("internal error in copy_to_host: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
-		exit(1);
+		interpreter_exit(1);
 	}
 
 	return words_used;

@@ -247,7 +247,7 @@ void handle_segv(int sig) {
 # endif
 		EPRINTF("Untracable segmentation fault\n");
 	}
-	exit(1);
+	interpreter_exit(1);
 }
 #endif
 
@@ -322,7 +322,8 @@ eval_to_hnf_return:
 		}
 	} else if (program->start_symbol_id == -1) {
 		EPRINTF("error in interpret: no start symbol and no program counter given\n");
-		exit(1);
+		interpreter_exit(1);
+		return -1;
 	} else {
 		pc = (BC_WORD*)program->symbol_table[program->start_symbol_id].offset;
 	}
@@ -376,7 +377,7 @@ eval_to_hnf_return:
 #endif
 		if (heap_free <= old_heap_free) {
 			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
-			exit(1);
+			interpreter_exit(1);
 #ifdef DEBUG_GARBAGE_COLLECTOR
 		} else {
 			EPRINTF("Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
@@ -424,23 +425,23 @@ int main(int argc, char **argv) {
 			if (stack_size==-1) {
 				EPRINTF("Illegal stack size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				exit(-1);
+				interpreter_exit(-1);
 			}
 		} else if (!strcmp(argv[i],"-h")) {
 			heap_size=string_to_size(argv[++i]);
 			if (heap_size==-1) {
 				EPRINTF("Illegal heap size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				exit(-1);
+				interpreter_exit(-1);
 			}
 		} else if (input) {
 			EPRINTF(usage, argv[0]);
-			exit(-1);
+			interpreter_exit(-1);
 		} else {
 			input = fopen(argv[i], "rb");
 			if (!input) {
 				EPRINTF("Could not open '%s'\n", argv[i]);
-				exit(-1);
+				interpreter_exit(-1);
 			}
 		}
 	}
@@ -452,7 +453,7 @@ int main(int argc, char **argv) {
 	free_char_provider(&cp);
 	if (res) {
 		EPRINTF("Parsing failed (%d)\n", res);
-		exit(res);
+		interpreter_exit(res);
 	}
 
 #if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)

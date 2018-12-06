@@ -9034,7 +9034,7 @@ jsr_eval_host_node_with_args:
 
 	if (args_needed!=instr_arg) {
 		EPRINTF("Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,instr_arg);
-		exit(-1);
+		interpreter_exit(-1);
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
@@ -9052,7 +9052,7 @@ jsr_eval_host_node_with_args:
 				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i]);
 		if (added_words<0) {
 			EPRINTF("copying to host failed\n");
-			exit(1);
+			interpreter_exit(1);
 		}
 		ie->host->host_hp_ptr+=added_words;
 		ie->host->host_hp_free-=added_words;
