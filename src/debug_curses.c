@@ -30,6 +30,9 @@ void init_program_lines(struct program *program) {
 	uint32_t i = 0;
 	uint32_t instrs = 0;
 	while (i < program->code_size) {
+		if (program->code_symbols_matching[i]!=-1)
+			instrs++;
+
 		program_lines[i] = instrs;
 		int len = strlen(instruction_type(program->code[i]));
 		for (; len; len--)
@@ -106,8 +109,10 @@ void init_debugger(struct program *_program,
 	nodelay(curscr, FALSE);
 	noecho();
 
+	int nr_code_labels=init_symbols_matching(program);
+
 	winh_listing = newwin(1, WIN_LST_WIDTH, WIN_LST_TOP - 1, WIN_LST_LFT);
-	win_listing = newpad(program->nr_instructions, 255);
+	win_listing = newpad(program->nr_instructions+nr_code_labels, 255);
 	wprintw(winh_listing, "Program listing");
 	wbkgd(winh_listing, A_STANDOUT);
 	print_program(win_listing, program);

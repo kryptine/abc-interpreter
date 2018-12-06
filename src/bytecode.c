@@ -190,21 +190,68 @@ int print_label_name(char *s, size_t size, char *label) {
 	return printed-1;
 }
 
+# ifdef DEBUG_CURSES
+int
+# else
+static void
+# endif
+init_symbols_matching(struct program *pgm) {
+	pgm->code_symbols_matching=safe_malloc(sizeof(uint32_t)*pgm->code_size);
+	pgm->data_symbols_matching=safe_malloc(sizeof(uint32_t)*pgm->data_size);
+
+	for (uint32_t i=0; i<pgm->code_size; i++)
+		pgm->code_symbols_matching[i]=-1;
+	for (uint32_t i=0; i<pgm->data_size; i++)
+		pgm->data_symbols_matching[i]=-1;
+
+# ifdef DEBUG_CURSES
+	int nr_code_labels=0;
+# endif
+
+	for (uint32_t i=0; i<pgm->symbol_table_size; i++) {
+		if (pgm->symbol_table[i].name[0]=='\0')
+# ifdef DEBUG_CURSES
+			return nr_code_labels;
+# else
+			return;
+# endif
+		if (pgm->symbol_table[i].offset==-1)
+			continue;
+
+		if (pgm->data<=(BC_WORD*)pgm->symbol_table[i].offset &&
+				(BC_WORD*)pgm->symbol_table[i].offset<=pgm->data+pgm->data_size)
+			pgm->data_symbols_matching[(BC_WORD*)pgm->symbol_table[i].offset-pgm->data]=i;
+		else if (pgm->code<=(BC_WORD*)pgm->symbol_table[i].offset &&
+				(BC_WORD*)pgm->symbol_table[i].offset<=pgm->code+pgm->code_size) {
+			if (pgm->code_symbols_matching[(BC_WORD*)pgm->symbol_table[i].offset-pgm->code]!=-1)
+				continue;
+			pgm->code_symbols_matching[(BC_WORD*)pgm->symbol_table[i].offset-pgm->code]=i;
+# ifdef DEBUG_CURSES
+			nr_code_labels++;
+# endif
+		}
+	}
+
+# ifdef DEBUG_CURSES
+	return nr_code_labels;
+# endif
+}
+
 int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
 	if (heap != NULL && heap <= label && label < heap + heap_size)
 		return print_plain_label(s, size, label, pgm, heap, heap_size);
-	else if (label == (BC_WORD*) ((BC_WORD)&INT|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&INT)
 		return snprintf(s, size, "INT");
-	else if (label == (BC_WORD*) ((BC_WORD)&BOOL|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&BOOL)
 		return snprintf(s, size, "BOOL");
-	else if (label == (BC_WORD*) ((BC_WORD)&CHAR|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&CHAR)
 		return snprintf(s, size, "CHAR");
-	else if (label == (BC_WORD*) ((BC_WORD)&REAL|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&REAL)
 		return snprintf(s, size, "REAL");
-	else if (label == (BC_WORD*) ((BC_WORD)&__STRING__|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&__STRING__)
 		return snprintf(s, size, "__STRING__");
-	else if (label == (BC_WORD*) ((BC_WORD)&__ARRAY__|2))
+	else if (((BC_WORD)label&-2) == (BC_WORD)&__ARRAY__)
 		return snprintf(s, size, "__ARRAY__");
 	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[63])
 		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)/2+1);
@@ -219,40 +266,35 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		s += used;
 	}
 
-	int is_data = pgm->data <= label && label < pgm->data + pgm->data_size;
-	char distance_positive = '+';
+	if (pgm->code_symbols_matching==NULL)
+		init_symbols_matching(pgm);
 
-	uint32_t min_distance = -1;
-	char *min_distance_label = "?";
-	for (int i = 0; i < pgm->symbol_table_size; i++) {
-		if ((BC_WORD*) pgm->symbol_table[i].offset - label == 0) {
-			if (*pgm->symbol_table[i].name)
-				return used + print_label_name(s, size - used, pgm->symbol_table[i].name);
-			else
-				break;
-		}
-		if (*pgm->symbol_table[i].name) {
-			uint32_t distance = label - (BC_WORD*) pgm->symbol_table[i].offset;
-			if (distance < min_distance) {
-				min_distance = distance;
-				min_distance_label = pgm->symbol_table[i].name;
-				distance_positive = '+';
-			}
-			if (is_data) {
-				uint32_t distance = (BC_WORD*) pgm->symbol_table[i].offset - label;
-				if (distance < min_distance) {
-					min_distance = distance;
-					min_distance_label = pgm->symbol_table[i].name;
-					distance_positive = '-';
-				}
-			}
-		}
+	uint32_t *symbols_matching;
+	BC_WORD i;
+	if (pgm->data<=label && label<pgm->data+pgm->data_size) {
+		symbols_matching=pgm->data_symbols_matching;
+		i=label-pgm->data;
+	} else if (pgm->code<=label && label<pgm->code+pgm->code_size) {
+		symbols_matching=pgm->code_symbols_matching;
+		i=label-pgm->code;
+	} else {
+		return used;
 	}
 
-	int more_used = print_label_name(s, size - used, min_distance_label);
-	s += more_used;
-	used += more_used;
-	return used + snprintf(s, size - used, "%c%u", distance_positive, min_distance);
+	unsigned int offset=0;
+	for (; i>=0; i--) {
+		if (symbols_matching[i]!=-1) {
+			int more_used=print_label_name(s, size-used, pgm->symbol_table[symbols_matching[i]].name);
+			used+=more_used;
+			if (offset==0)
+				return used;
+			s+=more_used;
+			return used+snprintf(s, size-used, "+%u", offset);
+		}
+		offset++;
+	}
+
+	return used;
 }
 
 # ifdef DEBUG_CURSES
@@ -322,10 +364,13 @@ unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i) {
 # ifdef DEBUG_CURSES
 void print_code(WINDOW *w, struct program *pgm) {
 # else
+#  define WPRINTF(w,...) PRINTF(__VA_ARGS__);
 void print_code(struct program *pgm) {
 # endif
 	uint32_t i;
-	for (i = 0; i < pgm->code_size; i++)
+	for (i = 0; i < pgm->code_size; i++) {
+		if (pgm->code_symbols_matching[i]!=-1)
+			WPRINTF(w,"%s\n",pgm->symbol_table[pgm->code_symbols_matching[i]].name);
 		i+=print_instruction(
 # ifdef DEBUG_CURSES
 				w,
@@ -333,6 +378,7 @@ void print_code(struct program *pgm) {
 				0,
 # endif
 				pgm, i);
+	}
 }
 
 # ifdef DEBUG_CURSES
@@ -368,6 +414,8 @@ void print_program(WINDOW *w, struct program *pgm) {
 # else
 void print_program(struct program *pgm) {
 # endif
+	if (pgm->code_symbols_matching==NULL)
+		init_symbols_matching(pgm);
 # ifdef DEBUG_CURSES
 	print_code(w, pgm);
 # else

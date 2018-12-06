@@ -92,6 +92,11 @@ void init_parser(struct parser *state
 	state->is_main_module = 0;
 #endif
 
+#ifdef INTERPRETER
+	state->program->code_symbols_matching=NULL;
+	state->program->data_symbols_matching=NULL;
+#endif
+
 #ifdef DEBUG_CURSES
 	state->program->nr_instructions = 0;
 #endif

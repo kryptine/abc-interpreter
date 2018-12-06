@@ -75,6 +75,10 @@ struct program {
 	struct host_symbol *host_symbols;
 	struct host_symbols_list *extra_host_symbols;
 #endif
+#ifdef INTERPRETER
+	uint32_t *code_symbols_matching; /* used to print labels for code addresses */
+	uint32_t *data_symbols_matching; /* idem for data addresses */
+#endif
 #ifdef DEBUG_CURSES
 	unsigned int nr_instructions;
 #endif
@@ -97,6 +101,7 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size);
 # ifdef DEBUG_CURSES
 #  include <curses.h>
+int init_symbols_matching(struct program *pgm);
 void print_program(WINDOW *f, struct program *pgm);
 # else
 unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i);
