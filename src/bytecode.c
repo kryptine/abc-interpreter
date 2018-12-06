@@ -281,17 +281,16 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		return used;
 	}
 
-	unsigned int offset=0;
 	for (; i>=0; i--) {
 		if (symbols_matching[i]!=-1) {
-			int more_used=print_label_name(s, size-used, pgm->symbol_table[symbols_matching[i]].name);
+			struct symbol *symbol=&pgm->symbol_table[symbols_matching[i]];
+			int more_used=print_label_name(s, size-used, symbol->name);
 			used+=more_used;
-			if (offset==0)
+			if (symbol->offset==(BC_WORD)label)
 				return used;
 			s+=more_used;
-			return used+snprintf(s, size-used, "+%u", offset);
+			return used+snprintf(s, size-used, "+%u", (unsigned int)((BC_WORD)label-symbol->offset));
 		}
-		offset++;
 	}
 
 	return used;
@@ -364,6 +363,7 @@ unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i) {
 # ifdef DEBUG_CURSES
 void print_code(WINDOW *w, struct program *pgm) {
 # else
+#  undef WPRINTF
 #  define WPRINTF(w,...) PRINTF(__VA_ARGS__);
 void print_code(struct program *pgm) {
 # endif
@@ -382,29 +382,31 @@ void print_code(struct program *pgm) {
 }
 
 # ifdef DEBUG_CURSES
-void print_data(WINDOW *w, BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
+void print_data(WINDOW *w, struct program *pgm) {
 # else
-#  undef WPRINTF
-#  define WPRINTF(w,...) PRINTF(__VA_ARGS__)
-void print_data(BC_WORD *data, uint32_t length, BC_WORD *code, uint32_t code_length) {
+void print_data(struct program *pgm) {
 # endif
+	char _tmp[256];
 	uint32_t i;
 	uint8_t j;
-	for (i = 0; i < length; i++) {
+	for (i=0; i<pgm->data_size; i++) {
+		if (pgm->data_symbols_matching[i]!=-1)
+			WPRINTF(w,"%s\n",pgm->symbol_table[pgm->data_symbols_matching[i]].name);
+
 		WPRINTF(w, "%d\t", i);
-		WPRINTF(w, IF_INT_64_OR_32("%016"SCNx64"  ","%08"SCNx32"  "), data[i]);
+		WPRINTF(w, IF_INT_64_OR_32("%016"SCNx64"  ","%08"SCNx32"  "), pgm->data[i]);
 
 		for (j=0; j < IF_INT_64_OR_32(8,4); j++) {
-			char c = (data[i] >> j*8) & 0xff;
+			char c = (pgm->data[i] >> j*8) & 0xff;
 			WPRINTF(w, "%c", c >= ' ' && c <= '~' ? c : '.');
 		}
 
-		if (data[i] >= (BC_WORD) data && data[i] < (BC_WORD) (data + length)) {
-			WPRINTF(w, "  <data+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) data) / IF_INT_64_OR_32(8,4));
-		} else if (data[i] >= (BC_WORD) code && data[i] < (BC_WORD) (code + code_length)) {
-			WPRINTF(w, "  <code+" BC_WORD_FMT ">\n", (data[i] - (BC_WORD) code) / IF_INT_64_OR_32(8,4));
+		if (((BC_WORD)pgm->data<=pgm->data[i] && pgm->data[i]<(BC_WORD)(pgm->data+pgm->data_size)) ||
+			((BC_WORD)pgm->code<=pgm->data[i] && pgm->data[i]<(BC_WORD)(pgm->code+pgm->code_size))) {
+			print_label(_tmp, 256, 1, (BC_WORD*)pgm->data[i], pgm, NULL, 0);
+			WPRINTF(w, "  %s\n",_tmp);
 		} else {
-			WPRINTF(w, "  " BC_WORD_FMT "\n", data[i]);
+			WPRINTF(w, "  " BC_WORD_FMT "\n", pgm->data[i]);
 		}
 	}
 }
@@ -421,7 +423,7 @@ void print_program(struct program *pgm) {
 # else
 	print_code(pgm);
 	PRINTF("\n");
-	print_data(pgm->data, pgm->data_size, pgm->code, pgm->code_size);
+	print_data(pgm);
 # endif
 }
 #endif
