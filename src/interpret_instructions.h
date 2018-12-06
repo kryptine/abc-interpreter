@@ -1915,6 +1915,21 @@ INSTRUCTION_BLOCK(create_array_INT):
 	pc+=1;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(create_array_REAL):
+{
+	BC_WORD s;
+
+	s=bsp[0];
+	NEED_HEAP(s+3);
+	++bsp;
+	hp[0]=(BC_WORD)&__ARRAY__+2;
+	hp[1]=s;
+	hp[2]=(BC_WORD)&REAL+2;
+	*++asp=(BC_WORD)hp;
+	hp+=3+s;
+	pc+=1;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(create_array_r):
 {
 	BC_WORD s,i,n_ab,n_b,n_a;

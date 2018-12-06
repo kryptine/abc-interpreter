@@ -152,6 +152,7 @@ const char *instruction_type (BC_WORD i) {
 		case Ccreate_array_BOOL:     return "";
 		case Ccreate_array_CHAR:     return "";
 		case Ccreate_array_INT:      return "";
+		case Ccreate_array_REAL:     return "";
 		case Ccreate_array_r_:       return "nnl";
 		case Ccreate_array_r_a:      return "nl";
 		case Ccreate_array_r_b:      return "nl";

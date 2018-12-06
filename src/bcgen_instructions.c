@@ -1357,6 +1357,13 @@ void code_create_array_(char element_descriptor[],int a_size,int b_size) {
 				add_instruction(Ccreate_array_INT);
 				return;
 			}
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0')
+			{
+				add_instruction(Ccreate_array_REAL);
+				return;
+			}
 		case '_':
 			if (element_descriptor[1]=='_' && element_descriptor[2]=='\0') {
 				add_instruction(Ccreate_array_);

@@ -137,6 +137,7 @@ enum {
 	INSTRUCTION(create_array_BOOL)
 	INSTRUCTION(create_array_CHAR)
 	INSTRUCTION(create_array_INT)
+	INSTRUCTION(create_array_REAL)
 	INSTRUCTION(create_array_r)
 	INSTRUCTION(create_array_r_)
 	INSTRUCTION(create_array_r_a)
