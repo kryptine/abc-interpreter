@@ -34,7 +34,7 @@ import StdEnum,StdFunc
 Start :: *World -> [Int]
 Start w
 # ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map),w)
-	= get_start_rule_as_expression (".." </> "test" </> "functions.bc") w
+	= get_start_rule_as_expression defaultDeserializationSettings (".." </> "test" </> "functions.bc") w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map
 where
 	use ::
