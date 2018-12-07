@@ -51,4 +51,4 @@ testThroughFile graph fp w
 # (Right graph_s,f) = graphFromFile f
 # (_,w) = fclose f w
 
-= deserialize graph_s (IF_WINDOWS "Compiler.exe" "compiler") w
+= deserialize defaultDeserializationSettings graph_s (IF_WINDOWS "Compiler.exe" "compiler") w
