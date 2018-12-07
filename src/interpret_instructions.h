@@ -1662,6 +1662,30 @@ INSTRUCTION_BLOCK(catAC):
 	pc++;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(cmpAC):
+{
+	BC_WORD *n1,*n2;
+	char *s1,*s2;
+	int sz1,sz2;
+
+	n1=(BC_WORD*)asp[0];
+	n2=(BC_WORD*)asp[-1];
+	asp-=2;
+
+	bsp--;
+	pc++;
+
+	sz1=n1[1];
+	sz2=n2[1];
+	s1=(char*)&n1[2];
+	s2=(char*)&n2[2];
+
+	*bsp=strncmp(s1,s2,sz1<sz2 ? sz1 : sz2);
+	if (sz1!=sz2 && *bsp==0)
+		*bsp=sz1<sz2 ? -1 : 1;
+
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(cosR):
 {
 	BC_REAL d=cos(*(BC_REAL*)&bsp[0]);
@@ -8900,9 +8924,6 @@ INSTRUCTION_BLOCK(jesr):
 			break;
 		case 10:
 			clean_endF();
-			break;
-		case 11:
-			clean_cmpAC();
 			break;
 		case 12:
 			clean_writeFI();

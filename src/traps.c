@@ -259,63 +259,6 @@ void clean_endF (void)
 	return;
 }
 
-void clean_cmpAC (void)
-{
-	BC_WORD *asp,*bsp;
-	BC_WORD *a;
-	BC_WORD *b;
-	BC_WORD s;
-
-	asp=g_asp;
-	bsp=g_bsp;
-
-	a=(BC_WORD*)asp[0];
-	b=(BC_WORD*)asp[-1];
-
-	g_asp=asp-2;
-
-	--bsp;
-	g_bsp=bsp;
-
-	s=b[1];
-	if (a[1]!=s){
-		*bsp = a[1]<s;
-		return;
-	}
-	a=(BC_WORD*)(BC_WORD)&a[2];
-	b=(BC_WORD*)(BC_WORD)&b[2];
-	// TODO make 64/32-bit agnostic
-	while ((short int)s>=(short int)4){
-		if (a[0]!=b[0]){
-			*bsp = a[0]<b[0] ? -1 : 1;
-			return;
-		}
-		++a;
-		++b;
-		s-=4;
-	}
-
-	if ((short int)s>=(short int)2){
-		if (*(uint16_t*)a!=*(uint16_t*)b){
-			*bsp = *(uint16_t*)a < *(uint16_t*)b ? -1 : 1;
-			return;
-		}
-		if ((short int)s>(short int)2){
-			if (((uint8_t*)a)[2]!=((uint8_t*)b)[2]){
-				*bsp = ((uint8_t*)a)[2] < ((uint8_t*)b)[2] ? -1 : 1;
-			 	return;
-			}
-		}
-	} else if ((short int)s>(short int)0){
-		if (*(uint8_t*)a!=*(uint8_t*)b){
-			*bsp = *(uint8_t*)a < *(uint8_t*)b ? -1 : 1;
-			return;
-		}
-	}
-
-	*bsp = 1;
-}
-
 void clean_writeFI (void)
 {
 	BC_WORD *bsp;

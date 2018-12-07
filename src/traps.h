@@ -6,7 +6,6 @@ void clean_sliceAC (void);
 void clean_ItoAC (void);
 void clean_openF (void);
 void clean_endF (void);
-void clean_cmpAC (void);
 void clean_writeFI (void);
 void clean_writeFS (void);
 void clean_writeFC (void);

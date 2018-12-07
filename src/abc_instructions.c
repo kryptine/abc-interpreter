@@ -140,6 +140,7 @@ const char *instruction_type (BC_WORD i) {
 		case CcatAC:                 return "";
 		case Cccall:                 return "";
 		case Ccentry:                return "";
+		case CcmpAC:                 return "";
 		case CcosR:                  return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "n";

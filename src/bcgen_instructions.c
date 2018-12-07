@@ -2260,8 +2260,9 @@ void code_jsr(char label_name[]) {
 
 	if (lib_function_n>=0) {
 		switch (lib_function_n) {
-			case 0: add_instruction(CeqAC); break;
-			case 1: add_instruction(CcatAC); break;
+			case  0: add_instruction(CeqAC); break;
+			case  1: add_instruction(CcatAC); break;
+			case 11: add_instruction(CcmpAC); break;
 			default:
 				add_instruction_w(Cjesr,lib_function_n);
 		}
