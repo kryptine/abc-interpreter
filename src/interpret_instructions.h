@@ -2177,7 +2177,7 @@ INSTRUCTION_BLOCK(eq_nulldesc):
 INSTRUCTION_BLOCK(eqAC):
 {
 	BC_WORD *n,*s;
-	BC_WORD length;
+	BC_WORD_S length;
 
 	n=(BC_WORD*)asp[0];
 	s=(BC_WORD*)asp[-1];
