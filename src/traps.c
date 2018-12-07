@@ -5,48 +5,6 @@
 #include "traps.h"
 #include "util.h"
 
-void clean_catAC (void)
-{
-	BC_WORD *s1,*s2;
-	unsigned int l1,l2,l,lw,i;
-	unsigned char *s1_p,*s2_p,*s_p;
-
-	s1=(BC_WORD*)g_asp[0];
-	s2=(BC_WORD*)g_asp[-1];
-	l1=s1[1];
-	l2=s2[1];
-
-	s1_p=(unsigned char*)&s1[2];
-	s2_p=(unsigned char*)&s2[2];
-
-	l=l1+l2;
-	lw=(l+3)>>2;
-
-	if ((g_heap_free -= (int)(lw+2)) < 0){
-		g_heap_free += lw+2;
-		trap_needs_gc = 1;
-		return;
-	}
-
-	g_hp[0]=(BC_WORD)&__STRING__+2;
-	g_hp[1]=l;
-
-	g_asp-=1;
-	g_asp[0] = (BC_WORD)g_hp;
-
-	s_p=(unsigned char *)&g_hp[2];
-	g_hp+=2+lw;
-
-	for (i=0; i<l1; ++i)
-		s_p[i]=s1_p[i];
-
-	s_p+=l1;
-
-	for (i=0; i<l2; ++i)
-		s_p[i]=s2_p[i];
-
-}
-
 void clean_readLineF (void)
 {
 	BC_WORD *bsp,*hp;

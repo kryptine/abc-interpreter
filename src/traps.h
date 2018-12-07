@@ -1,7 +1,6 @@
 #ifndef _H_ABCINT_TRAPS
 #define _H_ABCINT_TRAPS
 
-void clean_catAC (void);
 void clean_readLineF (void);
 void clean_sliceAC (void);
 void clean_ItoAC (void);

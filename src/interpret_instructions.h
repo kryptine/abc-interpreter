@@ -1628,6 +1628,40 @@ INSTRUCTION_BLOCK(build_ua1):
 	hp[-1]=*bsp++;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(catAC):
+{
+	BC_WORD *s1,*s2;
+	unsigned int l1,l2,l,lw,i;
+	char *s1_p,*s2_p,*s_p;
+
+	s1=(BC_WORD*)asp[0];
+	s2=(BC_WORD*)asp[-1];
+	l1=s1[1];
+	l2=s2[1];
+
+	s1_p=(char*)&s1[2];
+	s2_p=(char*)&s2[2];
+
+	l=l1+l2;
+	lw=IF_INT_64_OR_32((l+7)>>3,(l+3)>>2)+2;
+
+	NEED_HEAP(lw);
+
+	*--asp=(BC_WORD)hp;
+	hp[0]=(BC_WORD)&__STRING__+2;
+	hp[1]=l;
+	s_p=(char*)&hp[2];
+	hp+=lw;
+
+	for (i=0; i<l1; ++i)
+		s_p[i]=s1_p[i];
+	s_p+=l1;
+	for (i=0; i<l2; ++i)
+		s_p[i]=s2_p[i];
+
+	pc++;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(cosR):
 {
 	BC_REAL d=cos(*(BC_REAL*)&bsp[0]);
@@ -8846,9 +8880,6 @@ INSTRUCTION_BLOCK(jesr):
 	g_heap_free=heap_free;
 	g_hp=hp;
 	switch (pc[1]){
-		case 1:
-			clean_catAC();
-			break;
 		case 2:
 			clean_sliceAC();
 			break;

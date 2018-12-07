@@ -137,6 +137,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuild_u2b:             return "nl";
 		case Cbuild_u31:             return "l";
 		case Cbuild_ua1:             return "nl";
+		case CcatAC:                 return "";
 		case Cccall:                 return "";
 		case Ccentry:                return "";
 		case CcosR:                  return "";

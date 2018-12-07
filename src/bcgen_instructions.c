@@ -2259,10 +2259,12 @@ void code_jsr(char label_name[]) {
 	lib_function_n = get_lib_function_n(label_name);
 
 	if (lib_function_n>=0) {
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
+		switch (lib_function_n) {
+			case 0: add_instruction(CeqAC); break;
+			case 1: add_instruction(CcatAC); break;
+			default:
+				add_instruction_w(Cjesr,lib_function_n);
+		}
 
 		last_jsr_with_d=0;
 		return;
