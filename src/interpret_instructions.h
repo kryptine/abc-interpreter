@@ -2189,38 +2189,39 @@ INSTRUCTION_BLOCK(eqAC):
 		END_INSTRUCTION_BLOCK;
 	n+=2;
 	s+=2;
-	for (;;){
-		if (length>=IF_INT_64_OR_32(8,4)){
-			if (*n!=*s)
-				break;
-			++n;
-			++s;
-			length-=IF_INT_64_OR_32(8,4);
-			continue;
+	while (length>=IF_INT_64_OR_32(8,4)){
+		length-=IF_INT_64_OR_32(8,4);
+		if (*n!=*s) {
+			length=-1;
+			break;
 		}
-#if WORD_WIDTH==64
-		if (length>=4){
-			if (*(uint32_t*)n!=*(uint32_t*)s)
-				break;
-			length-=4;
-			n=(BC_WORD*)((BC_WORD)n+4);
-			s=(BC_WORD*)((BC_WORD)s+4);
-		}
-#endif
-		if (length>=2){
-			if (*(uint16_t*)n!=*(uint16_t*)s)
-				break;
-			if (length>2)
-				if (((BC_BOOL*)n)[2]!=((BC_BOOL*)s)[2])
-					break;
-		} else {
-			if (length>0)
-				if (((BC_BOOL*)n)[0]!=((BC_BOOL*)s)[0])
-					break;
-		}
-		*bsp=1;
-		break;
+		++n;
+		++s;
 	}
+#if WORD_WIDTH==64
+	if (length>=4){
+		length-=4;
+		if (*(uint32_t*)n!=*(uint32_t*)s) {
+			length=-1;
+			END_INSTRUCTION_BLOCK;
+		}
+		n=(BC_WORD*)((uint32_t*)n+1);
+		s=(BC_WORD*)((uint32_t*)s+1);
+	}
+#endif
+	if (length>=2){
+		if (*(uint16_t*)n==*(uint16_t*)s) {
+			if (length>2) {
+				if (((char*)n)[2]==((char*)s)[2])
+					*bsp=1;
+			} else
+				*bsp=1;
+		}
+	} else if (length>0) {
+		if (((char*)n)[0]==((char*)s)[0])
+			*bsp=1;
+	} else if (length==0)
+		*bsp=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(eqAC_a):
