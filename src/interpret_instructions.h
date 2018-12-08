@@ -8968,7 +8968,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		ie->csp = csp;
 		ie->hp = hp;
 		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
-		host_node = __interpret__evaluate__host(ie, host_node);
+		host_node=__interpret__evaluate__host(ie, host_node);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		hp = ie->hp;
 #if DEBUG_CLEAN_LINKS > 1
@@ -8991,9 +8991,6 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		n[2]=((BC_WORD*)asp[0])[2];
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
-
-	extern void *__Nil;
-	ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid]=(BC_WORD*)&__Nil-1;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -9172,12 +9169,11 @@ jsr_eval_host_node_with_args:
 	ie->bsp = bsp;
 	ie->csp = csp;
 	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp+1, host_node);
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	asp++;
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
 
