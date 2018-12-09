@@ -8973,16 +8973,15 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 		host_node=__interpret__evaluate__host(ie, host_node);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
-		hp = ie->hp;
+		asp=ie->asp;
+		bsp=ie->bsp;
+		csp=ie->csp;
+		hp=ie->hp;
 #if DEBUG_CLEAN_LINKS > 1
 		EPRINTF("\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
 	}
 
-	asp=ie->asp;
-	bsp=ie->bsp;
-	csp=ie->csp;
-	hp=ie->hp;
 	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
