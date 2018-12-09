@@ -292,7 +292,11 @@ int interpret(
 	csp = _csp;
 	hp = _hp;
 	heap_size /= 2; /* copying garbage collector */
-	BC_WORD_S heap_free = heap + heap_size - hp; /* TODO check semispace */
+#ifdef LINK_CLEAN_RUNTIME
+	BC_WORD_S heap_free=heap + heap_size/(ie->in_first_semispace ? 2 : 1) - hp;
+#else
+	BC_WORD_S heap_free = heap + heap_size - hp;
+#endif
 
 	BC_WORD ret = EVAL_TO_HNF_LABEL;
 
