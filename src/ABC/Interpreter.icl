@@ -24,6 +24,12 @@ import symbols_in_program
 import ABC.Interpreter.Internal
 import ABC.Interpreter.Util
 
+defaultDeserializationSettings :: DeserializationSettings
+defaultDeserializationSettings =
+	{ heap_size  = 2 << 20
+	, stack_size = (512 << 10) * 2
+	}
+
 :: *SerializedGraph =
 	{ graph    :: !*String
 	, descinfo :: !{#DescInfo}
@@ -77,8 +83,8 @@ where
 		ccall strip_bytecode "sA:VIp"
 	}
 
-deserialize :: !SerializedGraph !FilePath !*World -> *(a, !*World)
-deserialize {graph,descinfo,modules,bytecode} thisexe w
+deserialize :: !DeserializationSettings !SerializedGraph !FilePath !*World -> *(a, !*World)
+deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # pgm = parse host_syms bytecode
@@ -87,14 +93,14 @@ deserialize {graph,descinfo,modules,bytecode} thisexe w
 # int_syms = {#s \\ s <- getInterpreterSymbols pgm}
 # int_syms = {#lookup_symbol_value d modules int_syms \\ d <-: descinfo}
 
-# stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
+# stack = malloc (IF_INT_64_OR_32 8 4 * dsets.stack_size)
 # asp = stack
-# bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
-# csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
-# heap = malloc (IF_INT_64_OR_32 8 4 * (HEAP_SIZE+4))
+# bsp = stack + IF_INT_64_OR_32 8 4 * (dsets.stack_size-1)
+# csp = stack + IF_INT_64_OR_32 4 2 * dsets.stack_size
+# heap = malloc (IF_INT_64_OR_32 8 4 * (dsets.heap_size+4))
 # ie_settings = build_interpretation_environment
 	pgm
-	heap HEAP_SIZE stack STACK_SIZE
+	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
 # graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
@@ -153,11 +159,8 @@ where
 	where
 		PREFIX_D = 4
 
-STACK_SIZE :== (512 << 10) * 2
-HEAP_SIZE :== 2 << 20
-
-get_start_rule_as_expression :: !FilePath !*World -> *(a, *World)
-get_start_rule_as_expression filename w
+get_start_rule_as_expression :: !DeserializationSettings !FilePath !*World -> *(a, *World)
+get_start_rule_as_expression dsets filename w
 # ([prog:_],w) = getCommandLine w
 # (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile filename w
@@ -166,14 +169,14 @@ get_start_rule_as_expression filename w
 # pgm = parse syms bc
 | isNothing pgm = abort "Failed to parse program\n"
 # pgm = fromJust pgm
-# stack = malloc (IF_INT_64_OR_32 8 4 * STACK_SIZE)
+# stack = malloc (IF_INT_64_OR_32 8 4 * dsets.stack_size)
 # asp = stack
-# bsp = stack + IF_INT_64_OR_32 8 4 * (STACK_SIZE-1)
-# csp = stack + IF_INT_64_OR_32 4 2 * STACK_SIZE
-# heap = malloc (IF_INT_64_OR_32 8 4 * HEAP_SIZE)
+# bsp = stack + IF_INT_64_OR_32 8 4 * (dsets.stack_size-1)
+# csp = stack + IF_INT_64_OR_32 4 2 * dsets.stack_size
+# heap = malloc (IF_INT_64_OR_32 8 4 * dsets.heap_size)
 # ie_settings = build_interpretation_environment
 	pgm
-	heap HEAP_SIZE stack STACK_SIZE
+	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings

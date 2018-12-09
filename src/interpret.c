@@ -113,7 +113,7 @@ void build_host_nodes(void) {
 			HOST_NODE_INSTRUCTIONS[6*arity-6] = (BC_WORD)1 << IF_INT_64_OR_32(48,16);
 			HOST_NODE_INSTRUCTIONS[6*arity-5] = INSTR(Cjsr_eval_host_node);
 		} else if (arity <= 5) {
-			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1);
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1); /* ap entry */
 			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(
 				arity == 2 ? Crepl_args1 :
 				arity == 3 ? Crepl_args2 :
@@ -121,6 +121,7 @@ void build_host_nodes(void) {
 				             Crepl_args4);
 			HOST_NODE_INSTRUCTIONS[6*arity-2] = INSTR(Cjsr_eval_host_node+arity-1);
 		} else {
+			HOST_NODE_INSTRUCTIONS[6*arity-6] = INSTR(Cjsr_eval_host_node+arity-1); /* ap entry */
 			HOST_NODE_INSTRUCTIONS[6*arity-3] = INSTR(Crepl_args);
 			HOST_NODE_INSTRUCTIONS[6*arity-2] = arity-1;
 			HOST_NODE_INSTRUCTIONS[6*arity-1] = INSTR(Cjsr_eval_host_node+arity-1);
@@ -291,7 +292,11 @@ int interpret(
 	csp = _csp;
 	hp = _hp;
 	heap_size /= 2; /* copying garbage collector */
-	BC_WORD_S heap_free = heap + heap_size - hp; /* TODO check semispace */
+#ifdef LINK_CLEAN_RUNTIME
+	BC_WORD_S heap_free=heap + heap_size/(ie->in_first_semispace ? 2 : 1) - hp;
+#else
+	BC_WORD_S heap_free = heap + heap_size - hp;
+#endif
 
 	BC_WORD ret = EVAL_TO_HNF_LABEL;
 

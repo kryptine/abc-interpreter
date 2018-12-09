@@ -9,7 +9,7 @@ import ABC.Interpreter
 
 Start w
 # (graph,w) = serialize_for_interpretation graph "GraphTest.bc" w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup
 where
 	use ::

@@ -22,8 +22,8 @@ void init_nodes_set(struct nodes_set *set, size_t heap_size) {
 
 	set->black.bitmap = safe_calloc(1, (heap_size / 8 / sizeof(BC_WORD) + 2) * sizeof(BC_WORD));
 	set->black.size = heap_size / 8 / sizeof(BC_WORD) + 1;
-#if (DEBUG_GARBAGE_COLLECTOR > 4)
-	fprintf(stderr, "\tBitmap size = %d\n", (int) set->black.size);
+#if DEBUG_GARBAGE_COLLECTOR > 4
+	EPRINTF("\tBitmap size = %d\n", (int) set->black.size);
 #endif
 	set->black.ptr_i = 0;
 	set->black.ptr_j = 0;
@@ -44,8 +44,8 @@ int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 	BC_WORD val = ((BC_WORD) node - (BC_WORD) heap) / sizeof(BC_WORD);
 	BC_WORD i = val / 8 / sizeof(BC_WORD);
 	BC_WORD m = (BC_WORD) 1 << (val % (8 * sizeof(BC_WORD)));
-#if (DEBUG_GARBAGE_COLLECTOR > 4)
-	fprintf(stderr, "\t\tbitmap[%d] |= %x\n", (int) i, (int) m);
+#if DEBUG_GARBAGE_COLLECTOR > 4
+	EPRINTF("\t\tbitmap[%d] |= %x\n", (int) i, (int) m);
 #endif
 	if (set->black.bitmap[i] & m) {
 		return 0;
@@ -56,8 +56,8 @@ int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap) {
 }
 
 BC_WORD next_black_node(struct nodes_set *set) {
-#if (DEBUG_GARBAGE_COLLECTOR > 4)
-	fprintf(stderr, "\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
+#if DEBUG_GARBAGE_COLLECTOR > 4
+	EPRINTF("\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
 #endif
 	if (set->black.ptr_i > set->black.size)
 		return -1;
@@ -71,8 +71,8 @@ BC_WORD next_black_node(struct nodes_set *set) {
 					return -1;
 			} while (!set->black.bitmap[set->black.ptr_i]);
 		}
-#if (DEBUG_GARBAGE_COLLECTOR > 4)
-		fprintf(stderr, "\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
+#if DEBUG_GARBAGE_COLLECTOR > 4
+		EPRINTF("\tSearching with %d/%d\n", (int) set->black.ptr_i, (int) set->black.ptr_j);
 #endif
 	}
 
@@ -88,8 +88,8 @@ BC_WORD next_black_node(struct nodes_set *set) {
 }
 
 void realloc_grey_nodes_set(struct nodes_set *set) {
-#if (DEBUG_GARBAGE_COLLECTOR > 1)
-	fprintf(stderr, "\tReallocating grey nodes set\n");
+#if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF("\tReallocating grey nodes set\n");
 #endif
 	set->grey.write_ptr = set->grey.size;
 	set->grey.read_ptr = 0;
@@ -99,15 +99,15 @@ void realloc_grey_nodes_set(struct nodes_set *set) {
 
 void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t heap_size) {
 	if (node < heap || node >= heap + heap_size) {
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p is not on the heap...\n", (void*) node);
+#if DEBUG_GARBAGE_COLLECTOR > 2
+		EPRINTF("\t%p is not on the heap...\n", (void*) node);
 #endif
 		return;
 	}
 
 	if (!add_black_node(set, node, heap)) { /* Already black */
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p is already black...\n", (void*) node);
+#if DEBUG_GARBAGE_COLLECTOR > 2
+		EPRINTF("\t%p is already black...\n", (void*) node);
 #endif
 		return;
 	}
@@ -116,8 +116,8 @@ void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t h
 		realloc_grey_nodes_set(set);
 	}
 
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-	fprintf(stderr, "\t%p -> grey\n", (void*) node);
+#if DEBUG_GARBAGE_COLLECTOR > 2
+	EPRINTF("\t%p -> grey\n", (void*) node);
 #endif
 	set->grey.nodes[set->grey.write_ptr++] = node;
 	if (set->grey.write_ptr == set->grey.size)
@@ -143,9 +143,12 @@ BC_WORD *get_grey_node(struct nodes_set *set) {
 
 void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	BC_WORD *asp_temp;
-	for (asp_temp = asp; asp_temp > stack; asp_temp--) {
+#ifdef LINK_CLEAN_RUNTIME
+	for (asp_temp = asp; asp_temp >= stack; asp_temp--)
+#else
+	for (asp_temp = asp; asp_temp > stack; asp_temp--)
+#endif
 		add_grey_node(set, (BC_WORD*) *asp_temp, heap, heap_size);
-	}
 }
 
 void mark_cafs(void **cafs, BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
@@ -171,29 +174,18 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 	while ((node = get_grey_node(set)) != NULL) {
 		int16_t a_arity, b_arity;
 
-		if (node[0] & 2) {
+		if (node[0] & 2) { /* HNF */
 			a_arity = ((int16_t*)(node[0]))[-1];
 			b_arity = 0;
 			if (a_arity > 256) {
 				a_arity = ((int16_t*)(node[0]))[0];
 				b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 			}
-		} else {
-			int16_t arity = ((int16_t*)(node[0]))[-1];
-			if (arity < 0) {
-				a_arity = 1;
-				b_arity = 0;
-			} else {
-				b_arity = arity >> 8;
-				a_arity = (arity & 0xff) - b_arity;
-			}
-		}
 
-#if (DEBUG_GARBAGE_COLLECTOR > 2)
-		fprintf(stderr, "\t%p -> black: %lx; arity %d/%d\n", (void*) node, node[0], a_arity, b_arity);
+#if DEBUG_GARBAGE_COLLECTOR > 2
+			EPRINTF("\t%p -> black: "BC_WORD_FMT_HEX"; HNF with arity %d/%d\n", (void*) node, node[0], a_arity, b_arity);
 #endif
 
-		if (node[0] & 2) { /* HNF */
 			if (node[0] == (BC_WORD) &INT + 2 ||
 					node[0] == (BC_WORD) &CHAR + 2 ||
 					node[0] == (BC_WORD) &BOOL + 2 ||
@@ -232,9 +224,23 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 						add_grey_node(set, rest[i], heap, heap_size);
 				}
 			}
-		} else if (node[0] == (BC_WORD) &__cycle__in__spine) {
-			/* No pointer arguments */
-		} else { /* Thunk */
+		} else { /* thunk */
+			if (node[0]==(BC_WORD)&__cycle__in__spine)
+				continue;
+
+			int16_t arity = ((int16_t*)(node[0]))[-1];
+			if (arity < 0) {
+				a_arity = 1;
+				b_arity = 0;
+			} else {
+				b_arity = arity >> 8;
+				a_arity = (arity & 0xff) - b_arity;
+			}
+
+#if DEBUG_GARBAGE_COLLECTOR > 2
+			EPRINTF("\t%p -> black: "BC_WORD_FMT_HEX"; thunk with arity %d/%d\n", (void*) node, node[0], a_arity, b_arity);
+#endif
+
 			int i;
 			for (i = 1; i <= a_arity; i++)
 				add_grey_node(set, (BC_WORD*) node[i], heap, heap_size);

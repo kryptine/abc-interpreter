@@ -2177,7 +2177,7 @@ INSTRUCTION_BLOCK(eq_nulldesc):
 INSTRUCTION_BLOCK(eqAC):
 {
 	BC_WORD *n,*s;
-	BC_WORD length;
+	BC_WORD_S length;
 
 	n=(BC_WORD*)asp[0];
 	s=(BC_WORD*)asp[-1];
@@ -2189,38 +2189,39 @@ INSTRUCTION_BLOCK(eqAC):
 		END_INSTRUCTION_BLOCK;
 	n+=2;
 	s+=2;
-	for (;;){
-		if (length>=IF_INT_64_OR_32(8,4)){
-			if (*n!=*s)
-				break;
-			++n;
-			++s;
-			length-=IF_INT_64_OR_32(8,4);
-			continue;
+	while (length>=IF_INT_64_OR_32(8,4)){
+		length-=IF_INT_64_OR_32(8,4);
+		if (*n!=*s) {
+			length=-1;
+			break;
 		}
-#if WORD_WIDTH==64
-		if (length>=4){
-			if (*(uint32_t*)n!=*(uint32_t*)s)
-				break;
-			length-=4;
-			n=(BC_WORD*)((BC_WORD)n+4);
-			s=(BC_WORD*)((BC_WORD)s+4);
-		}
-#endif
-		if (length>=2){
-			if (*(uint16_t*)n!=*(uint16_t*)s)
-				break;
-			if (length>2)
-				if (((BC_BOOL*)n)[2]!=((BC_BOOL*)s)[2])
-					break;
-		} else {
-			if (length>0)
-				if (((BC_BOOL*)n)[0]!=((BC_BOOL*)s)[0])
-					break;
-		}
-		*bsp=1;
-		break;
+		++n;
+		++s;
 	}
+#if WORD_WIDTH==64
+	if (length>=4){
+		length-=4;
+		if (*(uint32_t*)n!=*(uint32_t*)s) {
+			length=-1;
+			END_INSTRUCTION_BLOCK;
+		}
+		n=(BC_WORD*)((uint32_t*)n+1);
+		s=(BC_WORD*)((uint32_t*)s+1);
+	}
+#endif
+	if (length>=2){
+		if (*(uint16_t*)n==*(uint16_t*)s) {
+			if (length>2) {
+				if (((char*)n)[2]==((char*)s)[2])
+					*bsp=1;
+			} else
+				*bsp=1;
+		}
+	} else if (length>0) {
+		if (((char*)n)[0]==((char*)s)[0])
+			*bsp=1;
+	} else if (length==0)
+		*bsp=1;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(eqAC_a):
@@ -4007,7 +4008,10 @@ INSTRUCTION_BLOCK(printD):
 
 	s=(BC_WORD*)*bsp++;
 	l=s[0];
-	if (l>256) { /* record; skip arity and type string */
+	if (l>>16>>3) { /* function */
+		s+=(l>>16>>3)*2+3;
+		l=s[0];
+	} else if (l>256) { /* record; skip arity and type string */
 		s+=2+s[1]/IF_INT_64_OR_32(8,4)+(s[1]%IF_INT_64_OR_32(8,4) ? 1 : 0);
 		l=s[0];
 	}
@@ -8967,32 +8971,29 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		ie->csp = csp;
 		ie->hp = hp;
 		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
-		host_node = __interpret__evaluate__host(ie, host_node);
+		host_node=__interpret__evaluate__host(ie, host_node);
 		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
-		hp = ie->hp;
+		asp=ie->asp;
+		bsp=ie->bsp;
+		csp=ie->csp;
+		hp=ie->hp;
 #if DEBUG_CLEAN_LINKS > 1
 		EPRINTF("\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
 	}
 
-	ie->asp = asp;
-	ie->bsp = bsp;
-	ie->csp = csp;
-	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
+	BC_WORD *new_n;
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, &new_n, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	n[0]=((BC_WORD*)asp[0])[0];
-	n[1]=((BC_WORD*)asp[0])[1];
-	if (((int16_t*)n[0])[-1]>=2)
-		n[2]=((BC_WORD*)asp[0])[2];
+	n=(BC_WORD*)asp[0]; /* may have been updated due to garbage collection */
+	n[0]=new_n[0];
+	n[1]=new_n[1];
+	n[2]=new_n[2];
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
-
-	extern void *__Nil;
-	ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid]=(BC_WORD*)&__Nil-1;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -9167,16 +9168,15 @@ jsr_eval_host_node_with_args:
 
 	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
-	ie->asp = asp;
-	ie->bsp = bsp;
-	ie->csp = csp;
-	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp+1, host_node);
+	asp=ie->asp;
+	bsp=ie->bsp;
+	csp=ie->csp;
+	hp=ie->hp;
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)++asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	asp++;
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
 
