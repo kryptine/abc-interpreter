@@ -14,7 +14,7 @@ RUN \
 		time\
 		bc
 
-RUN	install_clean_nightly.sh base lib-directory lib-dynamics lib-graphcopy lib-platform
+RUN	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform
 COPY etc/ByteCode.env ByteCode.env
 RUN tail -n +3 ByteCode.env >> /opt/clean/etc/IDEEnvs
 

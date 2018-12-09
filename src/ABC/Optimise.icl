@@ -7,12 +7,11 @@ import StdFile
 from StdFunctions import o
 import StdInt
 import StdList
+import StdMaybe
 import StdMisc
 import StdString
 
-import Data.Maybe
-import System.CommandLine
-from Text import <+
+import ArgEnv
 
 import ABC.Instructions
 import ABC.Optimise.Branches
@@ -394,9 +393,9 @@ skip_b_instructions is              n = (is,n)
 
 Start :: *World -> *World
 Start w
-# (args,w) = getCommandLine w
-| length args <> 4 || args!!2 <> "-o" = abort "Usage: optimise ABC_FILE -o OPTABC_FILE\n"
-# [_:input:_:output:_] = args
+# args = getCommandLine
+| size args <> 4 || args.[2] <> "-o" = abort "Usage: optimise ABC_FILE -o OPTABC_FILE\n"
+# {[1]=input,[3]=output} = args
 # (ok,input,w) = fopen input FReadText w
 | not ok = abort "Could not open input file\n"
 # (pgm,input) = loop input

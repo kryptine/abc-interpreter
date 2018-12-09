@@ -5,15 +5,9 @@ import StdBool
 from StdFunc import o
 import StdGeneric
 import StdList
+import StdMaybe
 import StdString
 import StdTuple
-
-import Control.Applicative
-import Control.Monad
-import Data.Functor
-import Data.Maybe
-import Data.Tuple
-from Text import class Text(startsWith), instance Text String
 
 import ABC.Instructions
 
@@ -34,7 +28,9 @@ where
 	plus_min_int` :: !Int !String -> Maybe (Int, Int)
 	plus_min_int` start line
 	| start >= size line   = Nothing
-	| line.[start] == '-'  = appFst (~) <$> plus_min_int` (start+1) line
+	| line.[start] == '-'  = case plus_min_int` (start+1) line of
+		Nothing         -> Nothing
+		Just (n, start) -> Just (~n, start)
 	| line.[start] == '+'  = plus_min_int` (start+1) line
 	| isDigit line.[start] = Just (int` 0 start line)
 	| otherwise            = Nothing
@@ -121,19 +117,27 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 		| not (startsWith (instr:=(0,first_char)) line) -> Nothing
 		| d.gcd_arity > 0 && not (isSpace line.[size instr]) -> Nothing
 		| d.gcd_arity == 0 && size line > size instr && not (isSpace line.[size instr]) -> Nothing
-		| otherwise -> appFst CONS <$> fx (size instr + 1) line
+		| otherwise -> case fx (size instr + 1) line of
+			Nothing    -> Nothing
+			Just (x,i) -> Just (CONS x,i)
 	where
 		first_char = case instr.[0] of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
-parseLine`{|OBJECT|} fx = \i s -> appFst (\x->OBJECT x) <$> fx i s
+parseLine`{|OBJECT|} fx = \i s -> case fx i s of
+	Nothing     -> Nothing
+	Just (x, i) -> Just (OBJECT x, i)
 parseLine`{|EITHER|} fl fr = \i s -> case fl i s of
 	Just (l,i) -> Just (LEFT l,i)
 	Nothing    -> case fr i s of
 		Just (r,i) -> Just (RIGHT r,i)
 		Nothing    -> Nothing
 parseLine`{|UNIT|} = \i _ -> Just (UNIT, i)
-parseLine`{|PAIR|} fx fy = \i s -> fx i s >>= \(x,i) -> fy (skipSpace i s) s >>= \(y,i) -> Just (PAIR x y, skipSpace i s)
+parseLine`{|PAIR|} fx fy = \i s -> case fx i s of
+	Nothing    -> Nothing
+	Just (x,i) -> case fy (skipSpace i s) s of
+		Nothing    -> Nothing
+		Just (y,i) -> Just (PAIR x y, skipSpace i s)
 where
 	skipSpace :: !Int !String -> Int
 	skipSpace n s
@@ -156,3 +160,13 @@ where
 	parseAnnot s = case parseLine`{|*|} 0 s of
 		Just (a,_) -> a
 		Nothing    -> OtherAnnotation (s % (1, size s - 1))
+
+startsWith :: !String !String -> Bool
+startsWith start string
+#! sz = size start
+| sz > size string = False
+| otherwise        = check (sz-1)
+where
+	check :: !Int -> Bool
+	check -1 = True
+	check i  = start.[i]==string.[i] && check (i-1)

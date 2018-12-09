@@ -5,12 +5,9 @@ import StdClass
 from StdFunc import flip
 import StdInt
 import StdList
+import StdMaybe
 import StdMisc
 import StdTuple
-
-from Data.Func import $
-import Data.Maybe
-import Data.Tuple
 
 import ABC.Instructions
 
@@ -87,8 +84,8 @@ removePoppedValues :: !Stack -> Stack
 removePoppedValues ([(ei,_):sn],sp) | ei < sp = removePoppedValues (sn,sp)
 removePoppedValues s = s
 
-removeUnchangedValues :: (Stack -> Stack)
-removeUnchangedValues = appFst $ filter (uncurry (<>))
+removeUnchangedValues :: Stack -> Stack
+removeUnchangedValues (se,sp) = (filter (uncurry (<>)) se, sp)
 
 addReader :: !Int !Int ![(Int,[Int])] -> [(Int,[Int])]
 addReader r w rs=:[sir=:(si,sr):rsn]
@@ -98,7 +95,7 @@ addReader r w rs=:[sir=:(si,sr):rsn]
 addReader _ _ [] = []
 
 addReaders :: ![(Int,Int)] ![(Int,[Int])] -> [(Int,[Int])]
-addReaders [(i,ei):sn] rbw = addReaders sn $ addReader ei i rbw
+addReaders [(i,ei):sn] rbw = addReaders sn (addReader ei i rbw)
 addReaders []          rbw = rbw
 
 getReaders :: !Int ![(Int,[Int])] -> [Int]
@@ -213,5 +210,5 @@ where
 opt_reorder :: !StackType ![ABCInstruction] -> [ABCInstruction]
 opt_reorder type is = generate type (se,sp) reads_before_write 0
 where
-	(se,sp) = removeUnchangedValues $ removePoppedValues $ foldl (flip simulate) ([],0) is
+	(se,sp) = removeUnchangedValues (removePoppedValues (foldl (flip simulate) ([],0) is))
 	reads_before_write = addReaders se [(i,[]) \\ (i,_) <- se]
