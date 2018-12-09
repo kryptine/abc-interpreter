@@ -4008,7 +4008,10 @@ INSTRUCTION_BLOCK(printD):
 
 	s=(BC_WORD*)*bsp++;
 	l=s[0];
-	if (l>256) { /* record; skip arity and type string */
+	if (l>>16>>3) { /* function */
+		s+=(l>>16>>3)*2+3;
+		l=s[0];
+	} else if (l>256) { /* record; skip arity and type string */
 		s+=2+s[1]/IF_INT_64_OR_32(8,4)+(s[1]%IF_INT_64_OR_32(8,4) ? 1 : 0);
 		l=s[0];
 	}
