@@ -8982,15 +8982,16 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 #endif
 	}
 
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
+	BC_WORD *new_n;
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, &new_n, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
 	}
-	n[0]=((BC_WORD*)asp[0])[0];
-	n[1]=((BC_WORD*)asp[0])[1];
-	if (((int16_t*)n[0])[-1]>=2)
-		n[2]=((BC_WORD*)asp[0])[2];
+	n=(BC_WORD*)asp[0]; /* may have been updated due to garbage collection */
+	n[0]=new_n[0];
+	n[1]=new_n[1];
+	n[2]=new_n[2];
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
 
