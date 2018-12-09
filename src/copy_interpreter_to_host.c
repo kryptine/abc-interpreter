@@ -738,13 +738,21 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 
 	BC_WORD bootstrap[2];
 	switch (n_args) {
-		case 0: bootstrap[0]=Cjmp_ap1; break;
-		case 1: bootstrap[0]=Cjmp_ap2; break;
-		case 2: bootstrap[0]=Cjmp_ap3; break;
-		case 3: bootstrap[0]=Cjmp_ap4; break;
-		case 4: bootstrap[0]=Cjmp_ap5; break;
-		default:
-			bootstrap[0]=Cjmp_ap;
+#ifdef COMPUTED_GOTOS
+		case 0:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap1]; break;
+		case 1:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap2]; break;
+		case 2:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap3]; break;
+		case 3:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap4]; break;
+		case 4:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap5]; break;
+		default: bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap];
+#else
+		case 0:  bootstrap[0]=Cjmp_ap1; break;
+		case 1:  bootstrap[0]=Cjmp_ap2; break;
+		case 2:  bootstrap[0]=Cjmp_ap3; break;
+		case 3:  bootstrap[0]=Cjmp_ap4; break;
+		case 4:  bootstrap[0]=Cjmp_ap5; break;
+		default: bootstrap[0]=Cjmp_ap;
+#endif
 			bootstrap[1]=n_args+1;
 	}
 
