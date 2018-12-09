@@ -669,12 +669,12 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\tInterpreting...\n");
 #endif
-			*++ie->asp = (BC_WORD) node;
+			*ie->asp = (BC_WORD) node;
 			if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
 				EPRINTF("Failed to interpret\n");
 				return -1;
 			}
-			node = (BC_WORD*)*ie->asp--;
+			node = (BC_WORD*)*ie->asp;
 		}
 	}
 
@@ -717,9 +717,9 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	EPRINTF("Copying %p -> %p (arity %d) with %d argument(s)...\n", node, (void*)*node, a_arity, n_args+1);
 #endif
 
-	for (int i=1; i<=n_args+1; i++)
+	for (int i=0; i<=n_args; i++)
 		ie->asp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
-	ie->asp += n_args+1;
+	ie->asp += n_args;
 	for (int i = 0; i <= n_args; i++) {
 		BC_WORD *host_node=(BC_WORD*)*--ie->host->host_a_ptr;
 		*ie->host->host_a_ptr++=(BC_WORD)node_finalizer;
@@ -761,7 +761,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		return -1;
 	}
 
-	node=(BC_WORD*)*ie->asp--;
+	node=(BC_WORD*)*ie->asp;
 
 	if (ie->asp!=old_asp) {
 		EPRINTF("internal error; stack not cleaned up\n");
