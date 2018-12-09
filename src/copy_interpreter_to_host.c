@@ -636,7 +636,6 @@ void *__interpret__copy__node__asm_redirect_node;
  * - The dummies are used so that the other arguments are already in the right
  *   register.
  */
-static int copy_counter=0;
 #ifdef WINDOWS
 BC_WORD copy_interpreter_to_host(
 		struct finalizers *node_finalizer, struct InterpretationEnvironment *clean_ie) {
@@ -647,9 +646,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
-	int cc=copy_counter++;
 	BC_WORD *old_asp=ie->asp;
-	EPRINTF("\t&%d\t%p\n",cc,ie->asp);
 
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Copying %p -> %p...\n", node, (void*)*node);
@@ -681,11 +678,9 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		}
 	}
 
-	EPRINTF("\t&%d\t%p\n",cc,ie->asp);
 	if (ie->asp!=old_asp) {
 		EPRINTF("internal error; stack not cleaned up\n");
-		//interpreter_exit(1);
-		ie->asp=old_asp;
+		interpreter_exit(1);
 	}
 
 	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
@@ -715,53 +710,12 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
 
-	int cc=copy_counter++;
 	BC_WORD *old_asp=ie->asp;
-	EPRINTF("\t%d\t%p\n",cc,ie->asp);
 
 #if DEBUG_CLEAN_LINKS > 0
-	EPRINTF("Copying %p -> %p with %d argument(s)...\n", node, (void*)*node, n_args+1);
-#endif
-
 	int16_t a_arity = ((int16_t*)(node[0]))[-1];
-	BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->in_first_semispace ? 2 : 1) - ie->hp;
-	if (n_args+a_arity==0) {
-		if (heap_free<3) {
-			ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
-					, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
-#ifdef DEBUG_GARBAGE_COLLECTOR
-					, ie->program->code, ie->program->data
+	EPRINTF("Copying %p -> %p (arity %d) with %d argument(s)...\n", node, (void*)*node, a_arity, n_args+1);
 #endif
-					);
-			if (heap_free<3) {
-				EPRINTF("Interpreter is out of memory\n");
-				return -1;
-			}
-		}
-		*ie->asp=(BC_WORD)ie->hp;
-		ie->hp+=3;
-	} else {
-		int words_needed=a_arity>2 ? a_arity+1 : 3;
-		if (heap_free<words_needed) {
-			ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
-					, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
-#ifdef DEBUG_GARBAGE_COLLECTOR
-					, ie->program->code, ie->program->data
-#endif
-					);
-			if (heap_free<words_needed) {
-				EPRINTF("Interpreter is out of memory\n");
-				return -1;
-			}
-			/* Update address after garbage collection */
-			node = (BC_WORD*) node_finalizer->cur->arg;
-		}
-		for (int i=0; i<=a_arity; i++)
-			ie->hp[i]=node[i];
-		node=ie->hp;
-		*ie->asp=(BC_WORD)node;
-		ie->hp+=words_needed;
-	}
 
 	for (int i=1; i<=n_args+1; i++)
 		ie->asp[i]=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
@@ -779,57 +733,31 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	}
 
 	/* Update address since garbage collection may have run during copying */
-	if (n_args+a_arity==0)
-		node = (BC_WORD*) node_finalizer->cur->arg;
+	node=(BC_WORD*)node_finalizer->cur->arg;
+	*++ie->asp=(BC_WORD)node;
 
-#if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("\tarity is %d\n",a_arity);
-#endif
-	if (a_arity >= 1) {
-		if (a_arity == 2) {
-			*++ie->asp = node[2];
-		} else if (a_arity > 2) {
-			BC_WORD *rest = (BC_WORD*)node[2];
-			for (int i = a_arity-2; i >= 0; i--)
-				*++ie->asp = rest[i];
-		}
-		*++ie->asp = node[1];
+	BC_WORD bootstrap[2];
+	switch (n_args) {
+		case 0: bootstrap[0]=Cjmp_ap1; break;
+		case 1: bootstrap[0]=Cjmp_ap2; break;
+		case 2: bootstrap[0]=Cjmp_ap3; break;
+		case 3: bootstrap[0]=Cjmp_ap4; break;
+		case 4: bootstrap[0]=Cjmp_ap5; break;
+		default:
+			bootstrap[0]=Cjmp_ap;
+			bootstrap[1]=n_args+1;
 	}
 
-	BC_WORD *lazy_entry = ((BC_WORD**)(node[0]-2))[n_args*2+1];
-	BC_WORD *pc;
-
-	if (n_args + a_arity == 0) {
-		/* Function with arity 1; these do not have an apply entry point so we use the lazy one instead */
-		*++ie->asp=(BC_WORD)node;
-		pc = lazy_entry;
-	} else {
-		pc = (BC_WORD*) lazy_entry[-2];
-	}
-
-	if (interpret_ie(ie, pc) != 0) {
+	if (interpret_ie(ie, bootstrap) != 0) {
 		EPRINTF("Failed to interpret\n");
 		return -1;
 	}
 
-	node = (BC_WORD*) *ie->asp;
-	/* Only for .a n with n>0 we actually needed the first space on the stack */
-	if (n_args+a_arity==0 ||
-#ifdef COMPUTED_GOTOS
-			lazy_entry[-3]==(BC_WORD)instruction_labels[Cjmp]
-#else
-			lazy_entry[-3]==Cjmp
-#endif
-		) {
-		EPRINTF("\tdecreasing asp\n");
-		ie->asp--;
-	}
+	node=(BC_WORD*)*ie->asp--;
 
-	EPRINTF("\t%d\t%p\n",cc,ie->asp);
 	if (ie->asp!=old_asp) {
 		EPRINTF("internal error; stack not cleaned up\n");
-		//interpreter_exit(1);
-		ie->asp=old_asp;
+		interpreter_exit(1);
 	}
 
 	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,

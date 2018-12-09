@@ -8976,10 +8976,10 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 #endif
 	}
 
-	ie->asp = asp;
-	ie->bsp = bsp;
-	ie->csp = csp;
-	ie->hp = hp;
+	asp=ie->asp;
+	bsp=ie->bsp;
+	csp=ie->csp;
+	hp=ie->hp;
 	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
@@ -9165,11 +9165,11 @@ jsr_eval_host_node_with_args:
 
 	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
-	ie->asp = asp;
-	ie->bsp = bsp;
-	ie->csp = csp;
-	ie->hp = hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
+	asp=ie->asp;
+	bsp=ie->bsp;
+	csp=ie->csp;
+	hp=ie->hp;
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)++asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
