@@ -3,7 +3,6 @@ implementation module Compiler
 import StdFile
 import StdList
 
-import Data.Either
 import Data.Maybe
 import System.OS
 
@@ -48,7 +47,7 @@ testThroughFile graph fp w
 # (_,w) = fclose f w
 
 # (ok,f,w) = fopen fp FReadData w
-# (Right graph_s,f) = graphFromFile f
+# (Just graph_s,f) = graphFromFile f
 # (_,w) = fclose f w
 
 = deserialize defaultDeserializationSettings graph_s (IF_WINDOWS "Compiler.exe" "compiler") w

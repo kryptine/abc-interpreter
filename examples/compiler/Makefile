@@ -1,6 +1,7 @@
 CLM:=clm
 CLMFLAGS:=\
 	-I ../../src\
+	-IL ArgEnv\
 	-IL Platform\
 	-IL GraphCopy\
 	-nt\

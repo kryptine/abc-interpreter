@@ -1,6 +1,6 @@
 definition module ABC.Interpreter
 
-from Data.Either import :: Either
+from StdMaybe import :: Maybe
 from System.FilePath import :: FilePath
 
 :: DeserializationSettings =
@@ -22,4 +22,4 @@ deserialize :: !DeserializationSettings !SerializedGraph !FilePath !*World -> *(
 get_start_rule_as_expression :: !DeserializationSettings !FilePath !*World -> *(a, *World)
 
 graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
-graphFromFile :: !*File -> *(!Either String *SerializedGraph, !*File)
+graphFromFile :: !*File -> *(!Maybe *SerializedGraph, !*File)

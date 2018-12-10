@@ -5,17 +5,14 @@ import StdClass
 import StdFile
 import StdInt
 import StdList
+import StdMaybe
 import StdMisc
 import StdOrdList
 
-import Data._Array
-import Data.Either
+import ArgEnv
+
 import Data.Error
-from Data.Func import `on`, on
-import Data.Maybe
-import System.CommandLine
 import System.File
-import System.FilePath
 import System._Pointer
 
 import graph_copy_with_names
@@ -104,7 +101,7 @@ deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
 	asp bsp csp heap
 # graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
-# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
+# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
 = (interpret ie (Finalizer 0 0 graph_node), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
@@ -161,7 +158,7 @@ where
 
 get_start_rule_as_expression :: !DeserializationSettings !FilePath !*World -> *(a, *World)
 get_start_rule_as_expression dsets filename w
-# ([prog:_],w) = getCommandLine w
+# {[0]=prog} = getCommandLine
 # (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile filename w
 | isError bc = abort "Failed to read the file\n"
@@ -180,7 +177,7 @@ get_start_rule_as_expression dsets filename w
 	asp bsp csp heap
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
-# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=unsafeCreateArray 1}
+# ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
 = (interpret ie (Finalizer 0 0 start_node), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
@@ -242,24 +239,24 @@ where
 	writeArray write xs -1 f = f
 	writeArray write xs i f = writeArray write xs (i-1) (write xs.[i] f)
 
-graphFromFile :: !*File -> *(!Either String *SerializedGraph, !*File)
+graphFromFile :: !*File -> *(!Maybe *SerializedGraph, !*File)
 graphFromFile f
 # (graph,f) = readString f
 
 # (_,descinfo_size,f) = freadi f
-# (descinfo,f) = readArray readDescInfo (descinfo_size-1) (unsafeCreateArray descinfo_size) f
+# (descinfo,f) = readArray readDescInfo (descinfo_size-1) (create_array_ descinfo_size) f
 
 # (_,modules_size,f) = freadi f
-# (modules,f) = readArray readString (modules_size-1) (unsafeCreateArray modules_size) f
+# (modules,f) = readArray readString (modules_size-1) (create_array_ modules_size) f
 
 # (bytecode,f) = readString f
 
 # (end,f) = fend f
-| not end = (Left "EOF not found after end of graph",f)
+| not end = (Nothing,f)
 # (err,f) = ferror f
-| err = (Left "I/O error while reading graph",f)
+| err = (Nothing,f)
 
-= (Right {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
+= (Just {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
 where
 	readArray :: !(*File -> *(a, *File)) !Int !*(arr a) !*File -> *(!*arr a, !*File) | Array arr a
 	readArray _ -1 xs f = (xs,f)

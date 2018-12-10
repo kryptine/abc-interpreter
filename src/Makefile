@@ -1,7 +1,7 @@
 SHELL:=bash
 CLM:=clm
 CPM:=cpm
-override CLMFLAGS+=-I . -IL Platform -IL GraphCopy -ns
+override CLMFLAGS+=-I . -IL ArgEnv -IL Platform -IL GraphCopy -ns
 override CFLAGS+=\
 	-std=c99\
 	-Wall\

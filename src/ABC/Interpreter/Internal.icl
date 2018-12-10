@@ -4,16 +4,15 @@ import StdArray
 import StdClass
 import StdInt
 
-import Data._Array
-
 import ABC.Interpreter
+import ABC.Interpreter.Util
 
 add_shared_node :: !Int !*{a} a -> *(!Int, !*{a}, !Int)
 add_shared_node ptr nodes node
 # (arraysize,nodes) = usize nodes
 # (spot,nodes) = find_empty_spot ptr nodes
 | spot == -1
-	= (arraysize, {copy (arraysize-1) nodes (unsafeCreateArray (arraysize+100)) & [arraysize]=node}, arraysize+1)
+	= (arraysize, {copy (arraysize-1) nodes (create_array_ (arraysize+100)) & [arraysize]=node}, arraysize+1)
 | otherwise
 	= (spot, {nodes & [spot]=node}, if (spot+1 >= arraysize) 0 (spot+1))
 where

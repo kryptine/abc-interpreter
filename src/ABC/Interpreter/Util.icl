@@ -5,10 +5,7 @@ import StdBool
 import StdClass
 import StdInt
 import StdList
-
-import Data._Array
-import Data.Maybe
-import System._Pointer
+import StdMaybe
 
 import symbols_in_program
 
@@ -33,31 +30,36 @@ import code from library "ucrtbase_library"
 
 OFFSET_PARSER_PROGRAM :== IF_INT_64_OR_32 8 4 // Offset to the program field in the parser struct (parse.h)
 
-parse :: !{#Symbol} !String -> Maybe Program
+parse :: !{#Symbol} !String -> Maybe Int
 parse syms s
 #! cp = new_string_char_provider s
 #! parser = new_parser syms
 #! res = parse_program parser cp
 | free_char_provider_to_false cp || free_to_false cp = Nothing
 | res <> 0 = Nothing
-#! pgm = readInt parser OFFSET_PARSER_PROGRAM
+#! pgm = readInt (parser+OFFSET_PARSER_PROGRAM)
 #! parser = free_parser parser parser
 | free_to_false parser = Nothing
 = Just pgm
 where
-	free_parser :: !Pointer !Pointer -> Pointer
+	free_parser :: !Int !Int -> Int
 	free_parser _ _ = code {
 		ccall free_parser "p:V:p"
 	}
 
-new_parser :: !{#Symbol} -> Pointer
+	readInt :: !Int -> Int
+	readInt _ = code {
+		load_i 0
+	}
+
+new_parser :: !{#Symbol} -> Int
 new_parser syms
 # parser = malloc 100 // size of the parser struct + some extra to be sure
 = init parser symbol_n symbol_string_length symbol_string parser
 where
 	symbol_n = size syms
 	symbol_string_length = sum [size s.symbol_name \\ s <-: syms]
-	symbol_string = build_symbol_string 0 0 (unsafeCreateArray (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
+	symbol_string = build_symbol_string 0 0 (create_array_ (symbol_n * IF_INT_64_OR_32 9 5 + symbol_string_length))
 
 	build_symbol_string :: !Int !Int !*{#Char}-> *{#Char}
 	build_symbol_string i j s
@@ -75,22 +77,22 @@ where
 		| i == orgsize = (desti+1, {dest & [desti]='\0'})
 		| otherwise    = copyString org orgsize (i+1) (desti+1) {dest & [desti]=org.[i]}
 
-	init :: !Pointer !Int !Int !.{#Char} !Pointer -> Pointer
+	init :: !Int !Int !Int !.{#Char} !Int -> Int
 	init _ _ _ _ _ = code {
 		ccall init_parser "pIIs:V:p"
 	}
 
-new_string_char_provider :: !String -> Pointer
+new_string_char_provider :: !String -> Int
 new_string_char_provider s
 # cp = malloc 16
 = init cp s (size s) 1 cp
 where
-	init :: !Pointer !String !Int !Int !Pointer -> Pointer
+	init :: !Int !String !Int !Int !Int -> Int
 	init _ _ _ _ _ = code {
 		ccall new_string_char_provider "psII:V:p"
 	}
 
-free_char_provider_to_false :: !Pointer -> Bool
+free_char_provider_to_false :: !Int -> Bool
 free_char_provider_to_false cp = code {
 	push_b 0
 	pushB FALSE
@@ -99,22 +101,28 @@ free_char_provider_to_false cp = code {
 	ccall free_char_provider "p:V:I"
 }
 
-parse_program :: !Pointer !Pointer -> Int
+parse_program :: !Int !Int -> Int
 parse_program parser char_provider = code {
 	ccall parse_program "pp:I"
 }
 
-free_to_false :: !Pointer -> Bool
+free_to_false :: !Int -> Bool
 free_to_false p
 # n = free p
 = n == 0 && n <> 0
 
-malloc :: !Int -> Pointer
+malloc :: !Int -> Int
 malloc _ = code {
 	ccall malloc "I:p"
 }
 
-free :: !Pointer -> Int
+free :: !Int -> Int
 free _ = code {
 	ccall free "p:I"
+}
+
+create_array_ :: .Int -> u:(a v:b) | Array a b, [u<=v]
+create_array_ size = code {
+	updatepop_a 0 7
+	jmp_ap 1
 }
