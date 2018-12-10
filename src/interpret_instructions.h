@@ -8938,6 +8938,9 @@ INSTRUCTION_BLOCK(jesr):
 		case 14:
 			clean_writeFC();
 			break;
+		default:
+			EPRINTF("internal error: unknown trap %d\n",(int)pc[1]);
+			interpreter_exit(-1);
 	}
 	asp=g_asp;
 	bsp=g_bsp;

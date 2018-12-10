@@ -820,6 +820,16 @@ void add_instruction_w_internal_label_label(int16_t i,int32_t n1,struct label *l
 	store_code_label_value(label_name,0);
 }
 
+void add_jesr_instruction(int lib_function_n) {
+	switch (lib_function_n) {
+		case  0: add_instruction(CeqAC); break;
+		case  1: add_instruction(CcatAC); break;
+		case 11: add_instruction(CcmpAC); break;
+		default:
+			add_instruction_w(Cjesr,lib_function_n);
+	}
+}
+
 void add_label(char *label_name) {
 	if (list_code)
 		printf("%d\t.label %s\n",pgrm.code_size,label_name);
@@ -2259,14 +2269,7 @@ void code_jsr(char label_name[]) {
 	lib_function_n = get_lib_function_n(label_name);
 
 	if (lib_function_n>=0) {
-		switch (lib_function_n) {
-			case  0: add_instruction(CeqAC); break;
-			case  1: add_instruction(CcatAC); break;
-			case 11: add_instruction(CcmpAC); break;
-			default:
-				add_instruction_w(Cjesr,lib_function_n);
-		}
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3397,12 +3400,7 @@ void code_buildh0_put_a_jsr(char descriptor_name[],int a_offset,char label_name[
 
 	if (lib_function_n>=0) {
 		code_buildh0_put_a(descriptor_name,a_offset);
-
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3604,12 +3602,7 @@ void code_pop_a_jsr(int n,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_pop_a(n);
-
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3652,12 +3645,7 @@ void code_pop_b_jsr(int n,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_pop_b(n);
-
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3695,12 +3683,7 @@ void code_push_a_jsr(int a_offset,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_push_a(a_offset);
-
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3741,12 +3724,7 @@ void code_push_b_jsr(int b_offset,char label_name[]) {
 
 	if (lib_function_n>=0) {
 		code_push_b(b_offset);
-
-		if (lib_function_n==0)
-			add_instruction(CeqAC);
-		else
-			add_instruction_w(Cjesr,lib_function_n);
-
+		add_jesr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}

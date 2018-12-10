@@ -303,13 +303,12 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
-	int result = interpret(ie,
+static inline int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
+	return interpret(ie,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
 			pc);
-	return result;
 }
 
 static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
