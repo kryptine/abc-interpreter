@@ -9131,7 +9131,8 @@ jsr_eval_host_node_with_args:
 	if (instr_arg >= 2)
 		arg2 = (BC_WORD*) *--ie->host->host_a_ptr;
 
-	asp-=instr_arg+1;
+	asp-=instr_arg;
+	*asp=((BC_WORD)&d___Nil[1])-IF_INT_64_OR_32(8,4);
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
@@ -9175,7 +9176,7 @@ jsr_eval_host_node_with_args:
 	bsp=ie->bsp;
 	csp=ie->csp;
 	hp=ie->hp;
-	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)++asp, host_node);
+	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
 		return -1;
