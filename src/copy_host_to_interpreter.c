@@ -84,10 +84,6 @@ static int copied_node_size(struct program *program, BC_WORD *node) {
 
 static const char new_host_symbol_name[]="_unknown_descriptor";
 static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
-#ifdef MACH_O64
-	EPRINTF("Copying descriptors has not been implemented yet on MACHO_64\n");
-	interpreter_exit(1);
-#else
 	/* Just use the host descriptor, since we're never going to use code addresses anyway */
 	int16_t arity=*(int16_t*)descriptor;
 	if (arity>=256) { /* record; no curry table */
@@ -98,7 +94,6 @@ static void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symb
 		host_symbol->interpreter_location=descriptor-2*arity;
 	}
 	host_symbol->name=(char*)new_host_symbol_name;
-#endif
 }
 
 BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
