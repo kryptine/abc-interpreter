@@ -62,6 +62,7 @@ where
 		, toInt (last (rev [TestA,TestB 0,TestA,TestB 1]))
 		, toInt (last (rev [TestB -5,TestA,TestC 7 15,TestB 0]))
 		, toInt (last (rev [TestC 15 7,TestB 0,TestA]))
+		, hd (map id (repeat 37))
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
