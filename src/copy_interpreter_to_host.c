@@ -691,11 +691,8 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
  *
  * - The dummies are used so that the other arguments are already in the right
  *   register.
- * - All arguments (indexes of the shared nodes array in the Clean
- *   InterpretationEnvironment) are passed variadically, with n_args the number
- *   of arguments minus 1. The first argument is the *last* element in the
- *   variadic list; otherwise it is in order. For instance, for a function with
- *   arity 5 the arguments are passed as 2, 3, 4, 5, 1.
+ * - The arguments have to be popped of the A-stack of the host.
+ * - n_args is the number of arguments minus 1.
  */
 #ifdef WINDOWS
 BC_WORD copy_interpreter_to_host_n(
