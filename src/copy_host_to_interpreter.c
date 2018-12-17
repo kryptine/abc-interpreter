@@ -151,9 +151,12 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 		return &heap[2];
 	} else if (descriptor==(BC_WORD)&__STRING__+2) {
 		int length=node[1];
+		heap[0]=descriptor;
+		heap[1]=length;
+		heap+=2;
 		length=(length+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		memcpy(heap, node, (2+length)*IF_INT_64_OR_32(8,4));
-		return &heap[length+2];
+		memcpy(heap, node+2, length*IF_INT_64_OR_32(8,4));
+		return &heap[length];
 	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
 		heap[0]=descriptor;
 		heap[1]=node[1];
