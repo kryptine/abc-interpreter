@@ -63,6 +63,7 @@ where
 		, toInt (last (rev [TestA,TestB 0,TestA,TestB 1]))
 		, toInt (last (rev [TestB -5,TestA,TestC 7 15,TestB 0]))
 		, toInt (last (rev [TestC 15 7,TestB 0,TestA]))
+		, (\xs -> sumints [x*y \\ (x,y) <- xs]) (rev [(1,1),(2,3),(5,6)])
 		, map id (repeat 37) !! 100
 		, int_repeat 37 !! 100
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]

@@ -65,8 +65,7 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
-		struct host_symbol *host_symbol = find_host_symbol_by_address(program, host_desc_label);
-		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple))
+		if (args_needed!=0 && (void*)host_desc_label!=&__Tuple)
 			return 4;
 	}
 	int ab_arity=a_arity+b_arity;
@@ -210,9 +209,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
-		/* TODO find a better way to check for tuples */
-		struct host_symbol *host_symbol = find_host_symbol_by_address(program, host_desc_label);
-		if (args_needed != 0 && (host_symbol==NULL || host_symbol->location != &__Tuple)) {
+		if (args_needed!=0 && (void*)host_desc_label!=&__Tuple) {
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
 			heap[1]=(BC_WORD)&heap[2];
 			heap[2]=(BC_WORD)&INT+2;
