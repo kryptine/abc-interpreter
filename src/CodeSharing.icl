@@ -33,9 +33,9 @@ import StdEnum,StdFunc
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map),w)
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat),w)
 	= get_start_rule_as_expression defaultDeserializationSettings (".." </> "test" </> "functions.bc") w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat
 where
 	use ::
 		(Int -> Int)
@@ -47,8 +47,9 @@ where
 		((Int -> Int) -> Int)
 		((Int Int Int -> Int) -> Int)
 		(A.a b: (a -> b) [a] -> [b])
+		(A.a: a -> [a])
 		-> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map =
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map int_repeat =
 		[ intsquare 6 + intsquare 1
 		, sub5 (last [1..470000]/10000) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
@@ -63,6 +64,7 @@ where
 		, toInt (last (rev [TestB -5,TestA,TestC 7 15,TestB 0]))
 		, toInt (last (rev [TestC 15 7,TestB 0,TestA]))
 		, map id (repeat 37) !! 100
+		, int_repeat 37 !! 100
 		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
 		]
 
