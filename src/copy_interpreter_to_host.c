@@ -452,20 +452,22 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return &host_heap[2];
 	} else if (descriptor==(BC_WORD)&__STRING__+2) {
 		int len=node[1];
-		len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
-		memcpy(host_heap,node,len*IF_INT_64_OR_32(8,4));
-		return host_heap+len;
+		host_heap[0]=descriptor;
+		host_heap[1]=len;
+		len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+		memcpy(host_heap+2,node+2,len*IF_INT_64_OR_32(8,4));
+		return host_heap+len+2;
 	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
 		int len=node[1];
+		host_heap[0]=descriptor;
+		host_heap[1]=len;
+		host_heap[2]=node[2]; /* TODO */
 		BC_WORD desc=node[2];
 		if (desc==(BC_WORD)&BOOL+2)
-			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+3;
+			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-			len=len+3;
+			len=len;
 		else if (desc==0) { /* boxed array */
-			host_heap[0]=descriptor;
-			host_heap[1]=node[1];
-			host_heap[2]=node[2];
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
 			for (int i=0; i<len; i++)
@@ -475,8 +477,6 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			host_heap[0]=descriptor;
-			host_heap[1]=node[1];
 			host_heap[2]=((BC_WORD*)(desc-2))[-2]; /* TODO check that the descriptor exists */
 			node+=3;
 			BC_WORD *new_array=&host_heap[3];
@@ -491,8 +491,8 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			}
 			return host_heap;
 		}
-		memcpy(host_heap,node,len*IF_INT_64_OR_32(8,4));
-		return host_heap+len;
+		memcpy(host_heap+3,node+3,len*IF_INT_64_OR_32(8,4));
+		return host_heap+len+3;
 	}
 
 	int16_t a_arity = ((int16_t*)descriptor)[-1];
