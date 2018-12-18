@@ -603,8 +603,41 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 
 	BC_WORD *host_node=(BC_WORD*)(descriptor-1);
 
-	/* TODO: this should check on host_node[0] if the descriptor is something from ABC.Interpreter.Internal */
-	if (host_node[1]==(BC_WORD)clean_ie) {
+	while (host_node[1]==(BC_WORD)clean_ie) {
+		BC_WORD host_node_descriptor=host_node[0];
+		if (host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__1 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__2 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__3 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__4 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__5 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__6 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__7 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__8 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__9 +(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__10+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__11+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__12+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__13+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__14+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__15+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__16+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__17+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__18+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__19+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__20+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__21+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__22+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__23+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__24+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__25+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__26+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__27+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__28+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<IF_MACH_O_ELSE(4,3))+2 &&
+				host_node_descriptor!=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<IF_MACH_O_ELSE(4,3))+2)
+			break;
 		/* The host node is a delayed interpretation.
 		 * The original descriptor is at host_node[2][2][1], but because we
 		 * know how these nodes are built above this is always host_node[7]. */
