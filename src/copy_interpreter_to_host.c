@@ -465,7 +465,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		if (desc==(BC_WORD)&BOOL+2)
 			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-			len=len;
+			{} /* len is correct */
 		else if (desc==0) { /* boxed array */
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
