@@ -2,7 +2,7 @@ module functions
 
 import StdInt
 
-Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map)
+Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map, repeat)
 
 square :: Int -> Int
 square x = x * x
@@ -33,3 +33,6 @@ ap3 f = f 3 2 1
 map :: (a -> b) [a] -> [b]
 map f [x:xs] = [f x:map f xs]
 map _ []     = []
+
+repeat :: a -> [a]
+repeat x = let xs = [x:xs] in xs
