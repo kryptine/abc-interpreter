@@ -433,7 +433,6 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 #endif
 				) {
 		*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
-		node[0]--;
 		return host_heap;
 	}
 
@@ -614,6 +613,18 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		return;
 	}
 
+	if (!(descriptor & 2) &&
+			*(BC_WORD*)(descriptor-1) ==
+#ifdef COMPUTED_GOTOS
+				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
+#else
+				Cjsr_eval_host_node
+#endif
+				) {
+		node[0]--;
+		return;
+	}
+
 	descriptor=node[0]=host_node[0];
 
 	int16_t ab_arity=((int16_t*)descriptor)[-1];
@@ -649,8 +660,32 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 
 	host_node[0]=(BC_WORD)host_descriptor;
 
-	if (a_arity==0)
+	if (a_arity==0) {
+		if (descriptor==(BC_WORD)&__ARRAY__+2) {
+			BC_WORD elem_desc=node[2];
+
+			if (elem_desc==0) { /* boxed array */
+				BC_WORD **array=(BC_WORD**)&node[3];
+				for (int len=node[1]-1; len>=0; len--)
+					restore_and_translate_descriptors(clean_ie, array[len]);
+			} else {
+				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
+				if (elem_ab_arity>0) {
+					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
+					elem_ab_arity-=256;
+
+					node+=3;
+					for (int i=0; i<node[1]-1; i++) {
+						for (int a=0; a<elem_a_arity; a++)
+							restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[a]);
+						node+=elem_ab_arity;
+					}
+				}
+			}
+		}
+
 		return;
+	}
 
 	restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[1]);
 

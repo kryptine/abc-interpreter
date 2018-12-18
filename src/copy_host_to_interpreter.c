@@ -178,7 +178,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
 			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
 			if (elem_host_symbol==NULL) {
-				EPRINTF("error: cannot copy unboxed array of unknown records to interpreter\n");
+				EPRINTF("error: cannot copy unboxed array of unknown records to interpreter\n"); /* TODO */
 				interpreter_exit(1);
 			}
 			heap[2]=(BC_WORD)elem_host_symbol->interpreter_location;
@@ -202,13 +202,12 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 	int16_t a_arity = ((int16_t*)descriptor)[-1];
 	int16_t b_arity = 0;
-	BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2);
 	if (a_arity > 256) { /* record */
 		a_arity = ((int16_t*)descriptor)[0];
 		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
-		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
+		BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2)-a_arity*IF_MACH_O_ELSE(2,1);
 		if (args_needed!=0 && (void*)host_desc_label!=&__Tuple) {
 			heap[0]=(BC_WORD)HOST_NODES[args_needed]+IF_INT_64_OR_32(16,8)+2;
 			heap[1]=(BC_WORD)&heap[2];
@@ -311,15 +310,40 @@ static inline void restore_and_translate_descriptors(struct program *program, BC
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
-	EPRINTF("\ttranslating %p (%s) to %p\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location);
+	EPRINTF("\ttranslating %p (%s) to %p; %d %d\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location,ab_arity,a_arity);
 #endif
 	if (is_record)
 		interpreter_node[0]=(BC_WORD)host_symbol->interpreter_location+2+1;
 	else
 		interpreter_node[0]=(BC_WORD)host_symbol->interpreter_location+2+a_arity*16+1;
 
-	if (a_arity==0)
+	if (a_arity==0) {
+		if (descriptor==(BC_WORD)&__ARRAY__+2) {
+			BC_WORD elem_desc=node[2];
+
+			if (elem_desc==0) { /* boxed array */
+				BC_WORD **array=(BC_WORD**)&node[3];
+				for (int len=node[1]-1; len>=0; len--)
+					restore_and_translate_descriptors(program, array[len]);
+			} else {
+				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
+				if (elem_ab_arity>0) {
+					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
+					elem_ab_arity-=256;
+
+					BC_WORD **array=(BC_WORD**)&node[3];
+					int len=node[1];
+					for (int i=0; i<len; i++) {
+						for (int a=0; a<elem_a_arity; a++)
+							restore_and_translate_descriptors(program, array[a]);
+						array+=elem_ab_arity;
+					}
+				}
+			}
+		}
+
 		return;
+	}
 
 	restore_and_translate_descriptors(program, (BC_WORD*)node[1]);
 
@@ -361,8 +385,34 @@ static void add_shared_nodes(struct interpretation_environment *ie, BC_WORD *nod
 		ab_arity -= 256;
 	}
 
-	if (a_arity==0)
+	if (a_arity==0) {
+		if (descriptor==(BC_WORD)&__ARRAY__+2) {
+			BC_WORD elem_desc=node[2];
+
+			if (elem_desc==0) { /* boxed array */
+				BC_WORD **array=(BC_WORD**)&node[3];
+				for (int len=node[1]-1; len>=0; len--)
+					add_shared_nodes(ie, array[len]);
+			} else {
+				elem_desc|=2;
+				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
+				if (elem_ab_arity>0) {
+					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
+					elem_ab_arity-=256;
+
+					BC_WORD **array=(BC_WORD**)&node[3];
+					int len=node[1];
+					for (int i=0; i<len; i++) {
+						for (int a=0; a<elem_a_arity; a++)
+							add_shared_nodes(ie, array[a]);
+						array+=elem_ab_arity;
+					}
+				}
+			}
+		}
+
 		return;
+	}
 
 	add_shared_nodes(ie, (BC_WORD*)node[1]);
 
