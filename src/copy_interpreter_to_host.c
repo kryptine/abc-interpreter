@@ -311,50 +311,151 @@ static inline int interpret_ie(struct interpretation_environment *ie, BC_WORD *p
 			pc);
 }
 
-static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
+static inline int copied_node_size(BC_WORD *node) {
+	BC_WORD descriptor=node[0];
+
+	if ((descriptor==(BC_WORD)&INT+2 && node[1]<33) || descriptor==(BC_WORD)&CHAR+2)
+		return 0;
+
+	if (descriptor & 1)
+		return 0;
+	node[0]|=1;
+
+	if (!(descriptor & 2)) { /* thunk, delay interpretation */
+		if (*((BC_WORD*)descriptor) ==
+#ifdef COMPUTED_GOTOS
+				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
+#else
+				Cjsr_eval_host_node
+#endif
+				)
+			return 0;
+		else
+			return 3+FINALIZER_SIZE_ON_HEAP;
+	}
+
+	if (descriptor==(BC_WORD)&INT+2 ||
+			descriptor==(BC_WORD)&BOOL+2 ||
+			descriptor==(BC_WORD)&REAL+2)
+		return 2;
+	else if (descriptor==(BC_WORD)&__STRING__+2)
+		return (node[1]+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
+	else if (descriptor==(BC_WORD)&__ARRAY__+2) {
+		int len=node[1];
+		BC_WORD desc=node[2];
+		if (desc==(BC_WORD)&BOOL+2)
+			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
+			{} /* len is correct */
+		else if (desc==0) { /* boxed array */
+			int words_needed=len;
+			for (int i=0; i<len; i++)
+				words_needed+=copied_node_size((BC_WORD*)node[i+3]);
+			len=words_needed;
+		} else { /* unboxed array */
+			desc|=2;
+			int16_t elem_a_arity=*(int16_t*)desc;
+			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			int words_needed=len*elem_ab_arity;
+			node+=3;
+			for (int i=0; i<len; i++) {
+				for (int a=0; a<elem_a_arity; a++)
+					words_needed+=copied_node_size((BC_WORD*)node[a]);
+				node+=elem_ab_arity;
+			}
+			len=words_needed;
+		}
+		return len+3;
+	}
+
+	int16_t a_arity = ((int16_t*)descriptor)[-1];
+	int16_t b_arity = 0;
+	if (a_arity > 256) { /* record */
+		a_arity = ((int16_t*)descriptor)[0];
+		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
+	} else { /* may be curried */
+		int args_needed = ((int16_t*)descriptor)[0] >> 3;
+		if (args_needed != 0 && ((void**)(descriptor-2))[-2-2*a_arity] != &__Tuple)
+			return 3+FINALIZER_SIZE_ON_HEAP;
+	}
+	int ab_arity=a_arity+b_arity;
+
+	int words_needed=1+ab_arity;
+	if (ab_arity >= 3)
+		words_needed++;
+
+	if (a_arity>0) {
+		words_needed+=copied_node_size((BC_WORD*)node[1]);
+
+		if (ab_arity >= 3) {
+			BC_WORD **rest = (BC_WORD**) node[2];
+			for (int i=0; i < a_arity-1; i++)
+				words_needed+=copied_node_size(rest[i]);
+		} else if (a_arity == 2)
+			words_needed+=copied_node_size((BC_WORD*)node[2]);
+	}
+
+	return words_needed;
+}
+
+static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	*target=host_heap;
+	BC_WORD descriptor=node[0];
 
-	if (!(node[0] & 2)) {
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tthunk %p\n",node);
-#endif
-		if (*((BC_WORD*)node[0]) ==
+	if (descriptor==(BC_WORD)&INT+2 && node[1]<33) {
+		*target=(BC_WORD*)(small_integers+2*node[1]);
+		return host_heap;
+	} else if (descriptor==(BC_WORD)&CHAR+2) {
+		*target=(BC_WORD*)(static_characters+2*node[1]);
+		return host_heap;
+	}
+
+	if (!(descriptor & 1)) {
+		EPRINTF("internal error in copy_to_host: node %p not seen\n",node);
+		interpreter_exit(-1);
+	}
+	descriptor--;
+
+	if (ie->host->host_hp_ptr<=(BC_WORD*)descriptor &&
+			(BC_WORD*)descriptor<=ie->host->host_hp_ptr+ie->host->host_hp_free) {
+		*target=(BC_WORD*)descriptor;
+		return host_heap;
+	}
+
+	if (!(descriptor & 2) &&
+			*(BC_WORD*)descriptor ==
 #ifdef COMPUTED_GOTOS
 				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
 #else
 				Cjsr_eval_host_node
 #endif
 				) {
-			*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
-			return host_heap;
-		} else {
-			host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret;
-			host_heap[1]=(BC_WORD)clean_ie;
-			host_heap[2]=(BC_WORD)&host_heap[3];
-			return build_finalizer(&host_heap[3], interpreter_finalizer, (BC_WORD)node);
-		}
+		*target=ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+node[1]];
+		node[0]--;
+		return host_heap;
 	}
 
-	if (node[0]==(BC_WORD)&INT+2 && node[1]<33) {
-		*target=(BC_WORD*)(small_integers+2*node[1]);
-		return host_heap;
-	} else if (node[0]==(BC_WORD)&CHAR+2) {
-		*target=(BC_WORD*)(static_characters+2*node[1]);
-		return host_heap;
-	} else if (node[0]==(BC_WORD)&INT+2 ||
-			node[0]==(BC_WORD)&BOOL+2 ||
-			node[0]==(BC_WORD)&REAL+2) {
-		host_heap[0]=node[0];
+	node[0]=(BC_WORD)host_heap|1;
+
+	if (!(descriptor & 2)) {
+		host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__ninterpret;
+		host_heap[1]=(BC_WORD)clean_ie;
+		host_heap[2]=(BC_WORD)&host_heap[3];
+		return build_finalizer(&host_heap[3], interpreter_finalizer, descriptor);
+	} else if (descriptor==(BC_WORD)&INT+2 ||
+			descriptor==(BC_WORD)&BOOL+2 ||
+			descriptor==(BC_WORD)&REAL+2) {
+		host_heap[0]=descriptor;
 		host_heap[1]=node[1];
 		return &host_heap[2];
-	} else if (node[0]==(BC_WORD)&__STRING__+2) {
+	} else if (descriptor==(BC_WORD)&__STRING__+2) {
 		int len=node[1];
 		len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
 		memcpy(host_heap,node,len*IF_INT_64_OR_32(8,4));
 		return host_heap+len;
-	} else if (node[0]==(BC_WORD)&__ARRAY__+2) {
+	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
 		int len=node[1];
 		BC_WORD desc=node[2];
 		if (desc==(BC_WORD)&BOOL+2)
@@ -362,7 +463,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
 			len=len+3;
 		else if (desc==0) { /* boxed array */
-			host_heap[0]=node[0];
+			host_heap[0]=descriptor;
 			host_heap[1]=node[1];
 			host_heap[2]=node[2];
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
@@ -374,7 +475,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			host_heap[0]=node[0];
+			host_heap[0]=descriptor;
 			host_heap[1]=node[1];
 			host_heap[2]=((BC_WORD*)(desc-2))[-2]; /* TODO check that the descriptor exists */
 			node+=3;
@@ -394,18 +495,16 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return host_heap+len;
 	}
 
-	int16_t a_arity = ((int16_t*)(node[0]))[-1];
+	int16_t a_arity = ((int16_t*)descriptor)[-1];
 	int16_t b_arity = 0;
 	int host_address_offset = -2 - 2*a_arity;
-	int add_to_host_address = a_arity*IF_MACH_O_ELSE(2,1);
 	if (a_arity > 256) { /* record */
+		a_arity = ((int16_t*)descriptor)[0];
+		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
 		host_address_offset = -2;
-		add_to_host_address = 0;
-		a_arity = ((int16_t*)(node[0]))[0];
-		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
-		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple) {
+		int args_needed = ((int16_t*)descriptor)[0] >> 3;
+		if (args_needed != 0 && ((void**)(descriptor-2))[host_address_offset] != &__Tuple) {
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\tstill %d argument(s) needed for %p (%d present)\n",args_needed,node,a_arity);
 #endif
@@ -445,7 +544,7 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			}
 			host_heap[1]=(BC_WORD)clean_ie;
 			host_heap[2]=(BC_WORD)&host_heap[3];
-			return build_finalizer(host_heap+3, interpreter_finalizer, (BC_WORD)node);
+			return build_finalizer(host_heap+3, interpreter_finalizer, descriptor);
 		}
 	}
 	int ab_arity=a_arity+b_arity;
@@ -454,29 +553,8 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	EPRINTF( "\tcopying (arities %d / %d)...\n", a_arity, b_arity);
 #endif
 
-	BC_WORD *host_address=(BC_WORD*)node[0];
-	if (ie->program->data<=host_address && host_address<=ie->program->data+ie->program->data_size) {
-		host_address = ((void**)(node[0]-2))[host_address_offset];
-		if (host_address==(void*)-1) {
-			EPRINTF("Unresolvable descriptor %p\n",(void*)node[0]); /* TODO: copy descriptor */
-			*target=(BC_WORD*)-4;
-			return host_heap;
-		}
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
-				host_address,add_to_host_address,
-				(void*)(node[0]-2),host_address_offset,&((void**)(node[0]-2))[host_address_offset]);
-#endif
-		host_address+=add_to_host_address;
-		host_address=(BC_WORD*)((BC_WORD)host_address+2);
-	} else {
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tnot attempting to resolve non-data descriptor %p\n",host_address);
-#endif
-	}
-
 	BC_WORD *host_node=host_heap;
-	host_node[0]=(BC_WORD)host_address;
+	host_node[0]=descriptor;
 
 	if (ab_arity < 3) {
 		host_heap += 1+ab_arity;
@@ -517,85 +595,75 @@ static BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	return host_heap;
 }
 
-static int copied_node_size(BC_WORD *node) {
-	if (!(node[0] & 2)) { /* thunk, delay interpretation */
-		if (*((BC_WORD*)node[0]) ==
-#ifdef COMPUTED_GOTOS
-				(BC_WORD) instruction_labels[Cjsr_eval_host_node]
-#else
-				Cjsr_eval_host_node
-#endif
-				)
-			return 0;
-		else
-			return 3+FINALIZER_SIZE_ON_HEAP;
+static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
+	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
+	BC_WORD descriptor=node[0];
+
+	if (!(descriptor & 1))
+		return;
+
+	BC_WORD *host_node=(BC_WORD*)(descriptor-1);
+
+	/* TODO: this should check on host_node[0] if the descriptor is something from ABC.Interpreter.Internal */
+	if (host_node[1]==(BC_WORD)clean_ie) {
+		/* The host node is a delayed interpretation.
+		 * The original descriptor is at host_node[2][2][1], but because we
+		 * know how these nodes are built above this is always host_node[7]. */
+		node[0]=host_node[7];
+		host_node[7]=(BC_WORD)node;
+		return;
 	}
 
-	if ((node[0]==(BC_WORD)&INT+2 && node[1]<33) || node[0]==(BC_WORD)&CHAR+2)
-		return 0;
-	else if (node[0]==(BC_WORD)&INT+2 ||
-			node[0]==(BC_WORD)&BOOL+2 ||
-			node[0]==(BC_WORD)&REAL+2)
-		return 2;
-	else if (node[0]==(BC_WORD)&__STRING__+2)
-		return (node[1]+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
-	else if (node[0]==(BC_WORD)&__ARRAY__+2) {
-		int len=node[1];
-		BC_WORD desc=node[2];
-		if (desc==(BC_WORD)&BOOL+2)
-			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-			{} /* len is correct */
-		else if (desc==0) { /* boxed array */
-			int words_needed=len;
-			for (int i=0; i<len; i++)
-				words_needed+=copied_node_size((BC_WORD*)node[i+3]);
-			len=words_needed;
-		} else { /* unboxed array */
-			desc|=2;
-			int16_t elem_a_arity=*(int16_t*)desc;
-			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			int words_needed=len*elem_ab_arity;
-			node+=3;
-			for (int i=0; i<len; i++) {
-				for (int a=0; a<elem_a_arity; a++)
-					words_needed+=copied_node_size((BC_WORD*)node[a]);
-				node+=elem_ab_arity;
-			}
-			len=words_needed;
+	descriptor=node[0]=host_node[0];
+
+	int16_t ab_arity=((int16_t*)descriptor)[-1];
+	int16_t a_arity=ab_arity;
+	int host_descriptor_offset=-2 - 2*a_arity;
+	int add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
+	if (ab_arity > 256) {
+		ab_arity-=256;
+		a_arity=((int16_t*)descriptor)[0];
+		host_descriptor_offset=-2;
+		add_to_host_descriptor=0;
+	}
+
+	BC_WORD *host_descriptor=(BC_WORD*)descriptor;
+	if (ie->program->data<=host_descriptor && host_descriptor<=ie->program->data+ie->program->data_size) {
+		host_descriptor=((void**)(descriptor-2))[host_descriptor_offset];
+		if (host_descriptor==(void*)-1) {
+			EPRINTF("Unresolvable descriptor %p\n",(void*)descriptor); /* TODO: copy descriptor */
+			interpreter_exit(-1);
 		}
-		return len+3;
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
+				host_descriptor,add_to_host_descriptor,
+				(void*)(descriptor-2),host_descriptor_offset,&((void**)(descriptor-2))[host_descriptor_offset]);
+#endif
+		host_descriptor+=add_to_host_descriptor;
+		host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
+	} else {
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\tnot attempting to resolve non-data descriptor %p\n",host_descriptor);
+#endif
 	}
 
-	int16_t a_arity = ((int16_t*)(node[0]))[-1];
-	int16_t b_arity = 0;
-	int host_address_offset = -2 - 2*a_arity;
-	if (a_arity > 256) { /* record */
-		a_arity = ((int16_t*)(node[0]))[0];
-		b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
-	} else { /* may be curried */
-		int args_needed = ((int16_t*)(node[0]))[0] >> 3;
-		if (args_needed != 0 && ((void**)(node[0]-2))[host_address_offset] != &__Tuple)
-			return 3+FINALIZER_SIZE_ON_HEAP;
+	host_node[0]=(BC_WORD)host_descriptor;
+
+	if (a_arity==0)
+		return;
+
+	restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[1]);
+
+	if (a_arity==1)
+		return;
+
+	if (ab_arity==2)
+		restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[2]);
+	else {
+		BC_WORD **rest=(BC_WORD**)node[2];
+		for (int i=0; i<a_arity-1; i++)
+			restore_and_translate_descriptors(clean_ie, rest[i]);
 	}
-	int ab_arity=a_arity+b_arity;
-
-	int words_needed=1+ab_arity;
-	if (ab_arity >= 3)
-		words_needed++;
-
-	if (a_arity>0) {
-		words_needed+=copied_node_size((BC_WORD*)node[1]);
-
-		if (ab_arity >= 3) {
-			BC_WORD **rest = (BC_WORD**) node[2];
-			for (int i=0; i < a_arity-1; i++)
-				words_needed+=copied_node_size(rest[i]);
-		} else if (a_arity == 2)
-			words_needed+=copied_node_size((BC_WORD*)node[2]);
-	}
-
-	return words_needed;
 }
 
 extern void __interpret__garbage__collect(struct interpretation_environment*);
@@ -622,6 +690,8 @@ int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		EPRINTF("internal error in copy_to_host: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
 		interpreter_exit(1);
 	}
+
+	restore_and_translate_descriptors(clean_ie,node);
 
 	return words_used;
 }
