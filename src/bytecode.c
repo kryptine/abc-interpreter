@@ -20,6 +20,7 @@ void free_program(struct program *pgm) {
 	struct host_symbols_list *extra_host_symbols=pgm->extra_host_symbols;
 	while (extra_host_symbols != NULL) {
 		struct host_symbols_list *next=extra_host_symbols->next;
+		free(extra_host_symbols->host_symbol.interpreter_location-2);
 		free(extra_host_symbols);
 		extra_host_symbols=next;
 	}

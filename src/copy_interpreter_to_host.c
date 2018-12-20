@@ -597,7 +597,6 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 }
 
 static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
 	BC_WORD descriptor=node[0];
 
 	if (!(descriptor & 1))
@@ -674,7 +673,16 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	}
 
 	BC_WORD *host_descriptor=(BC_WORD*)descriptor;
-	if (ie->program->data<=host_descriptor && host_descriptor<=ie->program->data+ie->program->data_size) {
+	if ((BC_WORD)host_descriptor==(BC_WORD)&INT+2 ||
+			(BC_WORD)host_descriptor==(BC_WORD)&BOOL+2 ||
+			(BC_WORD)host_descriptor==(BC_WORD)&__STRING__+2 ||
+			(BC_WORD)host_descriptor==(BC_WORD)&__ARRAY__+2 ||
+			(BC_WORD)host_descriptor==(BC_WORD)&CHAR+2 ||
+			(BC_WORD)host_descriptor==(BC_WORD)&REAL+2) {
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\tnot translating descriptor of basic type\n");
+#endif
+	} else {
 		host_descriptor=((void**)(descriptor-2))[host_descriptor_offset];
 		if (host_descriptor==(void*)-1) {
 			EPRINTF("Unresolvable descriptor %p\n",(void*)descriptor); /* TODO: copy descriptor */
@@ -687,10 +695,6 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 #endif
 		host_descriptor+=add_to_host_descriptor;
 		host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
-	} else {
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tnot attempting to resolve non-data descriptor %p\n",host_descriptor);
-#endif
 	}
 
 	host_node[0]=(BC_WORD)host_descriptor;

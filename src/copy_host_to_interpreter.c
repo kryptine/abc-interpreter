@@ -88,20 +88,6 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 	return words_needed;
 }
 
-static const char new_host_symbol_name[]="_unknown_descriptor";
-static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
-	/* Just use the host descriptor, since we're never going to use code addresses anyway */
-	int16_t arity=*(int16_t*)descriptor;
-	if (arity>=256) { /* record; no curry table */
-		host_symbol->location=descriptor;
-		host_symbol->interpreter_location=descriptor;
-	} else {
-		host_symbol->location=descriptor-arity;
-		host_symbol->interpreter_location=descriptor-2*arity;
-	}
-	host_symbol->name=(char*)new_host_symbol_name;
-}
-
 static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
 		BC_WORD *heap, BC_WORD **target, BC_WORD *node) {
 	*target=heap;
@@ -259,6 +245,53 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 	return heap;
 }
 
+static const char new_host_symbol_name[]="_unknown_descriptor";
+static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
+	/* Just use the host descriptor, since we're never going to use code addresses anyway */
+	int16_t ab_arity=((int16_t*)descriptor)[0];
+	int16_t a_arity=((int16_t*)descriptor)[1];
+	if (ab_arity>=256) { /* record */
+		host_symbol->location=descriptor;
+		host_symbol->interpreter_location=descriptor;
+		/* TODO: copy record descriptor */
+	} else {
+		a_arity>>=3;
+		BC_WORD *new_descriptor=safe_malloc((a_arity*2+6)*sizeof(BC_WORD));
+		new_descriptor[0]=(BC_WORD)descriptor;
+		new_descriptor[1]=(BC_WORD)&new_descriptor[2]+2;
+		/* curry table won't be used */
+		new_descriptor[a_arity*2+2]=a_arity;
+#ifdef MACH_O64
+		new_descriptor[a_arity*2+3]=descriptor[a_arity*2+2];
+#else
+		new_descriptor[a_arity*2+3]=((uint32_t*)descriptor)[a_arity*2+2];
+#endif
+		new_descriptor[a_arity*2+4]=0;
+		/* descriptor name won't be used */
+		new_descriptor[a_arity*2+5]=0;
+		host_symbol->location=descriptor;
+		host_symbol->interpreter_location=&new_descriptor[2];
+	}
+	host_symbol->name=(char*)new_host_symbol_name;
+}
+
+static struct host_symbol *translate_descriptor(struct program *program, BC_WORD *descriptor) {
+	struct host_symbol *host_symbol=find_host_symbol_by_address(program, descriptor);
+
+	if (host_symbol==NULL) {
+		struct host_symbols_list *extra_host_symbols=safe_malloc(sizeof(struct host_symbols_list));
+		extra_host_symbols->host_symbol.interpreter_location=(BC_WORD*)-1;
+		extra_host_symbols->next=program->extra_host_symbols;
+		program->extra_host_symbols=extra_host_symbols;
+		host_symbol=&extra_host_symbols->host_symbol;
+	}
+
+	if (host_symbol->interpreter_location==(BC_WORD*)-1)
+		copy_descriptor_to_interpreter(descriptor, host_symbol);
+
+	return host_symbol;
+}
+
 static inline void restore_and_translate_descriptors(struct program *program, BC_WORD *node) {
 	BC_WORD descriptor=node[0];
 
@@ -286,28 +319,14 @@ static inline void restore_and_translate_descriptors(struct program *program, BC
 	int16_t a_arity = ab_arity;
 	int is_record = 0;
 	BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2);
-	struct host_symbol *host_symbol;
 	if (ab_arity > 256) { /* record */
 		a_arity = ((int16_t*)descriptor)[0];
 		ab_arity -= 256;
-		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 		is_record = 1;
-	} else { /* may be curried */
+	} else {
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
-		host_symbol = find_host_symbol_by_address(program, host_desc_label);
 	}
-
-	if (host_symbol==NULL) {
-		struct host_symbols_list *extra_host_symbols=safe_malloc(sizeof(struct host_symbols_list));
-		extra_host_symbols->host_symbol.interpreter_location=(BC_WORD*)-1;
-		extra_host_symbols->next=program->extra_host_symbols;
-		program->extra_host_symbols=extra_host_symbols;
-		host_symbol=&extra_host_symbols->host_symbol;
-	}
-	if (host_symbol->interpreter_location==(BC_WORD*)-1) {
-		/* Copy descriptor to interpreter */
-		copy_descriptor_to_interpreter((BC_WORD*)(descriptor-2), host_symbol);
-	}
+	struct host_symbol *host_symbol=translate_descriptor(program, host_desc_label);
 
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("\ttranslating %p (%s) to %p; %d %d\n",host_symbol->location,host_symbol->name,host_symbol->interpreter_location,ab_arity,a_arity);
