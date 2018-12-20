@@ -460,13 +460,15 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		int len=node[1];
 		host_heap[0]=descriptor;
 		host_heap[1]=len;
-		host_heap[2]=node[2]; /* TODO */
 		BC_WORD desc=node[2];
-		if (desc==(BC_WORD)&BOOL+2)
+		if (desc==(BC_WORD)&BOOL+2) {
+			host_heap[2]=desc;
 			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-		else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2)
-			{} /* len is correct */
-		else if (desc==0) { /* boxed array */
+		} else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2) {
+			host_heap[2]=desc;
+			/* len is correct */
+		} else if (desc==0) { /* boxed array */
+			host_heap[2]=desc;
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
 			for (int i=0; i<len; i++)
