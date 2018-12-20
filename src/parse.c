@@ -472,7 +472,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
+# ifdef DEBUG_CLEAN_LINKS
 					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
+# endif
 				} else if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
 					state->program->symbol_table[state->ptr].offset &= -2;
 # if (WORD_WIDTH == 64)
@@ -499,7 +501,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							/* Descriptor has a _hnf code address */
 							struct host_symbol *host_sym = find_host_symbol_by_name(state->program, state->program->symbol_table[state->ptr].name);
 							if (host_sym == NULL) {
+#  ifdef DEBUG_CLEAN_LINKS
 								EPRINTF("Warning: symbol '%s' not present in host\n",state->program->symbol_table[state->ptr].name);
+#  endif
 							} else {
 								((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2] = (BC_WORD) host_sym->location;
 								host_sym->interpreter_location = (BC_WORD*) state->program->symbol_table[state->ptr].offset;
