@@ -19,7 +19,7 @@ library: .FORCE
 	$(MAKE) -C ../src $@
 
 $(PATCHED):
-	$(MAKE) -C ../src $@
+	$(MAKE) -C ../src $(shell basename $@)
 
 .FORCE:
 .PHONY: all clean library
