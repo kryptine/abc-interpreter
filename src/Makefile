@@ -1,7 +1,5 @@
 SHELL:=bash
-CLM:=clm
 CPM:=cpm
-override CLMFLAGS+=-I . -IL ArgEnv -IL Platform -IL GraphCopy -ns
 override CFLAGS+=\
 	-std=c99\
 	-Wall\
@@ -27,8 +25,6 @@ endif
 
 ifeq ($(OS),Mac)
 override CFLAGS+=-DMACH_O64
-else
-override CLMFLAGS+=-no-opt-link
 endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
@@ -119,13 +115,6 @@ endif
 
 all: $(BINARIES)
 
-CodeSharing: library $(PATCHED) .FORCE
-	$(CLM) $(CLMFLAGS) $@ -o $@
-
-GraphTest: library $(PATCHED) .FORCE
-	$(CLM) -O -bytecode _system
-	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
-
 ifeq ($(OS),Windows_NT)
 $(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
 else
@@ -175,7 +164,7 @@ AUXILIARIES:=$(INTERPRET_LIB)\
 	$(OBJ_INTERPRET_LIB)
 
 clean:
-	$(RM) $(BINARIES) CodeSharing GraphTest $(AUXILIARIES)
+	$(RM) $(BINARIES) $(AUXILIARIES)
 	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
 
 .FORCE:

@@ -27,14 +27,14 @@ import ABC.Interpreter.Util
 // the first 100 elements.
 import StdEnum,StdFunc
 //Start w
-//# (primes,w) = get_start_rule_as_expression "../test/infprimes.bc" w
+//# (primes,w) = get_start_rule_as_expression "infprimes.bc" w
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
 Start :: *World -> [Int]
 Start w
 # ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat),w)
-	= get_start_rule_as_expression defaultDeserializationSettings (".." </> "test" </> "functions.bc") w
+	= get_start_rule_as_expression defaultDeserializationSettings "functions.bc" w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat
 where
 	use ::

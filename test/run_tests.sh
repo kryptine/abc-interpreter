@@ -157,7 +157,7 @@ for MODULE in *.icl
 do
 	MODULE="${MODULE/.icl/}"
 
-	if [[ "${MODULE:0:1}" == "#" ]]; then
+	if [[ "$MODULE" == "CodeSharing" ]] || [[ "$MODULE" == "GraphTest" ]]; then
 		continue
 	elif [[ "${#RUN_ONLY[@]}" -gt 0 ]] && ! contains "$MODULE" "${RUN_ONLY[@]}"; then
 		continue

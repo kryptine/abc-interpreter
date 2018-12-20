@@ -57,33 +57,39 @@ interworking-Start:
   extends: .base
   stage: test-interworking
   script:
-    - (cd test; ./run_tests.sh -Rq -o functions)
-    - cd src
+    - cd test
+    - ./run_tests.sh -Rqo functions
     - make -B CodeSharing
-    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./CodeSharing 2>/dev/null > CodeSharing.result
+    - git diff --no-index --word-diff CodeSharing.expected CodeSharing.result
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
-    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./CodeSharing 2>/dev/null > CodeSharing.result
+    - git diff --no-index --word-diff CodeSharing.expected CodeSharing.result
 
 interworking-GraphCopy:
   extends: .base
   stage: test-interworking
   script:
-    - cd src
+    - cd test
     - make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./GraphTest 2>/dev/null > GraphTest.result
+    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./GraphTest 2>/dev/null > GraphTest.result
+    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
 
 interworking-GraphCopy-clang:
   extends: .base
   stage: test-interworking
   script:
     - export OS=Linux CC=clang
-    - cd src
+    - cd test
     - make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./GraphTest 2>/dev/null > GraphTest.result
+    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - ./GraphTest 2>/dev/null > GraphTest.result
+    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
 
 examples:
   extends: .base
