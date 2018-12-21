@@ -43,4 +43,5 @@ strcmp
 strcpy
 strlen
 strncmp
+strncpy
 ungetc
