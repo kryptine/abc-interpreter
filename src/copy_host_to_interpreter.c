@@ -254,7 +254,7 @@ static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct ho
 		host_symbol->location=descriptor;
 		host_symbol->interpreter_location=&new_descriptor[2];
 	} else {
-		a_arity>>=3;
+		a_arity>>=IF_MACH_O_ELSE(4,3);
 		BC_WORD *new_descriptor=safe_malloc((a_arity*2+6)*sizeof(BC_WORD));
 		new_descriptor[0]=(BC_WORD)descriptor;
 		new_descriptor[1]=(BC_WORD)&new_descriptor[2]+2;
