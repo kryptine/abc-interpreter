@@ -789,8 +789,9 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
 
+					uint32_t size=node[1];
 					node+=3;
-					for (int i=0; i<node[1]; i++) {
+					for (int i=0; i<size; i++) {
 						for (int a=0; a<elem_a_arity; a++)
 							restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[a]);
 						node+=elem_ab_arity;
