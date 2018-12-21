@@ -591,9 +591,9 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	return host_heap;
 }
 
-static BC_WORD *translate_descriptor(BC_WORD *descriptor);
+static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descriptor);
 
-static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
+static inline BC_WORD *copy_descriptor_to_host(struct program *program, BC_WORD *descriptor) {
 	int16_t ab_arity=((int16_t*)descriptor)[0];
 	int16_t a_arity=((int16_t*)descriptor)[1];
 	if (ab_arity>=256) { /* record */
@@ -617,7 +617,7 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 		strncpy((char*)&new_descriptor[1]+4, type_string, type_string_size+1);
 		for (int i=0; i<n_child_descs; i++)
 			new_descriptor[2+type_string_words]=(BC_WORD)
-				translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+				translate_descriptor(program, (BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
 		new_descriptor[2+type_string_words+n_child_descs]=name_string_size;
 		strncpy((char*)&new_descriptor[2+type_string_words+n_child_descs]+4, name_string, name_string_size);
 		return &new_descriptor[1];
@@ -630,7 +630,7 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 		new_descriptor[2]=ab_arity+(a_arity<<16);
 		strncpy((char*)&new_descriptor[3], type_string, type_string_size+1);
 		for (int i=0; i<n_child_descs; i++) {
-			BC_WORD child_desc=(BC_WORD)translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+			BC_WORD child_desc=(BC_WORD)translate_descriptor(program, (BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
 			if (child_desc != (child_desc & 0xffffffff))
 				EPRINTF("Warning: truncating child descriptor address while copying record to host.\n");
 			new_descriptor[3+type_string_words]=(uint32_t)child_desc;
@@ -664,7 +664,7 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 	}
 }
 
-static BC_WORD *translate_descriptor(BC_WORD *descriptor) {
+static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descriptor) {
 	if ((BC_WORD)descriptor==(BC_WORD)&INT ||
 			(BC_WORD)descriptor==(BC_WORD)&BOOL ||
 			(BC_WORD)descriptor==(BC_WORD)&__STRING__ ||
@@ -677,8 +677,12 @@ static BC_WORD *translate_descriptor(BC_WORD *descriptor) {
 	BC_WORD *host_descriptor=(BC_WORD*)descriptor[-2];
 
 	if (host_descriptor==(void*)-1) {
-		host_descriptor=copy_descriptor_to_host(descriptor);
+		host_descriptor=copy_descriptor_to_host(program, descriptor);
 		descriptor[-2]=(BC_WORD)host_descriptor;
+
+		struct host_symbol *host_symbol=add_extra_host_symbol(program);
+		host_symbol->location=host_descriptor;
+		host_symbol->interpreter_location=descriptor;
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
@@ -688,7 +692,8 @@ static BC_WORD *translate_descriptor(BC_WORD *descriptor) {
 	return host_descriptor;
 }
 
-static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
+static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie,
+		struct program *program, BC_WORD *node) {
 	BC_WORD descriptor=node[0];
 
 	if (!(descriptor & 1))
@@ -768,7 +773,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
 	}
 
-	BC_WORD *host_descriptor=translate_descriptor((BC_WORD*)(descriptor-2)-host_descriptor_offset);
+	BC_WORD *host_descriptor=translate_descriptor(program, (BC_WORD*)(descriptor-2)-host_descriptor_offset);
 	host_descriptor=(BC_WORD*)((BC_WORD)(host_descriptor+add_to_host_descriptor)+2);
 
 	host_node[0]=(BC_WORD)host_descriptor;
@@ -780,11 +785,11 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 			if (elem_desc==0) { /* boxed array */
 				BC_WORD **array=(BC_WORD**)&node[3];
 				for (int len=node[1]-1; len>=0; len--)
-					restore_and_translate_descriptors(clean_ie, array[len]);
+					restore_and_translate_descriptors(clean_ie, program, array[len]);
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
 				if (elem_ab_arity>0) { /* unboxed records */
-					host_node[2]=(BC_WORD)translate_descriptor((BC_WORD*)(elem_desc-2))+2;
+					host_node[2]=(BC_WORD)translate_descriptor(program, (BC_WORD*)(elem_desc-2))+2;
 
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
@@ -793,7 +798,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 					node+=3;
 					for (int i=0; i<size; i++) {
 						for (int a=0; a<elem_a_arity; a++)
-							restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[a]);
+							restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[a]);
 						node+=elem_ab_arity;
 					}
 				}
@@ -803,17 +808,17 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		return;
 	}
 
-	restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[1]);
+	restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[1]);
 
 	if (a_arity==1)
 		return;
 
 	if (ab_arity==2)
-		restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[2]);
+		restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[2]);
 	else {
 		BC_WORD **rest=(BC_WORD**)node[2];
 		for (int i=0; i<a_arity-1; i++)
-			restore_and_translate_descriptors(clean_ie, rest[i]);
+			restore_and_translate_descriptors(clean_ie, program, rest[i]);
 	}
 }
 
@@ -842,7 +847,7 @@ int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		interpreter_exit(1);
 	}
 
-	restore_and_translate_descriptors(clean_ie,node);
+	restore_and_translate_descriptors(clean_ie, ie->program, node);
 
 	return words_used;
 }

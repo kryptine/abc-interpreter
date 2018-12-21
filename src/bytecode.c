@@ -119,6 +119,16 @@ static void host_symbols_quicksort(struct host_symbol *arr, int lo, int hi) {
 void sort_host_symbols_by_location(struct program *pgm) {
 	host_symbols_quicksort(pgm->host_symbols, 0, pgm->host_symbols_n-1);
 }
+
+static const char new_host_symbol_name[]="_unknown_descriptor";
+struct host_symbol *add_extra_host_symbol(struct program *pgm) {
+	struct host_symbols_list *extra_host_symbols=safe_malloc(sizeof(struct host_symbols_list));
+	extra_host_symbols->host_symbol.interpreter_location=(BC_WORD*)-1;
+	extra_host_symbols->next=pgm->extra_host_symbols;
+	pgm->extra_host_symbols=extra_host_symbols;
+	extra_host_symbols->host_symbol.name=(char*)new_host_symbol_name;
+	return &extra_host_symbols->host_symbol;
+}
 # endif
 
 int print_plain_label(char *s, size_t size, BC_WORD *label,

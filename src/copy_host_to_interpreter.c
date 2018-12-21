@@ -237,7 +237,6 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 	return heap;
 }
 
-static const char new_host_symbol_name[]="_unknown_descriptor";
 static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
 	int16_t ab_arity=((int16_t*)descriptor)[0];
 	int16_t a_arity=((int16_t*)descriptor)[1];
@@ -270,19 +269,13 @@ static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct ho
 		host_symbol->location=descriptor;
 		host_symbol->interpreter_location=&new_descriptor[2];
 	}
-	host_symbol->name=(char*)new_host_symbol_name;
 }
 
 static struct host_symbol *translate_descriptor(struct program *program, BC_WORD *descriptor) {
 	struct host_symbol *host_symbol=find_host_symbol_by_address(program, descriptor);
 
-	if (host_symbol==NULL) {
-		struct host_symbols_list *extra_host_symbols=safe_malloc(sizeof(struct host_symbols_list));
-		extra_host_symbols->host_symbol.interpreter_location=(BC_WORD*)-1;
-		extra_host_symbols->next=program->extra_host_symbols;
-		program->extra_host_symbols=extra_host_symbols;
-		host_symbol=&extra_host_symbols->host_symbol;
-	}
+	if (host_symbol==NULL)
+		host_symbol=add_extra_host_symbol(program);
 
 	if (host_symbol->interpreter_location==(BC_WORD*)-1)
 		copy_descriptor_to_interpreter(descriptor, host_symbol);
