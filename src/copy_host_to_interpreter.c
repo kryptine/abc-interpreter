@@ -247,13 +247,19 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 static const char new_host_symbol_name[]="_unknown_descriptor";
 static inline void copy_descriptor_to_interpreter(BC_WORD *descriptor, struct host_symbol *host_symbol) {
-	/* Just use the host descriptor, since we're never going to use code addresses anyway */
 	int16_t ab_arity=((int16_t*)descriptor)[0];
 	int16_t a_arity=((int16_t*)descriptor)[1];
 	if (ab_arity>=256) { /* record */
+		BC_WORD *new_descriptor=safe_malloc(6*sizeof(BC_WORD));
+		new_descriptor[0]=(BC_WORD)descriptor;
+		new_descriptor[1]=0;
+		new_descriptor[2]=ab_arity+((BC_WORD)a_arity<<16);
+		/* type string, child descriptors, and record name won't be used */
+		new_descriptor[3]=0;
+		new_descriptor[4]=0;
+		new_descriptor[5]=0;
 		host_symbol->location=descriptor;
-		host_symbol->interpreter_location=descriptor;
-		/* TODO: copy record descriptor */
+		host_symbol->interpreter_location=&new_descriptor[2];
 	} else {
 		a_arity>>=3;
 		BC_WORD *new_descriptor=safe_malloc((a_arity*2+6)*sizeof(BC_WORD));
