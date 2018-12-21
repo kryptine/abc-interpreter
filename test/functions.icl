@@ -1,5 +1,7 @@
 module functions
 
+import StdArray
+import StdClass
 import StdInt
 import StdString
 
@@ -47,11 +49,14 @@ repeat x = let xs = [x:xs] in xs
 	, it2_b :: !Int
 	}
 
-internal_types :: ([InternalType1], [InternalType2])
+internal_types :: ([InternalType1], {#InternalType2}, [InternalType2])
 internal_types =
 	( [it1_1, it1_2]
-	, [{it2_a=it1_1, it2_b=1}, {it2_a=it1_2, it2_b=2}]
+	, {v \\ v <- it2s}
+	, it2s
 	)
 where
 	it1_1 = IT1 37 '!'
 	it1_2 = IT2 37 '!'
+
+	it2s = [{it2_a=it1_1, it2_b=1}, {it2_a=it1_2, it2_b=2}]

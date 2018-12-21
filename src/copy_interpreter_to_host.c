@@ -609,20 +609,21 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 		uint32_t name_string_words=(name_string_size+3)/4;
 		char *name_string=(char*)&descriptor[3+n_child_descs+type_string_words_interpreter];
 		uint32_t *new_descriptor=safe_malloc((5+type_string_words+name_string_words)*sizeof(uint32_t));
-		if ((BC_WORD)new_descriptor != ((BC_WORD)new_descriptor & 0xffffffff)) {
+		if ((BC_WORD)new_descriptor != ((BC_WORD)new_descriptor & 0xffffffff))
 			EPRINTF("Warning: copying record descriptor to address outside 32-bit range; this will lead to crashes when the record is printed.\n");
-		}
-		*(BC_WORD*)new_descriptor=(BC_WORD)&new_descriptor[2+n_child_descs+type_string_words];
-		new_descriptor[0]=0;
-		new_descriptor[1]=(uint32_t)(BC_WORD)&new_descriptor[3+n_child_descs+type_string_words];
+		new_descriptor[0]=0; /* pointer to module */
+		new_descriptor[1]=(uint32_t)(BC_WORD)&new_descriptor[3+type_string_words+n_child_descs];
 		new_descriptor[2]=ab_arity+(a_arity<<16);
 		strncpy((char*)&new_descriptor[3], type_string, type_string_size+1);
-		for (int i=0; i<n_child_descs; i++)
-			new_descriptor[3+type_string_words]=(BC_WORD)
-				translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
-		new_descriptor[3+n_child_descs+type_string_words]=name_string_size;
-		strncpy((char*)&new_descriptor[4+n_child_descs+type_string_words], (char*)name_string, name_string_size);
-		new_descriptor[4+n_child_descs+type_string_words+name_string_words]=0;
+		for (int i=0; i<n_child_descs; i++) {
+			BC_WORD child_desc=(BC_WORD)translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+			if (child_desc != (child_desc & 0xffffffff))
+				EPRINTF("Warning: truncating child descriptor address while copying record to host.\n");
+			new_descriptor[3+type_string_words]=(uint32_t)child_desc;
+		}
+		new_descriptor[3+type_string_words+n_child_descs]=name_string_size;
+		strncpy((char*)&new_descriptor[4+type_string_words+n_child_descs], (char*)name_string, name_string_size);
+		new_descriptor[4+type_string_words+n_child_descs+name_string_words]=0x42;
 		return (BC_WORD*)&new_descriptor[2];
 	} else {
 		a_arity>>=3;
@@ -632,7 +633,7 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 		/* curry table won't be used */
 		new_descriptor[a_arity*2+2]=a_arity;
 		new_descriptor[a_arity*2+3]=descriptor[a_arity*2+2];
-		new_descriptor[a_arity*2+4]=0;
+		new_descriptor[a_arity*2+4]=0; /* pointer to module */
 		new_descriptor[a_arity*2+5]=name_size;
 		strncpy((char*)&new_descriptor[a_arity*2+6], (char*)&descriptor[a_arity*2+4], name_size);
 		return (BC_WORD*)&new_descriptor[2];
@@ -759,7 +760,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
 				if (elem_ab_arity>0) { /* unboxed records */
-					node[2]=(BC_WORD)translate_descriptor((BC_WORD*)(node[2]-2))+2;
+					host_node[2]=(BC_WORD)translate_descriptor((BC_WORD*)(elem_desc-2))+2;
 
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
