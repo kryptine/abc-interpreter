@@ -478,7 +478,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			host_heap[2]=((BC_WORD*)(desc-2))[-2]; /* TODO check that the descriptor exists */
+			host_heap[2]=((BC_WORD*)(desc-2))[-2]+2; /* TODO check that the descriptor exists */
 			node+=3;
 			BC_WORD *new_array=&host_heap[3];
 			host_heap+=3+len*elem_ab_arity;
@@ -714,7 +714,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 					elem_ab_arity-=256;
 
 					node+=3;
-					for (int i=0; i<node[1]-1; i++) {
+					for (int i=0; i<node[1]; i++) {
 						for (int a=0; a<elem_a_arity; a++)
 							restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[a]);
 						node+=elem_ab_arity;

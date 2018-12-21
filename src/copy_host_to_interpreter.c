@@ -92,7 +92,6 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 		BC_WORD *heap, BC_WORD **target, BC_WORD *node) {
 	*target=heap;
 	BC_WORD *org_heap = heap;
-	struct program *program = ie->program;
 	BC_WORD descriptor=node[0];
 
 	if (descriptor==(BC_WORD)&INT+2 && node[1]<33) {
@@ -162,12 +161,6 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 		} else {
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			struct host_symbol *elem_host_symbol=find_host_symbol_by_address(program,(BC_WORD*)(desc-2));
-			if (elem_host_symbol==NULL) {
-				EPRINTF("error: cannot copy unboxed array of unknown records to interpreter\n"); /* TODO */
-				interpreter_exit(1);
-			}
-			heap[2]=(BC_WORD)elem_host_symbol->interpreter_location;
 			BC_WORD *elements=node+3;
 			BC_WORD *new_array=&heap[3];
 			heap+=3+length*elem_ab_arity;
@@ -352,9 +345,12 @@ static inline void restore_and_translate_descriptors(struct program *program, BC
 					restore_and_translate_descriptors(program, array[len]);
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
-				if (elem_ab_arity>0) {
+				if (elem_ab_arity>0) { /* unboxed records */
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
+
+					struct host_symbol *elem_host_symbol=translate_descriptor(program,(BC_WORD*)(elem_desc & -3));
+					interpreter_node[2]=(BC_WORD)elem_host_symbol->interpreter_location|2;
 
 					BC_WORD **array=(BC_WORD**)&node[3];
 					int len=node[1];
