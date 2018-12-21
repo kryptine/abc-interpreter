@@ -59,24 +59,16 @@ interworking-Start:
   script:
     - cd test
     - ./run_tests.sh -Rqo functions
-    - make -B CodeSharing
-    - ./CodeSharing 2>/dev/null > CodeSharing.result
-    - git diff --no-index --word-diff CodeSharing.expected CodeSharing.result
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
-    - ./CodeSharing 2>/dev/null > CodeSharing.result
-    - git diff --no-index --word-diff CodeSharing.expected CodeSharing.result
+    - make -B test-CodeSharing
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-CodeSharing
 
 interworking-GraphCopy:
   extends: .base
   stage: test-interworking
   script:
     - cd test
-    - make -B GraphTest
-    - ./GraphTest 2>/dev/null > GraphTest.result
-    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null > GraphTest.result
-    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
+    - make -B test-GraphTest
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
 
 interworking-GraphCopy-clang:
   extends: .base
@@ -84,12 +76,8 @@ interworking-GraphCopy-clang:
   script:
     - export OS=Linux CC=clang
     - cd test
-    - make -B GraphTest
-    - ./GraphTest 2>/dev/null > GraphTest.result
-    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null > GraphTest.result
-    - git diff --no-index --word-diff GraphTest.expected GraphTest.result
+    - make -B test-GraphTest
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
 
 examples:
   extends: .base
