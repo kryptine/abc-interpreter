@@ -32,11 +32,10 @@ import StdEnum,StdFunc
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
-Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat),w)
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat,internal_types),w)
 	= get_start_rule_as_expression defaultDeserializationSettings "functions.bc" w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat
+= (use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat, internal_types)
 where
 	use ::
 		(Int -> Int)

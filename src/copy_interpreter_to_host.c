@@ -596,6 +596,78 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	return host_heap;
 }
 
+static BC_WORD *translate_descriptor(BC_WORD *descriptor);
+
+static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
+	int16_t ab_arity=((int16_t*)descriptor)[0];
+	int16_t a_arity=((int16_t*)descriptor)[1];
+	if (ab_arity>=256) { /* record */
+		uint32_t type_string_size=(uint32_t)descriptor[1];
+		uint32_t type_string_words_interpreter=(type_string_size+7)/8;
+		uint32_t type_string_words=(type_string_size+3)/4;
+		char *type_string=(char*)&descriptor[2];
+		uint32_t n_child_descs=0;
+		for (char *ts=type_string; *ts; ts++)
+			if (*ts=='{')
+				n_child_descs++;
+		uint32_t name_string_size=(uint32_t)descriptor[2+n_child_descs+type_string_words_interpreter];
+		uint32_t name_string_words=(name_string_size+3)/4;
+		char *name_string=(char*)&descriptor[3+n_child_descs+type_string_words_interpreter];
+		uint32_t *new_descriptor=safe_malloc((5+type_string_words+name_string_words)*sizeof(uint32_t));
+		if ((BC_WORD)new_descriptor != ((BC_WORD)new_descriptor & 0xffffffff)) {
+			EPRINTF("Warning: copying record descriptor to address outside 32-bit range; this will lead to crashes when the record is printed.\n");
+		}
+		*(BC_WORD*)new_descriptor=(BC_WORD)&new_descriptor[2+n_child_descs+type_string_words];
+		new_descriptor[0]=0;
+		new_descriptor[1]=(uint32_t)(BC_WORD)&new_descriptor[3+n_child_descs+type_string_words];
+		new_descriptor[2]=ab_arity+(a_arity<<16);
+		strncpy((char*)&new_descriptor[3], type_string, type_string_size+1);
+		for (int i=0; i<n_child_descs; i++)
+			new_descriptor[3+type_string_words]=(BC_WORD)
+				translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+		new_descriptor[3+n_child_descs+type_string_words]=name_string_size;
+		strncpy((char*)&new_descriptor[4+n_child_descs+type_string_words], (char*)name_string, name_string_size);
+		new_descriptor[4+n_child_descs+type_string_words+name_string_words]=0;
+		return (BC_WORD*)&new_descriptor[2];
+	} else {
+		a_arity>>=3;
+		uint32_t name_size=(uint32_t)descriptor[a_arity*2+3];
+		uint32_t *new_descriptor=safe_malloc((a_arity*IF_MACH_O_ELSE(4,2)+6+(name_size+3)/4)*sizeof(uint32_t));
+		*(BC_WORD*)new_descriptor=(BC_WORD)&new_descriptor[2]+2;
+		/* curry table won't be used */
+		new_descriptor[a_arity*2+2]=a_arity;
+		new_descriptor[a_arity*2+3]=descriptor[a_arity*2+2];
+		new_descriptor[a_arity*2+4]=0;
+		new_descriptor[a_arity*2+5]=name_size;
+		strncpy((char*)&new_descriptor[a_arity*2+6], (char*)&descriptor[a_arity*2+4], name_size);
+		return (BC_WORD*)&new_descriptor[2];
+	}
+}
+
+static BC_WORD *translate_descriptor(BC_WORD *descriptor) {
+	if ((BC_WORD)descriptor==(BC_WORD)&INT ||
+			(BC_WORD)descriptor==(BC_WORD)&BOOL ||
+			(BC_WORD)descriptor==(BC_WORD)&__STRING__ ||
+			(BC_WORD)descriptor==(BC_WORD)&__ARRAY__ ||
+			(BC_WORD)descriptor==(BC_WORD)&CHAR ||
+			(BC_WORD)descriptor==(BC_WORD)&REAL) {
+		return descriptor;
+	}
+
+	BC_WORD *host_descriptor=(BC_WORD*)descriptor[-2];
+
+	if (host_descriptor==(void*)-1) {
+		host_descriptor=copy_descriptor_to_host(descriptor);
+		descriptor[-2]=(BC_WORD)host_descriptor;
+	}
+
+#if DEBUG_CLEAN_LINKS > 1
+	EPRINTF("\thost address is %p (from %p)\n",host_descriptor,descriptor);
+#endif
+
+	return host_descriptor;
+}
+
 static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
 	BC_WORD descriptor=node[0];
 
@@ -662,40 +734,23 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	descriptor=node[0]=host_node[0];
 
 	int16_t ab_arity=((int16_t*)descriptor)[-1];
-	int16_t a_arity=ab_arity;
-	int host_descriptor_offset=-2 - 2*a_arity;
-	int add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
+	int16_t a_arity;
+	int host_descriptor_offset;
+	int add_to_host_descriptor;
 	if (ab_arity > 256) {
 		ab_arity-=256;
 		a_arity=((int16_t*)descriptor)[0];
-		host_descriptor_offset=-2;
+		host_descriptor_offset=0;
 		add_to_host_descriptor=0;
+	} else {
+		a_arity=ab_arity;
+		host_descriptor_offset=2*a_arity;
+		add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
 	}
 
-	BC_WORD *host_descriptor=(BC_WORD*)descriptor;
-	if ((BC_WORD)host_descriptor==(BC_WORD)&INT+2 ||
-			(BC_WORD)host_descriptor==(BC_WORD)&BOOL+2 ||
-			(BC_WORD)host_descriptor==(BC_WORD)&__STRING__+2 ||
-			(BC_WORD)host_descriptor==(BC_WORD)&__ARRAY__+2 ||
-			(BC_WORD)host_descriptor==(BC_WORD)&CHAR+2 ||
-			(BC_WORD)host_descriptor==(BC_WORD)&REAL+2) {
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tnot translating descriptor of basic type\n");
-#endif
-	} else {
-		host_descriptor=((void**)(descriptor-2))[host_descriptor_offset];
-		if (host_descriptor==(void*)-1) {
-			EPRINTF("Unresolvable descriptor %p\n",(void*)descriptor); /* TODO: copy descriptor */
-			interpreter_exit(-1);
-		}
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
-				host_descriptor,add_to_host_descriptor,
-				(void*)(descriptor-2),host_descriptor_offset,&((void**)(descriptor-2))[host_descriptor_offset]);
-#endif
-		host_descriptor+=add_to_host_descriptor;
-		host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
-	}
+	BC_WORD *host_descriptor=translate_descriptor((BC_WORD*)(descriptor-2)-host_descriptor_offset);
+	host_descriptor+=add_to_host_descriptor;
+	host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
 
 	host_node[0]=(BC_WORD)host_descriptor;
 

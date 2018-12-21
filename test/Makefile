@@ -20,7 +20,7 @@ GraphTest: library $(PATCHED) .FORCE
 test: $(RUNTESTS)
 
 $(RUNTESTS): test-%: % .FORCE
-	./$< > $<.result
+	./$< | tee $<.result; echo
 	git diff --no-index --word-diff $<.expected $<.result && echo "\033[0;32m$< passed\033[0m"
 
 library: .FORCE
