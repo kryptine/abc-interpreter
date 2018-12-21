@@ -353,7 +353,6 @@ static inline int copied_node_size(BC_WORD *node) {
 				words_needed+=copied_node_size((BC_WORD*)node[i+3]);
 			len=words_needed;
 		} else { /* unboxed array */
-			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
 			int words_needed=len*elem_ab_arity;
@@ -458,27 +457,23 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return host_heap+len+2;
 	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
 		int len=node[1];
+		BC_WORD desc=node[2];
 		host_heap[0]=descriptor;
 		host_heap[1]=len;
-		BC_WORD desc=node[2];
+		host_heap[2]=desc;
 		if (desc==(BC_WORD)&BOOL+2) {
-			host_heap[2]=desc;
 			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		} else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2) {
-			host_heap[2]=desc;
 			/* len is correct */
 		} else if (desc==0) { /* boxed array */
-			host_heap[2]=desc;
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
 			for (int i=0; i<len; i++)
 				host_heap=copy_to_host(clean_ie, host_heap, &new_array[i], (BC_WORD*)node[i+3]);
 			return host_heap;
 		} else { /* unboxed array */
-			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			host_heap[2]=((BC_WORD*)(desc-2))[-2]; /* TODO check that the descriptor exists */
 			node+=3;
 			BC_WORD *new_array=&host_heap[3];
 			host_heap+=3+len*elem_ab_arity;
@@ -596,8 +591,109 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 	return host_heap;
 }
 
-static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
+static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descriptor);
+
+static inline BC_WORD *copy_descriptor_to_host(struct program *program, BC_WORD *descriptor) {
+	int16_t ab_arity=((int16_t*)descriptor)[0];
+	int16_t a_arity=((int16_t*)descriptor)[1];
+	if (ab_arity>=256) { /* record */
+		uint32_t type_string_size=(uint32_t)descriptor[1];
+		uint32_t type_string_words_interpreter=(type_string_size+7)/8;
+		/* On MACH_O64, the string starts in the same word as the arity */
+		uint32_t type_string_words=(type_string_size+3)/IF_MACH_O_ELSE(8,4);
+		char *type_string=(char*)&descriptor[2];
+		uint32_t n_child_descs=0;
+		for (char *ts=type_string; *ts; ts++)
+			if (*ts=='{')
+				n_child_descs++;
+		uint32_t name_string_size=(uint32_t)descriptor[2+n_child_descs+type_string_words_interpreter];
+		/* On MACH_O64, the string starts in the same word as its length */
+		uint32_t name_string_words=(name_string_size+3)/IF_MACH_O_ELSE(8,4);
+		char *name_string=(char*)&descriptor[3+n_child_descs+type_string_words_interpreter];
+#ifdef MACH_O64
+		BC_WORD *new_descriptor=safe_malloc((3+type_string_words+n_child_descs+name_string_words)*sizeof(BC_WORD));
+		new_descriptor[0]=0 /* pointer to module */ + (((2+type_string_words+n_child_descs)*sizeof(BC_WORD)-4)<<32);
+		new_descriptor[1]=ab_arity+(a_arity<<16);
+		strncpy((char*)&new_descriptor[1]+4, type_string, type_string_size+1);
+		for (int i=0; i<n_child_descs; i++)
+			new_descriptor[2+type_string_words]=(BC_WORD)
+				translate_descriptor(program, (BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+		new_descriptor[2+type_string_words+n_child_descs]=name_string_size;
+		strncpy((char*)&new_descriptor[2+type_string_words+n_child_descs]+4, name_string, name_string_size);
+		return &new_descriptor[1];
+#else
+		uint32_t *new_descriptor=safe_malloc((5+type_string_words+n_child_descs+name_string_words)*sizeof(uint32_t));
+		if ((BC_WORD)new_descriptor != ((BC_WORD)new_descriptor & 0xffffffff))
+			EPRINTF("Warning: copying record descriptor to address outside 32-bit range; this will lead to crashes when the record is printed.\n");
+		new_descriptor[0]=0; /* pointer to module */
+		new_descriptor[1]=(uint32_t)(BC_WORD)&new_descriptor[3+type_string_words+n_child_descs];
+		new_descriptor[2]=ab_arity+(a_arity<<16);
+		strncpy((char*)&new_descriptor[3], type_string, type_string_size+1);
+		for (int i=0; i<n_child_descs; i++) {
+			BC_WORD child_desc=(BC_WORD)translate_descriptor(program, (BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+			if (child_desc != (child_desc & 0xffffffff))
+				EPRINTF("Warning: truncating child descriptor address while copying record to host.\n");
+			new_descriptor[3+type_string_words]=(uint32_t)child_desc;
+		}
+		new_descriptor[3+type_string_words+n_child_descs]=name_string_size;
+		strncpy((char*)&new_descriptor[4+type_string_words+n_child_descs], name_string, name_string_size);
+		return (BC_WORD*)&new_descriptor[2];
+#endif
+	} else {
+		a_arity>>=3;
+		uint32_t name_size=(uint32_t)descriptor[a_arity*2+3];
+#ifdef MACH_O64
+		BC_WORD *new_descriptor=safe_malloc((a_arity*2+3+(name_size+3)/4)*sizeof(BC_WORD));
+		new_descriptor[0]=(BC_WORD)&new_descriptor[1]+2;
+		/* curry table won't be used */
+		new_descriptor[a_arity*2+1]=a_arity+(descriptor[a_arity*2+2]<<32);
+		new_descriptor[a_arity*2+2]=0 /* pointer to module */ + ((BC_WORD)name_size<<32);
+		strncpy((char*)&new_descriptor[a_arity*2+3], (char*)&descriptor[a_arity*2+4], name_size);
+		return (BC_WORD*)&new_descriptor[1];
+#else
+		uint32_t *new_descriptor=safe_malloc((a_arity*2+6+(name_size+3)/4)*sizeof(uint32_t));
+		*(BC_WORD*)new_descriptor=(BC_WORD)&new_descriptor[2]+2;
+		/* curry table won't be used */
+		new_descriptor[a_arity*2+2]=a_arity;
+		new_descriptor[a_arity*2+3]=descriptor[a_arity*2+2];
+		new_descriptor[a_arity*2+4]=0; /* pointer to module */
+		new_descriptor[a_arity*2+5]=name_size;
+		strncpy((char*)&new_descriptor[a_arity*2+6], (char*)&descriptor[a_arity*2+4], name_size);
+		return (BC_WORD*)&new_descriptor[2];
+#endif
+	}
+}
+
+static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descriptor) {
+	if ((BC_WORD)descriptor==(BC_WORD)&INT ||
+			(BC_WORD)descriptor==(BC_WORD)&BOOL ||
+			(BC_WORD)descriptor==(BC_WORD)&__STRING__ ||
+			(BC_WORD)descriptor==(BC_WORD)&__ARRAY__ ||
+			(BC_WORD)descriptor==(BC_WORD)&CHAR ||
+			(BC_WORD)descriptor==(BC_WORD)&REAL) {
+		return descriptor;
+	}
+
+	BC_WORD *host_descriptor=(BC_WORD*)descriptor[-2];
+
+	if (host_descriptor==(void*)-1) {
+		host_descriptor=copy_descriptor_to_host(program, descriptor);
+		descriptor[-2]=(BC_WORD)host_descriptor;
+
+		struct host_symbol *host_symbol=add_extra_host_symbol(program);
+		host_symbol->location=host_descriptor;
+		host_symbol->interpreter_location=descriptor;
+	}
+
+#if DEBUG_CLEAN_LINKS > 1
+	EPRINTF("\thost address is %p (from %p)\n",host_descriptor,descriptor);
+#endif
+
+	return host_descriptor;
+}
+
+static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie,
+		struct program *program, BC_WORD *node) {
 	BC_WORD descriptor=node[0];
 
 	if (!(descriptor & 1))
@@ -663,35 +759,22 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	descriptor=node[0]=host_node[0];
 
 	int16_t ab_arity=((int16_t*)descriptor)[-1];
-	int16_t a_arity=ab_arity;
-	int host_descriptor_offset=-2 - 2*a_arity;
-	int add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
+	int16_t a_arity;
+	int host_descriptor_offset;
+	int add_to_host_descriptor;
 	if (ab_arity > 256) {
 		ab_arity-=256;
 		a_arity=((int16_t*)descriptor)[0];
-		host_descriptor_offset=-2;
+		host_descriptor_offset=0;
 		add_to_host_descriptor=0;
+	} else {
+		a_arity=ab_arity;
+		host_descriptor_offset=2*a_arity;
+		add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
 	}
 
-	BC_WORD *host_descriptor=(BC_WORD*)descriptor;
-	if (ie->program->data<=host_descriptor && host_descriptor<=ie->program->data+ie->program->data_size) {
-		host_descriptor=((void**)(descriptor-2))[host_descriptor_offset];
-		if (host_descriptor==(void*)-1) {
-			EPRINTF("Unresolvable descriptor %p\n",(void*)descriptor); /* TODO: copy descriptor */
-			interpreter_exit(-1);
-		}
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\thost address is %p+%d (from %p with %d; %p)\n",
-				host_descriptor,add_to_host_descriptor,
-				(void*)(descriptor-2),host_descriptor_offset,&((void**)(descriptor-2))[host_descriptor_offset]);
-#endif
-		host_descriptor+=add_to_host_descriptor;
-		host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
-	} else {
-#if DEBUG_CLEAN_LINKS > 1
-		EPRINTF("\tnot attempting to resolve non-data descriptor %p\n",host_descriptor);
-#endif
-	}
+	BC_WORD *host_descriptor=translate_descriptor(program, (BC_WORD*)(descriptor-2)-host_descriptor_offset);
+	host_descriptor=(BC_WORD*)((BC_WORD)(host_descriptor+add_to_host_descriptor)+2);
 
 	host_node[0]=(BC_WORD)host_descriptor;
 
@@ -702,17 +785,20 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 			if (elem_desc==0) { /* boxed array */
 				BC_WORD **array=(BC_WORD**)&node[3];
 				for (int len=node[1]-1; len>=0; len--)
-					restore_and_translate_descriptors(clean_ie, array[len]);
+					restore_and_translate_descriptors(clean_ie, program, array[len]);
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
-				if (elem_ab_arity>0) {
+				if (elem_ab_arity>0) { /* unboxed records */
+					host_node[2]=(BC_WORD)translate_descriptor(program, (BC_WORD*)(elem_desc-2))+2;
+
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
 
+					uint32_t size=node[1];
 					node+=3;
-					for (int i=0; i<node[1]-1; i++) {
+					for (int i=0; i<size; i++) {
 						for (int a=0; a<elem_a_arity; a++)
-							restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[a]);
+							restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[a]);
 						node+=elem_ab_arity;
 					}
 				}
@@ -722,17 +808,17 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		return;
 	}
 
-	restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[1]);
+	restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[1]);
 
 	if (a_arity==1)
 		return;
 
 	if (ab_arity==2)
-		restore_and_translate_descriptors(clean_ie, (BC_WORD*)node[2]);
+		restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[2]);
 	else {
 		BC_WORD **rest=(BC_WORD**)node[2];
 		for (int i=0; i<a_arity-1; i++)
-			restore_and_translate_descriptors(clean_ie, rest[i]);
+			restore_and_translate_descriptors(clean_ie, program, rest[i]);
 	}
 }
 
@@ -761,7 +847,7 @@ int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
 		interpreter_exit(1);
 	}
 
-	restore_and_translate_descriptors(clean_ie,node);
+	restore_and_translate_descriptors(clean_ie, ie->program, node);
 
 	return words_used;
 }

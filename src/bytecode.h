@@ -95,6 +95,7 @@ struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name);
 /* Assumes the symbols are sorted by (host) address */
 struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr);
 void sort_host_symbols_by_location(struct program *pgm);
+struct host_symbol *add_extra_host_symbol(struct program *pgm);
 # endif
 
 int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,

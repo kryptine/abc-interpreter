@@ -57,33 +57,27 @@ interworking-Start:
   extends: .base
   stage: test-interworking
   script:
-    - (cd test; ./run_tests.sh -Rq -o functions)
-    - cd src
-    - make -B CodeSharing
-    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B CodeSharing
-    - ./CodeSharing 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - cd test
+    - ./run_tests.sh -Rqo functions
+    - make -B test-CodeSharing
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-CodeSharing
 
 interworking-GraphCopy:
   extends: .base
   stage: test-interworking
   script:
-    - cd src
-    - make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - cd test
+    - make -B test-GraphTest
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
 
 interworking-GraphCopy-clang:
   extends: .base
   stage: test-interworking
   script:
     - export OS=Linux CC=clang
-    - cd src
-    - make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
-    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B GraphTest
-    - ./GraphTest 2>/dev/null | grep '^\[\(37,\)*37\]$'
+    - cd test
+    - make -B test-GraphTest
+    - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
 
 examples:
   extends: .base

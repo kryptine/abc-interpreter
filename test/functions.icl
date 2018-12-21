@@ -1,8 +1,11 @@
 module functions
 
+import StdArray
+import StdClass
 import StdInt
+import StdString
 
-Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map, repeat)
+Start = (square, sub5, sub5 0 10, sumints, reverse, foldr, ap1, ap3, map, repeat, internal_types)
 
 square :: Int -> Int
 square x = x * x
@@ -36,3 +39,24 @@ map _ []     = []
 
 repeat :: a -> [a]
 repeat x = let xs = [x:xs] in xs
+
+:: InternalType1
+	= IT1 Int Char
+	| IT2 !Int Char
+
+:: InternalType2 =
+	{ it2_a :: InternalType1
+	, it2_b :: !Int
+	}
+
+internal_types :: ([InternalType1], {#InternalType2}, [InternalType2])
+internal_types =
+	( [it1_1, it1_2]
+	, {v \\ v <- it2s}
+	, it2s
+	)
+where
+	it1_1 = IT1 37 '!'
+	it1_2 = IT2 37 '!'
+
+	it2s = [{it2_a=it1_1, it2_b=1}, {it2_a=it1_2, it2_b=2}]

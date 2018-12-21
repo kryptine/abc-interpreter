@@ -4007,14 +4007,14 @@ INSTRUCTION_BLOCK(printD):
 	char *cs;
 
 	s=(BC_WORD*)*bsp++;
+	if ((BC_WORD)s & 2) /* record descriptor in unboxed array */
+		s=(BC_WORD*)((BC_WORD)s-2);
 	l=s[0];
-	if (l>>16>>3) { /* function */
+	if (l>>16>>3) /* function */
 		s+=(l>>16>>3)*2+3;
-		l=s[0];
-	} else if (l>256) { /* record; skip arity and type string */
-		s+=2+s[1]/IF_INT_64_OR_32(8,4)+(s[1]%IF_INT_64_OR_32(8,4) ? 1 : 0);
-		l=s[0];
-	}
+	else if (l>256) /* record, skip arity and type string */
+		s+=2+(s[1]+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+	l=s[0];
 	cs=(char*)&s[1];
 	for (i=0; i<l; ++i)
 		PUTCHAR(*cs++);
@@ -9239,7 +9239,7 @@ INSTRUCTION_BLOCK(push_t_r_args):
 }
 INSTRUCTION_BLOCK(push_a_r_args):
 	/* Unboxed array of records in asp[0], index in bsp[0].
-	 * Copy elements to the stacks and push record descriptor to B-stack. */
+	 * Copy elements to the stacks and push type string to B-stack. */
 {
 	BC_WORD *array,*desc,n,array_o,*a,*b;
 	int16_t a_arity,b_arity,ab_arity;
@@ -9248,8 +9248,8 @@ INSTRUCTION_BLOCK(push_a_r_args):
 	n=*bsp++;
 	array=(BC_WORD*)asp[0];
 	desc=(BC_WORD*)array[2];
-	ab_arity=((int16_t*)desc)[0]-256;
-	a_arity=((int16_t*)desc)[1];
+	ab_arity=((int16_t*)desc)[-1]-256;
+	a_arity=((int16_t*)desc)[0];
 	b_arity=ab_arity-a_arity;
 	array_o=(ab_arity*n)+3;
 	a=&array[array_o];
@@ -9260,7 +9260,7 @@ INSTRUCTION_BLOCK(push_a_r_args):
 	bsp-=b_arity;
 	for (int i=0;i<b_arity;i++)
 		bsp[i]=b[i];
-	*--bsp=(BC_WORD)(desc+2);
+	*--bsp=(BC_WORD)(desc+2)-2;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(push_r_arg_D):

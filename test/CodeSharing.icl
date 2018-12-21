@@ -11,6 +11,7 @@ import StdString
 
 import Data._Array
 import Data.Error
+from Data.Func import hyperstrict
 import Data.Maybe
 import System.CommandLine
 import System.File
@@ -27,15 +28,14 @@ import ABC.Interpreter.Util
 // the first 100 elements.
 import StdEnum,StdFunc
 //Start w
-//# (primes,w) = get_start_rule_as_expression "../test/infprimes.bc" w
+//# (primes,w) = get_start_rule_as_expression "infprimes.bc" w
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
-Start :: *World -> [Int]
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat),w)
-	= get_start_rule_as_expression defaultDeserializationSettings (".." </> "test" </> "functions.bc") w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat
+# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat,internal_types),w)
+	= get_start_rule_as_expression defaultDeserializationSettings "functions.bc" w
+= (use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat, internal_types)
 where
 	use ::
 		(Int -> Int)
@@ -63,6 +63,7 @@ where
 		, toInt (last (rev [TestA,TestB 0,TestA,TestB 1]))
 		, toInt (last (rev [TestB -5,TestA,TestC 7 15,TestB 0]))
 		, toInt (last (rev [TestC 15 7,TestB 0,TestA]))
+		, toInt (last (rev (hyperstrict [{#{x=29,y=8},{x=17,y=25}}]))).[0]
 		, (\xs -> sumints [x*y \\ (x,y) <- xs]) (rev [(1,1),(2,3),(5,6)])
 		, map id (repeat 37) !! 100
 		, int_repeat 37 !! 100
@@ -75,6 +76,14 @@ where
 	toInt TestA = 37
 	toInt (TestB i) = 42 + i
 	toInt (TestC a b) = 2 * a + b
+
+:: TestR =
+	{ x :: Int
+	, y :: !Int
+	}
+instance toInt TestR
+where
+	toInt r = r.x + r.y
 
 square :: Int -> Int
 square x = x * x

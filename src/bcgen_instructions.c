@@ -1337,7 +1337,7 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 				break;
 		}
 
-		add_instruction_w_w_label(Ccreate_array_r,a_size+b_size,b_size,element_descriptor);
+		add_instruction_w_w_label_offset(Ccreate_array_r,a_size+b_size,b_size,element_descriptor,2);
 		return;
 	} while(0);
 
@@ -1382,11 +1382,11 @@ void code_create_array_(char element_descriptor[],int a_size,int b_size) {
 	}
 
 	if (b_size==0)
-		add_instruction_w_label(Ccreate_array_r_a,a_size,element_descriptor);
+		add_instruction_w_label_offset(Ccreate_array_r_a,a_size,element_descriptor,2);
 	else if (a_size==0)
-		add_instruction_w_label(Ccreate_array_r_b,b_size,element_descriptor);
+		add_instruction_w_label_offset(Ccreate_array_r_b,b_size,element_descriptor,2);
 	else
-		add_instruction_w_w_label(Ccreate_array_r_,a_size+b_size,a_size,element_descriptor);
+		add_instruction_w_w_label_offset(Ccreate_array_r_,a_size+b_size,a_size,element_descriptor,2);
 }
 
 void code_decI(void) {
