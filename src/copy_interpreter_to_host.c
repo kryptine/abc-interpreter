@@ -599,16 +599,30 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 	if (ab_arity>=256) { /* record */
 		uint32_t type_string_size=(uint32_t)descriptor[1];
 		uint32_t type_string_words_interpreter=(type_string_size+7)/8;
-		uint32_t type_string_words=(type_string_size+3)/4;
+		/* On MACH_O64, the string starts in the same word as the arity */
+		uint32_t type_string_words=(type_string_size+3)/IF_MACH_O_ELSE(8,4);
 		char *type_string=(char*)&descriptor[2];
 		uint32_t n_child_descs=0;
 		for (char *ts=type_string; *ts; ts++)
 			if (*ts=='{')
 				n_child_descs++;
 		uint32_t name_string_size=(uint32_t)descriptor[2+n_child_descs+type_string_words_interpreter];
-		uint32_t name_string_words=(name_string_size+3)/4;
+		/* On MACH_O64, the string starts in the same word as its length */
+		uint32_t name_string_words=(name_string_size+3)/IF_MACH_O_ELSE(8,4);
 		char *name_string=(char*)&descriptor[3+n_child_descs+type_string_words_interpreter];
-		uint32_t *new_descriptor=safe_malloc((5+type_string_words+name_string_words)*sizeof(uint32_t));
+#ifdef MACH_O64
+		BC_WORD *new_descriptor=safe_malloc((3+type_string_words+n_child_descs+name_string_words)*sizeof(BC_WORD));
+		new_descriptor[0]=0 /* pointer to module */ + (((2+type_string_words+n_child_descs)*sizeof(BC_WORD)-4)<<32);
+		new_descriptor[1]=ab_arity+(a_arity<<16);
+		strncpy((char*)&new_descriptor[1]+4, type_string, type_string_size+1);
+		for (int i=0; i<n_child_descs; i++)
+			new_descriptor[2+type_string_words]=(BC_WORD)
+				translate_descriptor((BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
+		new_descriptor[2+type_string_words+n_child_descs]=name_string_size;
+		strncpy((char*)&new_descriptor[2+type_string_words+n_child_descs]+4, name_string, name_string_size);
+		return &new_descriptor[1];
+#else
+		uint32_t *new_descriptor=safe_malloc((5+type_string_words+n_child_descs+name_string_words)*sizeof(uint32_t));
 		if ((BC_WORD)new_descriptor != ((BC_WORD)new_descriptor & 0xffffffff))
 			EPRINTF("Warning: copying record descriptor to address outside 32-bit range; this will lead to crashes when the record is printed.\n");
 		new_descriptor[0]=0; /* pointer to module */
@@ -622,13 +636,22 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 			new_descriptor[3+type_string_words]=(uint32_t)child_desc;
 		}
 		new_descriptor[3+type_string_words+n_child_descs]=name_string_size;
-		strncpy((char*)&new_descriptor[4+type_string_words+n_child_descs], (char*)name_string, name_string_size);
-		new_descriptor[4+type_string_words+n_child_descs+name_string_words]=0x42;
+		strncpy((char*)&new_descriptor[4+type_string_words+n_child_descs], name_string, name_string_size);
 		return (BC_WORD*)&new_descriptor[2];
+#endif
 	} else {
 		a_arity>>=3;
 		uint32_t name_size=(uint32_t)descriptor[a_arity*2+3];
-		uint32_t *new_descriptor=safe_malloc((a_arity*IF_MACH_O_ELSE(4,2)+6+(name_size+3)/4)*sizeof(uint32_t));
+#ifdef MACH_O64
+		BC_WORD *new_descriptor=safe_malloc((a_arity*2+3+(name_size+3)/4)*sizeof(BC_WORD));
+		new_descriptor[0]=(BC_WORD)&new_descriptor[1]+2;
+		/* curry table won't be used */
+		new_descriptor[a_arity*2+1]=a_arity+(descriptor[a_arity*2+2]<<32);
+		new_descriptor[a_arity*2+2]=0 /* pointer to module */ + ((BC_WORD)name_size<<32);
+		strncpy((char*)&new_descriptor[a_arity*2+3], (char*)&descriptor[a_arity*2+4], name_size);
+		return (BC_WORD*)&new_descriptor[1];
+#else
+		uint32_t *new_descriptor=safe_malloc((a_arity*2+6+(name_size+3)/4)*sizeof(uint32_t));
 		*(BC_WORD*)new_descriptor=(BC_WORD)&new_descriptor[2]+2;
 		/* curry table won't be used */
 		new_descriptor[a_arity*2+2]=a_arity;
@@ -637,6 +660,7 @@ static inline BC_WORD *copy_descriptor_to_host(BC_WORD *descriptor) {
 		new_descriptor[a_arity*2+5]=name_size;
 		strncpy((char*)&new_descriptor[a_arity*2+6], (char*)&descriptor[a_arity*2+4], name_size);
 		return (BC_WORD*)&new_descriptor[2];
+#endif
 	}
 }
 
