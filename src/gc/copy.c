@@ -179,8 +179,8 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 					int16_t b_arity=0;
 					if (node[2]!=0) { /* unboxed */
 						BC_WORD *desc=(BC_WORD*)node[2];
-						arity=((int16_t*)desc)[0];
-						a_arity=((int16_t*)desc)[1];
+						arity=((int16_t*)desc)[-1];
+						a_arity=((int16_t*)desc)[0];
 						b_arity=arity-256-a_arity;
 						arity=a_arity+b_arity;
 					}

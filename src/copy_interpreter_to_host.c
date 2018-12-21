@@ -353,7 +353,6 @@ static inline int copied_node_size(BC_WORD *node) {
 				words_needed+=copied_node_size((BC_WORD*)node[i+3]);
 			len=words_needed;
 		} else { /* unboxed array */
-			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
 			int words_needed=len*elem_ab_arity;
@@ -458,27 +457,23 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return host_heap+len+2;
 	} else if (descriptor==(BC_WORD)&__ARRAY__+2) {
 		int len=node[1];
+		BC_WORD desc=node[2];
 		host_heap[0]=descriptor;
 		host_heap[1]=len;
-		BC_WORD desc=node[2];
+		host_heap[2]=desc;
 		if (desc==(BC_WORD)&BOOL+2) {
-			host_heap[2]=desc;
 			len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 		} else if (desc==(BC_WORD)&INT+2 || desc==(BC_WORD)&REAL+2) {
-			host_heap[2]=desc;
 			/* len is correct */
 		} else if (desc==0) { /* boxed array */
-			host_heap[2]=desc;
 			BC_WORD **new_array=(BC_WORD**)&host_heap[5];
 			host_heap+=3+len;
 			for (int i=0; i<len; i++)
 				host_heap=copy_to_host(clean_ie, host_heap, &new_array[i], (BC_WORD*)node[i+3]);
 			return host_heap;
 		} else { /* unboxed array */
-			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			host_heap[2]=((BC_WORD*)(desc-2))[-2]+2; /* TODO check that the descriptor exists */
 			node+=3;
 			BC_WORD *new_array=&host_heap[3];
 			host_heap+=3+len*elem_ab_arity;
@@ -749,8 +744,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	}
 
 	BC_WORD *host_descriptor=translate_descriptor((BC_WORD*)(descriptor-2)-host_descriptor_offset);
-	host_descriptor+=add_to_host_descriptor;
-	host_descriptor=(BC_WORD*)((BC_WORD)host_descriptor+2);
+	host_descriptor=(BC_WORD*)((BC_WORD)(host_descriptor+add_to_host_descriptor)+2);
 
 	host_node[0]=(BC_WORD)host_descriptor;
 
@@ -764,7 +758,9 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 					restore_and_translate_descriptors(clean_ie, array[len]);
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
-				if (elem_ab_arity>0) {
+				if (elem_ab_arity>0) { /* unboxed records */
+					node[2]=(BC_WORD)translate_descriptor((BC_WORD*)(node[2]-2))+2;
+
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
 

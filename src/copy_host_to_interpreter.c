@@ -41,7 +41,6 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 				words_needed+=copied_node_size(program, (BC_WORD*)node[i+3]);
 			len=words_needed;
 		} else { /* unboxed array */
-			desc|=2;
 			int16_t elem_a_arity=*(int16_t*)desc;
 			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
 			int words_needed=len*elem_ab_arity;
@@ -349,8 +348,8 @@ static inline void restore_and_translate_descriptors(struct program *program, BC
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
 					elem_ab_arity-=256;
 
-					struct host_symbol *elem_host_symbol=translate_descriptor(program,(BC_WORD*)(elem_desc & -3));
-					interpreter_node[2]=(BC_WORD)elem_host_symbol->interpreter_location|2;
+					struct host_symbol *elem_host_symbol=translate_descriptor(program,(BC_WORD*)(elem_desc-2));
+					interpreter_node[2]=(BC_WORD)elem_host_symbol->interpreter_location+2;
 
 					BC_WORD **array=(BC_WORD**)&node[3];
 					int len=node[1];
@@ -415,7 +414,6 @@ static void add_shared_nodes(struct interpretation_environment *ie, BC_WORD *nod
 				for (int len=node[1]-1; len>=0; len--)
 					add_shared_nodes(ie, array[len]);
 			} else {
-				elem_desc|=2;
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
 				if (elem_ab_arity>0) {
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
