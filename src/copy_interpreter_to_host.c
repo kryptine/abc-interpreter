@@ -130,6 +130,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 						desc==(BC_WORD)&CHAR+2 ||
 						desc==(BC_WORD)&BOOL+2 ||
 						desc==(BC_WORD)&REAL+2) {
+					/* TODO small_integers and static_characters */
 #if DEBUG_CLEAN_LINKS > 1
 					EPRINTF("; basic type");
 #endif
@@ -347,7 +348,7 @@ static inline int copied_node_size(BC_WORD *node
 
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&BOOL+2 ||
-			descriptor==(BC_WORD)&CHAR+2 ||
+			/* For CHAR we use static_characters above */
 			descriptor==(BC_WORD)&REAL+2)
 		return 2;
 #ifdef INDIRECTIONS_FOR_HNFS
@@ -480,7 +481,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&BOOL+2 ||
-			descriptor==(BC_WORD)&CHAR+2 ||
+			/* For CHAR we use static_characters above */
 			descriptor==(BC_WORD)&REAL+2) {
 		host_heap[0]=descriptor;
 		host_heap[1]=node[1];
