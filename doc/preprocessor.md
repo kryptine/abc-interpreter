@@ -46,6 +46,13 @@ Some defines are used to indicate what tool is being built:
 - `COMPUTED_GOTOS`:
   Uses computed gotos ('threaded code') for a ~20% speed-up. This makes the
   code very hard to debug. Internally, this uses `_COMPUTED_GOTO_LABELS`
+  Disabled by default.
+
+- `INDIRECTIONS_FOR_HNFS`: during copying, create indirections for HNFs when
+  they are surely lazy (when they are not a child of `ARRAY`, `[!]`, `[ !]`,
+  `[!!]`, or a record).
+  Disabled by default, due to issue
+  [#74](https://gitlab.science.ru.nl/cstaps/abc-interpreter/issues/74).
 
 - `LINK_CLEAN_RUNTIME`:
   Compile for linking with the Clean run-time system. This means sharing some
