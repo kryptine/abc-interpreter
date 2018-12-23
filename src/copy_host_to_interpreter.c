@@ -24,6 +24,7 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&BOOL+2 ||
+			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&REAL+2)
 		return 2;
 	else if (descriptor==(BC_WORD)&__STRING__+2)
@@ -128,6 +129,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&REAL+2 ||
+			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&BOOL+2) {
 		heap[0]=descriptor;
 		heap[1]=node[1];

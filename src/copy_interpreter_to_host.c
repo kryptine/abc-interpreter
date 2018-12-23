@@ -336,6 +336,7 @@ static inline int copied_node_size(BC_WORD *node) {
 
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&BOOL+2 ||
+			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&REAL+2)
 		return 2;
 	else if (descriptor==(BC_WORD)&__STRING__+2)
@@ -444,6 +445,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 		return build_finalizer(&host_heap[3], interpreter_finalizer, descriptor);
 	} else if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&BOOL+2 ||
+			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&REAL+2) {
 		host_heap[0]=descriptor;
 		host_heap[1]=node[1];
