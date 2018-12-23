@@ -8983,6 +8983,10 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 #if DEBUG_CLEAN_LINKS > 1
 		EPRINTF("\tnew node after evaluation: %p -> %p\n",host_node,(void*)*host_node);
 #endif
+	} else {
+		/* needs to be up to date for copying */
+		ie->asp=asp;
+		ie->hp=hp;
 	}
 
 	BC_WORD *new_n;
@@ -9168,7 +9172,6 @@ jsr_eval_host_node_with_args:
 		host_node = __interpret__evaluate__host_with_args(ie, 0, arg1,arg1,arg1, lazy_entry);
 #endif
 	}
-	hp = ie->hp;
 
 	ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 
