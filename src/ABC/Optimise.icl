@@ -391,7 +391,7 @@ skip_b_instructions [IpushI _:is]   n = skip_b_instructions is (n+1)
 skip_b_instructions [Ipop_b _:is]   n = skip_b_instructions is (n+1)
 skip_b_instructions is              n = (is,n)
 
-Start :: *World -> *World
+Start :: !*World -> *World
 Start w
 # args = getCommandLine
 | size args <> 4 || args.[2] <> "-o" = abort "Usage: optimise ABC_FILE -o OPTABC_FILE\n"

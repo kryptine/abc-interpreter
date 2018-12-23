@@ -10,7 +10,7 @@ import StdInt
 import StdList
 import StdString
 
-isAStackInstruction :: ABCInstruction -> Bool
+isAStackInstruction :: !ABCInstruction -> Bool
 isAStackInstruction instr = case instr of
 	Ipush_a _        -> True
 	Iupdate_a _ _    -> True
@@ -18,7 +18,7 @@ isAStackInstruction instr = case instr of
 	Ipop_a _         -> True
 	_                -> False
 
-isBStackInstruction :: ABCInstruction -> Bool
+isBStackInstruction :: !ABCInstruction -> Bool
 isBStackInstruction instr = case instr of
 	Ipush_b _        -> True
 	Iupdate_b _ _    -> True

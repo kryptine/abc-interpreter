@@ -140,8 +140,8 @@ from StdFile import class <<<
 :: StringLiteral = StringLit !String
 :: StringWithSpaces = StringWithSpaces !String
 
-isAStackInstruction :: ABCInstruction -> Bool
-isBStackInstruction :: ABCInstruction -> Bool
+isAStackInstruction :: !ABCInstruction -> Bool
+isBStackInstruction :: !ABCInstruction -> Bool
 
 instance <<< ABCInstruction
 instance <<< [a] | <<< a
