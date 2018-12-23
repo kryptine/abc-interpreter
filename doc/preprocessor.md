@@ -8,6 +8,13 @@
 - `POSIX`:
   For POSIX-compatible systems.
 
+- `MACH_O64`:
+  For Mach-O64. Because Mac only allows position-independent executables
+  nowadays, curry tables are wider on the host on this platform.
+
+- `WINDOWS`:
+  For Windows systems. This platform has a different calling convention.
+
 ## Debugging
 
 - `DEBUG_ALL_INSTRUCTIONS`:

@@ -1,10 +1,11 @@
 SHELL:=bash
 CPM:=cpm
-override CFLAGS+=\
+override CFLAGS:=\
 	-std=c99\
 	-Wall\
 	-Wno-strict-aliasing\
-	-Werror
+	-Werror\
+	$(CFLAGS)
 override CLIBS+=-lm
 
 ifeq ($(MINGW),1)
