@@ -6,10 +6,10 @@
 #include "interpret.h"
 #include "util.h"
 
-extern void *__Tuple;
+extern void *__Tuple,*ARRAY,*__Conss,*__Consts,*__Conssts;
 extern int __interpret__add__shared__node(void *clean_InterpretationEnvironment, void *node);
 
-static inline int copied_node_size(struct program *program, BC_WORD *node) {
+static inline int copied_node_size(struct program *program, BC_WORD *node, int create_thunks_for_hnfs) {
 	BC_WORD descriptor=node[0];
 
 	if ((descriptor==(BC_WORD)&INT+2 && node[1]<33) || descriptor==(BC_WORD)&CHAR+2)
@@ -27,6 +27,8 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 			descriptor==(BC_WORD)&CHAR+2 ||
 			descriptor==(BC_WORD)&REAL+2)
 		return 2;
+	else if (create_thunks_for_hnfs)
+		return 3;
 	else if (descriptor==(BC_WORD)&__STRING__+2)
 		return (node[1]+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4)+2;
 	else if (descriptor==(BC_WORD)&__ARRAY__+2) {
@@ -39,7 +41,7 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 		else if (desc==0) { /* boxed array */
 			int words_needed=len;
 			for (int i=0; i<len; i++)
-				words_needed+=copied_node_size(program, (BC_WORD*)node[i+3]);
+				words_needed+=copied_node_size(program, (BC_WORD*)node[i+3], 0);
 			len=words_needed;
 		} else { /* unboxed array */
 			int16_t elem_a_arity=*(int16_t*)desc;
@@ -48,7 +50,7 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 			node+=3;
 			for (int i=0; i<len; i++) {
 				for (int a=0; a<elem_a_arity; a++)
-					words_needed+=copied_node_size(program, (BC_WORD*)node[a]);
+					words_needed+=copied_node_size(program, (BC_WORD*)node[a], 0);
 				node+=elem_ab_arity;
 			}
 			len=words_needed;
@@ -59,14 +61,22 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 	int16_t a_arity = ((int16_t*)descriptor)[-1];
 	int16_t b_arity = 0;
 	BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2);
+	create_thunks_for_hnfs=1;
 	if (a_arity > 256) { /* record */
 		a_arity = ((int16_t*)descriptor)[0];
 		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
+		create_thunks_for_hnfs=0;
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
 		host_desc_label-=a_arity*IF_MACH_O_ELSE(2,1);
 		if (args_needed!=0 && (void*)host_desc_label!=&__Tuple)
 			return 4;
+
+		if ((void*)host_desc_label==&ARRAY ||
+				(void*)host_desc_label==&__Conss ||
+				(void*)host_desc_label==&__Consts ||
+				(void*)host_desc_label==&__Conssts)
+			create_thunks_for_hnfs=0;
 	}
 	int ab_arity=a_arity+b_arity;
 
@@ -75,21 +85,21 @@ static inline int copied_node_size(struct program *program, BC_WORD *node) {
 		words_needed++;
 
 	if (a_arity>0) {
-		words_needed+=copied_node_size(program, (BC_WORD*)node[1]);
+		words_needed+=copied_node_size(program, (BC_WORD*)node[1], create_thunks_for_hnfs);
 
 		if (ab_arity >= 3) {
 			BC_WORD **rest = (BC_WORD**) node[2];
 			for (int i=0; i < a_arity-1; i++)
-				words_needed+=copied_node_size(program, rest[i]);
+				words_needed+=copied_node_size(program, rest[i], create_thunks_for_hnfs);
 		} else if (a_arity == 2)
-			words_needed+=copied_node_size(program, (BC_WORD*)node[2]);
+			words_needed+=copied_node_size(program, (BC_WORD*)node[2], create_thunks_for_hnfs);
 	}
 
 	return words_needed;
 }
 
 static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie,
-		BC_WORD *heap, BC_WORD **target, BC_WORD *node) {
+		BC_WORD *heap, BC_WORD **target, BC_WORD *node, int create_thunks_for_hnfs) {
 	*target=heap;
 	BC_WORD *org_heap = heap;
 	BC_WORD descriptor=node[0];
@@ -121,12 +131,6 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 	node[0]=(BC_WORD)heap+1;
 
-	if (!(descriptor & 2)) {
-		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
-		heap[1]=descriptor;
-		return &heap[3];
-	}
-
 	if (descriptor==(BC_WORD)&INT+2 ||
 			descriptor==(BC_WORD)&REAL+2 ||
 			descriptor==(BC_WORD)&CHAR+2 ||
@@ -134,6 +138,10 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 		heap[0]=descriptor;
 		heap[1]=node[1];
 		return &heap[2];
+	} else if (!(descriptor & 2) || create_thunks_for_hnfs) {
+		heap[0]=(BC_WORD)&HOST_NODE_INSTRUCTIONS[1];
+		heap[1]=descriptor;
+		return &heap[3];
 	} else if (descriptor==(BC_WORD)&__STRING__+2) {
 		int length=node[1];
 		heap[0]=descriptor;
@@ -157,7 +165,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 			BC_WORD *new_array=&heap[3];
 			heap+=3+length;
 			for (int i=0; i<length; i++)
-				heap=copy_to_interpreter(ie,heap,(BC_WORD**)&new_array[i],(BC_WORD*)node[i+3]);
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)&new_array[i],(BC_WORD*)node[i+3], 0);
 			return heap;
 		} else {
 			int16_t elem_a_arity=*(int16_t*)desc;
@@ -167,7 +175,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 			heap+=3+length*elem_ab_arity;
 			for (int i=0; i<length; i++) {
 				for (int a=0; a<elem_a_arity; a++)
-					heap=copy_to_interpreter(ie,heap,(BC_WORD**)&new_array[a],(BC_WORD*)elements[a]);
+					heap=copy_to_interpreter(ie,heap,(BC_WORD**)&new_array[a],(BC_WORD*)elements[a], 0);
 				for (int b=elem_a_arity; b<elem_ab_arity; b++)
 					new_array[b]=elements[b];
 				elements+=elem_ab_arity;
@@ -182,9 +190,11 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 	int16_t a_arity = ((int16_t*)descriptor)[-1];
 	int16_t b_arity = 0;
+	create_thunks_for_hnfs=1;
 	if (a_arity > 256) { /* record */
 		a_arity = ((int16_t*)descriptor)[0];
 		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
+		create_thunks_for_hnfs=0;
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> IF_MACH_O_ELSE(4,3);
 		BC_WORD *host_desc_label=(BC_WORD*)(descriptor-2)-a_arity*IF_MACH_O_ELSE(2,1);
@@ -195,6 +205,12 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 			heap[3]=descriptor;
 			return &heap[4];
 		}
+
+		if ((void*)host_desc_label==&ARRAY ||
+				(void*)host_desc_label==&__Conss ||
+				(void*)host_desc_label==&__Consts ||
+				(void*)host_desc_label==&__Conssts)
+			create_thunks_for_hnfs=0;
 	}
 	int ab_arity=a_arity+b_arity;
 
@@ -207,11 +223,11 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 		heap+=1+ab_arity;
 
 		if (a_arity >= 1) {
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[1],(BC_WORD*)node[1]);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[1],(BC_WORD*)node[1],create_thunks_for_hnfs);
 
 			if (a_arity == 2) {
 				org_heap[2]=(BC_WORD)heap;
-				heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[2],(BC_WORD*)node[2]);
+				heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[2],(BC_WORD*)node[2],create_thunks_for_hnfs);
 			} else if (b_arity == 1) {
 				org_heap[2] = node[2];
 			}
@@ -223,13 +239,13 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 	} else {
 		heap+=2+ab_arity;
 		if (a_arity >= 1)
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[1],(BC_WORD*)node[1]);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[1],(BC_WORD*)node[1],create_thunks_for_hnfs);
 		else
 			org_heap[1]=node[1];
 		org_heap[2]=(BC_WORD)&org_heap[3];
 		org_heap+=3;
 		for (int i=0; i<a_arity-1; i++)
-			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[i],((BC_WORD**)node[2])[i]);
+			heap=copy_to_interpreter(ie,heap,(BC_WORD**)&org_heap[i],((BC_WORD**)node[2])[i],create_thunks_for_hnfs);
 		org_heap+=a_arity-1;
 		BC_WORD *rest=&((BC_WORD*)(node[2]))[a_arity-1];
 		for (int i=0; i < (a_arity ? b_arity : b_arity-1); i++)
@@ -445,7 +461,7 @@ static void add_shared_nodes(struct interpretation_environment *ie, BC_WORD *nod
 int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie,
 		BC_WORD **target, BC_WORD *node) {
 	BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->in_first_semispace ? 2 : 1) - ie->hp;
-	int words_needed=copied_node_size(ie->program, node);
+	int words_needed=copied_node_size(ie->program, node, 0);
 
 	if (heap_free<words_needed) {
 		ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
@@ -459,7 +475,7 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 			return -1;
 	}
 
-	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, target, node);
+	BC_WORD *new_heap=copy_to_interpreter(ie, ie->hp, target, node, 0);
 	int words_used=new_heap-ie->hp;
 
 	if (words_used != words_needed) {
