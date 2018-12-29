@@ -75,7 +75,16 @@ where
 	}
 
 deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
-deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
+deserialize dsets graph thisexe w = deserialize` False dsets graph thisexe w
+
+deserializeStrict :: !DeserializationSettings !SerializedGraph !String !*World
+	-> *(!DeserializedValue a, !*World)
+deserializeStrict dsets graph thisexe w = case deserialize` True dsets graph thisexe w of
+	(Nothing,w) -> (DV_ParseError,w)
+	(Just v,w)  -> (v,w)
+
+deserialize` :: !Bool !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
+deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # pgm = parse host_syms bytecode
