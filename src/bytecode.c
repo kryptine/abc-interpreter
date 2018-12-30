@@ -304,7 +304,8 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		}
 	}
 
-	return used;
+	s[used]='\0';
+	return used+1;
 }
 
 # ifdef DEBUG_CURSES
