@@ -498,12 +498,12 @@ static void add_shared_nodes(struct interpretation_environment *ie, BC_WORD *nod
 
 int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie,
 		BC_WORD **target, BC_WORD *node) {
-	BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->in_first_semispace ? 2 : 1) - ie->hp;
+	BC_WORD_S heap_free=ie->heap + ie->heap_size/(ie->options.in_first_semispace ? 2 : 1) - ie->hp;
 	int words_needed=COPIED_NODE_SIZE(ie->program, node, 0);
 
 	if (heap_free<words_needed) {
 		ie->hp=garbage_collect(ie->stack, ie->asp, ie->heap, ie->heap_size/2, &heap_free, ie->caf_list
-				, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
+				, &ie->options, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, ie->program->code, ie->program->data
 #endif

@@ -282,7 +282,8 @@ int interpret(
 	void **caf_list = ie->caf_list;
 #else
 	void *caf_list[2] = {0, &caf_list[1]};
-	int in_first_semispace=1;
+	struct interpretation_options options;
+	options.in_first_semispace=1;
 #endif
 	int instr_arg;
 
@@ -293,7 +294,7 @@ int interpret(
 	hp = _hp;
 	heap_size /= 2; /* copying garbage collector */
 #ifdef LINK_CLEAN_RUNTIME
-	BC_WORD_S heap_free=heap + heap_size/(ie->in_first_semispace ? 2 : 1) - hp;
+	BC_WORD_S heap_free=heap + heap_size/(ie->options.in_first_semispace ? 2 : 1) - hp;
 #else
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
@@ -369,9 +370,9 @@ eval_to_hnf_return:
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free, caf_list
 #ifdef LINK_CLEAN_RUNTIME
-				, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
+				, &ie->options, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #else
-				, &in_first_semispace
+				, &options
 #endif
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, program->code, program->data

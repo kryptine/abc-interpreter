@@ -66,7 +66,8 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->hp = hp;
 	ie->caf_list[0] = 0;
 	ie->caf_list[1] = &ie->caf_list[1];
-	ie->in_first_semispace=1;
+	ie->options.in_first_semispace=1;
+	ie->options.hyperstrict=0;
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif

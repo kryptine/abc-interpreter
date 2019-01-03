@@ -7,7 +7,7 @@
 
 BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
-		void **cafs, int *in_first_semispace
+		void **cafs, struct interpretation_options *options
 #ifdef LINK_CLEAN_RUNTIME
 		, BC_WORD **shared_nodes_of_host
 #endif
@@ -20,7 +20,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
 
-	return collect_copy(stack, asp, heap, heap_size, heap_free, cafs, in_first_semispace
+	return collect_copy(stack, asp, heap, heap_size, heap_free, cafs, options
 #ifdef LINK_CLEAN_RUNTIME
 			, shared_nodes_of_host
 #endif

@@ -16,7 +16,7 @@ defaultDeserializationSettings :: DeserializationSettings
 
 :: DeserializedValue a
 	= DV_ParseError
-	
+
 	| DV_HeapFull
 	| DV_StackOverflow
 	| DV_Halt

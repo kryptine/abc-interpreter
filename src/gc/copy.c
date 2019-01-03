@@ -15,13 +15,13 @@
 
 BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
-		void **cafs, int *in_first_semispace
+		void **cafs, struct interpretation_options *options
 #ifdef LINK_CLEAN_RUNTIME
 		, BC_WORD **shared_nodes_of_host
 #endif
 		) {
-	BC_WORD *old_heap = *in_first_semispace ? heap : heap + heap_size;
-	BC_WORD *new_heap = *in_first_semispace ? heap + heap_size : heap;
+	BC_WORD *old_heap = options->in_first_semispace ? heap : heap + heap_size;
+	BC_WORD *new_heap = options->in_first_semispace ? heap + heap_size : heap;
 
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
@@ -394,13 +394,13 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	}
 #endif
 
-	if (*in_first_semispace) {
+	if (options->in_first_semispace) {
 		*heap_free = heap + 2 * heap_size - new_heap;
 	} else {
 		*heap_free = heap + heap_size - new_heap;
 	}
 
-	*in_first_semispace = 1 - *in_first_semispace;
+	options->in_first_semispace = 1 - options->in_first_semispace;
 
 	return new_heap;
 }

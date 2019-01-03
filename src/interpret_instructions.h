@@ -9000,7 +9000,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	n[1]=new_n[1];
 	n[2]=new_n[2];
 	hp=ie->hp+words_used;
-	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
+	heap_free = heap + (ie->options.in_first_semispace ? 1 : 2) * heap_size - hp;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
@@ -9185,7 +9185,7 @@ jsr_eval_host_node_with_args:
 		return -1;
 	}
 	hp=ie->hp+words_used;
-	heap_free = heap + (ie->in_first_semispace ? 1 : 2) * heap_size - hp;
+	heap_free = heap + (ie->options.in_first_semispace ? 1 : 2) * heap_size - hp;
 
 	pc=(BC_WORD*)*csp++;
 	END_INSTRUCTION_BLOCK;
