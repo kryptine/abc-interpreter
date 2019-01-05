@@ -126,11 +126,15 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 			int16_t b_arity = 0;
 
 			if (a_arity==0) {
-				if (desc==(BC_WORD)&INT+2 ||
-						desc==(BC_WORD)&CHAR+2 ||
+				if (desc==(BC_WORD)&INT+2 && s[i+1]<33) {
+					**ptr_stack--=(BC_WORD)(small_integers+2*s[i+1]);
+					i++;
+				} else if (desc==(BC_WORD)&CHAR+2) {
+					**ptr_stack--=(BC_WORD)(static_characters+2*s[i+1]);
+					i++;
+				} else if (desc==(BC_WORD)&INT+2 ||
 						desc==(BC_WORD)&BOOL+2 ||
 						desc==(BC_WORD)&REAL+2) {
-					/* TODO small_integers and static_characters */
 #if DEBUG_CLEAN_LINKS > 1
 					EPRINTF("; basic type");
 #endif
