@@ -9,12 +9,6 @@ import StdMaybe
 import StdMisc
 import StdOrdList
 
-import ArgEnv
-
-import Data.Error
-import System.File
-import System._Pointer
-
 import graph_copy_with_names
 import symbols_in_program
 
@@ -46,17 +40,17 @@ defaultDeserializationSettings =
 	, ie_snodes    :: !*{a}
 	}
 
-serialize_for_interpretation :: a !FilePath !*World -> *(!SerializedGraph, !*World)
+serialize_for_interpretation :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
 serialize_for_interpretation graph bcfile w
 # (graph,descs,mods) = copy_to_string_with_names graph
 
 # (bytecode,w) = readFile bcfile w
-| isError bytecode = abort "Failed to read the bytecode file\n"
-# bytecode = fromOk bytecode
+| isNothing bytecode = (Nothing, w)
+# bytecode = fromJust bytecode
 
 #! (len,bytecodep) = strip_bytecode bytecode {#symbol_name di mods \\ di <-: descs}
 #! bytecode = derefCharArray bytecodep len
-| free_to_false bytecodep = abort "cannot happen\n"
+| free_to_false bytecodep = (Nothing, w)
 
 # rec =
 	{ graph    = graph
@@ -64,7 +58,7 @@ serialize_for_interpretation graph bcfile w
 	, modules  = mods
 	, bytecode = bytecode
 	}
-= (rec, w)
+= (Just rec, w)
 where
 	symbol_name :: !DescInfo !{#String} -> String
 	symbol_name {di_prefix_arity_and_mod,di_name} mod_a
@@ -80,12 +74,12 @@ where
 		ccall strip_bytecode "sA:VIp"
 	}
 
-deserialize :: !DeserializationSettings !SerializedGraph !FilePath !*World -> *(a, !*World)
+deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
 deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # pgm = parse host_syms bytecode
-| isNothing pgm = abort "Failed to parse bytecode\n"
+| isNothing pgm = (Nothing, w)
 # pgm = fromJust pgm
 # int_syms = {#s \\ s <- getInterpreterSymbols pgm}
 # int_syms = {#lookup_symbol_value d modules int_syms \\ d <-: descinfo}
@@ -102,7 +96,7 @@ deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
 # graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
-= (interpret ie (Finalizer 0 0 graph_node), w)
+= (Just (interpret ie (Finalizer 0 0 graph_node)), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
 	getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
@@ -156,15 +150,14 @@ where
 	where
 		PREFIX_D = 4
 
-get_start_rule_as_expression :: !DeserializationSettings !FilePath !*World -> *(a, *World)
-get_start_rule_as_expression dsets filename w
-# {[0]=prog} = getCommandLine
+get_start_rule_as_expression :: !DeserializationSettings !String !String !*World -> *(Maybe a, !*World)
+get_start_rule_as_expression dsets prog filename w
 # (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile filename w
-| isError bc = abort "Failed to read the file\n"
-# bc = fromOk bc
+| isNothing bc = (Nothing, w)
+# bc = fromJust bc
 # pgm = parse syms bc
-| isNothing pgm = abort "Failed to parse program\n"
+| isNothing pgm = (Nothing, w)
 # pgm = fromJust pgm
 # stack = malloc (IF_INT_64_OR_32 8 4 * dsets.stack_size)
 # asp = stack
@@ -178,7 +171,7 @@ get_start_rule_as_expression dsets filename w
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
-= (interpret ie (Finalizer 0 0 start_node), w)
+= (Just (interpret ie (Finalizer 0 0 start_node)), w)
 	// Obviously, this is not a "valid" finalizer in the sense that it can be
 	// called from the garbage collector. But that's okay, because we don't add
 	// it to the finalizer_list anyway. This is just to ensure that the first
@@ -351,3 +344,51 @@ malloc :: !Int -> Pointer
 malloc _ = code {
 	ccall malloc "I:p"
 }
+
+readFile :: !String !*World -> (!Maybe String, !*World)
+readFile fname w
+# (ok,f,w) = fopen fname FReadData w
+| not ok = (Nothing, w)
+# (ok,f) = fseek f 0 FSeekEnd
+| not ok
+	# (_,w) = fclose f w
+	= (Nothing, w)
+# (size,f) = fposition f
+# (ok,f) = fseek f 0 FSeekSet
+| not ok
+	# (_,w) = fclose f w
+	= (Nothing, w)
+# (s,f) = freads f size
+# (_,w) = fclose f w
+= (Just s,w)
+
+:: Pointer :== Int
+
+derefInt :: !Pointer -> Int
+derefInt ptr = code {
+	load_i 0
+}
+
+derefChar :: !Pointer -> Char
+derefChar ptr = code inline {
+	load_ui8 0
+}
+
+derefCharArray :: !Pointer !Int -> {#Char}
+derefCharArray ptr len = copy 0 (createArray len '\0')
+where
+	copy :: !Int *{#Char} -> *{#Char}
+	copy i arr
+	| i == len = arr
+	# c = derefChar (ptr+i)
+	= copy (i+1) {arr & [i]=c}
+
+derefString :: !Pointer -> String
+derefString ptr
+# len = findNull ptr - ptr
+= derefCharArray ptr len
+where
+	findNull :: !Pointer -> Pointer
+	findNull ptr = case derefChar ptr of
+		'\0' -> ptr
+		_    -> findNull (ptr+1)

@@ -1,40 +1,24 @@
 module CodeSharing
 
-import StdArray
-import StdBool
-import StdClass
-import StdFile
-import StdInt
-import StdList
-import StdMisc
-import StdString
+import StdEnv
+import StdMaybe
 
-import Data._Array
-import Data.Error
 from Data.Func import hyperstrict
-import Data.Maybe
-import System.CommandLine
-import System.File
-import System.FilePath
-import System._Pointer
-import Text
-
-import symbols_in_program
+import System.OS
 
 import ABC.Interpreter
-import ABC.Interpreter.Util
 
 // Example: get an infinite list of primes from a bytecode file and take only
 // the first 100 elements.
 import StdEnum,StdFunc
 //Start w
-//# (primes,w) = get_start_rule_as_expression "infprimes.bc" w
+//# (Just primes,w) = get_start_rule_as_expression (IF_WINDOWS "CodeSharing.exe" "CodeSharing") "infprimes.bc" w
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
 Start w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat,internal_types),w)
-	= get_start_rule_as_expression defaultDeserializationSettings "functions.bc" w
+# (Just (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat,internal_types),w)
+	= get_start_rule_as_expression defaultDeserializationSettings (IF_WINDOWS "CodeSharing.exe" "CodeSharing") "functions.bc" w
 = (use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat, internal_types)
 where
 	use ::

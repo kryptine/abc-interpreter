@@ -2,8 +2,8 @@ implementation module Compiler
 
 import StdFile
 import StdList
+import StdMaybe
 
-import Data.Maybe
 import System.OS
 
 import ABC.Interpreter
@@ -38,9 +38,9 @@ Start w
 where
 	program = Add (Lit 1) (Mul (Lit 2) (Add (Lit 3) (Lit 4)))
 
-testThroughFile :: a !FilePath !*World -> *(a, !*World)
+testThroughFile :: a !String !*World -> *(a, !*World)
 testThroughFile graph fp w
-# (graph_s,w) = serialize_for_interpretation optimise_addition "compiler.bc" w
+# (Just graph_s,w) = serialize_for_interpretation optimise_addition "compiler.bc" w
 
 # (ok,f,w) = fopen fp FWriteData w
 # (graph_s,f) = graphToFile graph_s f
@@ -50,4 +50,5 @@ testThroughFile graph fp w
 # (Just graph_s,f) = graphFromFile f
 # (_,w) = fclose f w
 
-= deserialize defaultDeserializationSettings graph_s (IF_WINDOWS "Compiler.exe" "compiler") w
+# (Just graph,w) = deserialize defaultDeserializationSettings graph_s (IF_WINDOWS "Compiler.exe" "compiler") w
+= (graph,w)

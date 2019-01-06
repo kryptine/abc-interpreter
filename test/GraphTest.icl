@@ -1,6 +1,7 @@
 module GraphTest
 
 import StdEnv
+import StdMaybe
 
 from Data.Func import hyperstrict
 import System.OS
@@ -9,7 +10,10 @@ import ABC.Interpreter
 
 Start w
 # (graph,w) = serialize_for_interpretation graph "GraphTest.bc" w
-# ((intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
+# graph = case graph of
+	Nothing -> abort "Could not serialize the graph; is GraphTest.bc up to date?\n"
+	Just g  -> g
+# (Just (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup
 where
 	use ::
