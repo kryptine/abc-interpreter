@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "interpret.h"
 #include "traps.h"
 #include "util.h"
@@ -190,7 +187,7 @@ void clean_openF (void)
 /*
 	printf ("clean_openF %d %d %d\n",mode,(int)file_name_string,file_name_length);
 */
-	c_file_name=malloc (file_name_length+1);
+	c_file_name=safe_malloc (file_name_length+1);
 	if (c_file_name==NULL){
 		EPRINTF("clean_openF malloc failed\n");
 		interpreter_exit (1);
@@ -340,7 +337,7 @@ void clean_print_string_ (void)
 	s+=IF_INT_64_OR_32(16,8);
 
 	while (l!=0){
-		putchar (*s);
+		PUTCHAR (*s);
 		++s;
 		--l;
 	}
