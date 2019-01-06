@@ -206,22 +206,27 @@ make_finalizer ie_settings = code {
 	pushI 0
 }
 
-graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
-graphToFile {graph,descinfo,modules,bytecode} f
+graphToString :: !*SerializedGraph -> *(!.String, !*SerializedGraph)
+graphToString g=:{graph,descinfo,modules,bytecode}
 # (graph_cpy,graph,graph_size) = copy graph
-# f = f <<< graph_size
-# f = f <<< {#c \\ c <- graph_cpy}
-
-# f = f <<< size descinfo
-# f = writeArray (\di f -> f <<< di.di_prefix_arity_and_mod <<< size di.di_name <<< di.di_name) descinfo (size descinfo-1) f
-
-# f = f <<< size modules
-# f = writeArray (\m f -> f <<< size m <<< m) modules (size modules-1) f
-
-# f = f <<< size bytecode
-# f = f <<< bytecode
-
-= ({graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
+# g & graph = graph
+# string_size = sum
+	[ 4 + graph_size
+	, 4 + sum [4 + size di.di_name + 1 \\ di <-: descinfo]
+	, 4 + sum [size mod + 1 \\ mod <-: modules]
+	, 4 + size bytecode
+	]
+# s = createArray string_size '\0'
+# (i,s) = writeInt graph_size 0 s
+# (i,s) = writeString {#c \\ c <- graph_cpy} i s
+# (i,s) = writeInt (size descinfo) i s
+# (i,s) = writeArray writeDescInfo 0 descinfo i s
+# (i,s) = writeInt (size modules) i s
+# (i,s) = writeArray writeTerminatedString 0 modules i s
+# (i,s) = writeInt (size bytecode) i s
+# (i,s) = writeString bytecode i s
+| i <> string_size = abort "internal error in graphToString\n"
+= (s,g)
 where
 	copy :: !*(b a) -> *(![a], !*b a, !Int) | Array b a
 	copy arr
@@ -235,45 +240,112 @@ where
 		# (x,arr) = arr![i]
 		= copy (i-1) arr [x:cpy]
 
-	writeArray :: !(e *File -> *File) !(arr e) !Int !*File -> *File | Array arr e
-	writeArray write xs -1 f = f
-	writeArray write xs i f = writeArray write xs (i-1) (write xs.[i] f)
+	writeInt :: !Int !Int !*String -> (!Int, !.String)
+	writeInt n i s = (i+4, {s & [i]=toChar n, [i+1]=toChar (n>>8), [i+2]=toChar (n>>16), [i+3]=toChar (n>>24)})
+
+	writeString :: !String !Int !*String -> (!Int, !.String)
+	writeString src i s = (i+size src, {s & [j]=c \\ j <- [i..] & c <-: src})
+
+	writeTerminatedString :: !String !Int !*String -> (!Int, !.String)
+	writeTerminatedString src i s
+	# (i,s) = writeString src i s
+	= (i+1, {s & [i]='\0'})
+
+	writeDescInfo :: !DescInfo !Int !*String -> (!Int, !.String)
+	writeDescInfo di i s
+	# (i,s) = writeInt di.di_prefix_arity_and_mod i s
+	= writeTerminatedString di.di_name i s
+
+	writeArray :: !(a Int *String -> (Int, *String)) !Int !{#a} !Int !*String -> (!Int, !.String) | Array {#} a
+	writeArray write n arr i s
+	| n >= size arr = (i,s)
+	# (i,s) = write arr.[n] i s
+	= writeArray write (n+1) arr i s
+
+graphFromString :: !String -> Maybe *SerializedGraph
+graphFromString s = read 0 s
+where
+	read :: !Int !String -> Maybe *SerializedGraph
+	read i s
+	# (i,graph_size) = readInt i s
+	| i < 0 = Nothing
+	# (i,graph) = readString i graph_size s
+	| i < 0 = Nothing
+	# graph = {c \\ c <-: graph}
+
+	# (i,descinfo_size) = readInt i s
+	| i < 0 = Nothing
+	# (i,descinfo) = readArray readDescInfo descinfo_size i s
+	| i < 0 = Nothing
+	# descinfo = {di \\ di <- descinfo}
+
+	# (i,modules_size) = readInt i s
+	| i < 0 = Nothing
+	# (i,modules) = readArray readTerminatedString modules_size i s
+	| i < 0 = Nothing
+	# modules = {mod \\ mod <- modules}
+
+	# (i,bytecode_size) = readInt i s
+	| i < 0 = Nothing
+	# (i,bytecode) = readString i bytecode_size s
+	| i < 0 = Nothing
+
+	| i <> size s = Nothing
+	= Just {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode}
+
+	readInt :: !Int !String -> (!Int, !Int)
+	readInt i s
+	| i >= size s-4 = (-1,0)
+	| otherwise = (i+4, sum [toInt s.[i+j] << (8*j) \\ j <- [0,1,2,3]])
+
+	readString :: !Int !Int !String -> (!Int, !String)
+	readString i len s
+	| i > size s - len = (-1,"")
+	| otherwise = (i+len, s % (i,i+len-1))
+
+	readTerminatedString :: !Int !String -> (!Int, !String)
+	readTerminatedString i s
+	# len = findNull i s - i
+	| len < 0 = (-1, "")
+	# (i,s`) = readString i len s
+	| i < 0 = (i,s`)
+	= (i+1,s`)
+	where
+		findNull :: !Int !String -> Int
+		findNull i s
+		| i >= size s   = -1
+		| s.[i] == '\0' = i
+		| otherwise     = findNull (i+1) s
+
+	readDescInfo :: !Int !String -> (!Int, !DescInfo)
+	readDescInfo i s
+	| i >= size s = (-1, {di_prefix_arity_and_mod=0, di_name=""})
+	# (i,arity) = readInt i s
+	| i < 0 = (-1, {di_prefix_arity_and_mod=0, di_name=""})
+	# (i,name) = readTerminatedString i s
+	| i < 0 = (-1, {di_prefix_arity_and_mod=0, di_name=""})
+	= (i, {di_prefix_arity_and_mod=arity, di_name=name})
+
+	readArray :: !(Int String -> (Int, a)) !Int !Int !String -> (!Int, ![a])
+	readArray read len i s
+	| len <= 0 = (i,[])
+	# (i,x) = read i s
+	| i < 0 = (i,[])
+	# (i,xs) = readArray read (len-1) i s
+	= (i,[x:xs])
+
+graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
+graphToFile g f
+# (s,g) = graphToString g
+# f = f <<< size s <<< s
+= (g,f)
 
 graphFromFile :: !*File -> *(!Maybe *SerializedGraph, !*File)
 graphFromFile f
-# (graph,f) = readString f
-
-# (_,descinfo_size,f) = freadi f
-# (descinfo,f) = readArray readDescInfo (descinfo_size-1) (create_array_ descinfo_size) f
-
-# (_,modules_size,f) = freadi f
-# (modules,f) = readArray readString (modules_size-1) (create_array_ modules_size) f
-
-# (bytecode,f) = readString f
-
-# (end,f) = fend f
-| not end = (Nothing,f)
-# (err,f) = ferror f
-| err = (Nothing,f)
-
-= (Just {graph=graph,descinfo=descinfo,modules=modules,bytecode=bytecode},f)
-where
-	readArray :: !(*File -> *(a, *File)) !Int !*(arr a) !*File -> *(!*arr a, !*File) | Array arr a
-	readArray _ -1 xs f = (xs,f)
-	readArray read i xs f
-	# (x,f) = read f
-	= readArray read (i-1) {xs & [i]=x} f
-
-	readDescInfo :: !*File -> *(!DescInfo, !*File)
-	readDescInfo f
-	# (_,prefix_arity_and_mod,f) = freadi f
-	# (name,f) = readString f
-	= ({di_prefix_arity_and_mod=prefix_arity_and_mod, di_name=name}, f)
-
-	readString :: !*File -> *(!.String, !*File)
-	readString f
-	# (_,size,f) = freadi f
-	= freads f size
+# (_,size,f) = freadi f
+# (s,f) = freads f size
+# g = graphFromString s
+= (g,f)
 
 malloc :: !Int -> Pointer
 malloc _ = code {

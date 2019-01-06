@@ -21,5 +21,8 @@ deserialize :: !DeserializationSettings !SerializedGraph !FilePath !*World -> *(
 
 get_start_rule_as_expression :: !DeserializationSettings !FilePath !*World -> *(a, *World)
 
+graphToString :: !*SerializedGraph -> *(!.String, !*SerializedGraph)
+graphFromString :: !String -> Maybe *SerializedGraph
+
 graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
 graphFromFile :: !*File -> *(!Maybe *SerializedGraph, !*File)
