@@ -3738,7 +3738,9 @@ INSTRUCTION_BLOCK(halt):
 			EPRINTF("%s\n",_tmp);
 		}
 	}
-	interpreter_exit(1);
+	interpret_error=&e__ABC_PInterpreter__dDV__Halt;
+	EXIT(ie,1);
+	goto eval_to_hnf_return_failure;
 #else
 	return 0;
 #endif
@@ -8940,7 +8942,11 @@ INSTRUCTION_BLOCK(jesr):
 			break;
 		default:
 			EPRINTF("internal error: unknown trap %d\n",(int)pc[1]);
-			interpreter_exit(-1);
+			EXIT(ie,-1);
+#ifdef LINK_CLEAN_RUNTIME
+			interpret_error=&e__ABC_PInterpreter__dDV__IllegalInstruction;
+			goto eval_to_hnf_return_failure;
+#endif
 	}
 	asp=g_asp;
 	bsp=g_bsp;
@@ -8993,7 +8999,8 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	int words_used=copy_to_interpreter_or_garbage_collect(ie, &new_n, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
-		return -1;
+		interpret_error=&e__ABC_PInterpreter__dDV__HeapFull;
+		goto eval_to_hnf_return_failure;
 	}
 	n=(BC_WORD*)asp[0]; /* may have been updated due to garbage collection */
 	n[0]=new_n[0];
@@ -9107,7 +9114,7 @@ jsr_eval_host_node_with_args:
 
 	if (args_needed!=instr_arg) {
 		EPRINTF("Error in jsr_eval_host_node: wanted nr. of args (%d) is not the given nr (%d)\n",args_needed,instr_arg);
-		interpreter_exit(-1);
+		EXIT(NULL,-1);
 	}
 
 #if DEBUG_CLEAN_LINKS > 1
@@ -9124,7 +9131,8 @@ jsr_eval_host_node_with_args:
 				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i], 0);
 		if (added_words<0) {
 			EPRINTF("copying to host failed\n");
-			interpreter_exit(1);
+			EXIT(ie,1);
+			goto eval_to_hnf_return_failure;
 		}
 		ie->host->host_hp_ptr+=added_words;
 		ie->host->host_hp_free-=added_words;
@@ -9181,7 +9189,8 @@ jsr_eval_host_node_with_args:
 	int words_used=copy_to_interpreter_or_garbage_collect(ie, (BC_WORD**)asp, host_node);
 	if (words_used<0) {
 		EPRINTF("Interpreter is out of memory\n");
-		return -1;
+		interpret_error=&e__ABC_PInterpreter__dDV__HeapFull;
+		goto eval_to_hnf_return_failure;
 	}
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->options.in_first_semispace ? 1 : 2) * heap_size - hp;

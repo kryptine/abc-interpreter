@@ -145,7 +145,7 @@ static inline BC_WORD *copy_to_interpreter(struct interpretation_environment *ie
 
 	if (!(descriptor & 1)) {
 		EPRINTF("internal error in copy_to_interpreter: node %p not seen\n",node);
-		interpreter_exit(-1);
+		EXIT(NULL,-1);
 	}
 	descriptor--;
 
@@ -518,7 +518,7 @@ int copy_to_interpreter_or_garbage_collect(struct interpretation_environment *ie
 
 	if (words_used != words_needed) {
 		EPRINTF("internal error in copy_to_interpreter: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
-		interpreter_exit(1);
+		EXIT(NULL,1);
 	}
 
 	restore_and_translate_descriptors(ie->program, node);

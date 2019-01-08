@@ -350,7 +350,7 @@ static void activate_label(struct s_label *label) {
 						lab->bcgen_label=new_label(pgrm->code_size<<2);
 				} else if (lab->bcgen_label->label_offset!=-1 && lab->bcgen_label->label_offset!=(pgrm->code_size<<2)) {
 					EPRINTF("Error: overwriting label '%s'\n",lab->bcgen_label->label_name);
-					interpreter_exit(1);
+					EXIT(NULL,1);
 				}
 				lab->bcgen_label->label_offset=pgrm->code_size<<2;
 			}
@@ -406,7 +406,7 @@ static void activate_label(struct s_label *label) {
 						break;
 					default:
 						EPRINTF("error in activate_label\n");
-						interpreter_exit(-1);
+						EXIT(NULL,-1);
 				}
 				ci++;
 			}
@@ -430,7 +430,7 @@ static struct s_label *find_label_by_name(const char *name) {
 			return label;
 	}
 	EPRINTF("error in find_label_by_name (%s)\n",name);
-	interpreter_exit(1);
+	EXIT(NULL,1);
 	return NULL;
 }
 
@@ -485,7 +485,7 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 					break;
 				default:
 					EPRINTF("error in strip_bytecode\n");
-					interpreter_exit(-1);
+					EXIT(NULL,-1);
 			}
 		}
 	}

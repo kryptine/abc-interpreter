@@ -25,8 +25,8 @@ Start w
 # graph = case graph of
 	Nothing -> abort "Could not serialize the graph; is GraphTest.bc up to date?\n"
 	Just g  -> g
-# (DV_Ok (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,repeat,sumtup),w) = deserializeStrict defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup
+# (DV_Ok (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,repeat,sumtup,createarray),w) = deserializeStrict defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup createarray
 where
 	use ::
 		(Int -> DeserializedValue Int)
@@ -46,8 +46,9 @@ where
 		(TestRecord -> DeserializedValue Int)
 		(A.a: a -> DeserializedValue [a])
 		((Int,Int,(Int,Int)) ->  DeserializedValue Int)
+		(Int -> DeserializedValue {Int})
 		-> [DeserializedValue Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 imap reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup =
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 imap reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup createarray =
 		[ case (intsquare 6, intsquare 1) of
 			(DV_Ok a, DV_Ok b) -> DV_Ok (a+b)
 			(err, _)           -> err
@@ -69,6 +70,7 @@ where
 		, toInt_rec {tr_a=37*37,tr_b=TestA,tr_c=False}
 		, flip (!!) 100 <$> repeat 37
 		, sumtup (5,10,(15,7))
+		, size <$> createarray 1000000000
 		: case imap (\x -> if (x == 0 || x == 10) 37 42) [0,10] of
 			DV_Ok res -> [DV_Ok r \\ r <- res]
 		]
@@ -108,6 +110,7 @@ graph = hyperstrict
 	, toInt_rec
 	, repeat
 	, \(a,b,(c,d)) -> a + b + c + d + 0
+	, createarray
 	)
 where
 	reverse_string :: String -> String
@@ -124,6 +127,9 @@ where
 
 	toInt_rec :: TestRecord -> Int
 	toInt_rec rec = toInt rec
+
+	createarray :: !Int -> {Int}
+	createarray n = createArray n 0
 
 arr :: {#TestRecord}
 arr =

@@ -165,6 +165,11 @@ void shift_address(BC_WORD *addr) {
 	*addr = ((*addr << 1) & -7) | (*addr & 3);
 }
 
+/* Return values:
+ * 0: success
+ * 1: unexpected end of string/file
+ * 2: illegal instruction
+ * 3: internal state machine error */
 int parse_program(struct parser *state, struct char_provider *cp) {
 	char elem8;
 	int16_t elem16;
@@ -374,10 +379,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						case '?':
 							EPRINTF(":%d\t%d\t%s %s\n", state->ptr, elem16, instruction_name(elem16), instruction_type(elem16));
 							EPRINTF("\tUnknown instruction; add to abc_instructions.c\n");
-							interpreter_exit(-1);
+							EXIT((void*)-1,-1);
+							return 2;
 						default:
 							EPRINTF("\tUnknown type character '%c' in type of %s\n",*type,instruction_name(elem16));
-							interpreter_exit(1);
+							EXIT((void*)-1,1);
+							return 2;
 					}
 				}
 
@@ -511,7 +518,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						} else {
 							/* This shouldn't happen */
 							EPRINTF("Parse error: %s should have -1/0 for descriptor resolve address\n",state->program->symbol_table[state->ptr].name);
-							interpreter_exit(1);
+							EXIT((void*)-1,1);
+							return 2;
 						}
 					}
 # endif

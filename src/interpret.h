@@ -44,6 +44,16 @@ struct interpretation_environment {
 	void *caf_list[2];
 	struct interpretation_options options;
 };
+
+extern void *e__ABC_PInterpreter__dDV__ParseError;
+extern void *e__ABC_PInterpreter__dDV__HeapFull;
+extern void *e__ABC_PInterpreter__dDV__StackOverflow;
+extern void *e__ABC_PInterpreter__dDV__Halt;
+extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
+extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
+extern void *e__ABC_PInterpreter__dDV__Ok;
+
+extern void **interpret_error;
 #endif
 
 extern void* __STRING__[];

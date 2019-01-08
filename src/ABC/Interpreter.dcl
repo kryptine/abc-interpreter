@@ -18,7 +18,7 @@ defaultDeserializationSettings :: DeserializationSettings
 	= DV_ParseError
 
 	| DV_HeapFull
-	| DV_StackOverflow
+	| DV_StackOverflow // unused for now; see TODO in interpret.c
 	| DV_Halt
 	| DV_IllegalInstruction
 	| DV_HostHeapFull

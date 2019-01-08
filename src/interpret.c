@@ -178,6 +178,8 @@ void *ap_addresses[] = {&ap_2, &ap_3, &ap_4, &ap_5, &ap_6, &ap_7, &ap_8, &ap_9,
 	&ap_10, &ap_11, &ap_12, &ap_13, &ap_14, &ap_15, &ap_16, &ap_17, &ap_18,
 	&ap_19, &ap_20, &ap_21, &ap_22, &ap_23, &ap_24, &ap_25, &ap_26, &ap_27,
 	&ap_28, &ap_29, &ap_30, &ap_31, &ap_32};
+
+void **interpret_error=NULL;
 #endif
 
 BC_WORD Fjmp_ap[64] =
@@ -248,7 +250,9 @@ void handle_segv(int sig) {
 # endif
 		EPRINTF("Untracable segmentation fault\n");
 	}
-	interpreter_exit(1);
+	/* TODO: if LINK_CLEAN_RUNTIME and ie->options.hyperstrict are set, we
+	 * should attempt to go back to the host and return DV_StackOverflow. */
+	EXIT(NULL,1);
 }
 #endif
 
@@ -299,8 +303,6 @@ int interpret(
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-	BC_WORD ret = EVAL_TO_HNF_LABEL;
-
 #if defined(POSIX) && !defined(MACH_O64)
 	/* TODO: check why this breaks on Mac */
 	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
@@ -310,11 +312,14 @@ int interpret(
 #endif
 
 	if (_pc != NULL) {
+		BC_WORD *ret=safe_malloc(sizeof(BC_WORD));
 #ifdef COMPUTED_GOTOS
-		ret = (BC_WORD) &&eval_to_hnf_return;
+		*ret=(BC_WORD)&&eval_to_hnf_return;
+#else
+		*ret=EVAL_TO_HNF_LABEL;
 #endif
-		*--csp = (BC_WORD) &ret;
-		pc = _pc;
+		*--csp=(BC_WORD)ret;
+		pc=_pc;
 
 		if (0) {
 eval_to_hnf_return:
@@ -325,10 +330,18 @@ eval_to_hnf_return:
 			ie->hp = hp;
 #endif
 			return 0;
+#ifdef LINK_CLEAN_RUNTIME
+eval_to_hnf_return_failure:
+			ie->asp = asp;
+			ie->bsp = bsp;
+			ie->csp = csp;
+			ie->hp = hp;
+			return -1;
+#endif
 		}
 	} else if (program->start_symbol_id == -1) {
 		EPRINTF("error in interpret: no start symbol and no program counter given\n");
-		interpreter_exit(1);
+		EXIT(NULL,1);
 		return -1;
 	} else {
 		pc = (BC_WORD*)program->symbol_table[program->start_symbol_id].offset;
@@ -383,7 +396,11 @@ eval_to_hnf_return:
 #endif
 		if (heap_free <= old_heap_free) {
 			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
-			interpreter_exit(1);
+			EXIT(ie,1);
+#ifdef LINK_CLEAN_RUNTIME
+			interpret_error=&e__ABC_PInterpreter__dDV__HeapFull;
+#endif
+			return 1;
 #ifdef DEBUG_GARBAGE_COLLECTOR
 		} else {
 			EPRINTF("Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
@@ -431,23 +448,23 @@ int main(int argc, char **argv) {
 			if (stack_size==-1) {
 				EPRINTF("Illegal stack size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		} else if (!strcmp(argv[i],"-h")) {
 			heap_size=string_to_size(argv[++i]);
 			if (heap_size==-1) {
 				EPRINTF("Illegal heap size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		} else if (input) {
 			EPRINTF(usage, argv[0]);
-			interpreter_exit(-1);
+			EXIT(NULL,-1);
 		} else {
 			input = fopen(argv[i], "rb");
 			if (!input) {
 				EPRINTF("Could not open '%s'\n", argv[i]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		}
 	}
@@ -459,7 +476,7 @@ int main(int argc, char **argv) {
 	free_char_provider(&cp);
 	if (res) {
 		EPRINTF("Parsing failed (%d)\n", res);
-		interpreter_exit(res);
+		EXIT(NULL,res);
 	}
 
 #if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)

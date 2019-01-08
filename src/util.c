@@ -45,10 +45,17 @@ void *safe_realloc(void *ptr, size_t size) {
 	return ptr;
 }
 
-void interpreter_exit(int code) {
+void interpreter_exit(
+#ifdef LINK_CLEAN_RUNTIME
+		struct interpretation_environment *ie,
+#endif
+		int code) {
 #ifdef STDERR_TO_FILE
 	if (stderr_to_file!=NULL)
 		fclose(stderr_to_file);
+#endif
+#ifdef LINK_CLEAN_RUNTIME
+	if (ie==NULL || (ie!=(void*)-1 && !ie->options.hyperstrict))
 #endif
 	exit(code);
 }
