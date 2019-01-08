@@ -1,5 +1,4 @@
-#ifndef _H_ABCINT_INTERPRET
-#define _H_ABCINT_INTERPRET
+#pragma once
 
 #include "bytecode.h"
 
@@ -94,6 +93,8 @@ extern void* __interpreter_indirection[9];
 extern jmp_buf segfault_restore_point;
 #endif
 
+#define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */
+
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
 extern void *instruction_labels[CMAX];
@@ -138,5 +139,3 @@ int interpret(
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
 		BC_WORD *node);
-
-#endif

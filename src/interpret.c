@@ -491,6 +491,7 @@ int main(int argc, char **argv) {
 	heap_size /= sizeof(BC_WORD);
 	heap_size *= 2; /* Copying garbage collector */
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
+	stack[stack_size/2-1] = A_STACK_CANARY;
 	heap = safe_malloc((heap_size+4) * sizeof(BC_WORD));
 
 	BC_WORD *asp = stack;

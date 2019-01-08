@@ -61,6 +61,7 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->heap_size = heap_size;
 	ie->stack = stack;
 	ie->stack_size = stack_size;
+	ie->stack[ie->stack_size/2-1]=A_STACK_CANARY;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;

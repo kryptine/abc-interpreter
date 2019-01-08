@@ -9312,6 +9312,10 @@ INSTRUCTION_BLOCK(A_data_la):
 #endif
 UNIMPLEMENTED_INSTRUCTION_BLOCK:
 	EPRINTF("Unimplemented instruction " BC_WORD_FMT " (%s) at %d\n", *pc, instruction_name(*pc), (int) (pc-program->code));
-	if (asp + 10 > csp)
-		EPRINTF("A and C stack pointers are dangerously close; perhaps try with a larger stack.\n");
-	return 1;
+	if (stack[stack_size/2-1] != A_STACK_CANARY)
+		EPRINTF("Stack overflow\n");
+	EXIT(ie,-1);
+#ifdef LINK_CLEAN_RUNTIME
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+	return -1;
+#endif
