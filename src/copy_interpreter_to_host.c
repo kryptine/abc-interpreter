@@ -49,10 +49,19 @@ extern void *e__ABC_PInterpreter_PInternal__dinterpret__29;
 extern void *e__ABC_PInterpreter_PInternal__dinterpret__30;
 extern void *e__ABC_PInterpreter_PInternal__dinterpret__31;
 
+extern void *e__ABC_PInterpreter__dDV__ParseError;
+extern void *e__ABC_PInterpreter__dDV__HeapFull;
+extern void *e__ABC_PInterpreter__dDV__StackOverflow;
+extern void *e__ABC_PInterpreter__dDV__Halt;
+extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
+extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
+extern void *e__ABC_PInterpreter__dDV__Ok;
+
 struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
-		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
+		int hyperstrict) {
 	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
@@ -67,7 +76,7 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->caf_list[0] = 0;
 	ie->caf_list[1] = &ie->caf_list[1];
 	ie->options.in_first_semispace=1;
-	ie->options.hyperstrict=0;
+	ie->options.hyperstrict=hyperstrict != 0;
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
@@ -889,37 +898,98 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	}
 }
 
+static int evaluate_all_children(struct interpretation_environment *ie) {
+	BC_WORD *start_a_stack=ie->asp;
+	ie->asp[1]=ie->asp[0];
+	ie->asp++;
+
+	while (ie->asp > start_a_stack) {
+		BC_WORD *node=(BC_WORD*)ie->asp[0];
+
+		if (!(node[0] & 2)) {
+			if (interpret_ie(ie, (BC_WORD*)node[0]) != 0) {
+				ie->asp=start_a_stack;
+				EPRINTF("Failed to interpret\n");
+				return -1;
+			}
+		}
+
+		node=(BC_WORD*)*ie->asp--;
+
+		int16_t a_arity=((int16_t*)node[0])[-1];
+		int16_t ab_arity=a_arity;
+		if (a_arity > 256) { /* record */
+			a_arity=((int16_t*)node[0])[0];
+			ab_arity=((int16_t*)node[0])[-1]-256;
+		}
+
+		if (a_arity > 0) {
+			if (!(((BC_WORD*)node[1])[0] & 2))
+				*++ie->asp=node[1];
+
+			if (a_arity > 1) {
+				if (ab_arity==2) {
+					if (!(((BC_WORD*)node[2])[0] & 2))
+						*++ie->asp=node[2];
+				} else {
+					BC_WORD *rest=(BC_WORD*)node[2];
+					for (a_arity-=2; a_arity>=0; a_arity--)
+						if (!(((BC_WORD*)rest[a_arity])[0] & 2))
+							*++ie->asp=rest[a_arity];
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 extern void __interpret__garbage__collect(struct interpretation_environment*);
-int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
-		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	int words_needed=COPIED_NODE_SIZE(node, 0);
+int copy_to_host_or_garbage_collect(struct interpretation_environment *ie,
+		BC_WORD **target, BC_WORD *node, int hyperstrict_if_requested) {
+	int words_needed=0;
+
+	if (hyperstrict_if_requested && ie->options.hyperstrict) {
+		*++ie->asp=(BC_WORD)node;
+		evaluate_all_children(ie);
+		node=(BC_WORD*)*ie->asp--;
+		words_needed+=2;
+	}
+
+	words_needed+=COPIED_NODE_SIZE(node, 0);
 
 	if (words_needed > ie->host->host_hp_free) {
-		*ie->host->host_a_ptr++=(BC_WORD)clean_ie;
+		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 		__interpret__garbage__collect(ie);
-		ie->host->clean_ie=clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
-		host_heap=ie->host->host_hp_ptr;
+		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
 		if (words_needed > ie->host->host_hp_free) {
 			EPRINTF("not enough memory to copy node back to host\n");
 			interpreter_exit(1);
 		}
 	}
 
-	BC_WORD *new_heap=COPY_TO_HOST(clean_ie,host_heap,target,node,0);
-	int words_used=new_heap-host_heap;
+	BC_WORD *new_heap;
+	if (hyperstrict_if_requested && ie->options.hyperstrict) {
+		*target=ie->host->host_hp_ptr;
+		ie->host->host_hp_ptr[0]=(BC_WORD)&e__ABC_PInterpreter__dDV__Ok+IF_MACH_O_ELSE(16,8)+2;
+		new_heap=COPY_TO_HOST(ie->host->clean_ie,&ie->host->host_hp_ptr[2],(BC_WORD**)&ie->host->host_hp_ptr[1],node,0);
+	} else {
+		new_heap=COPY_TO_HOST(ie->host->clean_ie,ie->host->host_hp_ptr,target,node,0);
+	}
+
+	int words_used=new_heap-ie->host->host_hp_ptr;
 
 	if (words_used != words_needed) {
 		EPRINTF("internal error in copy_to_host: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
 		interpreter_exit(1);
 	}
 
-	restore_and_translate_descriptors(clean_ie, ie->program, node);
+	restore_and_translate_descriptors(ie->host->clean_ie, ie->program, node);
 
 	return words_used;
 }
 
-// Used to communicate redirect host thunks with the ASM interface; see #51
+/* Used to communicate redirect host thunks with the ASM interface; see #51 */
 void *__interpret__copy__node__asm_redirect_node;
 
 /**
@@ -975,8 +1045,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		interpreter_exit(1);
 	}
 
-	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
-			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
+	return copy_to_host_or_garbage_collect(ie, (BC_WORD**)&__interpret__copy__node__asm_redirect_node, node, 1);
 }
 
 /**
@@ -1057,6 +1126,5 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		interpreter_exit(1);
 	}
 
-	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
-			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
+	return copy_to_host_or_garbage_collect(ie, (BC_WORD**)&__interpret__copy__node__asm_redirect_node, node, 1);
 }

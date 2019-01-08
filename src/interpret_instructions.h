@@ -9120,9 +9120,8 @@ jsr_eval_host_node_with_args:
 	*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
 
 	for (int i=instr_arg; i>=1; i--) {
-		int added_words=copy_to_host_or_garbage_collect(
-				ie->host->clean_ie, ie->host->host_hp_ptr,
-				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i]);
+		int added_words=copy_to_host_or_garbage_collect(ie,
+				(BC_WORD**)ie->host->host_a_ptr++, (BC_WORD*)asp[-i], 0);
 		if (added_words<0) {
 			EPRINTF("copying to host failed\n");
 			interpreter_exit(1);
