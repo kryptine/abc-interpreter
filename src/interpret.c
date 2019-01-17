@@ -278,7 +278,7 @@ static void handle_segv(int sig, siginfo_t *info, void *context) {
 		}
 		return;
 	}
-	interpret_error=&e__ABC_PInterpreter__dDV__SegmentationFault;
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
 # endif
 	EPRINTF("Segmentation fault in interpreter\n");
 # ifdef LINK_CLEAN_RUNTIME
@@ -288,7 +288,7 @@ static void handle_segv(int sig, siginfo_t *info, void *context) {
 #elif defined(WINDOWS)
 static LONG WINAPI handle_segv(struct _EXCEPTION_POINTERS *exception) {
 # ifdef LINK_CLEAN_RUNTIME
-	interpret_error=&e__ABC_PInterpreter__dDV__SegmentationFault;
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
 	if (segfault_restore_points!=NULL)
 		longjmp(segfault_restore_points->restore_point, 1);
 # endif
@@ -434,7 +434,8 @@ eval_to_hnf_return_failure:
 			if (stack[stack_size/2-1]!=A_STACK_CANARY) {
 				stack[stack_size/2-1]=A_STACK_CANARY;
 				interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
-			}
+			} else if (bsp <= csp)
+				interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
 			return -1;
 #endif
 		}

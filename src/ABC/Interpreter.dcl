@@ -21,7 +21,6 @@ defaultDeserializationSettings :: DeserializationSettings
 	| DV_StackOverflow // On Windows, not all stack overflows can be caught
 	| DV_Halt
 	| DV_IllegalInstruction
-	| DV_SegmentationFault
 	| DV_HostHeapFull
 
 	| DV_Ok a
