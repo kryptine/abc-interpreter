@@ -105,7 +105,11 @@ void build_host_nodes(void) {
 		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
 #ifdef COMPUTED_GOTOS
 # define INSTR(i) (BC_WORD) instruction_labels[i]
-		interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+		interpret(NULL,
+# ifdef SEGFAULT_RESTORE_POINTS
+				0,
+# endif
+				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 #else
 # define INSTR(i) i
 #endif
