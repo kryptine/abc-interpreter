@@ -15,13 +15,13 @@
 
 BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 		BC_WORD *heap, size_t heap_size, BC_WORD_S *heap_free,
-		void **cafs, int *in_first_semispace
+		void **cafs, struct interpretation_options *options
 #ifdef LINK_CLEAN_RUNTIME
 		, BC_WORD **shared_nodes_of_host
 #endif
 		) {
-	BC_WORD *old_heap = *in_first_semispace ? heap : heap + heap_size;
-	BC_WORD *new_heap = *in_first_semispace ? heap + heap_size : heap;
+	BC_WORD *old_heap = options->in_first_semispace ? heap : heap + heap_size;
+	BC_WORD *new_heap = options->in_first_semispace ? heap + heap_size : heap;
 
 	struct nodes_set nodes_set;
 	init_nodes_set(&nodes_set, heap_size);
@@ -77,11 +77,16 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	struct finalizers *finalizers = NULL;
 	while ((finalizers = next_interpreter_finalizer(finalizers)) != NULL) {
 # if DEBUG_GARBAGE_COLLECTOR > 2
-		EPRINTF("\t%p -> %p\n", (void*)finalizers->cur->arg, ((void**)finalizers->cur->arg)[1]);
+		EPRINTF("\t%p -> %p\n", (void*)finalizers->cur->arg, ((void**)(finalizers->cur->arg&-2))[1]);
 # endif
 		if (!on_heap(finalizers->cur->arg, old_heap, heap_size))
 			continue;
-		BC_WORD *temp = (BC_WORD*) finalizers->cur->arg;
+		BC_WORD *temp = (BC_WORD*)(finalizers->cur->arg&-2);
+		/* LSB of the reference is set for hyperstrict references; we store
+		 * this information temporarily in the function argument of the
+		 * finalizer because the LSB is now used for pointer reversal */
+		if (finalizers->cur->arg&1)
+			finalizers->cur->fun = (void(*)(BC_WORD))((BC_WORD)finalizers->cur->fun+1);
 		finalizers->cur->arg = *temp;
 		*temp = (BC_WORD) (&finalizers->cur->arg) | 1;
 	}
@@ -108,7 +113,13 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 #endif
 			BC_WORD *temp = (BC_WORD*) (node[0] ^ 1);
 			node[0] = *temp;
-			*temp = (BC_WORD) new_heap;
+#ifdef LINK_CLEAN_RUNTIME
+			/* see remark about hyperstrict references above */
+			if (temp[-1]==((BC_WORD)(&interpreter_finalizer)+1))
+				*temp = (BC_WORD) new_heap|1;
+			else
+#endif
+				*temp = (BC_WORD) new_heap;
 		}
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF("\tDealing with %p -> %p -> %p\n", (void*) node, (void*) node[0], (void*) *(BC_WORD*)(node[0] ^ 1));
@@ -394,13 +405,13 @@ BC_WORD *collect_copy(BC_WORD *stack, BC_WORD *asp,
 	}
 #endif
 
-	if (*in_first_semispace) {
+	if (options->in_first_semispace) {
 		*heap_free = heap + 2 * heap_size - new_heap;
 	} else {
 		*heap_free = heap + heap_size - new_heap;
 	}
 
-	*in_first_semispace = 1 - *in_first_semispace;
+	options->in_first_semispace = 1 - options->in_first_semispace;
 
 	return new_heap;
 }

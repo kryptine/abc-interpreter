@@ -165,7 +165,7 @@ void mark_cafs(void **cafs, BC_WORD *heap, size_t heap_size, struct nodes_set *s
 void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set) {
 	struct finalizers *finalizers = NULL;
 	while ((finalizers = next_interpreter_finalizer(finalizers)) != NULL)
-		add_grey_node(set, (BC_WORD*) finalizers->cur->arg, heap, heap_size);
+		add_grey_node(set, (BC_WORD*)(finalizers->cur->arg&-2), heap, heap_size);
 }
 #endif
 

@@ -30,7 +30,7 @@ endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
 else
-override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE -D_C99_SOURCE
+override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE=199309L -D_XOPEN_SOURCE=500 -D_C99_SOURCE
 endif
 ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation

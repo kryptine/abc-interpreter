@@ -315,15 +315,15 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		}
 	}
 
-	if (node[0] == (BC_WORD) &INT+2)
+	if ((node[0]&-4)==(BC_WORD)&INT)
 		wprintw(win, "INT %d", node[1]);
-	else if (node[0] == (BC_WORD) &BOOL+2)
+	else if ((node[0]&-4)==(BC_WORD)&BOOL)
 		wprintw(win, "BOOL %s", node[1] ? "true" : "false");
-	else if (node[0] == (BC_WORD) &CHAR+2)
+	else if ((node[0]&-4)==(BC_WORD)&CHAR)
 		wprintw(win, "CHAR '%c'", node[1]);
-	else if (node[0] == (BC_WORD) &REAL+2)
+	else if ((node[0]&-4)==(BC_WORD)&REAL)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
-	else if (node[0] == (BC_WORD) &__cycle__in__spine)
+	else if ((node[0]&-4)==(BC_WORD)&__cycle__in__spine)
 		wprintw(win, "_cycle_in_spine");
 	else {
 		char _tmp[256];
@@ -413,15 +413,15 @@ void debugger_update_b_stack(BC_WORD *ptr) {
 
 void debugger_update_c_stack(BC_WORD *ptr) {
 	char _tmp[256];
-	BC_WORD **start = (BC_WORD**) csp - 1;
-	mvwprintw(winh_c, 0, 0, "C-stack  (%d)\n", start-(BC_WORD**)ptr+1);
+	BC_WORD **start = (BC_WORD**) csp+1;
+	mvwprintw(winh_c, 0, 0, "C-stack  (%d)\n", (BC_WORD**)ptr-start+1);
 	wrefresh(winh_c);
 
 	wmove(win_c, 0, 0);
-	while (start >= (BC_WORD**) ptr) {
+	while (start <= (BC_WORD**) ptr) {
 		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
-		wprintw(win_c, "%3d  %s\n", start-(BC_WORD**)ptr, _tmp);
-		start--;
+		wprintw(win_c, "%3d  %s\n", (BC_WORD**)ptr-start, _tmp);
+		start++;
 	}
 	wclrtobot(win_c);
 	REFRESH_C();
@@ -614,6 +614,10 @@ void scroll_heap_window(int up, int left) {
 	REFRESH_HEAP(heap_line, heap_col);
 }
 
+#ifdef POSIX
+# include <setjmp.h>
+jmp_buf segfault_restore_point;
+#endif
 void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 	wmove(win_heap, 0, 0);
 #ifdef POSIX

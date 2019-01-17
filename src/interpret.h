@@ -1,7 +1,60 @@
-#ifndef _H_ABCINT_INTERPRET
-#define _H_ABCINT_INTERPRET
+#pragma once
 
 #include "bytecode.h"
+
+struct interpretation_options {
+	int in_first_semispace:1;
+#ifdef LINK_CLEAN_RUNTIME
+	int hyperstrict:1;
+#endif
+};
+
+#ifdef LINK_CLEAN_RUNTIME
+/* This struct matches the Clean structure that the interpretation_environment
+ * is kept in. */
+struct InterpretationEnvironment2 {
+	BC_WORD **__ie_shared_nodes;
+	int __ie_shared_nodes_ptr;
+};
+struct InterpretationEnvironment {
+	void *__ie_descriptor;
+	struct finalizers *__ie_finalizer;
+	struct InterpretationEnvironment2 *__ie_2;
+};
+
+struct host_status {
+	BC_WORD *host_a_ptr;  /* The A-stack pointer of the host */
+	BC_WORD *host_hp_ptr; /* Heap pointer */
+	size_t host_hp_free;  /* Nr. of free heap words */
+	struct InterpretationEnvironment *clean_ie; /* Clean InterpretationEnvironment */
+};
+
+struct interpretation_environment {
+	struct host_status *host;
+	struct program *program;
+	BC_WORD *heap;
+	BC_WORD heap_size;
+	BC_WORD *stack;
+	BC_WORD stack_size;
+	BC_WORD *asp;
+	BC_WORD *bsp;
+	BC_WORD *csp;
+	BC_WORD *hp;
+	void *caf_list[2];
+	struct interpretation_options options;
+};
+
+extern void *e__ABC_PInterpreter__dDV__ParseError;
+extern void *e__ABC_PInterpreter__dDV__HeapFull;
+extern void *e__ABC_PInterpreter__dDV__StackOverflow;
+extern void *e__ABC_PInterpreter__dDV__Halt;
+extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
+extern void *e__ABC_PInterpreter__dDV__SegmentationFault;
+extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
+extern void *e__ABC_PInterpreter__dDV__Ok;
+
+extern void **interpret_error;
+#endif
 
 extern void* __STRING__[];
 extern void* __ARRAY__[];
@@ -36,10 +89,9 @@ extern BC_WORD Fjmp_ap[64];
 
 extern void* __interpreter_indirection[9];
 
-#if defined(POSIX) && defined(DEBUG_CURSES)
-# include <setjmp.h>
-extern jmp_buf segfault_restore_point;
-#endif
+#define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */
+
+void install_interpreter_segv_handler(void);
 
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
@@ -78,6 +130,7 @@ extern void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
+		int create_restore_point,
 #else
 		struct program *program,
 #endif
@@ -85,5 +138,3 @@ int interpret(
 		BC_WORD *heap, size_t heap_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
 		BC_WORD *node);
-
-#endif

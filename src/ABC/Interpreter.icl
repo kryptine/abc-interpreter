@@ -75,7 +75,16 @@ where
 	}
 
 deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
-deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
+deserialize dsets graph thisexe w = deserialize` False dsets graph thisexe w
+
+deserializeStrict :: !DeserializationSettings !SerializedGraph !String !*World
+	-> *(!DeserializedValue a, !*World)
+deserializeStrict dsets graph thisexe w = case deserialize` True dsets graph thisexe w of
+	(Nothing,w) -> (DV_ParseError,w)
+	(Just v,w)  -> (v,w)
+
+deserialize` :: !Bool !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
+deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # pgm = parse host_syms bytecode
@@ -93,10 +102,11 @@ deserialize dsets {graph,descinfo,modules,bytecode} thisexe w
 	pgm
 	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
+	strict
 # graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
-= (Just (interpret ie (Finalizer 0 0 graph_node)), w)
+= (Just (interpret ie (Finalizer 0 0 (graph_node + if strict 1 0))), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
 	getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
@@ -168,6 +178,7 @@ get_start_rule_as_expression dsets prog filename w
 	pgm
 	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
+	False
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
@@ -177,9 +188,9 @@ get_start_rule_as_expression dsets prog filename w
 	// it to the finalizer_list anyway. This is just to ensure that the first
 	// call to interpret gets the right argument.
 
-build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer -> Pointer
-build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp = code {
-	ccall build_interpretation_environment "ppIpIpppp:p"
+build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Bool -> Pointer
+build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp strict = code {
+	ccall build_interpretation_environment "ppIpIppppI:p"
 }
 
 build_start_node :: !Pointer -> Pointer

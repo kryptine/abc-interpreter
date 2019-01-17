@@ -250,22 +250,22 @@ init_symbols_matching(struct program *pgm) {
 
 int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
-	if (heap != NULL && heap <= label && label < heap + heap_size)
-		return print_plain_label(s, size, label, pgm, heap, heap_size);
-	else if (((BC_WORD)label&-2) == (BC_WORD)&INT)
+	if (((BC_WORD)label&-4) == (BC_WORD)&INT)
 		return snprintf(s, size, "INT");
-	else if (((BC_WORD)label&-2) == (BC_WORD)&BOOL)
+	else if (((BC_WORD)label&-4) == (BC_WORD)&BOOL)
 		return snprintf(s, size, "BOOL");
-	else if (((BC_WORD)label&-2) == (BC_WORD)&CHAR)
+	else if (((BC_WORD)label&-4) == (BC_WORD)&CHAR)
 		return snprintf(s, size, "CHAR");
-	else if (((BC_WORD)label&-2) == (BC_WORD)&REAL)
+	else if (((BC_WORD)label&-4) == (BC_WORD)&REAL)
 		return snprintf(s, size, "REAL");
-	else if (((BC_WORD)label&-2) == (BC_WORD)&__STRING__)
+	else if (((BC_WORD)label&-4) == (BC_WORD)&__STRING__)
 		return snprintf(s, size, "__STRING__");
-	else if (((BC_WORD)label&-2) == (BC_WORD)&__ARRAY__)
+	else if (((BC_WORD)label&-4) == (BC_WORD)&__ARRAY__)
 		return snprintf(s, size, "__ARRAY__");
 	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[63])
 		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)/2+1);
+	else if (heap != NULL && heap <= label && label < heap + heap_size)
+		return print_plain_label(s, size, label, pgm, heap, heap_size);
 
 	int used = 0;
 	if (include_plain_address) {

@@ -16,7 +16,7 @@ void clean_readLineF (void)
 
 	if ( (g_heap_free -= 2) < 0){
 		EPRINTF("clean_readLineF gc\n");
-		interpreter_exit (1);
+		EXIT(NULL,1);
 	}
 
 	file=(FILE*)bsp[1];
@@ -64,7 +64,7 @@ void clean_readLineF (void)
 	}
 
 	EPRINTF("clean_readLineF gc\n");
-	interpreter_exit (1);
+	EXIT(NULL,1);
 }
 
 void clean_sliceAC (void)
@@ -143,8 +143,9 @@ void clean_ItoAC (void)
 	lw=(l+11)>>2;
 
 	if ( (g_heap_free -= lw) < 0){
-		EPRINTF("clean_sliceAC gc\n");
-		interpreter_exit (1);
+		g_heap_free += lw;
+		trap_needs_gc = 1;
+		return;
 	}
 
 	*++asp=(BC_WORD)hp;
@@ -190,7 +191,7 @@ void clean_openF (void)
 	c_file_name=safe_malloc (file_name_length+1);
 	if (c_file_name==NULL){
 		EPRINTF("clean_openF malloc failed\n");
-		interpreter_exit (1);
+		EXIT(NULL,1);
 	}
 
 	for (i=0; i<file_name_length; ++i)
@@ -203,25 +204,25 @@ void clean_openF (void)
 		file=fopen (c_file_name,"r");
 		if (file==NULL){
 			EPRINTF("clean_openF could not open file %s\n",c_file_name);
-			interpreter_exit (1);
+			EXIT(NULL,1);
 		}
 	} else if (mode==1){
 		file=fopen (c_file_name,"w");
 		if (file==NULL){
 			EPRINTF("clean_openF could not create file %s\n",c_file_name);
-			interpreter_exit (1);
+			EXIT(NULL,1);
 			return;
 		}
 	} else if (mode==3){
 		file=fopen (c_file_name,"rb");
 		if (file==NULL){
 			EPRINTF("clean_openF could not open file %s\n",c_file_name);
-			interpreter_exit (1);
+			EXIT(NULL,1);
 			return;
 		}
 	} else {
 		EPRINTF("clean_openF mode not implemented %d\n",mode);
-		interpreter_exit (1);
+		EXIT(NULL,1);
 		return;
 	}
 

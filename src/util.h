@@ -7,7 +7,14 @@ void *safe_malloc(size_t);
 void *safe_calloc(size_t, size_t);
 void *safe_realloc(void *, size_t);
 
+#ifdef LINK_CLEAN_RUNTIME
+# include "interpret.h"
+# define EXIT interpreter_exit
+void interpreter_exit(struct interpretation_environment *,int);
+#else
+# define EXIT(ie,code) interpreter_exit(code)
 void interpreter_exit(int);
+#endif
 
 enum char_provider_type {
 	CPT_FILE,

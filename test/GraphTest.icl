@@ -3,58 +3,80 @@ module GraphTest
 import StdEnv
 import StdMaybe
 
-from Data.Func import hyperstrict
+from Data.Func import hyperstrict, instance Functor ((->) a)
+import Data.Functor
 import System.OS
 
 import ABC.Interpreter
+
+instance Functor DeserializedValue
+where
+	fmap f v = case v of
+		DV_Ok v               -> DV_Ok (f v)
+		DV_ParseError         -> DV_ParseError
+		DV_HeapFull           -> DV_HeapFull
+		DV_StackOverflow      -> DV_StackOverflow
+		DV_Halt               -> DV_Halt
+		DV_IllegalInstruction -> DV_IllegalInstruction
+		DV_HostHeapFull       -> DV_HostHeapFull
 
 Start w
 # (graph,w) = serialize_for_interpretation graph "GraphTest.bc" w
 # graph = case graph of
 	Nothing -> abort "Could not serialize the graph; is GraphTest.bc up to date?\n"
 	Just g  -> g
-# (Just (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,sumtup),w) = deserialize defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
-= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup
+# (DV_Ok (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,repeat,sumtup,createarray),w) = deserializeStrict defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
+= use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup createarray
 where
 	use ::
-		(Int -> Int)
-		(Int Int Int Int Int -> Int)
-		(Int Int Int -> Int)
-		([Int] -> Int)
-		(A.a: [a] -> [a])
-		(A.a b: (a b -> b) b [a] -> b)
-		((Int -> Int) -> Int)
-		((Int Int Int -> Int) -> Int)
-		(A.a b: (a -> b) [a] -> [b])
-		(String -> String)
-		({#Int} -> {#Int})
-		({Char} -> {Char})
-		({#TestRecord} -> {#TestRecord})
+		(Int -> DeserializedValue Int)
+		(Int Int Int Int Int -> DeserializedValue Int)
+		(Int Int Int -> DeserializedValue Int)
+		([Int] -> DeserializedValue Int)
+		(A.a: [a] -> DeserializedValue [a])
+		(A.a b: (a b -> b) b [a] -> DeserializedValue b)
+		((Int -> Int) -> DeserializedValue Int)
+		((Int Int Int -> Int) -> DeserializedValue Int)
+		(A.a b: (a -> b) [a] -> DeserializedValue [b])
+		(String -> DeserializedValue String)
+		({#Int} -> DeserializedValue {#Int})
+		({Char} -> DeserializedValue {Char})
+		({#TestRecord} -> DeserializedValue {#TestRecord})
 		{#TestRecord}
-		(TestRecord -> Int)
-		((Int,Int,(Int,Int)) -> Int)
-		-> [Int]
-	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec sumtup =
-		[ intsquare 6 + intsquare 1
+		(TestRecord -> DeserializedValue Int)
+		(A.a: a -> DeserializedValue [a])
+		((Int,Int,(Int,Int)) ->  DeserializedValue Int)
+		(Int -> DeserializedValue {Int})
+		-> [DeserializedValue Int]
+	use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 imap reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup createarray =
+		[ case (intsquare 6, intsquare 1) of
+			(DV_Ok a, DV_Ok b) -> DV_Ok (a+b)
+			(err, _)           -> err
 		, sub5 (last [1..47]) 1 2 3 (square 2)
 		, sub3_10 -20 -30 3
 		, sumints [1,1,2,3,4,5,6,7,8]
-		, last (rev [37,36..0])
-		, length (last (rev [[1..i] \\ i <- [37,36..0]]))
+		, last <$> rev [37,36..0]
+		, length <$> last <$> rev [[1..i] \\ i <- [37,36..0]]
 		, ap1 (\x -> x - 5)
 		, ap1 (flip (-) 5)
 		, ap3 (\x y z -> 10*x + 3*y + z)
 		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
-		, toInt (last (rev [TestA,TestB]))
-		, length [c \\ c <-: reverse_string "0123456789012345678901234567890123456"]
-		, length [i \\ i <-: reverse_array {#i \\ i <- [0..36]}]
-		, length [c \\ c <-: reverse_boxed_array {c\\ c <- ['A'..'e']}]
-		, sum [toInt x \\ x <-: recarr]
-		, sum [toInt x \\ x <-: reverse_recarr arr]
+		, foldr (\x y -> x + y) 0 [1..]
+		, toInt <$> last <$> rev [TestA,TestB]
+		, length <$> toList <$> reverse_string "0123456789012345678901234567890123456"
+		, length <$> toList <$> reverse_array {#i \\ i <- [0..36]}
+		, length <$> toList <$> reverse_boxed_array {c\\ c <- ['A'..'e']}
+		, DV_Ok (sum [toInt x \\ x <-: recarr])
+		, sum <$> map toInt <$> toList <$> reverse_recarr arr
 		, toInt_rec {tr_a=37*37,tr_b=TestA,tr_c=False}
+		, flip (!!) 100 <$> repeat 37
 		, sumtup (5,10,(15,7))
-		: map (\x -> if (x == 0 || x == 10) 37 42) [0,10]
+		, size <$> createarray 1000000000
+		: case imap (\x -> if (x == 0 || x == 10) 37 42) [0,10] of
+			DV_Ok res -> [DV_Ok r \\ r <- res]
 		]
+	where
+		toList arr = [x \\ x <-: arr]
 
 :: TestT = TestA | TestB
 instance toInt TestT
@@ -87,7 +109,9 @@ graph = hyperstrict
 	, reverse_recarr
 	, arr
 	, toInt_rec
+	, repeat
 	, \(a,b,(c,d)) -> a + b + c + d + 0
+	, createarray
 	)
 where
 	reverse_string :: String -> String
@@ -104,6 +128,9 @@ where
 
 	toInt_rec :: TestRecord -> Int
 	toInt_rec rec = toInt rec
+
+	createarray :: !Int -> {Int}
+	createarray n = createArray n 0
 
 arr :: {#TestRecord}
 arr =

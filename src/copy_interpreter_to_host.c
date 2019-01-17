@@ -52,7 +52,8 @@ extern void *e__ABC_PInterpreter_PInternal__dinterpret__31;
 struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
-		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp) {
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
+		int hyperstrict) {
 	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
@@ -60,16 +61,19 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->heap_size = heap_size;
 	ie->stack = stack;
 	ie->stack_size = stack_size;
+	ie->stack[ie->stack_size/2-1]=A_STACK_CANARY;
 	ie->asp = asp;
 	ie->bsp = bsp;
 	ie->csp = csp;
 	ie->hp = hp;
 	ie->caf_list[0] = 0;
 	ie->caf_list[1] = &ie->caf_list[1];
-	ie->in_first_semispace=1;
+	ie->options.in_first_semispace=1;
+	ie->options.hyperstrict=hyperstrict != 0;
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
+	install_interpreter_segv_handler();
 	return ie;
 }
 
@@ -87,7 +91,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 	BC_WORD *node = ie->hp;
 
 	BC_WORD **ptr_stack = (BC_WORD**) ie->asp;
-	int16_t *a_size_stack = (int16_t*) ie->csp;
+	int16_t *a_size_stack = (int16_t*) ie->bsp;
 	BC_WORD dummy;
 	*++ptr_stack = &dummy;
 	*--a_size_stack = 1;
@@ -118,7 +122,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\t");
-			for (int16_t *a=(int16_t*)ie->csp-1; a>a_size_stack; a--)
+			for (int16_t *a=(int16_t*)ie->bsp-1; a>a_size_stack; a--)
 				EPRINTF("   ");
 			EPRINTF("%p := %p",ie->hp,(void*)desc);
 #endif
@@ -307,8 +311,10 @@ void *get_interpretation_environment_finalizer(void) {
 void interpreter_finalizer(BC_WORD interpret_node) {
 }
 
-static inline int interpret_ie(struct interpretation_environment *ie, BC_WORD *pc) {
+static inline int interpret_ie(struct interpretation_environment *ie,
+		BC_WORD *pc, int create_restore_point) {
 	return interpret(ie,
+			create_restore_point,
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,
@@ -459,7 +465,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 
 	if (!(descriptor & 1)) {
 		EPRINTF("internal error in copy_to_host: node %p not seen\n",node);
-		interpreter_exit(-1);
+		EXIT(NULL,-1);
 	}
 	descriptor--;
 
@@ -593,7 +599,7 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 				case 29: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__29+(2<<IF_MACH_O_ELSE(4,3))+2; break;
 				case 30: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__30+(2<<IF_MACH_O_ELSE(4,3))+2; break;
 				case 31: host_heap[0]=(BC_WORD)&e__ABC_PInterpreter_PInternal__dinterpret__31+(2<<IF_MACH_O_ELSE(4,3))+2; break;
-				default: EPRINTF("Missing case in copy_to_host (%d)\n",args_needed); interpreter_exit(1);
+				default: EPRINTF("Missing case in copy_to_host (%d)\n",args_needed); EXIT(NULL,1);
 			}
 			host_heap[1]=(BC_WORD)clean_ie;
 			host_heap[2]=(BC_WORD)&host_heap[3];
@@ -759,7 +765,7 @@ static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descripto
 }
 
 static inline void restore_and_translate_descriptors(struct InterpretationEnvironment *clean_ie,
-		struct program *program, BC_WORD *node) {
+		struct program *program, BC_WORD *node, BC_WORD add_to_interpreter_indirections) {
 	BC_WORD descriptor=node[0];
 
 	if (!(descriptor & 1))
@@ -806,7 +812,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		 * The original descriptor is at host_node[2][2][1], but because we
 		 * know how these nodes are built above this is always host_node[7]. */
 		node[0]=host_node[7];
-		host_node[7]=(BC_WORD)node;
+		host_node[7]=(BC_WORD)node+add_to_interpreter_indirections;
 		return;
 	}
 
@@ -851,7 +857,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 			if (elem_desc==0) { /* boxed array */
 				BC_WORD **array=(BC_WORD**)&node[3];
 				for (int len=node[1]-1; len>=0; len--)
-					restore_and_translate_descriptors(clean_ie, program, array[len]);
+					restore_and_translate_descriptors(clean_ie, program, array[len], add_to_interpreter_indirections);
 			} else {
 				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
 				if (elem_ab_arity>0) { /* unboxed records */
@@ -864,7 +870,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 					node+=3;
 					for (int i=0; i<size; i++) {
 						for (int a=0; a<elem_a_arity; a++)
-							restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[a]);
+							restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[a], add_to_interpreter_indirections);
 						node+=elem_ab_arity;
 					}
 				}
@@ -874,52 +880,124 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 		return;
 	}
 
-	restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[1]);
+	restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[1], add_to_interpreter_indirections);
 
 	if (a_arity==1)
 		return;
 
 	if (ab_arity==2)
-		restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[2]);
+		restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[2], add_to_interpreter_indirections);
 	else {
 		BC_WORD **rest=(BC_WORD**)node[2];
 		for (int i=0; i<a_arity-1; i++)
-			restore_and_translate_descriptors(clean_ie, program, rest[i]);
+			restore_and_translate_descriptors(clean_ie, program, rest[i], add_to_interpreter_indirections);
 	}
 }
 
-extern void __interpret__garbage__collect(struct interpretation_environment*);
-int copy_to_host_or_garbage_collect(struct InterpretationEnvironment *clean_ie,
-		BC_WORD *host_heap, BC_WORD **target, BC_WORD *node) {
-	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	int words_needed=COPIED_NODE_SIZE(node, 0);
+static int evaluate_all_children(struct interpretation_environment *ie) {
+	BC_WORD *start_a_stack=ie->asp;
+	ie->asp[1]=ie->asp[0];
+	ie->asp++;
 
-	if (words_needed > ie->host->host_hp_free) {
-		*ie->host->host_a_ptr++=(BC_WORD)clean_ie;
-		__interpret__garbage__collect(ie);
-		ie->host->clean_ie=clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
-		host_heap=ie->host->host_hp_ptr;
-		if (words_needed > ie->host->host_hp_free) {
-			EPRINTF("not enough memory to copy node back to host\n");
-			interpreter_exit(1);
+	while (ie->asp > start_a_stack) {
+		BC_WORD *node=(BC_WORD*)ie->asp[0];
+
+		if (!(node[0] & 2)) {
+			if (interpret_ie(ie, (BC_WORD*)node[0], 0) != 0) {
+				ie->asp=start_a_stack;
+				EPRINTF("Failed to interpret\n");
+				return -1;
+			}
+		}
+
+		node=(BC_WORD*)*ie->asp--;
+
+		int16_t a_arity=((int16_t*)node[0])[-1];
+		int16_t ab_arity=a_arity;
+		if (a_arity > 256) { /* record */
+			a_arity=((int16_t*)node[0])[0];
+			ab_arity=((int16_t*)node[0])[-1]-256;
+		}
+
+		if (a_arity > 0) {
+			if (!(((BC_WORD*)node[1])[0] & 2))
+				*++ie->asp=node[1];
+
+			if (a_arity > 1) {
+				if (ab_arity==2) {
+					if (!(((BC_WORD*)node[2])[0] & 2))
+						*++ie->asp=node[2];
+				} else {
+					BC_WORD *rest=(BC_WORD*)node[2];
+					for (a_arity-=2; a_arity>=0; a_arity--)
+						if (!(((BC_WORD*)rest[a_arity])[0] & 2))
+							*++ie->asp=rest[a_arity];
+				}
+			}
 		}
 	}
 
-	BC_WORD *new_heap=COPY_TO_HOST(clean_ie,host_heap,target,node,0);
-	int words_used=new_heap-host_heap;
+	return 0;
+}
+
+/* Used to communicate redirect host thunks with the ASM interface; see #51 */
+void *__interpret__copy__node__asm_redirect_node;
+
+extern void __interpret__garbage__collect(struct interpretation_environment*);
+int copy_to_host_or_garbage_collect(struct interpretation_environment *ie,
+		BC_WORD **target, BC_WORD *node, int hyperstrict_if_requested) {
+	int words_needed=0;
+
+	if (hyperstrict_if_requested && ie->options.hyperstrict) {
+		*++ie->asp=(BC_WORD)node;
+		if (evaluate_all_children(ie) != 0) {
+			__interpret__copy__node__asm_redirect_node=interpret_error-1;
+			ie->asp--;
+			return 0;
+		}
+		node=(BC_WORD*)*ie->asp--;
+		words_needed+=2;
+	}
+
+	words_needed+=COPIED_NODE_SIZE(node, 0);
+
+	if (words_needed > ie->host->host_hp_free) {
+		*ie->host->host_a_ptr++=(BC_WORD)ie->host->clean_ie;
+		__interpret__garbage__collect(ie);
+		ie->host->clean_ie=(struct InterpretationEnvironment*)*--ie->host->host_a_ptr;
+		if (words_needed > ie->host->host_hp_free) {
+			EPRINTF("not enough memory to copy node back to host\n");
+			EXIT(ie,1);
+			if (hyperstrict_if_requested && ie->options.hyperstrict) {
+				*target=(BC_WORD*)&e__ABC_PInterpreter__dDV__HostHeapFull-1;
+				return 0;
+			} else {
+				interpret_error=&e__ABC_PInterpreter__dDV__HostHeapFull;
+				return -1;
+			}
+		}
+	}
+
+	BC_WORD *new_heap;
+	if (hyperstrict_if_requested && ie->options.hyperstrict) {
+		*target=ie->host->host_hp_ptr;
+		ie->host->host_hp_ptr[0]=(BC_WORD)&e__ABC_PInterpreter__dDV__Ok+IF_MACH_O_ELSE(16,8)+2;
+		new_heap=COPY_TO_HOST(ie->host->clean_ie,&ie->host->host_hp_ptr[2],(BC_WORD**)&ie->host->host_hp_ptr[1],node,0);
+	} else {
+		new_heap=COPY_TO_HOST(ie->host->clean_ie,ie->host->host_hp_ptr,target,node,0);
+	}
+
+	int words_used=new_heap-ie->host->host_hp_ptr;
 
 	if (words_used != words_needed) {
 		EPRINTF("internal error in copy_to_host: precomputed words needed %d does not match actual number %d\n",words_needed,words_used);
-		interpreter_exit(1);
+		EXIT(NULL,1);
 	}
 
-	restore_and_translate_descriptors(clean_ie, ie->program, node);
+	restore_and_translate_descriptors(ie->host->clean_ie, ie->program, node, hyperstrict_if_requested && ie->options.hyperstrict);
 
 	return words_used;
 }
-
-// Used to communicate redirect host thunks with the ASM interface; see #51
-void *__interpret__copy__node__asm_redirect_node;
 
 /**
  * This signature is weird to make calling it from Clean easy and lightweight:
@@ -935,7 +1013,8 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct InterpretationEnvironment *clean_ie, struct finalizers *node_finalizer) {
 #endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
+	int with_error_reporting=node_finalizer->cur->arg&1;
+	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-2);
 
 	BC_WORD *old_asp=ie->asp;
 
@@ -961,7 +1040,7 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 			EPRINTF("\tInterpreting...\n");
 #endif
 			*ie->asp = (BC_WORD) node;
-			if (interpret_ie(ie, (BC_WORD*) node[0]) != 0) {
+			if (interpret_ie(ie, (BC_WORD*) node[0], with_error_reporting) != 0) {
 				EPRINTF("Failed to interpret\n");
 				return -1;
 			}
@@ -971,11 +1050,10 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 
 	if (ie->asp!=old_asp) {
 		EPRINTF("internal error; stack not cleaned up\n");
-		interpreter_exit(1);
+		EXIT(NULL,1);
 	}
 
-	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
-			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
+	return copy_to_host_or_garbage_collect(ie, (BC_WORD**)&__interpret__copy__node__asm_redirect_node, node, with_error_reporting);
 }
 
 /**
@@ -996,7 +1074,8 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct InterpretationEnvironment *clean_ie, int n_args) {
 #endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	BC_WORD *node = (BC_WORD*) node_finalizer->cur->arg;
+	int with_error_reporting=node_finalizer->cur->arg&1;
+	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-2);
 
 	BC_WORD *old_asp=ie->asp;
 
@@ -1021,7 +1100,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	}
 
 	/* Update address since garbage collection may have run during copying */
-	node=(BC_WORD*)node_finalizer->cur->arg;
+	node=(BC_WORD*)(node_finalizer->cur->arg&-2);
 	*++ie->asp=(BC_WORD)node;
 
 	BC_WORD bootstrap[2];
@@ -1044,18 +1123,18 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 			bootstrap[1]=n_args+1;
 	}
 
-	if (interpret_ie(ie, bootstrap) != 0) {
+	if (interpret_ie(ie, bootstrap, with_error_reporting) != 0) {
 		EPRINTF("Failed to interpret\n");
-		return -1;
+		__interpret__copy__node__asm_redirect_node=interpret_error-1;
+		return 0;
 	}
 
 	node=(BC_WORD*)*ie->asp;
 
 	if (ie->asp!=old_asp) {
 		EPRINTF("internal error; stack not cleaned up\n");
-		interpreter_exit(1);
+		EXIT(NULL,1);
 	}
 
-	return copy_to_host_or_garbage_collect(ie->host->clean_ie, ie->host->host_hp_ptr,
-			(BC_WORD**)&__interpret__copy__node__asm_redirect_node, node);
+	return copy_to_host_or_garbage_collect(ie, (BC_WORD**)&__interpret__copy__node__asm_redirect_node, node, with_error_reporting);
 }

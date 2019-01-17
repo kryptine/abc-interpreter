@@ -45,6 +45,7 @@ Global
 		ExportedNames:	
 	Paths
 		Path:	{Project}
+		Path:	{Project}*..*src
 		Path:	{Application}*Libraries*GraphCopy
 		Path:	{Application}*Libraries*Platform
 	Precompile:	

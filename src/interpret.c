@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WINDOWS
+# define _NO_BOOL_TYPEDEF /* for mingw */
+# define BOOL WINBOOL
+# define CHAR WINCHAR
+# include <windows.h>
+# include <excpt.h>
+# undef BOOL
+# undef CHAR
+#endif
+
 #include "abc_instructions.h"
 #include "bytecode.h"
 #include "gc.h"
@@ -105,7 +115,11 @@ void build_host_nodes(void) {
 		HOST_NODES[arity-1] = (void**) &HOST_NODE_DESCRIPTORS[i+1];
 #ifdef COMPUTED_GOTOS
 # define INSTR(i) (BC_WORD) instruction_labels[i]
-		interpret(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+		interpret(NULL,
+# ifdef POSIX
+				0,
+# endif
+				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 #else
 # define INSTR(i) i
 #endif
@@ -178,6 +192,8 @@ void *ap_addresses[] = {&ap_2, &ap_3, &ap_4, &ap_5, &ap_6, &ap_7, &ap_8, &ap_9,
 	&ap_10, &ap_11, &ap_12, &ap_13, &ap_14, &ap_15, &ap_16, &ap_17, &ap_18,
 	&ap_19, &ap_20, &ap_21, &ap_22, &ap_23, &ap_24, &ap_25, &ap_26, &ap_27,
 	&ap_28, &ap_29, &ap_30, &ap_31, &ap_32};
+
+void **interpret_error=NULL;
 #endif
 
 BC_WORD Fjmp_ap[64] =
@@ -233,24 +249,84 @@ void* __interpreter_indirection[9] = {
 
 static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 
+#include <setjmp.h>
 #ifdef POSIX
 # include <signal.h>
-# ifdef DEBUG_CURSES
-jmp_buf segfault_restore_point;
-# endif
+#endif
 
-void handle_segv(int sig) {
-	if (asp >= csp) {
-		EPRINTF("A/C-stack overflow\n");
-	} else {
-# ifdef DEBUG_CURSES
-		siglongjmp(segfault_restore_point, SIGSEGV);
+#ifdef LINK_CLEAN_RUNTIME
+struct segfault_restore_points {
+	jmp_buf restore_point;
+	BC_WORD *host_a_ptr;
+	struct segfault_restore_points *prev;
+};
+static struct segfault_restore_points *segfault_restore_points=NULL;
+#endif
+
+#ifdef POSIX
+# ifdef LINK_CLEAN_RUNTIME
+static struct sigaction old_segv_handler;
 # endif
-		EPRINTF("Untracable segmentation fault\n");
+static void handle_segv(int sig, siginfo_t *info, void *context) {
+# ifdef LINK_CLEAN_RUNTIME
+	if (segfault_restore_points==NULL) {
+		if (old_segv_handler.sa_handler!=SIG_DFL && old_segv_handler.sa_handler!=SIG_IGN) {
+			if (old_segv_handler.sa_flags & SA_SIGINFO)
+				old_segv_handler.sa_sigaction(sig,info,context);
+			else
+				old_segv_handler.sa_handler(sig);
+		}
+		return;
 	}
-	interpreter_exit(1);
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+# endif
+	EPRINTF("Segmentation fault in interpreter\n");
+# ifdef LINK_CLEAN_RUNTIME
+	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
+# endif
+}
+#elif defined(WINDOWS)
+static LONG WINAPI handle_segv(struct _EXCEPTION_POINTERS *exception) {
+# ifdef LINK_CLEAN_RUNTIME
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+	if (segfault_restore_points!=NULL)
+		longjmp(segfault_restore_points->restore_point, 1);
+# endif
+	return EXCEPTION_CONTINUE_SEARCH;
 }
 #endif
+
+void install_interpreter_segv_handler(void) {
+#ifdef POSIX
+# ifdef MACH_O64
+	stack_t signal_stack;
+# else
+	struct sigaltstack signal_stack;
+# endif
+	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
+	signal_stack.ss_size=SIGSTKSZ;
+	signal_stack.ss_flags=0;
+	if (sigaltstack(&signal_stack,NULL) == -1)
+		perror("sigaltstack");
+
+	struct sigaction segv_handler;
+	segv_handler.sa_sigaction=handle_segv;
+	sigemptyset(&segv_handler.sa_mask);
+	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO;
+	if (sigaction(SIGSEGV, &segv_handler,
+# ifdef LINK_CLEAN_RUNTIME
+				&old_segv_handler
+# else
+				NULL
+# endif
+				) == -1)
+		perror("sigaction");
+#elif defined(WINDOWS)
+	SetUnhandledExceptionFilter(&handle_segv);
+#else
+	EPRINTF("warning: interpreter does not recover from segfaults on this platform\n");
+#endif
+}
 
 #ifdef COMPUTED_GOTOS
 void *instruction_labels[CMAX];
@@ -259,6 +335,7 @@ void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
+		int create_restore_point,
 #else
 		struct program *program,
 #endif
@@ -282,7 +359,8 @@ int interpret(
 	void **caf_list = ie->caf_list;
 #else
 	void *caf_list[2] = {0, &caf_list[1]};
-	int in_first_semispace=1;
+	struct interpretation_options options;
+	options.in_first_semispace=1;
 #endif
 	int instr_arg;
 
@@ -293,41 +371,77 @@ int interpret(
 	hp = _hp;
 	heap_size /= 2; /* copying garbage collector */
 #ifdef LINK_CLEAN_RUNTIME
-	BC_WORD_S heap_free=heap + heap_size/(ie->in_first_semispace ? 2 : 1) - hp;
+	BC_WORD_S heap_free=heap + heap_size/(ie->options.in_first_semispace ? 2 : 1) - hp;
 #else
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-	BC_WORD ret = EVAL_TO_HNF_LABEL;
-
-#if defined(POSIX) && !defined(MACH_O64)
-	/* TODO: check why this breaks on Mac */
-	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
-		perror("sigaction");
-		return 1;
+#ifdef LINK_CLEAN_RUNTIME
+	if (create_restore_point) {
+		struct segfault_restore_points *new=safe_malloc(sizeof(struct segfault_restore_points));
+		new->prev=segfault_restore_points;
+		new->host_a_ptr=ie->host->host_a_ptr;
+		segfault_restore_points=new;
+# ifdef POSIX
+		if (sigsetjmp(new->restore_point, 1) != 0) {
+# else
+		if (setjmp(new->restore_point) != 0) {
+# endif
+			ie->host->host_a_ptr=segfault_restore_points->host_a_ptr;
+			goto eval_to_hnf_return_failure;
+		}
 	}
 #endif
 
 	if (_pc != NULL) {
+		BC_WORD *ret=safe_malloc(sizeof(BC_WORD));
 #ifdef COMPUTED_GOTOS
-		ret = (BC_WORD) &&eval_to_hnf_return;
+		*ret=(BC_WORD)&&eval_to_hnf_return;
+#else
+		*ret=EVAL_TO_HNF_LABEL;
 #endif
-		*--csp = (BC_WORD) &ret;
-		pc = _pc;
+		*++csp=(BC_WORD)ret;
+		pc=_pc;
 
 		if (0) {
+#ifdef LINK_CLEAN_RUNTIME
+			struct segfault_restore_points *old;
+#endif
 eval_to_hnf_return:
 #ifdef LINK_CLEAN_RUNTIME
 			ie->asp = asp;
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+			if (create_restore_point) {
+				old=segfault_restore_points;
+				segfault_restore_points=old->prev;
+				free(old);
+			}
 #endif
 			return 0;
+#ifdef LINK_CLEAN_RUNTIME
+eval_to_hnf_return_failure:
+			ie->asp = asp;
+			ie->bsp = bsp;
+			ie->csp = csp;
+			ie->hp = hp;
+			if (create_restore_point) {
+				old=segfault_restore_points;
+				segfault_restore_points=old->prev;
+				free(old);
+			}
+			if (stack[stack_size/2-1]!=A_STACK_CANARY) {
+				stack[stack_size/2-1]=A_STACK_CANARY;
+				interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+			} else if (bsp <= csp)
+				interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+			return -1;
+#endif
 		}
 	} else if (program->start_symbol_id == -1) {
 		EPRINTF("error in interpret: no start symbol and no program counter given\n");
-		interpreter_exit(1);
+		EXIT(NULL,1);
 		return -1;
 	} else {
 		pc = (BC_WORD*)program->symbol_table[program->start_symbol_id].offset;
@@ -369,9 +483,9 @@ eval_to_hnf_return:
 		int old_heap_free = heap_free;
 		hp = garbage_collect(stack, asp, heap, heap_size, &heap_free, caf_list
 #ifdef LINK_CLEAN_RUNTIME
-				, &ie->in_first_semispace, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
+				, &ie->options, &ie->host->clean_ie->__ie_2->__ie_shared_nodes[3]
 #else
-				, &in_first_semispace
+				, &options
 #endif
 #ifdef DEBUG_GARBAGE_COLLECTOR
 				, program->code, program->data
@@ -382,7 +496,12 @@ eval_to_hnf_return:
 #endif
 		if (heap_free <= old_heap_free) {
 			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);
-			interpreter_exit(1);
+			EXIT(ie,1);
+#ifdef LINK_CLEAN_RUNTIME
+			interpret_error=&e__ABC_PInterpreter__dDV__HeapFull;
+			goto eval_to_hnf_return_failure;
+#endif
+			return 1;
 #ifdef DEBUG_GARBAGE_COLLECTOR
 		} else {
 			EPRINTF("Freed %d words; now %d free words.\n", (int) (heap_free-old_heap_free), (int) heap_free);
@@ -430,23 +549,23 @@ int main(int argc, char **argv) {
 			if (stack_size==-1) {
 				EPRINTF("Illegal stack size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		} else if (!strcmp(argv[i],"-h")) {
 			heap_size=string_to_size(argv[++i]);
 			if (heap_size==-1) {
 				EPRINTF("Illegal heap size: '%s'\n", argv[i]);
 				EPRINTF(usage, argv[0]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		} else if (input) {
 			EPRINTF(usage, argv[0]);
-			interpreter_exit(-1);
+			EXIT(NULL,-1);
 		} else {
 			input = fopen(argv[i], "rb");
 			if (!input) {
 				EPRINTF("Could not open '%s'\n", argv[i]);
-				interpreter_exit(-1);
+				EXIT(NULL,-1);
 			}
 		}
 	}
@@ -458,7 +577,7 @@ int main(int argc, char **argv) {
 	free_char_provider(&cp);
 	if (res) {
 		EPRINTF("Parsing failed (%d)\n", res);
-		interpreter_exit(res);
+		EXIT(NULL,res);
 	}
 
 #if !defined(DEBUG_CURSES) && !defined(COMPUTED_GOTOS)
@@ -473,11 +592,14 @@ int main(int argc, char **argv) {
 	heap_size /= sizeof(BC_WORD);
 	heap_size *= 2; /* Copying garbage collector */
 	stack = safe_malloc(stack_size * sizeof(BC_WORD));
+	stack[stack_size/2-1] = A_STACK_CANARY;
 	heap = safe_malloc((heap_size+4) * sizeof(BC_WORD));
 
 	BC_WORD *asp = stack;
 	BC_WORD *bsp = &stack[stack_size];
 	BC_WORD *csp = &stack[stack_size >> 1];
+
+	install_interpreter_segv_handler();
 
 #ifdef DEBUG_CURSES
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
