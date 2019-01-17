@@ -315,15 +315,15 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		}
 	}
 
-	if (node[0] == (BC_WORD) &INT+2)
+	if ((node[0]&-4)==(BC_WORD)&INT)
 		wprintw(win, "INT %d", node[1]);
-	else if (node[0] == (BC_WORD) &BOOL+2)
+	else if ((node[0]&-4)==(BC_WORD)&BOOL)
 		wprintw(win, "BOOL %s", node[1] ? "true" : "false");
-	else if (node[0] == (BC_WORD) &CHAR+2)
+	else if ((node[0]&-4)==(BC_WORD)&CHAR)
 		wprintw(win, "CHAR '%c'", node[1]);
-	else if (node[0] == (BC_WORD) &REAL+2)
+	else if ((node[0]&-4)==(BC_WORD)&REAL)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
-	else if (node[0] == (BC_WORD) &__cycle__in__spine)
+	else if ((node[0]&-4)==(BC_WORD)&__cycle__in__spine)
 		wprintw(win, "_cycle_in_spine");
 	else {
 		char _tmp[256];
