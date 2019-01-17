@@ -49,6 +49,7 @@ extern void *e__ABC_PInterpreter__dDV__HeapFull;
 extern void *e__ABC_PInterpreter__dDV__StackOverflow;
 extern void *e__ABC_PInterpreter__dDV__Halt;
 extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
+extern void *e__ABC_PInterpreter__dDV__SegmentationFault;
 extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
 extern void *e__ABC_PInterpreter__dDV__Ok;
 
@@ -129,9 +130,7 @@ extern void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
-# ifdef POSIX
 		int create_restore_point,
-# endif
 #else
 		struct program *program,
 #endif

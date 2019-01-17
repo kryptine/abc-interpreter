@@ -24,6 +24,8 @@ memmove
 realloc
 
 exit
+longjmp
+_setjmp
 strerror
 
 fclose

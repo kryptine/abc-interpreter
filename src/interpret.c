@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WINDOWS
+# define _NO_BOOL_TYPEDEF /* for mingw */
+# define BOOL WINBOOL
+# define CHAR WINCHAR
+# include <windows.h>
+# include <excpt.h>
+# undef BOOL
+# undef CHAR
+#endif
+
 #include "abc_instructions.h"
 #include "bytecode.h"
 #include "gc.h"
@@ -239,22 +249,25 @@ void* __interpreter_indirection[9] = {
 
 static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 
+#include <setjmp.h>
 #ifdef POSIX
-# include <setjmp.h>
 # include <signal.h>
-# ifdef LINK_CLEAN_RUNTIME
+#endif
+
+#ifdef LINK_CLEAN_RUNTIME
 struct segfault_restore_points {
 	jmp_buf restore_point;
 	BC_WORD *host_a_ptr;
 	struct segfault_restore_points *prev;
 };
-struct segfault_restore_points *segfault_restore_points=NULL;
-# endif
+static struct segfault_restore_points *segfault_restore_points=NULL;
+#endif
 
+#ifdef POSIX
 # ifdef LINK_CLEAN_RUNTIME
-struct sigaction old_segv_handler;
+static struct sigaction old_segv_handler;
 # endif
-void handle_segv(int sig, siginfo_t *info, void *context) {
+static void handle_segv(int sig, siginfo_t *info, void *context) {
 # ifdef LINK_CLEAN_RUNTIME
 	if (segfault_restore_points==NULL) {
 		if (old_segv_handler.sa_handler!=SIG_DFL && old_segv_handler.sa_handler!=SIG_IGN) {
@@ -265,12 +278,21 @@ void handle_segv(int sig, siginfo_t *info, void *context) {
 		}
 		return;
 	}
-	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+	interpret_error=&e__ABC_PInterpreter__dDV__SegmentationFault;
 # endif
 	EPRINTF("Segmentation fault in interpreter\n");
 # ifdef LINK_CLEAN_RUNTIME
 	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
 # endif
+}
+#elif defined(WINDOWS)
+static LONG WINAPI handle_segv(struct _EXCEPTION_POINTERS *exception) {
+# ifdef LINK_CLEAN_RUNTIME
+	interpret_error=&e__ABC_PInterpreter__dDV__SegmentationFault;
+	if (segfault_restore_points!=NULL)
+		longjmp(segfault_restore_points->restore_point, 1);
+# endif
+	return EXCEPTION_CONTINUE_SEARCH;
 }
 #endif
 
@@ -299,6 +321,8 @@ void install_interpreter_segv_handler(void) {
 # endif
 				) == -1)
 		perror("sigaction");
+#elif defined(WINDOWS)
+	SetUnhandledExceptionFilter(&handle_segv);
 #else
 	EPRINTF("warning: interpreter does not recover from segfaults on this platform\n");
 #endif
@@ -311,9 +335,7 @@ void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
-# ifdef POSIX
 		int create_restore_point,
-# endif
 #else
 		struct program *program,
 #endif
@@ -354,13 +376,17 @@ int interpret(
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-#if defined(POSIX) && defined(LINK_CLEAN_RUNTIME)
+#ifdef LINK_CLEAN_RUNTIME
 	if (create_restore_point) {
 		struct segfault_restore_points *new=safe_malloc(sizeof(struct segfault_restore_points));
 		new->prev=segfault_restore_points;
 		new->host_a_ptr=ie->host->host_a_ptr;
 		segfault_restore_points=new;
+# ifdef POSIX
 		if (sigsetjmp(new->restore_point, 1) != 0) {
+# else
+		if (setjmp(new->restore_point) != 0) {
+# endif
 			ie->host->host_a_ptr=segfault_restore_points->host_a_ptr;
 			goto eval_to_hnf_return_failure;
 		}
@@ -378,7 +404,7 @@ int interpret(
 		pc=_pc;
 
 		if (0) {
-#if defined(POSIX) && defined(LINK_CLEAN_RUNTIME)
+#ifdef LINK_CLEAN_RUNTIME
 			struct segfault_restore_points *old;
 #endif
 eval_to_hnf_return:
@@ -387,13 +413,11 @@ eval_to_hnf_return:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
-# ifdef POSIX
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
 				free(old);
 			}
-# endif
 #endif
 			return 0;
 #ifdef LINK_CLEAN_RUNTIME
@@ -402,13 +426,15 @@ eval_to_hnf_return_failure:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
-# ifdef POSIX
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
 				free(old);
 			}
-# endif
+			if (stack[stack_size/2-1]!=A_STACK_CANARY) {
+				stack[stack_size/2-1]=A_STACK_CANARY;
+				interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+			}
 			return -1;
 #endif
 		}

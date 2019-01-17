@@ -181,11 +181,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 #ifdef COMPUTED_GOTOS
 	/* See rationale in interpret.h */
-	interpret(NULL,
-# ifdef SEGFAULT_RESTORE_POINTS
-			0,
-# endif
-			NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	interpret(NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
 	for (int i=0; i<32; i++)
 		Fjmp_ap[i*2]=(BC_WORD)instruction_labels[Fjmp_ap[i*2]];

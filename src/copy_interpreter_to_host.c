@@ -314,9 +314,7 @@ void interpreter_finalizer(BC_WORD interpret_node) {
 static inline int interpret_ie(struct interpretation_environment *ie,
 		BC_WORD *pc, int create_restore_point) {
 	return interpret(ie,
-#ifdef SEGFAULT_RESTORE_POINTS
 			create_restore_point,
-#endif
 			ie->stack, ie->stack_size,
 			ie->heap, ie->heap_size,
 			ie->asp, ie->bsp, ie->csp, ie->hp,

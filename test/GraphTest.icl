@@ -18,6 +18,7 @@ where
 		DV_StackOverflow      -> DV_StackOverflow
 		DV_Halt               -> DV_Halt
 		DV_IllegalInstruction -> DV_IllegalInstruction
+		DV_SegmentationFault  -> DV_SegmentationFault
 		DV_HostHeapFull       -> DV_HostHeapFull
 
 Start w
