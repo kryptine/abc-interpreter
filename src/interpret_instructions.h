@@ -3208,7 +3208,7 @@ INSTRUCTION_BLOCK(fill_a01_pop_rtn):
 	n_s=(BC_WORD*)asp[0];
 	n_d=(BC_WORD*)asp[-1];
 	asp-=1;
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	n_d[0]=n_s[0];
 	n_d[1]=n_s[1];
 	n_d[2]=n_s[2];
@@ -3733,7 +3733,7 @@ INSTRUCTION_BLOCK(halt):
 		EPRINTF("Stack trace:\n");
 		BC_WORD *start_csp = &stack[stack_size >> 1];
 		char _tmp[256];
-		for (; csp<start_csp; csp++) {
+		for (; csp>start_csp; csp--) {
 			print_label(_tmp, 256, 1, (BC_WORD*)*csp, program, ie->heap, ie->heap_size);
 			EPRINTF("%s\n",_tmp);
 		}
@@ -3765,7 +3765,7 @@ INSTRUCTION_BLOCK(jmp_eval):
 
 	n=(BC_WORD*)asp[0];
 	if ((n[0] & 2)!=0){
-		pc=(BC_WORD*)*csp++;
+		pc=(BC_WORD*)*csp--;
 		END_INSTRUCTION_BLOCK;
 	}
 	pc=(BC_WORD*)n[0];
@@ -3778,7 +3778,7 @@ INSTRUCTION_BLOCK(jmp_eval_upd):
 	d=n1[0];
 	if ((d & 2)!=0){
 		n2=(BC_WORD*)asp[-1];
-		pc=(BC_WORD*)*csp++;
+		pc=(BC_WORD*)*csp--;
 		n2[0]=d;
 		n2[1]=n1[1];
 		n2[2]=n1[2];
@@ -3803,7 +3803,7 @@ INSTRUCTION_BLOCK(jmp_true):
 	pc=(BC_WORD*)pc[1];
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(jsr):
-	*--csp=(BC_WORD)&pc[2];
+	*++csp=(BC_WORD)&pc[2];
 	pc=(BC_WORD*)pc[1];
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(jsr_eval):
@@ -3817,7 +3817,7 @@ INSTRUCTION_BLOCK(jsr_eval):
 		pc+=4;
 		END_INSTRUCTION_BLOCK;
 	}
-	*--csp=(BC_WORD)&pc[2];
+	*++csp=(BC_WORD)&pc[2];
 	pc=(BC_WORD*)n[0];
 	asp[(BC_WORD_S)ao]=asp[0];
 	asp[0]=(BC_WORD)n;
@@ -3831,7 +3831,7 @@ INSTRUCTION_BLOCK(jsr_eval0):
 	pc+=1;
 	if ((n[0] & 2)!=0)
 		END_INSTRUCTION_BLOCK;
-	*--csp=(BC_WORD)pc;
+	*++csp=(BC_WORD)pc;
 	pc=(BC_WORD*)n[0];
 	END_INSTRUCTION_BLOCK;
 }
@@ -3844,7 +3844,7 @@ INSTRUCTION_BLOCK(jsr_eval1):
 		pc+=2;
 		END_INSTRUCTION_BLOCK;
 	}
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 	pc=(BC_WORD*)n[0];
 	asp[-1]=asp[0];
 	asp[0]=(BC_WORD)n;
@@ -3859,7 +3859,7 @@ INSTRUCTION_BLOCK(jsr_eval2):
 		pc+=2;
 		END_INSTRUCTION_BLOCK;
 	}
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 	pc=(BC_WORD*)n[0];
 	asp[-2]=asp[0];
 	asp[0]=(BC_WORD)n;
@@ -3874,7 +3874,7 @@ INSTRUCTION_BLOCK(jsr_eval3):
 		pc+=2;
 		END_INSTRUCTION_BLOCK;
 	}
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 	pc=(BC_WORD*)n[0];
 	asp[-3]=asp[0];
 	asp[0]=(BC_WORD)n;
@@ -6803,7 +6803,7 @@ INSTRUCTION_BLOCK(select_r2b):
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(rtn):
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(shiftlI):
 	bsp[1]=bsp[0] << bsp[1];
@@ -7627,7 +7627,7 @@ INSTRUCTION_BLOCK(buildh0_put_a):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildh0_put_a_jsr):
 	asp[((BC_WORD_S*)pc)[2]] = pc[1];
-	*--csp=(BC_WORD)&pc[4];
+	*++csp=(BC_WORD)&pc[4];
 	pc=(BC_WORD*)pc[3];
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(buildo1):
@@ -7925,17 +7925,17 @@ INSTRUCTION_BLOCK(pop_a_jmp):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_a_jsr):
 	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
-	*--csp=(BC_WORD)&pc[3];
+	*++csp=(BC_WORD)&pc[3];
 	pc=*(BC_WORD**)&pc[2];
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_a_rtn):
 	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_ab_rtn):
 	asp = (BC_WORD*) (((uint8_t*)asp) + pc[1]);
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[2]);
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_b_jmp):
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
@@ -7943,7 +7943,7 @@ INSTRUCTION_BLOCK(pop_b_jmp):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_b_jsr):
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
-	*--csp=(BC_WORD)&pc[3];
+	*++csp=(BC_WORD)&pc[3];
 	pc=*(BC_WORD**)&pc[2];
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_b_pushBFALSE):
@@ -7958,7 +7958,7 @@ INSTRUCTION_BLOCK(pop_b_pushBTRUE):
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pop_b_rtn):
 	bsp = (BC_WORD*) (((uint8_t*)bsp) + pc[1]);
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 INSTRUCTION_BLOCK(pushD_a_jmp_eqD_b2):
 {
@@ -7983,7 +7983,7 @@ INSTRUCTION_BLOCK(push_a_jsr):
 	BC_WORD v;
 
 	v=asp[((BC_WORD_S*)pc)[1]];
-	*--csp=(BC_WORD)&pc[3];
+	*++csp=(BC_WORD)&pc[3];
 	pc=(BC_WORD*)pc[2];
 	*++asp=v;
 	END_INSTRUCTION_BLOCK;
@@ -8024,7 +8024,7 @@ INSTRUCTION_BLOCK(push_b_jsr):
 	BC_WORD v;
 
 	v=bsp[((BC_WORD_S*)pc)[1]];
-	*--csp=(BC_WORD)&pc[3];
+	*++csp=(BC_WORD)&pc[3];
 	pc=(BC_WORD*)pc[2];
 	*--bsp=v;
 	END_INSTRUCTION_BLOCK;
@@ -8096,7 +8096,7 @@ INSTRUCTION_BLOCK(push_jsr_eval):
 	pc+=2;
 	if ((n[0] & 2)!=0)
 		END_INSTRUCTION_BLOCK;
-	*--csp=(BC_WORD)pc;
+	*++csp=(BC_WORD)pc;
 	pc=(BC_WORD*)n[0];
 	END_INSTRUCTION_BLOCK;
 }
@@ -8390,7 +8390,7 @@ INSTRUCTION_BLOCK(updates4_a):
 }
 
 INSTRUCTION_BLOCK(jsr_ap):
-	*--csp=(BC_WORD)&pc[2];
+	*++csp=(BC_WORD)&pc[2];
 INSTRUCTION_BLOCK(jmp_ap):
 {
 	BC_WORD *n,d;
@@ -8432,13 +8432,13 @@ INSTRUCTION_BLOCK(jmp_ap):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap[(n_apply_args-2)*2];
+		*++csp=(BC_WORD)&Fjmp_ap[(n_apply_args-2)*2];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
 }
 INSTRUCTION_BLOCK(jsr_ap5):
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap5):
 {
 	BC_WORD *n,d;
@@ -8486,13 +8486,13 @@ INSTRUCTION_BLOCK(jmp_ap5):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap[6];
+		*++csp=(BC_WORD)&Fjmp_ap[6];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
 }
 INSTRUCTION_BLOCK(jsr_ap4):
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap4):
 {
 	BC_WORD *n,d;
@@ -8533,13 +8533,13 @@ INSTRUCTION_BLOCK(jmp_ap4):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap[4];
+		*++csp=(BC_WORD)&Fjmp_ap[4];
 		pc = *(BC_WORD**)(d+2);
 		END_INSTRUCTION_BLOCK;
 	}
 }
 INSTRUCTION_BLOCK(jsr_ap3):
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap3):
 {
 	BC_WORD *n,d;
@@ -8587,13 +8587,13 @@ INSTRUCTION_BLOCK(jmp_ap3):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap[2];
+		*++csp=(BC_WORD)&Fjmp_ap[2];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
 }
 INSTRUCTION_BLOCK(jsr_ap2):
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 INSTRUCTION_BLOCK(jmp_ap2):
 {
 	BC_WORD *n,d;
@@ -8641,7 +8641,7 @@ INSTRUCTION_BLOCK(jmp_ap2):
 		}
 		END_INSTRUCTION_BLOCK;
 	} else {
-		*--csp=(BC_WORD)&Fjmp_ap[0];
+		*++csp=(BC_WORD)&Fjmp_ap[0];
 		pc = *(BC_WORD**)(d+IF_INT_64_OR_32(6,2));
 		END_INSTRUCTION_BLOCK;
 	}
@@ -8651,7 +8651,7 @@ INSTRUCTION_BLOCK(jsr_ap1):
 	BC_WORD *n,d;
 
 	n=(BC_WORD*)asp[0];
-	*--csp=(BC_WORD)&pc[1];
+	*++csp=(BC_WORD)&pc[1];
 	d=n[0];
 #ifdef DEBUG_ALL_INSTRUCTIONS
 	EPRINTF("\t%p: " BC_WORD_FMT "; " BC_WORD_FMT "\n", (void*) d, *(BC_WORD*)(d+IF_INT_64_OR_32(6,2)) - (BC_WORD)program->code, d-(BC_WORD)program->data);
@@ -8676,7 +8676,7 @@ INSTRUCTION_BLOCK(add_arg0):
 	BC_WORD *n;
 	NEED_HEAP(2);
 	n=(BC_WORD*)asp[0];
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	hp[1]=asp[-1];
 	asp[-1]=(BC_WORD)hp;
 	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
@@ -8691,7 +8691,7 @@ INSTRUCTION_BLOCK(add_arg1):
 	NEED_HEAP(3);
 	n=(BC_WORD*)asp[0];
 	hp[2]=asp[-1];
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	hp[1]=n[1];
 	asp[-1]=(BC_WORD)hp;
 	hp[0]=n[0]+IF_INT_64_OR_32(16,8);
@@ -8706,7 +8706,7 @@ INSTRUCTION_BLOCK(add_arg2):
 	NEED_HEAP(5);
 	n=(BC_WORD*)asp[0];
 	hp[4]=asp[-1];
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	hp[1]=n[1];
 	hp[2]=(BC_WORD)&hp[3];
 	hp[3]=n[2];
@@ -8723,7 +8723,7 @@ INSTRUCTION_BLOCK(add_arg3):
 	NEED_HEAP(6);
 	n=(BC_WORD*)asp[0];
 	hp[5]=asp[-1];
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	a=(BC_WORD*)n[2];
 	hp[1]=n[1];
 	hp[2]=(BC_WORD)&hp[3];
@@ -8771,7 +8771,7 @@ add_arg_n:
 	NEED_HEAP(instr_arg+3);
 	n=(BC_WORD*)asp[0];
 	hp[5]=asp[-1];
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	a=(BC_WORD*)n[2];
 	hp[1]=n[1];
 	hp[2]=(BC_WORD)&hp[3];
@@ -9009,7 +9009,7 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->options.in_first_semispace ? 1 : 2) * heap_size - hp;
 
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 }
 INSTRUCTION_BLOCK(jsr_eval_host_node_31):
@@ -9195,7 +9195,7 @@ jsr_eval_host_node_with_args:
 	hp=ie->hp+words_used;
 	heap_free = heap + (ie->options.in_first_semispace ? 1 : 2) * heap_size - hp;
 
-	pc=(BC_WORD*)*csp++;
+	pc=(BC_WORD*)*csp--;
 	END_INSTRUCTION_BLOCK;
 }
 #endif

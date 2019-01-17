@@ -374,7 +374,7 @@ int interpret(
 #else
 		*ret=EVAL_TO_HNF_LABEL;
 #endif
-		*--csp=(BC_WORD)ret;
+		*++csp=(BC_WORD)ret;
 		pc=_pc;
 
 		if (0) {

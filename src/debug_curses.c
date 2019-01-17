@@ -413,15 +413,15 @@ void debugger_update_b_stack(BC_WORD *ptr) {
 
 void debugger_update_c_stack(BC_WORD *ptr) {
 	char _tmp[256];
-	BC_WORD **start = (BC_WORD**) csp - 1;
-	mvwprintw(winh_c, 0, 0, "C-stack  (%d)\n", start-(BC_WORD**)ptr+1);
+	BC_WORD **start = (BC_WORD**) csp+1;
+	mvwprintw(winh_c, 0, 0, "C-stack  (%d)\n", (BC_WORD**)ptr-start+1);
 	wrefresh(winh_c);
 
 	wmove(win_c, 0, 0);
-	while (start >= (BC_WORD**) ptr) {
+	while (start <= (BC_WORD**) ptr) {
 		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
-		wprintw(win_c, "%3d  %s\n", start-(BC_WORD**)ptr, _tmp);
-		start--;
+		wprintw(win_c, "%3d  %s\n", (BC_WORD**)ptr-start, _tmp);
+		start++;
 	}
 	wclrtobot(win_c);
 	REFRESH_C();

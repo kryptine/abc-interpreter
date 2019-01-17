@@ -91,7 +91,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 	BC_WORD *node = ie->hp;
 
 	BC_WORD **ptr_stack = (BC_WORD**) ie->asp;
-	int16_t *a_size_stack = (int16_t*) ie->csp;
+	int16_t *a_size_stack = (int16_t*) ie->bsp;
 	BC_WORD dummy;
 	*++ptr_stack = &dummy;
 	*--a_size_stack = 1;
@@ -122,7 +122,7 @@ BC_WORD *string_to_interpreter(BC_WORD *descriptors, uint64_t *clean_string,
 
 #if DEBUG_CLEAN_LINKS > 1
 			EPRINTF("\t");
-			for (int16_t *a=(int16_t*)ie->csp-1; a>a_size_stack; a--)
+			for (int16_t *a=(int16_t*)ie->bsp-1; a>a_size_stack; a--)
 				EPRINTF("   ");
 			EPRINTF("%p := %p",ie->hp,(void*)desc);
 #endif
