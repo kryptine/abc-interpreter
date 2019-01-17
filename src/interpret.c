@@ -240,8 +240,8 @@ void* __interpreter_indirection[9] = {
 static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 
 #ifdef POSIX
-# include <signal.h>
 # include <setjmp.h>
+# include <signal.h>
 struct segfault_restore_points {
 	jmp_buf restore_point;
 # ifdef LINK_CLEAN_RUNTIME
@@ -264,8 +264,11 @@ void handle_segv(int sig) {
 
 void install_interpreter_segv_handler(void) {
 #ifdef SEGFAULT_RESTORE_POINTS
-	/* TODO: check why this breaks on Mac */
+# ifdef MACH_O64
+	stack_t signal_stack;
+# else
 	struct sigaltstack signal_stack;
+# endif
 	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
 	signal_stack.ss_size=SIGSTKSZ;
 	signal_stack.ss_flags=0;
