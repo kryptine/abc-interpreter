@@ -129,7 +129,7 @@ extern void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
-# ifdef SEGFAULT_RESTORE_POINTS
+# ifdef POSIX
 		int create_restore_point,
 # endif
 #else

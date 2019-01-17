@@ -106,7 +106,7 @@ void build_host_nodes(void) {
 #ifdef COMPUTED_GOTOS
 # define INSTR(i) (BC_WORD) instruction_labels[i]
 		interpret(NULL,
-# ifdef SEGFAULT_RESTORE_POINTS
+# ifdef POSIX
 				0,
 # endif
 				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
@@ -242,14 +242,14 @@ static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 #ifdef POSIX
 # include <setjmp.h>
 # include <signal.h>
+# ifdef LINK_CLEAN_RUNTIME
 struct segfault_restore_points {
 	jmp_buf restore_point;
-# ifdef LINK_CLEAN_RUNTIME
 	BC_WORD *host_a_ptr;
-# endif
 	struct segfault_restore_points *prev;
 };
 struct segfault_restore_points *segfault_restore_points=NULL;
+# endif
 
 # ifdef LINK_CLEAN_RUNTIME
 struct sigaction old_segv_handler;
@@ -268,12 +268,14 @@ void handle_segv(int sig, siginfo_t *info, void *context) {
 	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
 # endif
 	EPRINTF("Segmentation fault in interpreter\n");
+# ifdef LINK_CLEAN_RUNTIME
 	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
+# endif
 }
 #endif
 
 void install_interpreter_segv_handler(void) {
-#ifdef SEGFAULT_RESTORE_POINTS
+#ifdef POSIX
 # ifdef MACH_O64
 	stack_t signal_stack;
 # else
@@ -309,7 +311,7 @@ void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
-# ifdef SEGFAULT_RESTORE_POINTS
+# ifdef POSIX
 		int create_restore_point,
 # endif
 #else
@@ -352,7 +354,7 @@ int interpret(
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-#ifdef SEGFAULT_RESTORE_POINTS
+#if defined(POSIX) && defined(LINK_CLEAN_RUNTIME)
 	if (create_restore_point) {
 		struct segfault_restore_points *new=safe_malloc(sizeof(struct segfault_restore_points));
 		new->prev=segfault_restore_points;
@@ -376,7 +378,7 @@ int interpret(
 		pc=_pc;
 
 		if (0) {
-#ifdef SEGFAULT_RESTORE_POINTS
+#if defined(POSIX) && defined(LINK_CLEAN_RUNTIME)
 			struct segfault_restore_points *old;
 #endif
 eval_to_hnf_return:
@@ -385,7 +387,7 @@ eval_to_hnf_return:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
-# ifdef SEGFAULT_RESTORE_POINTS
+# ifdef POSIX
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
@@ -400,7 +402,7 @@ eval_to_hnf_return_failure:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
-# ifdef SEGFAULT_RESTORE_POINTS
+# ifdef POSIX
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
