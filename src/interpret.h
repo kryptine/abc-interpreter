@@ -88,12 +88,9 @@ extern BC_WORD Fjmp_ap[64];
 
 extern void* __interpreter_indirection[9];
 
-#if defined(POSIX) && defined(DEBUG_CURSES)
-# include <setjmp.h>
-extern jmp_buf segfault_restore_point;
-#endif
-
 #define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */
+
+void install_interpreter_segv_handler(void);
 
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
@@ -132,6 +129,7 @@ extern void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
+		int create_restore_point,
 #else
 		struct program *program,
 #endif

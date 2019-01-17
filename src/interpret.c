@@ -237,24 +237,47 @@ static BC_WORD *asp, *bsp, *csp, *hp = NULL;
 
 #ifdef POSIX
 # include <signal.h>
-# ifdef DEBUG_CURSES
-jmp_buf segfault_restore_point;
+# include <setjmp.h>
+struct segfault_restore_points {
+	jmp_buf restore_point;
+# ifdef LINK_CLEAN_RUNTIME
+	BC_WORD *host_a_ptr;
 # endif
+	struct segfault_restore_points *prev;
+};
+struct segfault_restore_points *segfault_restore_points=NULL;
 
 void handle_segv(int sig) {
-	if (asp >= csp) {
-		EPRINTF("A/C-stack overflow\n");
-	} else {
-# ifdef DEBUG_CURSES
-		siglongjmp(segfault_restore_point, SIGSEGV);
+# ifndef DEBUG_CURSES
+	EPRINTF("Segmentation fault in interpreter\n");
+#  ifdef LINK_CLEAN_RUNTIME
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+#  endif
 # endif
-		EPRINTF("Untracable segmentation fault\n");
-	}
-	/* TODO: if LINK_CLEAN_RUNTIME and ie->options.hyperstrict are set, we
-	 * should attempt to go back to the host and return DV_StackOverflow. */
-	EXIT(NULL,1);
+	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
 }
 #endif
+
+void install_interpreter_segv_handler(void) {
+#if defined(POSIX) && !defined(MACH_O64)
+	/* TODO: check why this breaks on Mac */
+	struct sigaltstack signal_stack;
+	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
+	signal_stack.ss_size=SIGSTKSZ;
+	signal_stack.ss_flags=0;
+	if (sigaltstack(&signal_stack,NULL) == -1)
+		perror("sigaltstack");
+
+	struct sigaction segv_handler;
+	segv_handler.sa_handler=handle_segv;
+	sigemptyset(&segv_handler.sa_mask);
+	segv_handler.sa_flags=SA_ONSTACK;
+	if (sigaction(SIGSEGV, &segv_handler, NULL) == -1)
+		perror("sigaction");
+#else
+	EPRINTF("warning: interpreter does not recover from segfaults on this platform\n");
+#endif
+}
 
 #ifdef COMPUTED_GOTOS
 void *instruction_labels[CMAX];
@@ -263,6 +286,7 @@ void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
+		int create_restore_point,
 #else
 		struct program *program,
 #endif
@@ -303,11 +327,16 @@ int interpret(
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-#if defined(POSIX) && !defined(MACH_O64)
-	/* TODO: check why this breaks on Mac */
-	if (signal(SIGSEGV, handle_segv) == SIG_ERR) {
-		perror("sigaction");
-		return 1;
+#ifdef LINK_CLEAN_RUNTIME
+	if (create_restore_point) {
+		struct segfault_restore_points *new=safe_malloc(sizeof(struct segfault_restore_points));
+		new->prev=segfault_restore_points;
+		new->host_a_ptr=ie->host->host_a_ptr;
+		segfault_restore_points=new;
+		if (sigsetjmp(new->restore_point, 1) != 0) {
+			ie->host->host_a_ptr=segfault_restore_points->host_a_ptr;
+			goto eval_to_hnf_return_failure;
+		}
 	}
 #endif
 
@@ -322,12 +351,20 @@ int interpret(
 		pc=_pc;
 
 		if (0) {
+#ifdef LINK_CLEAN_RUNTIME
+			struct segfault_restore_points *old;
+#endif
 eval_to_hnf_return:
 #ifdef LINK_CLEAN_RUNTIME
 			ie->asp = asp;
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+			if (create_restore_point) {
+				old=segfault_restore_points;
+				segfault_restore_points=old->prev;
+				free(old);
+			}
 #endif
 			return 0;
 #ifdef LINK_CLEAN_RUNTIME
@@ -336,6 +373,11 @@ eval_to_hnf_return_failure:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+			if (create_restore_point) {
+				old=segfault_restore_points;
+				segfault_restore_points=old->prev;
+				free(old);
+			}
 			return -1;
 #endif
 		}
@@ -399,6 +441,7 @@ eval_to_hnf_return_failure:
 			EXIT(ie,1);
 #ifdef LINK_CLEAN_RUNTIME
 			interpret_error=&e__ABC_PInterpreter__dDV__HeapFull;
+			goto eval_to_hnf_return_failure;
 #endif
 			return 1;
 #ifdef DEBUG_GARBAGE_COLLECTOR
@@ -497,6 +540,8 @@ int main(int argc, char **argv) {
 	BC_WORD *asp = stack;
 	BC_WORD *bsp = &stack[stack_size];
 	BC_WORD *csp = &stack[stack_size >> 1];
+
+	install_interpreter_segv_handler();
 
 #ifdef DEBUG_CURSES
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);

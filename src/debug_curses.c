@@ -614,6 +614,10 @@ void scroll_heap_window(int up, int left) {
 	REFRESH_HEAP(heap_line, heap_col);
 }
 
+#ifdef POSIX
+# include <setjmp.h>
+jmp_buf segfault_restore_point;
+#endif
 void debugger_show_node_as_tree(BC_WORD *node, int max_depth) {
 	wmove(win_heap, 0, 0);
 #ifdef POSIX

@@ -2,6 +2,7 @@ SHELL:=bash
 CPM:=cpm
 override CFLAGS:=\
 	-std=c99\
+	-D_XOPEN_SOURCE=500\
 	-Wall\
 	-Wno-strict-aliasing\
 	-Werror\

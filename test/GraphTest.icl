@@ -34,7 +34,7 @@ where
 		(Int Int Int -> DeserializedValue Int)
 		([Int] -> DeserializedValue Int)
 		(A.a: [a] -> DeserializedValue [a])
-		(A.a b: (a (DeserializedValue b) -> b) b [a] -> DeserializedValue b)
+		(A.a b: (a b -> b) b [a] -> DeserializedValue b)
 		((Int -> Int) -> DeserializedValue Int)
 		((Int Int Int -> Int) -> DeserializedValue Int)
 		(A.a b: (a -> b) [a] -> DeserializedValue [b])
@@ -60,7 +60,8 @@ where
 		, ap1 (\x -> x - 5)
 		, ap1 (flip (-) 5)
 		, ap3 (\x y z -> 10*x + 3*y + z)
-		, foldr (\x (DV_Ok y) -> x + y) 0 [1,2,3,4,5,6,7,8,1]
+		, foldr (\x y -> x + y) 0 [1,2,3,4,5,6,7,8,1]
+		, foldr (\x y -> x + y) 0 [1..]
 		, toInt <$> last <$> rev [TestA,TestB]
 		, length <$> toList <$> reverse_string "0123456789012345678901234567890123456"
 		, length <$> toList <$> reverse_array {#i \\ i <- [0..36]}

@@ -106,7 +106,7 @@ deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
 # graph_node = string_to_interpreter int_syms graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
-= (Just (interpret ie (Finalizer 0 0 graph_node)), w)
+= (Just (interpret ie (Finalizer 0 0 (graph_node + if strict 1 0))), w)
 where
 	getInterpreterSymbols :: !Pointer -> [Symbol]
 	getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
