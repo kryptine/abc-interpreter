@@ -251,13 +251,23 @@ struct segfault_restore_points {
 };
 struct segfault_restore_points *segfault_restore_points=NULL;
 
-void handle_segv(int sig) {
-# ifndef DEBUG_CURSES
-	EPRINTF("Segmentation fault in interpreter\n");
-#  ifdef LINK_CLEAN_RUNTIME
-	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
-#  endif
+# ifdef LINK_CLEAN_RUNTIME
+struct sigaction old_segv_handler;
 # endif
+void handle_segv(int sig, siginfo_t *info, void *context) {
+# ifdef LINK_CLEAN_RUNTIME
+	if (segfault_restore_points==NULL) {
+		if (old_segv_handler.sa_handler!=SIG_DFL && old_segv_handler.sa_handler!=SIG_IGN) {
+			if (old_segv_handler.sa_flags & SA_SIGINFO)
+				old_segv_handler.sa_sigaction(sig,info,context);
+			else
+				old_segv_handler.sa_handler(sig);
+		}
+		return;
+	}
+	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+# endif
+	EPRINTF("Segmentation fault in interpreter\n");
 	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
 }
 #endif
@@ -276,10 +286,16 @@ void install_interpreter_segv_handler(void) {
 		perror("sigaltstack");
 
 	struct sigaction segv_handler;
-	segv_handler.sa_handler=handle_segv;
+	segv_handler.sa_sigaction=handle_segv;
 	sigemptyset(&segv_handler.sa_mask);
-	segv_handler.sa_flags=SA_ONSTACK;
-	if (sigaction(SIGSEGV, &segv_handler, NULL) == -1)
+	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO;
+	if (sigaction(SIGSEGV, &segv_handler,
+# ifdef LINK_CLEAN_RUNTIME
+				&old_segv_handler
+# else
+				NULL
+# endif
+				) == -1)
 		perror("sigaction");
 #else
 	EPRINTF("warning: interpreter does not recover from segfaults on this platform\n");
