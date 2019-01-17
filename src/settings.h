@@ -4,6 +4,10 @@
 # error Define either POSIX or WINDOWS
 #endif
 
+#if defined(LINK_CLEAN_RUNTIME) && defined(POSIX) && !defined(MACH_O64)
+# define SEGFAULT_RESTORE_POINTS
+#endif
+
 #include <inttypes.h>
 
 #ifndef WORD_WIDTH

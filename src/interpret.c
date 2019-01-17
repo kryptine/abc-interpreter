@@ -259,7 +259,7 @@ void handle_segv(int sig) {
 #endif
 
 void install_interpreter_segv_handler(void) {
-#if defined(POSIX) && !defined(MACH_O64)
+#ifdef SEGFAULT_RESTORE_POINTS
 	/* TODO: check why this breaks on Mac */
 	struct sigaltstack signal_stack;
 	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
@@ -286,7 +286,9 @@ void *instruction_labels[CMAX];
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
+# ifdef SEGFAULT_RESTORE_POINTS
 		int create_restore_point,
+# endif
 #else
 		struct program *program,
 #endif
@@ -327,7 +329,7 @@ int interpret(
 	BC_WORD_S heap_free = heap + heap_size - hp;
 #endif
 
-#ifdef LINK_CLEAN_RUNTIME
+#ifdef SEGFAULT_RESTORE_POINTS
 	if (create_restore_point) {
 		struct segfault_restore_points *new=safe_malloc(sizeof(struct segfault_restore_points));
 		new->prev=segfault_restore_points;
@@ -351,7 +353,7 @@ int interpret(
 		pc=_pc;
 
 		if (0) {
-#ifdef LINK_CLEAN_RUNTIME
+#ifdef SEGFAULT_RESTORE_POINTS
 			struct segfault_restore_points *old;
 #endif
 eval_to_hnf_return:
@@ -360,11 +362,13 @@ eval_to_hnf_return:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+# ifdef SEGFAULT_RESTORE_POINTS
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
 				free(old);
 			}
+# endif
 #endif
 			return 0;
 #ifdef LINK_CLEAN_RUNTIME
@@ -373,11 +377,13 @@ eval_to_hnf_return_failure:
 			ie->bsp = bsp;
 			ie->csp = csp;
 			ie->hp = hp;
+# ifdef SEGFAULT_RESTORE_POINTS
 			if (create_restore_point) {
 				old=segfault_restore_points;
 				segfault_restore_points=old->prev;
 				free(old);
 			}
+# endif
 			return -1;
 #endif
 		}
