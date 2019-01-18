@@ -437,18 +437,27 @@ static struct s_label *find_label_by_name(const char *name) {
 void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 	export_exported_labels=0;
 
-	uint32_t code_size=bytecode[0];
-	/*uint32_t words_in_strings=bytecode[1];*/
-	uint32_t strings_size=bytecode[2];
-	uint32_t data_size=bytecode[3];
-	n_labels=bytecode[4];
-	/*uint32_t global_label_string_count=bytecode[5];*/
-	code_reloc_size=bytecode[6];
-	data_reloc_size=bytecode[7];
-	uint32_t start_label_id=bytecode[8];
+	if (bytecode[0]!=ABC_MAGIC_NUMBER) {
+		EPRINTF("file to strip does not start with right magic number\n");
+		EXIT(NULL,-1);
+	}
+	code=&((uint8_t*)bytecode)[bytecode[1]+8];
+	if (bytecode[2]!=ABC_VERSION) {
+		EPRINTF("file to strip ABC* version does not match\n");
+		EXIT(NULL,-1);
+	}
+
+	uint32_t code_size=bytecode[3];
+	/*uint32_t words_in_strings=bytecode[4];*/
+	uint32_t strings_size=bytecode[5];
+	uint32_t data_size=bytecode[6];
+	n_labels=bytecode[7];
+	/*uint32_t global_label_string_count=bytecode[8];*/
+	code_reloc_size=bytecode[9];
+	data_reloc_size=bytecode[10];
+	uint32_t start_label_id=bytecode[11];
 
 	code_indices=safe_malloc(sizeof(struct code_index)*code_size);
-	code=(uint8_t*)&bytecode[9];
 
 	int ci=0;
 	int i=0;

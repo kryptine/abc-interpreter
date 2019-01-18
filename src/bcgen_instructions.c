@@ -4486,6 +4486,13 @@ static void print_local_labels(struct label_node *node, FILE *program_file) {
 }
 
 void write_program(FILE *program_file) {
+	uint32_t temp;
+	temp=ABC_MAGIC_NUMBER;
+	fwrite(&temp, sizeof(temp), 1, program_file);
+	temp=10*4;
+	fwrite(&temp, sizeof(temp), 1, program_file);
+	temp=ABC_VERSION;
+	fwrite(&temp, sizeof(temp), 1, program_file);
 	fwrite(&pgrm.code_size, sizeof(pgrm.code_size), 1, program_file);
 	fwrite(&pgrm.words_in_strings, sizeof(pgrm.words_in_strings), 1, program_file);
 	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
@@ -4502,8 +4509,8 @@ void write_program(FILE *program_file) {
 	if (start_label!=NULL) {
 		fwrite(&start_label->label_id, sizeof(uint32_t), 1, program_file);
 	} else {
-		uint32_t nil=-1;
-		fwrite(&nil, sizeof(nil), 1, program_file);
+		temp=-1;
+		fwrite(&temp, sizeof(temp), 1, program_file);
 	}
 
 	print_code(pgrm.code_size,pgrm.code,program_file);
@@ -4564,7 +4571,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	count_and_renumber_labels(labels, &start, &end);
 
 	*bytes_needed =
-			9*sizeof(uint32_t) +
+			12*sizeof(uint32_t) +
 			pgrm.code_byte_size +
 			sizeof(uint32_t)*pgrm.strings_size +
 			sizeof(uint64_t)*pgrm.data_size +
@@ -4573,17 +4580,20 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 			sizeof(uint32_t)*2*(pgrm.code_reloc_size+pgrm.data_reloc_size);
 	char *bytecode=safe_malloc(*bytes_needed);
 
-	((uint32_t*)bytecode)[0]=pgrm.code_size;
-	((uint32_t*)bytecode)[1]=pgrm.words_in_strings;
-	((uint32_t*)bytecode)[2]=pgrm.strings_size;
-	((uint32_t*)bytecode)[3]=pgrm.data_size;
-	((uint32_t*)bytecode)[4]=label_id;
-	((uint32_t*)bytecode)[5]=global_label_string_count;
-	((uint32_t*)bytecode)[6]=pgrm.code_reloc_size;
-	((uint32_t*)bytecode)[7]=pgrm.data_reloc_size;
-	((uint32_t*)bytecode)[8]=start_label==NULL ? -1 : start_label->label_id;
+	((uint32_t*)bytecode)[ 0]=ABC_MAGIC_NUMBER;
+	((uint32_t*)bytecode)[ 1]=10*4;
+	((uint32_t*)bytecode)[ 2]=ABC_VERSION;
+	((uint32_t*)bytecode)[ 3]=pgrm.code_size;
+	((uint32_t*)bytecode)[ 4]=pgrm.words_in_strings;
+	((uint32_t*)bytecode)[ 5]=pgrm.strings_size;
+	((uint32_t*)bytecode)[ 6]=pgrm.data_size;
+	((uint32_t*)bytecode)[ 7]=label_id;
+	((uint32_t*)bytecode)[ 8]=global_label_string_count;
+	((uint32_t*)bytecode)[ 9]=pgrm.code_reloc_size;
+	((uint32_t*)bytecode)[10]=pgrm.data_reloc_size;
+	((uint32_t*)bytecode)[11]=start_label==NULL ? -1 : start_label->label_id;
 
-	char *ptr=(char*)&((uint32_t*)bytecode)[9];
+	char *ptr=(char*)&((uint32_t*)bytecode)[12];
 	for (int i=0; i<pgrm.code_size; i++) {
 		memcpy(ptr, &pgrm.code[i].value, pgrm.code[i].width);
 		ptr+=pgrm.code[i].width;

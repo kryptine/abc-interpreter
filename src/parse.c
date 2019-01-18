@@ -169,7 +169,9 @@ void shift_address(BC_WORD *addr) {
  * 0: success
  * 1: unexpected end of string/file
  * 2: illegal instruction
- * 3: internal state machine error */
+ * 3: internal state machine error
+ * 4: wrong magic number
+ * 5: wrong version number */
 int parse_program(struct parser *state, struct char_provider *cp) {
 	char elem8;
 	int16_t elem16;
@@ -207,8 +209,26 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	while (state->state != PS_end) {
 		switch (state->state) {
 			case PS_init:
+			{
+				uint32_t header_length;
+
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				if (elem32 != ABC_MAGIC_NUMBER)
+					return 4;
+
+				if (provide_chars(&header_length, sizeof(header_length), 1, cp) < 0)
+					return 1;
+
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				header_length-=4;
+				if (elem32 != ABC_VERSION)
+					return 5;
+
+				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+					return 1;
+				header_length-=4;
 #ifdef LINKER
 				state->code_size = elem32;
 #else
@@ -218,6 +238,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 #ifdef LINKER
 				add_words_in_strings(elem32);
 #elif defined(INTERPRETER) && WORD_WIDTH==32
@@ -226,6 +247,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->strings_size = elem32;
 #if defined(INTERPRETER) && WORD_WIDTH == 32
 				/* Allocate one more to prevent reading out of bounds in PS_data */
@@ -235,6 +257,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 #ifdef LINKER
 				state->data_size = elem32;
 #else
@@ -250,26 +273,40 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->program->symbol_table_size = elem32;
 				state->program->symbol_table = safe_malloc(elem32 * sizeof(struct symbol));
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->program->symbols = safe_malloc(elem32 + state->program->symbol_table_size);
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->code_reloc_size = elem32;
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->data_reloc_size = elem32;
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
+				header_length-=4;
 				state->program->start_symbol_id = elem32;
+
+				while (header_length >= sizeof(elem32)) {
+					if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
+						return 1;
+					header_length -= sizeof(elem32);
+				}
+				if (header_length > 0 && provide_chars(&elem32, header_length, 1, cp) < 0)
+					return 1;
 
 				next_state(state);
 				break;
+			}
 			case PS_code: {
 				if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
 					return 1;
