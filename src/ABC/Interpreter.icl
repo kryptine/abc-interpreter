@@ -74,7 +74,7 @@ where
 		ccall strip_bytecode "sA:VIp"
 	}
 
-deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
+deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(!Maybe a, !*World)
 deserialize dsets graph thisexe w = deserialize` False dsets graph thisexe w
 
 deserializeStrict :: !DeserializationSettings !SerializedGraph !String !*World

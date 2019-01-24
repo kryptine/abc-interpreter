@@ -23,10 +23,10 @@ defaultDeserializationSettings :: DeserializationSettings
 	| DV_IllegalInstruction
 	| DV_HostHeapFull
 
-	| DV_Ok a
+	| DV_Ok !a
 
 serialize_for_interpretation :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
-deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
+deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(!Maybe a, !*World)
 deserializeStrict :: !DeserializationSettings !SerializedGraph !String !*World
 	-> *(!DeserializedValue a, !*World)
 get_start_rule_as_expression :: !DeserializationSettings !String !String !*World -> *(Maybe a, !*World)

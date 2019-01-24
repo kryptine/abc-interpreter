@@ -51,7 +51,7 @@ extern void *e__ABC_PInterpreter__dDV__Halt;
 extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
 extern void *e__ABC_PInterpreter__dDV__SegmentationFault;
 extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
-extern void *e__ABC_PInterpreter__dDV__Ok;
+extern void *e__ABC_PInterpreter__kDV__Ok;
 
 extern void **interpret_error;
 #endif

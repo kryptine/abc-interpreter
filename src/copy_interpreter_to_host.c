@@ -981,7 +981,7 @@ int copy_to_host_or_garbage_collect(struct interpretation_environment *ie,
 	BC_WORD *new_heap;
 	if (hyperstrict_if_requested && ie->options.hyperstrict) {
 		*target=ie->host->host_hp_ptr;
-		ie->host->host_hp_ptr[0]=(BC_WORD)&e__ABC_PInterpreter__dDV__Ok+IF_MACH_O_ELSE(16,8)+2;
+		ie->host->host_hp_ptr[0]=(BC_WORD)&e__ABC_PInterpreter__kDV__Ok+2;
 		new_heap=COPY_TO_HOST(ie->host->clean_ie,&ie->host->host_hp_ptr[2],(BC_WORD**)&ie->host->host_hp_ptr[1],node,0);
 	} else {
 		new_heap=COPY_TO_HOST(ie->host->clean_ie,ie->host->host_hp_ptr,target,node,0);
