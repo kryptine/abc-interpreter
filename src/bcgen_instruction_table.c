@@ -338,6 +338,7 @@ void load_instruction_table(void) {
 	put_instruction_name("updates4_a",            parse_instruction_n_n_n_n_n,     code_updates4_a );
 
 	put_instruction_name(".a",                    parse_directive_a,               code_a );
+	put_instruction_name(".ai",                   parse_directive_ai,              code_a );
 	put_instruction_name(".algtype",              parse_instruction_n,             code_algtype );
 	put_instruction_name(".caf",                  parse_instruction_a_n_n,         code_caf );
 	put_instruction_name(".code",                 parse_directive_n_n_n,           code_dummy );

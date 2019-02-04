@@ -1412,6 +1412,21 @@ int parse_directive_a (instruction *instruction)
 	return 1;
 }
 
+int parse_directive_ai (instruction *instruction)
+{
+	int64_t n;
+	STRING s1,s2;
+
+	if (!parse_integer (&n))
+		return 0;
+
+	parse_label (s1);
+	parse_label (s2);
+	instruction->code_function ((int)n,s1,s2);
+
+	return 1;
+}
+
 int parse_directive_depend (instruction *instruction)
 {
 	STRING a;

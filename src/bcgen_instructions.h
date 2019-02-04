@@ -316,6 +316,7 @@ void code_updates3pop_b(int b_offset_1, int b_offset_2, int b_offset_3, int b_of
 void code_updates4_a(int a_offset_1, int a_offset_2, int a_offset_3, int a_offset_4, int a_offset_5);
 
 void code_a(int n_apply_args, char *ea_label_name);
+void code_ai(int n_apply_args,char *ea_label_name,char *instance_member_code_name);
 void code_algtype(int n_constructors);
 void code_caf(char *label_name, int a_size, int b_size);
 void code_comp(int version, char *options);

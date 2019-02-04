@@ -49,6 +49,7 @@ int parse_instruction_s2(struct instruction*);
 int parse_instruction_s2_n_a(struct instruction*);
 int parse_directive(struct instruction*);
 int parse_directive_a(struct instruction*);
+int parse_directive_ai(struct instruction*);
 int parse_directive_depend(struct instruction*);
 int parse_directive_desc(struct instruction*);
 int parse_directive_desc0(struct instruction*);

@@ -3892,6 +3892,10 @@ void code_a(int n_apply_args,char *ea_label_name) {
 	}
 }
 
+void code_ai(int n_apply_args,char *ea_label_name,char *instance_member_code_name) {
+	code_a(n_apply_args,ea_label_name);
+}
+
 void code_algtype(int n_constructors) {
 }
 
