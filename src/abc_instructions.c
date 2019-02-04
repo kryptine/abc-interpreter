@@ -95,6 +95,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuildhr01:             return "l";
 		case Cbuildhr02:             return "l";
 		case Cbuildhr03:             return "l";
+		case Cbuildhr04:             return "l";
 		case Cbuildhr10:             return "l";
 		case Cbuildhr11:             return "l";
 		case Cbuildhr12:             return "l";

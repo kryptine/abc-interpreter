@@ -66,6 +66,7 @@ enum {
 	INSTRUCTION(buildhr01)
 	INSTRUCTION(buildhr02)
 	INSTRUCTION(buildhr03)
+	INSTRUCTION(buildhr04)
 	INSTRUCTION(buildhr10)
 	INSTRUCTION(buildhr11)
 	INSTRUCTION(buildhr12)

@@ -1065,6 +1065,10 @@ void code_buildhr(char descriptor_name[],int a_size,int b_size) {
 			add_instruction_label_offset(Cbuildhr03,descriptor_name,2);
 			return;
 		}
+		if (b_size==4) {
+			add_instruction_label_offset(Cbuildhr04,descriptor_name,2);
+			return;
+		}
 	} else if (a_size==1) {
 		if (b_size==0) {
 			add_instruction_label_offset(Cbuildhr10,descriptor_name,2);

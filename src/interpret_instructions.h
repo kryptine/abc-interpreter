@@ -697,6 +697,21 @@ INSTRUCTION_BLOCK(buildhr03):
 	pc+=2;
 	END_INSTRUCTION_BLOCK;
 }
+INSTRUCTION_BLOCK(buildhr04):
+{
+	NEED_HEAP(6);
+	hp[0]=pc[1];
+	hp[1]=bsp[0];
+	hp[2]=(BC_WORD)&hp[3];
+	hp[3]=bsp[1];
+	hp[4]=bsp[2];
+	hp[5]=bsp[3];
+	*++asp=(BC_WORD)hp;
+	bsp+=4;
+	hp+=6;
+	pc+=2;
+	END_INSTRUCTION_BLOCK;
+}
 INSTRUCTION_BLOCK(buildhr11):
 	NEED_HEAP(3);
 	hp[0]=pc[1];
