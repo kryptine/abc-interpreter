@@ -67,7 +67,6 @@ __interpret__copy__node__asm_finish:
 
 .global	__interpret__copy__node__asm_redirect_node
 __interpret__copy__node__asm_redirect:
-	# TODO: overwrite the node on the heap
 	mov	rbp,[__interpret__copy__node__asm_redirect_node@GOTPCREL+rip]
 	mov	rcx,[rbp]
 	# Evaluate the node if necessary

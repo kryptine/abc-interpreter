@@ -58,7 +58,6 @@ __interpret__copy__node__asm_finish:
 
 extrn	__interpret__copy__node__asm_redirect_node:near
 __interpret__copy__node__asm_redirect:
-	; TODO: overwrite the node on the heap
 	lea	rbp,__interpret__copy__node__asm_redirect_node
 	mov	rcx,[rbp]
 	; Evaluate the node if necessary
