@@ -44,7 +44,7 @@ Global
 	Paths
 		Path:	{Project}
 		Path:	{Application}*Libraries*StdEnv
-		Path:	{Application}*Libraries*Platform
+		Path:	{Application}*Libraries*ArgEnv
 	Precompile:	
 	Postlink:	
 MainModule
