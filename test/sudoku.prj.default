@@ -46,7 +46,6 @@ Global
 		StripByteCode:	True
 	Paths
 		Path:	{Project}
-		Path:	{Application}*lib*Platform
 	Precompile:	
 	Postlink:	
 MainModule

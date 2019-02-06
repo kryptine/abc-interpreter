@@ -1,7 +1,7 @@
 module sudoku
 
 import StdEnv
-import Data.Maybe
+import StdMaybe
 
 :: SudokuLike val :== {Node val}
 
