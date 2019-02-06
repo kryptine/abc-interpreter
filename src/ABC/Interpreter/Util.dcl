@@ -1,5 +1,10 @@
 definition module ABC.Interpreter.Util
 
+/**
+ * This module defines internal functions used by the ABC interpreter library
+ * (see {{`ABC.Interpreter`}}). It is not meant to be included directly.
+ */
+
 from _SystemArray import class Array
 from StdMaybe import :: Maybe
 from symbols_in_program import :: Symbol

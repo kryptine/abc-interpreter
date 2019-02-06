@@ -21,11 +21,11 @@ where
 		DV_HostHeapFull       -> DV_HostHeapFull
 
 Start w
-# (graph,w) = serialize_for_interpretation graph "GraphTest.bc" w
+# (graph,w) = serialize graph "GraphTest.bc" w
 # graph = case graph of
 	Nothing -> abort "Could not serialize the graph; is GraphTest.bc up to date?\n"
 	Just g  -> g
-# (DV_Ok (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,repeat,sumtup,createarray),w) = deserializeStrict defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
+# (DV_Ok (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,reverse_string,reverse_array,reverse_boxed_array,reverse_recarr,recarr,toInt_rec,repeat,sumtup,createarray),w) = deserialize_strict defaultDeserializationSettings graph (IF_WINDOWS "GraphTest.exe" "GraphTest") w
 = use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map reverse_string reverse_array reverse_boxed_array reverse_recarr recarr toInt_rec repeat sumtup createarray
 where
 	use ::

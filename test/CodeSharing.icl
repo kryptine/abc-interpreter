@@ -12,13 +12,13 @@ import ABC.Interpreter
 // the first 100 elements.
 import StdEnum,StdFunc
 //Start w
-//# (Just primes,w) = get_start_rule_as_expression (IF_WINDOWS "CodeSharing.exe" "CodeSharing") "infprimes.bc" w
+//# (Just primes,w) = get_start_rule_as_expression "infprimes.bc" (IF_WINDOWS "CodeSharing.exe" "CodeSharing") w
 //= last (iter 10 reverse [0..last (reverse (reverse (take 2000 primes)))])
 
 // Example: get a function from a bytecode file and apply it
 Start w
 # (Just (intsquare,sub5,sub3_10,sumints,rev,foldr,ap1,ap3,map,repeat,internal_types),w)
-	= get_start_rule_as_expression defaultDeserializationSettings (IF_WINDOWS "CodeSharing.exe" "CodeSharing") "functions.bc" w
+	= get_start_rule_as_expression defaultDeserializationSettings "functions.bc" (IF_WINDOWS "CodeSharing.exe" "CodeSharing") w
 = (use intsquare sub5 sub3_10 sumints rev foldr ap1 ap3 map repeat, internal_types)
 where
 	use ::

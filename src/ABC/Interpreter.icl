@@ -40,8 +40,8 @@ defaultDeserializationSettings =
 	, ie_snodes    :: !*{a}
 	}
 
-serialize_for_interpretation :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
-serialize_for_interpretation graph bcfile w
+serialize :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
+serialize graph bcfile w
 # (graph,descs,mods) = copy_to_string_with_names graph
 
 # (bytecode,w) = readFile bcfile w
@@ -77,9 +77,8 @@ where
 deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(!Maybe a, !*World)
 deserialize dsets graph thisexe w = deserialize` False dsets graph thisexe w
 
-deserializeStrict :: !DeserializationSettings !SerializedGraph !String !*World
-	-> *(!DeserializedValue a, !*World)
-deserializeStrict dsets graph thisexe w = case deserialize` True dsets graph thisexe w of
+deserialize_strict :: !DeserializationSettings !SerializedGraph !String !*World -> *(!DeserializedValue a, !*World)
+deserialize_strict dsets graph thisexe w = case deserialize` True dsets graph thisexe w of
 	(Nothing,w) -> (DV_ParseError,w)
 	(Just v,w)  -> (v,w)
 
@@ -161,7 +160,7 @@ where
 		PREFIX_D = 4
 
 get_start_rule_as_expression :: !DeserializationSettings !String !String !*World -> *(Maybe a, !*World)
-get_start_rule_as_expression dsets prog filename w
+get_start_rule_as_expression dsets filename prog w
 # (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile filename w
 | isNothing bc = (Nothing, w)
@@ -210,8 +209,8 @@ make_finalizer ie_settings = code {
 	pushI 0
 }
 
-graphToString :: !*SerializedGraph -> *(!.String, !*SerializedGraph)
-graphToString g=:{graph,descinfo,modules,bytecode}
+graph_to_string :: !*SerializedGraph -> *(!.String, !*SerializedGraph)
+graph_to_string g=:{graph,descinfo,modules,bytecode}
 # (graph_cpy,graph,graph_size) = copy graph
 # g & graph = graph
 # string_size = sum
@@ -266,8 +265,8 @@ where
 	# (i,s) = write arr.[n] i s
 	= writeArray write (n+1) arr i s
 
-graphFromString :: !String -> Maybe *SerializedGraph
-graphFromString s = read 0 s
+graph_from_string :: !String -> Maybe *SerializedGraph
+graph_from_string s = read 0 s
 where
 	read :: !Int !String -> Maybe *SerializedGraph
 	read i s
@@ -338,17 +337,17 @@ where
 	# (i,xs) = readArray read (len-1) i s
 	= (i,[x:xs])
 
-graphToFile :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
-graphToFile g f
-# (s,g) = graphToString g
+graph_to_file :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
+graph_to_file g f
+# (s,g) = graph_to_string g
 # f = f <<< size s <<< s
 = (g,f)
 
-graphFromFile :: !*File -> *(!Maybe *SerializedGraph, !*File)
-graphFromFile f
+graph_from_file :: !*File -> *(!Maybe *SerializedGraph, !*File)
+graph_from_file f
 # (_,size,f) = freadi f
 # (s,f) = freads f size
-# g = graphFromString s
+# g = graph_from_string s
 = (g,f)
 
 malloc :: !Int -> Pointer

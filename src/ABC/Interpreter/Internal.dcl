@@ -1,5 +1,10 @@
 definition module ABC.Interpreter.Internal
 
+/**
+ * This module defines internal functions used by the ABC interpreter library
+ * (see {{`ABC.Interpreter`}}). It is not meant to be included directly.
+ */
+
 import ABC.Interpreter
 
 add_shared_node :: !Int !*{a} a -> *(!Int, !*{a}, !Int)

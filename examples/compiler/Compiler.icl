@@ -40,14 +40,14 @@ where
 
 testThroughFile :: a !String !*World -> *(a, !*World)
 testThroughFile graph fp w
-# (Just graph_s,w) = serialize_for_interpretation optimise_addition "compiler.bc" w
+# (Just graph_s,w) = serialize optimise_addition "compiler.bc" w
 
 # (ok,f,w) = fopen fp FWriteData w
-# (graph_s,f) = graphToFile graph_s f
+# (graph_s,f) = graph_to_file graph_s f
 # (_,w) = fclose f w
 
 # (ok,f,w) = fopen fp FReadData w
-# (Just graph_s,f) = graphFromFile f
+# (Just graph_s,f) = graph_from_file f
 # (_,w) = fclose f w
 
 # (Just graph,w) = deserialize defaultDeserializationSettings graph_s (IF_WINDOWS "Compiler.exe" "compiler") w
