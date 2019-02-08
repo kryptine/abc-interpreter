@@ -28,7 +28,6 @@ ifeq ($(OS),Mac)
 override CFLAGS+=-DMACH_O64
 SRC_INTERFACE:=interface.macos64.s
 else
-override CFLAGS+=-fno-pie
 SRC_INTERFACE:=interface.linux64.s
 endif
 ifeq ($(OS),Windows_NT)
@@ -107,7 +106,7 @@ SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
 	finalizers.c\
 	strip.c
 ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
-OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB)) interface.o
+OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	gc/util.h\
 	interpret_instructions.h\
@@ -139,8 +138,8 @@ $(BCSTRIP): $(SRC_BCSTRIP) $(DEP_BCSTRIP)
 $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
-library: $(OBJ_INTERPRET_LIB)
-	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
+library: $(OBJ_INTERPRET_LIB) interface.o
+	cp $^ Clean\ System\ Files
 
 $(OBJ_INTERPRET_LIB): %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
@@ -149,7 +148,7 @@ interface.o: $(SRC_INTERFACE)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB)
-	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME $(CFLAGS) -S $< -o $@
+	$(CC) -DINTERPRETER -DLINK_CLEAN_RUNTIME -fno-pie $(CFLAGS) -S $< -o $@
 ifeq ($(OS),Mac)
 	sed -i '' -f mac_fix_underscores.sed $@
 endif
@@ -159,7 +158,8 @@ debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 
 AUXILIARIES:=$(INTERPRET_LIB)\
 	$(ASM_INTERPRET_LIB)\
-	$(OBJ_INTERPRET_LIB)
+	$(OBJ_INTERPRET_LIB)\
+	interface.o
 
 clean:
 	$(RM) $(BINARIES) $(AUXILIARIES)
