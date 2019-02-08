@@ -53,6 +53,21 @@ library:
 		traps.c \
 		util.c
 	ml64 /nologo /c /Fo interface.obj interface.asm
-	move *.obj "Clean System Files" >nul
+	if exist "Clean System Files\*.*" (del /S "Clean System Files\*.abc" "Clean System Files\*.obj")
+	move abc_instructions.obj "Clean System Files" >nul
+	move bcgen_instructions.obj "Clean System Files" >nul
+	move bytecode.obj "Clean System Files" >nul
+	move copy_host_to_interpreter.obj "Clean System Files" >nul
+	move copy_interpreter_to_host.obj "Clean System Files" >nul
+	move finalizers.obj "Clean System Files" >nul
+	move gc.obj "Clean System Files" >nul
+	move copy.obj "Clean System Files" >nul
+	move mark.obj "Clean System Files" >nul
+	move interface.obj "Clean System Files" >nul
+	move interpret.obj "Clean System Files" >nul
+	move parse.obj "Clean System Files" >nul
+	move strip.obj "Clean System Files" >nul
+	move traps.obj "Clean System Files" >nul
+	move util.obj "Clean System Files" >nul
 
 .FORCE:
