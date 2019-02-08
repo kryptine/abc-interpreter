@@ -18,6 +18,7 @@ s/___interpret__evaluate__host__with__args/__interpret__evaluate__host__with__ar
 s/___interpret__copy__node__asm_redirect_node/__interpret__copy__node__asm_redirect_node/g
 s/_e__ABC_PInterpreter_PInternal__\([dn]\)interpret/e__ABC_PInterpreter_PInternal__\1interpret/g
 s/_e__ABC_PInterpreter__dDV__/e__ABC_PInterpreter__dDV__/g
+s/_e__ABC_PInterpreter__kDV__/e__ABC_PInterpreter__kDV__/g
 s/_copy_interpreter_to_host/copy_interpreter_to_host/g
 s/_small_integers/small_integers/g
 s/_static_characters/static_characters/g
