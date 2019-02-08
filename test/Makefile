@@ -4,16 +4,15 @@ ifneq ($(OS),Mac)
 override CLMFLAGS+=-no-opt-link
 endif
 
-PATCHED:=../src/graph_copy_with_names.dcl ../src/graph_copy_with_names.icl
 TESTS:=CodeSharing GraphTest
 RUNTESTS:=$(addprefix test-,$(TESTS))
 
 all: $(TESTS)
 
-CodeSharing: library $(PATCHED) .FORCE
+CodeSharing: library .FORCE
 	$(CLM) $(CLMFLAGS) $@ -o $@
 
-GraphTest: library $(PATCHED) .FORCE
+GraphTest: library .FORCE
 	$(CLM) -O -bytecode _system
 	$(CLM) $(CLMFLAGS) -exl -desc -bytecode -optabc -h 10m $@ -o $@
 
@@ -25,9 +24,6 @@ $(RUNTESTS): test-%: % .FORCE
 
 library: .FORCE
 	$(MAKE) -C ../src $@
-
-$(PATCHED):
-	$(MAKE) -C ../src $(shell basename $@)
 
 .FORCE:
 .PHONY: all test $(RUNTESTS) library

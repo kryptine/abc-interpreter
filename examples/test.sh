@@ -2,8 +2,6 @@
 set -e
 
 make -C ../src\
-	graph_copy_with_names.dcl\
-	graph_copy_with_names.icl\
 	abcopt\
 	bcgen\
 	bclink\

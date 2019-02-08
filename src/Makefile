@@ -51,7 +51,6 @@ INTERP:=interpret
 endif
 
 BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCSTRIP) $(INTERP)
-PATCHED:=graph_copy_with_names.dcl graph_copy_with_names.icl
 
 SRC_BCGEN:=\
 	abc_instructions.c\
@@ -117,14 +116,6 @@ endif
 all: $(BINARIES)
 
 ifeq ($(OS),Windows_NT)
-$(PATCHED): %: $(CLEAN_HOME)/Libraries/GraphCopy/% %.patch
-else
-$(PATCHED): %: $(CLEAN_HOME)/lib/GraphCopy/% %.patch
-endif
-	cp $< $@
-	patch < $@.patch
-
-ifeq ($(OS),Windows_NT)
 $(ABCOPT): abcopt_win.prj.default .FORCE
 else
 $(ABCOPT): abcopt.prj.default .FORCE
@@ -160,7 +151,6 @@ debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
 
 AUXILIARIES:=$(INTERPRET_LIB)\
-	$(PATCHED)\
 	$(ASM_INTERPRET_LIB)\
 	$(OBJ_INTERPRET_LIB)
 
