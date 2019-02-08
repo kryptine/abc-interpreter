@@ -52,7 +52,7 @@ library:
 		strip.c \
 		traps.c \
 		util.c
-	ml64 /nologo /c /Fo interface.obj interface.asm
+	ml64 /nologo /c /Fo interface.obj interface.windows64.asm
 	if exist "Clean System Files\*.*" \
 		(del /S "Clean System Files\*.abc" "Clean System Files\*.o" "Clean System Files\*.obj")
 	move abc_instructions.obj "Clean System Files" >nul

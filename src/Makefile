@@ -26,6 +26,10 @@ endif
 
 ifeq ($(OS),Mac)
 override CFLAGS+=-DMACH_O64
+SRC_INTERFACE:=interface.macos64.s
+else
+override CFLAGS+=-fno-pie
+SRC_INTERFACE:=interface.linux64.s
 endif
 ifeq ($(OS),Windows_NT)
 override CFLAGS+=-DWINDOWS
@@ -139,6 +143,9 @@ library: $(OBJ_INTERPRET_LIB)
 	cp $(OBJ_INTERPRET_LIB) Clean\ System\ Files
 
 $(OBJ_INTERPRET_LIB): %.o: %.s
+	$(AS) $(ASFLAGS) $< -o $@
+
+interface.o: $(SRC_INTERFACE)
 	$(AS) $(ASFLAGS) $< -o $@
 
 $(ASM_INTERPRET_LIB): %.s: %.c $(DEP_INTERPRET_LIB)

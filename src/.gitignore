@@ -8,4 +8,4 @@ interpret
 graph_copy_with_names.dcl
 graph_copy_with_names.icl
 
-!interface.s
+!interface.*.s
