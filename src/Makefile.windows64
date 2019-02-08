@@ -53,7 +53,8 @@ library:
 		traps.c \
 		util.c
 	ml64 /nologo /c /Fo interface.obj interface.asm
-	if exist "Clean System Files\*.*" (del /S "Clean System Files\*.abc" "Clean System Files\*.obj")
+	if exist "Clean System Files\*.*" \
+		(del /S "Clean System Files\*.abc" "Clean System Files\*.o" "Clean System Files\*.obj")
 	move abc_instructions.obj "Clean System Files" >nul
 	move bcgen_instructions.obj "Clean System Files" >nul
 	move bytecode.obj "Clean System Files" >nul
