@@ -43,7 +43,7 @@ int main (int argc, char *argv[]) {
 		return -1;
 	}
 
-	FILE *input_files[argc - 1];
+	FILE **input_files = safe_malloc(sizeof(FILE*) * (argc-1));
 	unsigned int nr_abc_files = 0;
 	FILE *output_file = NULL;
 
@@ -56,7 +56,7 @@ int main (int argc, char *argv[]) {
 			}
 			i++;
 		} else {
-			if((input_files[i - 1] = fopen(argv[i], "r")) == NULL) {
+			if((input_files[i-1] = fopen(argv[i], "r")) == NULL) {
 				fprintf(stderr, "Error: Could not open abc file: %s\n", argv[i]);
 				return -1;
 			}

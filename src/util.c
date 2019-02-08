@@ -185,7 +185,12 @@ char *escape(char c) {
 
 /* https://stackoverflow.com/a/47229318 */
 #ifdef BCGEN
-ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
+# ifdef MICROSOFT_C
+SSIZE_T
+# else
+ssize_t
+# endif
+	getline(char **lineptr, size_t *n, FILE *stream) {
     size_t pos;
     int c;
 

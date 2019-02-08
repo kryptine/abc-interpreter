@@ -1,0 +1,38 @@
+all: ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodeStripper.exe
+
+ByteCodeGenerator.exe: .FORCE
+	cl /nologo /O2 \
+		/DWINDOWS /DMICROSOFT_C /DBCGEN \
+		abc_instructions.c \
+		bcgen.c \
+		bcgen_instruction_table.c \
+		bcgen_instructions.c \
+		bytecode.c \
+		parse_abc.c \
+		util.c \
+		/link /out:ByteCodeGenerator.exe
+
+ByteCodeLinker.exe: .FORCE
+	cl /nologo /O2 \
+		/DWINDOWS /DMICROSOFT_C /DLINKER \
+		abc_instructions.c \
+		bcgen_instructions.c \
+		bclink.c \
+		bytecode.c \
+		parse.c \
+		util.c \
+		/link /out:ByteCodeLinker.exe
+
+ByteCodeStripper.exe: .FORCE
+	cl /nologo /O2 \
+		/DWINDOWS /DMICROSOFT_C /DLINKER \
+		abc_instructions.c \
+		bcgen_instructions.c \
+		bcstrip.c \
+		bytecode.c \
+		parse.c \
+		strip.c \
+		util.c \
+		/link /out:ByteCodeStripper.exe
+
+.FORCE:
