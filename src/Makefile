@@ -39,6 +39,10 @@ ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation
 endif
 
+ifeq ($(filter optimized,$(MAKECMDGOALS)),optimized)
+override CFLAGS+=-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations
+endif
+
 ifeq ($(OS),Windows_NT)
 ABCOPT:=ABCOptimiser.exe
 BCGEN:=ByteCodeGenerator.exe
@@ -118,6 +122,8 @@ endif
 
 all: $(BINARIES)
 
+optimized:
+
 ifeq ($(OS),Windows_NT)
 $(ABCOPT): abcopt_win.prj.default .FORCE
 else
@@ -166,4 +172,4 @@ clean:
 	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
 
 .FORCE:
-.PHONY: all clean library
+.PHONY: all clean library optimized

@@ -14,6 +14,7 @@ FAILED=()
 RUNFLAGS=""
 NATIVE_RUNFLAGS=""
 
+MAKETARGETS="all"
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
 RUN_ONLY=()
@@ -95,7 +96,7 @@ while true; do
 			BENCHMARK=1
 			shift;;
 		-f)
-			CFLAGS+=" -Ofast -fno-unsafe-math-optimizations -DCOMPUTED_GOTOS"
+			MAKETARGETS+=" optimized"
 			shift;;
 		-h)
 			RUNFLAGS+=" -h $2"
@@ -146,7 +147,7 @@ if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
 fi
 
 if [ "$OS" != "Windows_NT" ]; then
-	CFLAGS="$CFLAGS" make -BC ../src all || exit 1
+	CFLAGS="$CFLAGS" make -BC ../src $MAKETARGETS || exit 1
 fi
 
 if [ $RECOMPILE -gt 0 ]; then
