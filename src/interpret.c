@@ -298,11 +298,7 @@ static LONG WINAPI handle_segv(struct _EXCEPTION_POINTERS *exception) {
 
 void install_interpreter_segv_handler(void) {
 #ifdef POSIX
-# ifdef MACH_O64
 	stack_t signal_stack;
-# else
-	struct sigaltstack signal_stack;
-# endif
 	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
 	signal_stack.ss_size=SIGSTKSZ;
 	signal_stack.ss_flags=0;
