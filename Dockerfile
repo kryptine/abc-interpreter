@@ -15,8 +15,6 @@ RUN \
 		bc
 
 RUN	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform lib-stdlib
-COPY etc/ByteCode.env ByteCode.env
-RUN tail -n +3 ByteCode.env >> /opt/clean/etc/IDEEnvs
 
 RUN git clone https://gitlab.science.ru.nl/cstaps/clean-tools /tmp/clean-tools &&\
 	make -C /tmp/clean-tools/clm -f Makefile.linux64 &&\

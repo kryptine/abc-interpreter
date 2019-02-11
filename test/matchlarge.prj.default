@@ -1,7 +1,7 @@
 Version: 1.4
 Global
 	ProjectRoot:	.
-	Target:	ByteCode
+	Target:	StdEnv
 	Exec:	{Project}/matchlarge
 	ByteCode:	{Project}/matchlarge.bc
 	CodeGen
