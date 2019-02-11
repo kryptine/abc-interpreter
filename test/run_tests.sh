@@ -141,7 +141,7 @@ while true; do
 	esac
 done
 
-if [ $BENCHMARK -gt 0 ] && [[ $CFLAGS != *"-Ofast"* ]]; then
+if [ $BENCHMARK -gt 0 ] && [[ $MAKETARGETS != *"optimized"* ]]; then
 	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
 	sleep 1
 fi
@@ -165,9 +165,9 @@ do
 	fi
 
 	if [ $BENCHMARK -gt 0 ]; then
-		cp "$MODULE.icl" /tmp
+		cp "$MODULE.icl" "$MODULE.icl.nobm"
 		if [ -f "$MODULE.bm.sed" ]; then
-			sed -i -f "$MODULE.bm.sed" "$MODULE.icl"
+			sed -i.nobm -f "$MODULE.bm.sed" "$MODULE.icl"
 		fi
 	fi
 
@@ -179,7 +179,7 @@ do
 
 	if [ $CPMRESULT -ne 0 ]; then
 		echo -e "${RED}FAILED: $MODULE (compilation)$RESET"
-		[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
+		[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 		FAILED+=("$MODULE")
 		continue
 	fi
@@ -196,22 +196,14 @@ do
 	MODULE_STACKSIZE="$(grep -w StackSize "$MODULE.prj" | cut -f4 | tr -d '\r')"
 	MODULE_RUNFLAGS="-h $MODULE_HEAPSIZE -s $MODULE_STACKSIZE"
 
-	[ $BENCHMARK -gt 0 ] && mv "/tmp/$MODULE.icl" .
+	[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 
 	if [ $BENCHMARK -gt 0 ]; then
-		# https://unix.stackexchange.com/a/430182/37050
-		WALL_TIME=""
-		{
-			/usr/bin/time -f %e $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>/dev/fd/3 >$MODULE.result
-			WALL_TIME="$(grep -v Warning <&3)"
-		} 3<<EOF
-EOF
-		WALL_TIME_NATIVE=""
-		{
-			/usr/bin/time -f %e ./"$MODULE" $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>/dev/fd/3
-			WALL_TIME_NATIVE="$(cat <&3)"
-		} 3<<EOF
-EOF
+		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>bm-tmp >$MODULE.result
+		WALL_TIME="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
+		/usr/bin/time -p ./"$MODULE" $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>bm-tmp
+		WALL_TIME_NATIVE="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
+		rm bm-tmp
 		if [ "$WALL_TIME_NATIVE" == "0.00" ]; then
 			WALL_TIME_RATIO="ratio not computable"
 		else
