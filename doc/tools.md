@@ -1,13 +1,17 @@
 # Tools
 
-This page gives an overview of the tools in the project.
+This page gives an overview of the tools used to generate bytecode.
+Because this workflow is implemented in `cpm` and the Clean IDE, you probably
+do not need to know the details. This page is here for documentation purposes
+only; see the [README](/README.md) for instructions for typical use cases.
 
-All tools can be built with `make -C src`.
+All tools can be built by running `make -C src all`, or
+`make -C src optimized all` to enable compiler optimizations.
 
-## General workflow
+## General build workflow
 
-E.g., interpret `fsieve.icl` which uses `StdReal`, assuming `i_system.abc` is
-the run-time system for the interpreter:
+E.g., to generate bytecode for `fsieve.icl` which uses `StdReal` and the
+`_system` standard run-time system, `cpm` performs the following steps:
 
 ```bash
 # Generate all required ABC code
@@ -16,23 +20,24 @@ clm fsieve
 # Optimise ABC code
 abcopt "Clean System Files/fsieve.abc" -o "Clean System Files/fsieve.opt.abc"
 abcopt "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc"
+abcopt "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.opt.abc"
 
 # Generate bytecode
 bcgen "Clean System Files/fsieve.opt.abc" -o "Clean System Files/fsieve.obc"
 bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc"
+bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.opt.abc" -o "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.obc"
 
 # Link bytecode
-bclink "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" i_system.obc -o fsieve.bc
-
-# Strip bytecode (optional)
-bcstrip fsive.bc -o fsieve.bc
-
-# Interpret bytecode
-interpret fsieve.bc
-
-# Alternatively, debug bytecode
-debug fsieve.bc
+bclink "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.obc" -o fsieve.bc
 ```
+
+Optionally, this bytecode is stripped to remove symbol names and dead code:
+
+```bash
+bcstrip fsive.bc -o fsieve.bc
+```
+
+The resulting bytecode file can be run in the interpreter or the debugger.
 
 ## Detailed descriptions
 
