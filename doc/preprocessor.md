@@ -1,9 +1,20 @@
 # Preprocessor `#define`s
 
+This page gives an overview of the preprocessor options that can be used to
+build the C tools in this repository.
+
+The `Makefile` (for Linux and Mac) tries to be clever and select the right
+options for you.  When `cc` is `clang`, the Makefile assumes that you are on
+Mac, but you can override this with `OS=Linux`. The preprocessor options can be
+set using `CFLAGS=...` which is taken over by the Makefile.
+
+The `Makefile.windows64` is not clever, you have to edit it to change
+preprocessor options on Windows.
+
 ## Platforms
 
 - `WORD_WIDTH`:
-  32 for 32-bit systems; 64 for 64-bit systems
+  32 for 32-bit systems; 64 for 64-bit systems.
 
 - `POSIX`:
   For POSIX-compatible systems.
@@ -15,6 +26,10 @@
 - `WINDOWS`:
   For Windows systems. This platform has a different calling convention.
 
+- `MICROSOFT_C`:
+  For builds with the Microsoft C compiler. This allows you to use `WINDOWS`
+  without `MICROSOFT_C` to build using `mingw`, for instance.
+
 ## Debugging
 
 - `DEBUG_ALL_INSTRUCTIONS`:
@@ -22,19 +37,23 @@
 
 - `DEBUG_CLEAN_LINKS`:
   Prints debugging information when nodes are copied to and from the
-  interpreter from a native Clean implementation. As with
-  `DEBUG_GARBAGE_COLLECTOR`, a higher value increases verbosity, with 0 turning
-  off debugging output.
+  interpreter from a native Clean implementation. The value `0` turns off all
+  debugging information, higher values increase verbosity.
 
 - `DEBUG_GARBAGE_COLLECTOR`:
-  Because the garbage collector is still very experimental, there is a lot of
-  debugging code available. This preprocessor macro can be set to any integer
-  from 0 to 4 to make the debugging increasingly verbose.
+  As with `DEBUG_CLEAN_LINKS`, a higher value increases verbosity, with 0
+  turning off debugging output.
 
 - `DEBUG_GARBAGE_COLLECTOR_MARKING`:
   Try the garbage collector marking phase after each instruction cycle, to test
   that it can deal (does not crash) with many different kinds of types. This is
-  very slow.
+  very slow, and is only meant to be used in CI (see
+  [.gitlab-ci.yml](/.gitlab-ci.yml)).
+
+- `STDERR_TO_FILE`:
+  Write output to `stderr` to a file called `stderr`. This is useful on
+  platforms with a slow console (e.g. Windows) to read back debugging
+  information.
 
 ## Tools
 
