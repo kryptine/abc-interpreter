@@ -181,7 +181,7 @@ const char *instruction_type (BC_WORD i) {
 		case CeqR:                   return "";
 		case CeqR_b:                 return "nr";
 		case Ceq_desc:               return "nl";
-		case Ceq_desc_b0:            return "l";
+		case Ceq_desc_b:             return "l";
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
 		case Cfill:                  return "nnl";

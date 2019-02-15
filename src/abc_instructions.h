@@ -162,7 +162,7 @@ enum {
 	INSTRUCTION(eqC_b)
 	INSTRUCTION(eqD_b)
 	INSTRUCTION(eq_desc)
-	INSTRUCTION(eq_desc_b0)
+	INSTRUCTION(eq_desc_b)
 	INSTRUCTION(eq_nulldesc)
 	INSTRUCTION(eqI)
 	INSTRUCTION(eqI_a)

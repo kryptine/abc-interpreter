@@ -1487,13 +1487,8 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 }
 
 void code_eq_desc_b(char descriptor_name[],int arity) {
-	if (arity == 0) {
-		add_instruction_label_offset(Ceq_desc_b0,descriptor_name,2);
-		return;
-	}
-
-	fprintf(stderr, "Error: eq_desc_b %d\n", arity);
-	exit(1);
+	add_instruction_label_offset(Ceq_desc_b,descriptor_name,(arity<<3)+2);
+	return;
 }
 
 void code_eq_nulldesc(char descriptor_name[], int a_offset) {

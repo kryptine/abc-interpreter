@@ -2175,7 +2175,7 @@ INSTRUCTION_BLOCK(eq_desc):
 	pc+=3;
 	END_INSTRUCTION_BLOCK;
 }
-INSTRUCTION_BLOCK(eq_desc_b0):
+INSTRUCTION_BLOCK(eq_desc_b):
 {
 	bsp[0] = bsp[0]==pc[1];
 	pc+=2;
