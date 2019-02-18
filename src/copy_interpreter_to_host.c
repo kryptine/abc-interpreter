@@ -1103,27 +1103,78 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	node=(BC_WORD*)(node_finalizer->cur->arg&-2);
 	*++ie->asp=(BC_WORD)node;
 
-	BC_WORD bootstrap[2];
+	BC_WORD bootstrap;
 	switch (n_args) {
 #ifdef COMPUTED_GOTOS
-		case 0:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap1]; break;
-		case 1:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap2]; break;
-		case 2:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap3]; break;
-		case 3:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap4]; break;
-		case 4:  bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap5]; break;
-		default: bootstrap[0]=(BC_WORD)instruction_labels[Cjmp_ap];
+		case 0:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap1]; break;
+		case 1:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap2]; break;
+		case 2:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap3]; break;
+		case 3:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap4]; break;
+		case 4:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap5]; break;
+		case 5:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap6]; break;
+		case 6:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap7]; break;
+		case 7:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap8]; break;
+		case 8:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap9]; break;
+		case 9:  bootstrap=(BC_WORD)instruction_labels[Cjmp_ap10]; break;
+		case 10: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap11]; break;
+		case 11: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap12]; break;
+		case 12: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap13]; break;
+		case 13: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap14]; break;
+		case 14: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap15]; break;
+		case 15: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap16]; break;
+		case 16: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap17]; break;
+		case 17: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap18]; break;
+		case 18: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap19]; break;
+		case 19: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap20]; break;
+		case 20: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap21]; break;
+		case 21: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap22]; break;
+		case 22: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap23]; break;
+		case 23: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap24]; break;
+		case 24: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap25]; break;
+		case 25: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap26]; break;
+		case 26: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap27]; break;
+		case 27: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap28]; break;
+		case 28: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap29]; break;
+		case 29: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap30]; break;
+		case 30: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap31]; break;
+		case 31: bootstrap=(BC_WORD)instruction_labels[Cjmp_ap32]; break;
 #else
-		case 0:  bootstrap[0]=Cjmp_ap1; break;
-		case 1:  bootstrap[0]=Cjmp_ap2; break;
-		case 2:  bootstrap[0]=Cjmp_ap3; break;
-		case 3:  bootstrap[0]=Cjmp_ap4; break;
-		case 4:  bootstrap[0]=Cjmp_ap5; break;
-		default: bootstrap[0]=Cjmp_ap;
+		case 0:  bootstrap=Cjmp_ap1; break;
+		case 1:  bootstrap=Cjmp_ap2; break;
+		case 2:  bootstrap=Cjmp_ap3; break;
+		case 3:  bootstrap=Cjmp_ap4; break;
+		case 4:  bootstrap=Cjmp_ap5; break;
+		case 5:  bootstrap=Cjmp_ap6; break;
+		case 6:  bootstrap=Cjmp_ap7; break;
+		case 7:  bootstrap=Cjmp_ap8; break;
+		case 8:  bootstrap=Cjmp_ap9; break;
+		case 9:  bootstrap=Cjmp_ap10; break;
+		case 10: bootstrap=Cjmp_ap11; break;
+		case 11: bootstrap=Cjmp_ap12; break;
+		case 12: bootstrap=Cjmp_ap13; break;
+		case 13: bootstrap=Cjmp_ap14; break;
+		case 14: bootstrap=Cjmp_ap15; break;
+		case 15: bootstrap=Cjmp_ap16; break;
+		case 16: bootstrap=Cjmp_ap17; break;
+		case 17: bootstrap=Cjmp_ap18; break;
+		case 18: bootstrap=Cjmp_ap19; break;
+		case 19: bootstrap=Cjmp_ap20; break;
+		case 20: bootstrap=Cjmp_ap21; break;
+		case 21: bootstrap=Cjmp_ap22; break;
+		case 22: bootstrap=Cjmp_ap23; break;
+		case 23: bootstrap=Cjmp_ap24; break;
+		case 24: bootstrap=Cjmp_ap25; break;
+		case 25: bootstrap=Cjmp_ap26; break;
+		case 26: bootstrap=Cjmp_ap27; break;
+		case 27: bootstrap=Cjmp_ap28; break;
+		case 28: bootstrap=Cjmp_ap29; break;
+		case 29: bootstrap=Cjmp_ap30; break;
+		case 30: bootstrap=Cjmp_ap31; break;
+		case 31: bootstrap=Cjmp_ap32; break;
 #endif
-			bootstrap[1]=n_args+1;
 	}
 
-	if (interpret_ie(ie, bootstrap, with_error_reporting) != 0) {
+	if (interpret_ie(ie, &bootstrap, with_error_reporting) != 0) {
 		EPRINTF("Failed to interpret\n");
 		__interpret__copy__node__asm_redirect_node=interpret_error-1;
 		return 0;

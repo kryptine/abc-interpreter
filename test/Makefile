@@ -1,5 +1,5 @@
 CLM:=clm
-override CLMFLAGS+=-I ../src -IL ArgEnv -IL Platform -IL GraphCopy -ns
+override CLMFLAGS+=-I ../lib -IL ArgEnv -IL Platform -IL GraphCopy -ns
 ifneq ($(OS),Mac)
 override CLMFLAGS+=-no-opt-link
 endif

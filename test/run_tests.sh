@@ -189,6 +189,7 @@ do
 
 	if [ ! -f "$MODULE$EXPECTED_PREFIX.expected" ]; then
 		echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
+		[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 		continue
 	fi
 

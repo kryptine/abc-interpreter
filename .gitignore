@@ -1,9 +1,7 @@
 *.s
-*.a
 *.o
 *.obj
 *.exe
-a.out
 
 *.prj
 *.abc
@@ -15,5 +13,3 @@ a.out
 *.bc
 
 *.graph
-
-examples/compiler/compiler

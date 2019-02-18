@@ -190,7 +190,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 			NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
 	for (int i=0; i<32; i++)
-		Fjmp_ap[i*2]=(BC_WORD)instruction_labels[Fjmp_ap[i*2]];
+		Fjmp_ap[i]=(BC_WORD)instruction_labels[Fjmp_ap[i]];
 
 	__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[0]];
 	__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[1]];

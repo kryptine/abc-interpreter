@@ -128,7 +128,33 @@ static inline int instruction_ends_block(int16_t instr) {
 		case Cjmp_ap3:
 		case Cjmp_ap4:
 		case Cjmp_ap5:
-		case Cjmp_ap:
+		case Cjmp_ap6:
+		case Cjmp_ap7:
+		case Cjmp_ap8:
+		case Cjmp_ap9:
+		case Cjmp_ap10:
+		case Cjmp_ap11:
+		case Cjmp_ap12:
+		case Cjmp_ap13:
+		case Cjmp_ap14:
+		case Cjmp_ap15:
+		case Cjmp_ap16:
+		case Cjmp_ap17:
+		case Cjmp_ap18:
+		case Cjmp_ap19:
+		case Cjmp_ap20:
+		case Cjmp_ap21:
+		case Cjmp_ap22:
+		case Cjmp_ap23:
+		case Cjmp_ap24:
+		case Cjmp_ap25:
+		case Cjmp_ap26:
+		case Cjmp_ap27:
+		case Cjmp_ap28:
+		case Cjmp_ap29:
+		case Cjmp_ap30:
+		case Cjmp_ap31:
+		case Cjmp_ap32:
 		case Cjmp_eval:
 		case Cjmp_eval_upd:
 		case Cpop_a_jmp:

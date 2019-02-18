@@ -96,11 +96,11 @@ SRC_INTERPRET:=\
 	gc/mark.c\
 	interpret.c\
 	parse.c\
-	traps.c\
 	util.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
 	gc/util.h\
 	interpret_instructions.h\
+	interpret_instructions_interworking.h\
 	settings.h
 
 SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
@@ -114,6 +114,7 @@ OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
 	gc/util.h\
 	interpret_instructions.h\
+	interpret_instructions_interworking.h\
 	settings.h
 
 ifneq ($(OS),Windows_NT)
@@ -145,7 +146,7 @@ $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@
 
 library: $(OBJ_INTERPRET_LIB) interface.o
-	cp $^ Clean\ System\ Files
+	cp $^ ../lib/Clean\ System\ Files
 
 $(OBJ_INTERPRET_LIB): %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
@@ -159,6 +160,10 @@ ifeq ($(OS),Mac)
 	sed -i '' -f mac_fix_underscores.sed $@
 endif
 
+interpret_instructions.h: .FORCE
+	$(MAKE) -C ../tools interpretergenc
+	../tools/interpretergenc > $@
+
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@
 
@@ -169,7 +174,12 @@ AUXILIARIES:=$(INTERPRET_LIB)\
 
 clean:
 	$(RM) $(BINARIES) $(AUXILIARIES)
-	find . -name '*.abc' -delete -or -name '*.obc' -delete -or -name '*.o' -delete
+	find . \
+		-name '*.abc' -delete \
+		-or -name '*.o' -delete -or -name '*.obj' -delete \
+		-or -name '*.prp' -delete \
+		-or -name '*.obc' -delete -or -name '*.bc' -delete \
+		-or -name 'Clean System Files' -empty -delete
 
 .FORCE:
 .PHONY: all clean library optimized
