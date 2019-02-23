@@ -19,7 +19,6 @@
 #include "interpret.h"
 #include "parse.h"
 #include "settings.h"
-#include "traps.h"
 #include "util.h"
 
 #ifdef DEBUG_CURSES
@@ -196,39 +195,39 @@ void *ap_addresses[] = {&ap_2, &ap_3, &ap_4, &ap_5, &ap_6, &ap_7, &ap_8, &ap_9,
 void **interpret_error=NULL;
 #endif
 
-BC_WORD Fjmp_ap[64] =
-	{ Cjmp_ap1, 0
-	, Cjmp_ap2, 0
-	, Cjmp_ap3, 0
-	, Cjmp_ap4, 0
-	, Cjmp_ap5, 0
-	, Cjmp_ap,  6
-	, Cjmp_ap,  7
-	, Cjmp_ap,  8
-	, Cjmp_ap,  9
-	, Cjmp_ap, 10
-	, Cjmp_ap, 11
-	, Cjmp_ap, 12
-	, Cjmp_ap, 13
-	, Cjmp_ap, 14
-	, Cjmp_ap, 15
-	, Cjmp_ap, 16
-	, Cjmp_ap, 17
-	, Cjmp_ap, 18
-	, Cjmp_ap, 19
-	, Cjmp_ap, 20
-	, Cjmp_ap, 21
-	, Cjmp_ap, 22
-	, Cjmp_ap, 23
-	, Cjmp_ap, 24
-	, Cjmp_ap, 25
-	, Cjmp_ap, 26
-	, Cjmp_ap, 27
-	, Cjmp_ap, 28
-	, Cjmp_ap, 29
-	, Cjmp_ap, 30
-	, Cjmp_ap, 31
-	, Cjmp_ap, 32
+BC_WORD Fjmp_ap[32] =
+	{ Cjmp_ap1
+	, Cjmp_ap2
+	, Cjmp_ap3
+	, Cjmp_ap4
+	, Cjmp_ap5
+	, Cjmp_ap6
+	, Cjmp_ap7
+	, Cjmp_ap8
+	, Cjmp_ap9
+	, Cjmp_ap10
+	, Cjmp_ap11
+	, Cjmp_ap12
+	, Cjmp_ap13
+	, Cjmp_ap14
+	, Cjmp_ap15
+	, Cjmp_ap16
+	, Cjmp_ap17
+	, Cjmp_ap18
+	, Cjmp_ap19
+	, Cjmp_ap20
+	, Cjmp_ap21
+	, Cjmp_ap22
+	, Cjmp_ap23
+	, Cjmp_ap24
+	, Cjmp_ap25
+	, Cjmp_ap26
+	, Cjmp_ap27
+	, Cjmp_ap28
+	, Cjmp_ap29
+	, Cjmp_ap30
+	, Cjmp_ap31
+	, Cjmp_ap32
 	};
 
 BC_WORD *g_asp, *g_bsp, *g_hp;
@@ -353,12 +352,12 @@ int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 	struct program *program = ie->program;
 	void **caf_list = ie->caf_list;
+	int instr_arg; /* for jsr_eval_host_node_n */
 #else
 	void *caf_list[2] = {0, &caf_list[1]};
 	struct interpretation_options options;
 	options.in_first_semispace=1;
 #endif
-	int instr_arg;
 
 	BC_WORD *pc;
 	asp = _asp;

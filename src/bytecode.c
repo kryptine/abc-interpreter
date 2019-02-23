@@ -262,8 +262,8 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 		return snprintf(s, size, "__STRING__");
 	else if (((BC_WORD)label&-4) == (BC_WORD)&__ARRAY__)
 		return snprintf(s, size, "__ARRAY__");
-	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[63])
-		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)/2+1);
+	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[31])
+		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)+1);
 	else if (heap != NULL && heap <= label && label < heap + heap_size)
 		return print_plain_label(s, size, label, pgm, heap, heap_size);
 

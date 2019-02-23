@@ -820,13 +820,51 @@ void add_instruction_w_internal_label_label(int16_t i,int32_t n1,struct label *l
 	store_code_label_value(label_name,0);
 }
 
-void add_jesr_instruction(int lib_function_n) {
-	switch (lib_function_n) {
-		case  0: add_instruction(CeqAC); break;
-		case  1: add_instruction(CcatAC); break;
-		case 11: add_instruction(CcmpAC); break;
+static char *specialized_jsr_labels[] = {
+	/* 0*/ "eqAC",
+	/* 1*/ "cmpAC",
+	/* 2*/ "catAC",
+	/* 3*/ "sliceAC",
+	/* 4*/ "ItoAC",
+	/* 5*/ "BtoAC",
+	/* 6*/ "print__string__",
+	/* 7*/ "openF",
+	/* 8*/ "stdioF",
+	/* 9*/ "closeF",
+	/*10*/ "readLineF",
+	/*11*/ "endF",
+	/*12*/ "writeFI",
+	/*13*/ "writeFS",
+	/*14*/ "writeFC",
+	/*15*/ "openSF"
+};
+
+static int get_specialized_jsr_label_n(char label_name[]) {
+	int i,n;
+
+	n = sizeof(specialized_jsr_labels) / sizeof (char*);
+	for(i=0; i<n; ++i)
+		if (!strcmp (label_name,specialized_jsr_labels[i]))
+			return i;
+
+	return -1;
+}
+
+void add_specialized_jsr_instruction(unsigned int n) {
+	switch (n) {
+		case  0: add_instruction(CeqAC); return;
+		case  1: add_instruction(CcmpAC); return;
+		case  2: add_instruction(CcatAC); return;
+		case  3: add_instruction(CsliceAC); return;
+		case  4: add_instruction(CItoAC); return;
+		case  6: add_instruction(Cprint_string); return;
 		default:
-			add_instruction_w(Cjesr,lib_function_n);
+			if (n < sizeof(specialized_jsr_labels)/sizeof(char*)) {
+				fprintf(stderr,"Warning: jsr %s is not supported by the interpreter\n",specialized_jsr_labels[n]);
+			} else {
+				fprintf(stderr,"internal error in add_specialized_jsr_instruction: %d\n",n);
+				exit(1);
+			}
 	}
 }
 
@@ -1032,6 +1070,7 @@ void code_buildC_b(int b_offset) {
 }
 
 void code_buildF_b(int b_offset) {
+	unsupported_instruction_warning(CbuildF_b);
 	add_instruction_w(CbuildF_b,b_offset);
 }
 
@@ -2050,6 +2089,7 @@ void code_fillC_b(int b_offset,int a_offset) {
 }
 
 void code_fillF_b(int b_offset,int a_offset) {
+	unsupported_instruction_warning(CfillF_b);
 	add_instruction_w_w(CfillF_b,-a_offset,b_offset);
 }
 
@@ -2199,13 +2239,41 @@ void code_jmp(char label_name[]) {
 
 void code_jmp_ap(int n_apply_args) {
 	switch (n_apply_args) {
-		case 1:  add_instruction(Cjmp_ap1); break;
-		case 2:  add_instruction(Cjmp_ap2); break;
-		case 3:  add_instruction(Cjmp_ap3); break;
-		case 4:  add_instruction(Cjmp_ap4); break;
-		case 5:  add_instruction(Cjmp_ap5); break;
-		default: add_instruction_w(Cjmp_ap,n_apply_args); break;
+		case 1:  add_instruction(Cjmp_ap1);  return;
+		case 2:  add_instruction(Cjmp_ap2);  return;
+		case 3:  add_instruction(Cjmp_ap3);  return;
+		case 4:  add_instruction(Cjmp_ap4);  return;
+		case 5:  add_instruction(Cjmp_ap5);  return;
+		case 6:  add_instruction(Cjmp_ap6);  return;
+		case 7:  add_instruction(Cjmp_ap7);  return;
+		case 8:  add_instruction(Cjmp_ap8);  return;
+		case 9:  add_instruction(Cjmp_ap9);  return;
+		case 10: add_instruction(Cjmp_ap10); return;
+		case 11: add_instruction(Cjmp_ap11); return;
+		case 12: add_instruction(Cjmp_ap12); return;
+		case 13: add_instruction(Cjmp_ap13); return;
+		case 14: add_instruction(Cjmp_ap14); return;
+		case 15: add_instruction(Cjmp_ap15); return;
+		case 16: add_instruction(Cjmp_ap16); return;
+		case 17: add_instruction(Cjmp_ap17); return;
+		case 18: add_instruction(Cjmp_ap18); return;
+		case 19: add_instruction(Cjmp_ap19); return;
+		case 20: add_instruction(Cjmp_ap20); return;
+		case 21: add_instruction(Cjmp_ap21); return;
+		case 22: add_instruction(Cjmp_ap22); return;
+		case 23: add_instruction(Cjmp_ap23); return;
+		case 24: add_instruction(Cjmp_ap24); return;
+		case 25: add_instruction(Cjmp_ap25); return;
+		case 26: add_instruction(Cjmp_ap26); return;
+		case 27: add_instruction(Cjmp_ap27); return;
+		case 28: add_instruction(Cjmp_ap28); return;
+		case 29: add_instruction(Cjmp_ap29); return;
+		case 30: add_instruction(Cjmp_ap30); return;
+		case 31: add_instruction(Cjmp_ap31); return;
+		case 32: add_instruction(Cjmp_ap32); return;
 	}
+	fprintf(stderr, "Error: jmp_ap %d not yet implemented\n",n_apply_args);
+	exit(1);
 }
 
 void code_jmp_eval(void) {
@@ -2224,34 +2292,6 @@ void code_jmp_true(char label_name[]) {
 	add_instruction_label(Cjmp_true,label_name);
 }
 
-char *lib_functions[] = {
-	/*0*/ "eqAC", /* CeqAC */
-	/*1*/ "catAC",
-	/*2*/ "sliceAC",
-	/*3*/ "ItoAC", "BtoAC",
-	/*5*/ "print__string__",
-	/*6*/ "openF", "stdioF",
-	/*8*/ "closeF",
-	/*9*/ "readLineF",
-	/*10*/ "endF",
-	/*11*/ "cmpAC",
-	/*12*/ "writeFI",
-	/*13*/ "writeFS",
-	/*14*/ "writeFC",
-	"openSF"
-};
-
-static int get_lib_function_n(char label_name[]) {
-	int lib_function_n,n_lib_functions;
-
-	n_lib_functions = sizeof(lib_functions) / sizeof (char*);
-	for(lib_function_n=0; lib_function_n<n_lib_functions; ++lib_function_n)
-		if (!strcmp (label_name,lib_functions[lib_function_n]))
-			return lib_function_n;
-
-	return -1;
-}
-
 void code_jsr(char label_name[]) {
 	int lib_function_n;
 
@@ -2265,10 +2305,10 @@ void code_jsr(char label_name[]) {
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -2278,13 +2318,41 @@ void code_jsr(char label_name[]) {
 
 void code_jsr_ap(int n_apply_args) {
 	switch (n_apply_args) {
-		case 1: add_instruction(Cjsr_ap1); return;
-		case 2: add_instruction(Cjsr_ap2); return;
-		case 3: add_instruction(Cjsr_ap3); return;
-		case 4: add_instruction(Cjsr_ap4); return;
-		case 5: add_instruction(Cjsr_ap5); return;
-		default: add_instruction_w(Cjsr_ap,n_apply_args); return;
+		case 1:  add_instruction(Cjsr_ap1);  return;
+		case 2:  add_instruction(Cjsr_ap2);  return;
+		case 3:  add_instruction(Cjsr_ap3);  return;
+		case 4:  add_instruction(Cjsr_ap4);  return;
+		case 5:  add_instruction(Cjsr_ap5);  return;
+		case 6:  add_instruction(Cjsr_ap6);  return;
+		case 7:  add_instruction(Cjsr_ap7);  return;
+		case 8:  add_instruction(Cjsr_ap8);  return;
+		case 9:  add_instruction(Cjsr_ap9);  return;
+		case 10: add_instruction(Cjsr_ap10); return;
+		case 11: add_instruction(Cjsr_ap11); return;
+		case 12: add_instruction(Cjsr_ap12); return;
+		case 13: add_instruction(Cjsr_ap13); return;
+		case 14: add_instruction(Cjsr_ap14); return;
+		case 15: add_instruction(Cjsr_ap15); return;
+		case 16: add_instruction(Cjsr_ap16); return;
+		case 17: add_instruction(Cjsr_ap17); return;
+		case 18: add_instruction(Cjsr_ap18); return;
+		case 19: add_instruction(Cjsr_ap19); return;
+		case 20: add_instruction(Cjsr_ap20); return;
+		case 21: add_instruction(Cjsr_ap21); return;
+		case 22: add_instruction(Cjsr_ap22); return;
+		case 23: add_instruction(Cjsr_ap23); return;
+		case 24: add_instruction(Cjsr_ap24); return;
+		case 25: add_instruction(Cjsr_ap25); return;
+		case 26: add_instruction(Cjsr_ap26); return;
+		case 27: add_instruction(Cjsr_ap27); return;
+		case 28: add_instruction(Cjsr_ap28); return;
+		case 29: add_instruction(Cjsr_ap29); return;
+		case 30: add_instruction(Cjsr_ap30); return;
+		case 31: add_instruction(Cjsr_ap31); return;
+		case 32: add_instruction(Cjsr_ap32); return;
 	}
+	fprintf(stderr, "Error: jsr_ap %d not yet implemented\n",n_apply_args);
+	exit(1);
 }
 
 void code_jsr_eval(int a_offset) {
@@ -2492,6 +2560,7 @@ void code_pushD_a(int a_offset) {
 }
 
 void code_pushF_a(int a_offset) {
+	unsupported_instruction_warning(CpushF_a);
 	add_instruction_w(CpushF_a,-a_offset);
 }
 
@@ -3395,11 +3464,11 @@ void code_buildh0_put_a_jsr(char descriptor_name[],int a_offset,char label_name[
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
 		code_buildh0_put_a(descriptor_name,a_offset);
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3597,11 +3666,11 @@ void code_pop_a_jsr(int n,char label_name[]) {
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
 		code_pop_a(n);
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3640,11 +3709,11 @@ void code_pop_b_jsr(int n,char label_name[]) {
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
 		code_pop_b(n);
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3678,11 +3747,11 @@ void code_push_a_jsr(int a_offset,char label_name[]) {
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
 		code_push_a(a_offset);
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}
@@ -3719,11 +3788,11 @@ void code_push_b_jsr(int b_offset,char label_name[]) {
 		last_d=0;
 	}
 
-	lib_function_n = get_lib_function_n(label_name);
+	lib_function_n = get_specialized_jsr_label_n(label_name);
 
 	if (lib_function_n>=0) {
 		code_push_b(b_offset);
-		add_jesr_instruction(lib_function_n);
+		add_specialized_jsr_instruction(lib_function_n);
 		last_jsr_with_d=0;
 		return;
 	}

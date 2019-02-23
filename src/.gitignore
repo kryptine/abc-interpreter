@@ -5,7 +5,6 @@ bcstrip
 debug
 interpret
 
-graph_copy_with_names.dcl
-graph_copy_with_names.icl
+interpret_instructions.h
 
 !interface.*.s
