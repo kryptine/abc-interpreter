@@ -4,73 +4,81 @@ import StdEnv
 import interpretergen
 
 :: Target
-:: Expr
-:: Var :== String
+:: Expr t
 
 start :: Target
-
-instance <<< Expr
-
-pre :: [Expr]
-post :: [Expr]
+bootstrap :: ![String] -> [String]
+get_output :: !Target -> [String]
 
 instr_unimplemented :: !Target -> Target
 instr_halt :: !Target -> Target
 instr_divLU :: !Target -> Target
 instr_mulUUL :: !Target -> Target
 
-instance cast Expr
-instance cast Var
-int_to_real :: !v -> Expr | val v
+lit_word  :: !Int -> Expr TWord
+lit_char  :: !Char -> Expr TChar
+lit_short :: !Int -> Expr TShort
+lit_int   :: !Int -> Expr TInt
 
-class val a :: !a -> Expr
+instance to_word TChar
+instance to_word TInt
+instance to_word TShort
+instance to_word (TPtr t)
+instance to_word TReal
 
-instance val Expr
-instance val Int
-instance val Char
-instance val Var
+instance to_char TWord
 
-(+.)  infixl 6 :: !a !b -> Expr | val a & val b
-(-.)  infixl 6 :: !a !b -> Expr | val a & val b
-(%.)  infixl 6 :: !a !b -> Expr | val a & val b
-(*.)  infixl 7 :: !a !b -> Expr | val a & val b
-(/.)  infixl 7 :: !a !b -> Expr | val a & val b
-(^.)  infixr 8 :: !a !b -> Expr | val a & val b
+instance to_int TWord
 
-(==.) infix  4 :: !a !b -> Expr | val a & val b
-(<>.) infix  4 :: !a !b -> Expr | val a & val b
-(<.)  infix  4 :: !a !b -> Expr | val a & val b
-(>.)  infix  4 :: !a !b -> Expr | val a & val b
-(<=.) infix  4 :: !a !b -> Expr | val a & val b
-(>=.) infix  4 :: !a !b -> Expr | val a & val b
+instance to_real TWord
 
-(&&.) infixr 3 :: !a !b -> Expr | val a & val b
-notB           :: !a -> Expr | val a
+instance to_word_ptr  TWord, (TPtr t)
+instance to_char_ptr  TWord, (TPtr t)
+instance to_short_ptr TWord, (TPtr t)
 
-(&.)  infixl 6 :: !a !b -> Expr | val a & val b
-(|.)  infixl 6 :: !a !b -> Expr | val a & val b
-(<<.) infix  7 :: !a !b -> Expr | val a & val b
-(>>.) infix  7 :: !a !b -> Expr | val a & val b
-xorI           :: !a !b -> Expr | val a & val b
-~.             :: !a -> Expr | val a
+instance + (Expr t)
+instance - (Expr t)
+instance * (Expr t)
+instance / (Expr t)
+instance ^ (Expr TReal)
+(%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 
-absR :: !Expr -> Expr
-acosR :: !Expr -> Expr
-asinR :: !Expr -> Expr
-atanR :: !Expr -> Expr
-cosR :: !Expr -> Expr
-entierR :: !Expr -> Expr
-expR :: !Expr -> Expr
-lnR :: !Expr -> Expr
-log10R :: !Expr -> Expr
-negR :: !Expr -> Expr
-sinR :: !Expr -> Expr
-sqrtR :: !Expr -> Expr
-tanR :: !Expr -> Expr
+(==.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
 
-if_i64_or_i32_expr :: !a !b -> Expr | val a & val b
+(&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+notB           :: !(Expr TWord) -> Expr TWord
 
-if_expr :: !c !t !e -> Expr | val c & val t & val e
+(&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(<<.) infix 7 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
+xorI          :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+~.            :: !(Expr TWord) -> Expr TWord
+
+absR    :: !(Expr TReal) -> Expr TReal
+acosR   :: !(Expr TReal) -> Expr TReal
+asinR   :: !(Expr TReal) -> Expr TReal
+atanR   :: !(Expr TReal) -> Expr TReal
+cosR    :: !(Expr TReal) -> Expr TReal
+entierR :: !(Expr TReal) -> Expr TInt
+expR    :: !(Expr TReal) -> Expr TReal
+lnR     :: !(Expr TReal) -> Expr TReal
+log10R  :: !(Expr TReal) -> Expr TReal
+negR    :: !(Expr TReal) -> Expr TReal
+sinR    :: !(Expr TReal) -> Expr TReal
+sqrtR   :: !(Expr TReal) -> Expr TReal
+tanR    :: !(Expr TReal) -> Expr TReal
+ItoR    :: !(Expr TInt)  -> Expr TReal
+RtoI    :: !(Expr TReal) -> Expr TInt
+
+if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
+
+if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
 
 begin_instruction :: !String !Target -> Target
 end_instruction :: !Target -> Target
@@ -80,80 +88,78 @@ end_scope :: !Target -> Target
 
 nop :: !Target -> Target
 
-(:.) infixr 9 :: !(Target -> Target) !(Target -> Target) !Target -> Target
+(:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 
-get_output :: !Target -> [Expr]
+class typename t :: t -> String
+instance typename TWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
+new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
 
-new_local :: !Type !Var !i !Target -> Target | val i
-local :: !Var -> Expr
-global :: !Var -> Expr
-set :: !var !v !Target -> Target | val var & val v
-add_local :: !Var !v !Target -> Target | val v
-sub_local :: !Var !v !Target -> Target | val v
+class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
+instance .=
+	TWord TWord, TWord TChar, TWord TInt, TWord TShort,
+	TChar TChar,
+	TInt TInt, TInt TWord,
+	(TPtr t) (TPtr u) // NB/TODO: no checking on child types!
+
+class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
+instance += TWord TWord
+
+class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
+instance -= TWord  TWord, TShort TShort, TInt TInt
+
+class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+instance advance_ptr Int, (Expr w)
+
+class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+instance rewind_ptr Int, (Expr w)
+
+class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t
+class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t)
+
+instance @  Int, (Expr t)
+instance @? Int, (Expr t)
 
 begin_block :: !Target -> Target
 end_block :: !Target -> Target
 
-while_do :: !c !(Target -> Target) !Target -> Target | val c
+while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
 break :: !Target -> Target
 
-label :: !String !Target -> Target
-goto :: !String !Target -> Target
-
-if_then :: !c !(Target -> Target) !Target -> Target | val c
-else_if :: !c !(Target -> Target) !Target -> Target | val c
+if_then :: !(Expr TWord) !(Target -> Target) !Target -> Target
+else_if :: !(Expr TWord) !(Target -> Target) !Target -> Target
 else :: !(Target -> Target) !Target -> Target
-if_break_else :: !c !(Target -> Target) !Target -> Target | val c
+if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
 
-(@) infix 9 :: !arr !i -> Expr | val arr & val i
-(@~) infix 9 :: !arr !(!Int, !i) -> Expr | val arr & val i
-(@?) infix 9 :: !arr !i -> Expr | val arr & val i
+class ensure_hp s :: !s !Target -> Target
+instance ensure_hp (Expr TWord)
+instance ensure_hp Int
 
-Arg :: !Int -> Expr
-Pc_ptr :: !Int -> Expr
-advance_pc :: !Int !Target -> Target
-set_pc :: !v !Target -> Target | val v
+A :: Expr (TPtr TWord)
+B :: Expr (TPtr TWord)
+Pc :: Expr (TPtr TWord)
+Hp :: Expr (TPtr TWord)
 
-A :: !i -> Expr | val i
-A_ptr :: !i -> Expr | val i
-set_a :: !i !v !Target -> Target | val i & val v
-set_asp :: !Expr !Target -> Target
-grow_a :: !i !Target -> Target | val i
-shrink_a :: !i !Target -> Target | val i
+BOOL_ptr :: Expr TWord
+CHAR_ptr :: Expr TWord
+INT_ptr :: Expr TWord
+REAL_ptr :: Expr TWord
+ARRAY__ptr :: Expr TWord
+STRING__ptr :: Expr TWord
+jmp_ap_ptr :: !Int -> Expr TWord
+cycle_ptr :: Expr TWord
+indirection_ptr :: Expr TWord
+dNil_ptr :: Expr TWord
+small_integer :: !(Expr TInt) -> Expr TWord
+caf_list :: Expr (TPtr (TPtr TWord))
 
-Hp :: !Expr -> Expr
-Hp_ptr :: !Int -> Expr
-set_hp :: !i !v !Target -> Target | val i & val v
-ensure_hp :: !i !Target -> Target | val i
-advance_hp :: !i !Target -> Target | val i
+push_c :: !(Expr TWord) !Target -> Target
+pop_c :: Expr TWord
 
-BOOL_ptr :: Expr
-CHAR_ptr :: Expr
-INT_ptr :: Expr
-REAL_ptr :: Expr
-ARRAY__ptr :: Expr
-STRING__ptr :: Expr
-jmp_ap_ptr :: !Int -> Expr
-cycle_ptr :: Expr
-indirection_ptr :: Expr
-dNil_ptr :: Expr
-small_integer :: !i -> Expr | val i
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt
 
-B :: !i -> Expr | val i
-B_ptr :: !i -> Expr | val i
-set_b :: !i !v !Target -> Target | val i & val v
-set_bsp :: !Expr !Target -> Target
-grow_b :: !i !Target -> Target | val i
-shrink_b :: !i !Target -> Target | val i
-
-push_c :: !v !Target -> Target | val v
-pop_c :: Expr
-
-memcpy :: !dest !src !n !Target -> Target | val dest & val src & val n
-strncmp :: !s1 !s2 !n -> Expr | val s1 & val s2 & val n
-
-putchar :: !c !Target -> Target | val c
-print_bool :: !c !Target -> Target | val c
-print_char :: !Bool !c !Target -> Target | val c
-print_int :: !c !Target -> Target | val c
-print_real :: !c !Target -> Target | val c
+putchar :: !(Expr TChar) !Target -> Target
+print_bool :: !(Expr TWord) !Target -> Target
+print_char :: !Bool !(Expr TChar) !Target -> Target
+print_int :: !(Expr TInt) !Target -> Target
+print_real :: !(Expr TReal) !Target -> Target

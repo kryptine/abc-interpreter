@@ -2,19 +2,20 @@ definition module interpretergen
 
 from target import :: Expr
 
-class cast e
-where
-	fromword :: !Type !e -> Expr
-	toword :: !Type !e -> Expr
+:: TWord  = TWord
+:: TChar  = TChar
+:: TShort = TShort
+:: TInt   = TInt
+:: TReal  = TReal
 
-:: Type
-	= TWord
-	| TWordPtr
+:: TPtr t = TPtr !t
 
-	| TChar
-	| TCharPtr
+class to_word  t :: !(Expr t) -> Expr TWord
+class to_char  t :: !(Expr t) -> Expr TChar
+class to_short t :: !(Expr t) -> Expr TShort
+class to_int   t :: !(Expr t) -> Expr TInt
+class to_real  t :: !(Expr t) -> Expr TReal
 
-	| TShort
-
-	| TInt
-	| TReal
+class to_word_ptr t  :: !(Expr t) -> Expr (TPtr TWord)
+class to_char_ptr t  :: !(Expr t) -> Expr (TPtr TChar)
+class to_short_ptr t :: !(Expr t) -> Expr (TPtr TShort)

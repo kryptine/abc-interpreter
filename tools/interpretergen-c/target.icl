@@ -4,11 +4,57 @@ import StdEnv
 import interpretergen
 
 :: Target =
-	{ output :: ![Expr]
+	{ output      :: ![String]
+	, var_counter :: !Int
 	}
 
+:: Expr t :== String
+
+(+-+) infixr 5 :: !(Expr a) !(Expr b) -> Expr c
+(+-+) _ _ = code inline {
+	.d 2 0
+	jsr catAC
+	.o 1 0
+}
+
 start :: Target
-start = {output=[]}
+start = {output=[], var_counter=0}
+
+bootstrap :: ![String] -> [String]
+bootstrap instrs = pre ++ instrs ++ post
+where
+	pre :: [String]
+	pre =
+		[ "#ifdef COMPUTED_GOTOS"
+		, "# define INSTRUCTION_BLOCK(instr) instr_ ## instr"
+		, "# define GARBAGE_COLLECT goto garbage_collect"
+		, "# define END_INSTRUCTION_BLOCK goto **(void**)pc"
+		, "# define UNIMPLEMENTED_INSTRUCTION_BLOCK instr_unimplemented"
+		, "#else"
+		, "# define INSTRUCTION_BLOCK(instr) case C ## instr"
+		, "# define GARBAGE_COLLECT break"
+		, "# define END_INSTRUCTION_BLOCK continue"
+		, "# define UNIMPLEMENTED_INSTRUCTION_BLOCK default"
+		, "#endif"
+
+		, "#define NEED_HEAP(words) {if ((heap_free-=words)<0){ heap_free+=words; GARBAGE_COLLECT;}}"
+		]
+
+	post :: [String]
+	post =
+		[ "#ifndef COMPUTED_GOTOS"
+		, "case EVAL_TO_HNF_LABEL:"
+		, "\tgoto eval_to_hnf_return;"
+		, "\tbreak;"
+		, "#endif"
+
+		, "#ifdef LINK_CLEAN_RUNTIME"
+		, "# include \"interpret_instructions_interworking.h\""
+		, "#endif"
+		]
+
+get_output :: !Target -> [String]
+get_output t = reverse t.output
 
 append e t :== {t & output=[e:t.output]}
 mark t :== append "MARK" t
@@ -18,42 +64,8 @@ concat_up_to_mark t=:{output} :==
 where
 	join :: !String ![String] -> String
 	join _ [s] = s
-	join g [s:ss] = s+++g+++join g ss
+	join g [s:ss] = s+-+g+-+join g ss
 drop_last_line t=:{output=[_:os]} :== {t & output=os}
-
-:: Expr :== String
-
-instance <<< Expr where <<< f s = fwrites s f
-
-pre :: [Expr]
-pre =
-	[ "#ifdef COMPUTED_GOTOS"
-	, "# define INSTRUCTION_BLOCK(instr) instr_ ## instr"
-	, "# define GARBAGE_COLLECT goto garbage_collect"
-	, "# define END_INSTRUCTION_BLOCK goto **(void**)pc"
-	, "# define UNIMPLEMENTED_INSTRUCTION_BLOCK instr_unimplemented"
-	, "#else"
-	, "# define INSTRUCTION_BLOCK(instr) case C ## instr"
-	, "# define GARBAGE_COLLECT break"
-	, "# define END_INSTRUCTION_BLOCK continue"
-	, "# define UNIMPLEMENTED_INSTRUCTION_BLOCK default"
-	, "#endif"
-
-	, "#define NEED_HEAP(words) {if ((heap_free-=words)<0){ heap_free+=words; GARBAGE_COLLECT;}}"
-	]
-
-post :: [Expr]
-post =
-	[ "#ifndef COMPUTED_GOTOS"
-	, "case EVAL_TO_HNF_LABEL:"
-	, "\tgoto eval_to_hnf_return;"
-	, "\tbreak;"
-	, "#endif"
-
-	, "#ifdef LINK_CLEAN_RUNTIME"
-	, "# include \"interpret_instructions_interworking.h\""
-	, "#endif"
-	]
 
 instr_unimplemented :: !Target -> Target
 instr_unimplemented t = foldl (flip append) t
@@ -142,170 +154,141 @@ instr_mulUUL t = foldl (flip append) t
 	, "}"
 	]
 
-instance cast Expr
-where
-	fromword t e = case t of
-		TWord    -> e
-		TWordPtr -> "(BC_WORD*)"+++e
-		TChar    -> "(char)"+++e
-		TCharPtr -> "(char*)"+++e
-		TReal    -> "*(BC_REAL*)&"+++e
-		TInt     -> "(BC_WORD_S)"+++e
+lit_word :: !Int -> Expr TWord
+lit_word i = toString i
 
-	toword t e = case t of
-		TWord -> e
-		TReal -> "*(BC_WORD*)&"+++e
-		_     -> "(BC_WORD)"+++e
+lit_char :: !Char -> Expr TChar
+lit_char c = {#'\'',c,'\''}
 
-instance cast Var
-where
-	fromword t v = fromword t v
-	toword t v = toword t v
+lit_short :: !Int -> Expr TShort
+lit_short i = toString i
 
-int_to_real :: !v -> Expr | val v
-int_to_real v = "(BC_REAL)("+++val v+++")"
+lit_int :: !Int -> Expr TInt
+lit_int i = toString i
 
-instance val Expr where val e = e
-instance val Int  where val i = toString i
-instance val Char where val c = {#'\'',c,'\''}
-instance val Var  where val v = v
+instance to_word TChar    where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TInt     where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TShort   where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word (TPtr t) where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TReal    where to_word e = "*(BC_WORD*)&("+-+e+-+")"
 
-no_parens :: !i -> Expr | val i
-no_parens e
-# v = val e
-| has_enclosing_parens v
-	= v%(1,size v-2)
-	= v
+instance to_char TWord where to_char e = "(char)("+-+e+-+")"
 
-has_enclosing_parens :: !String -> Bool
-has_enclosing_parens s =
-	size s>2 &&
-	s.[0]=='(' &&
-	s.[size s-1]==')' &&
-	one_region (size s-2) 1 s
-where
-	one_region :: !Int !Int !String -> Bool
-	one_region -1 _ _ = True
-	one_region _ 0 _ = False
-	one_region i level s = one_region (i-1) new_level s
-	where
-		new_level = case s.[i] of
-			'(' -> level-1
-			')' -> level+1
-			_   -> level
+instance to_int  TWord where to_int  e = "(BC_WORD_S)("+-+e+-+")"
 
-(+.) infixl 6 :: !a !b -> Expr | val a & val b
-(+.) a b
-# a = val a
-# b = val b
-| a=="0"    = b
-| b=="0"    = a
-| otherwise = "("+++val a+++"+"+++val b+++")"
+instance to_real TWord where to_real e = "*(BC_REAL*)&("+-+e+-+")"
 
-(-.) infixl 6 :: !a !b -> Expr | val a & val b
-(-.) a b = "("+++val a+++"-"+++val b+++")"
+instance to_word_ptr  TWord    where to_word_ptr  e = "(BC_WORD*)("+-+e+-+")"
+instance to_word_ptr  (TPtr t) where to_word_ptr  e = "(BC_WORD*)("+-+e+-+")"
+instance to_char_ptr  TWord    where to_char_ptr  e = "(char*)("+-+e+-+")"
+instance to_char_ptr  (TPtr t) where to_char_ptr  e = "(char*)("+-+e+-+")"
+instance to_short_ptr TWord    where to_short_ptr e = "(int16_t*)("+-+e+-+")"
+instance to_short_ptr (TPtr t) where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 
-(%.)  infixl 6 :: !a !b -> Expr | val a & val b
-(%.) a b = "("+++val a+++"%"+++val b+++")"
+instance + (Expr t) where + a b = "("+-+a+-+"+"+-+b+-+")"
+instance - (Expr t) where - a b = "("+-+a+-+"-"+-+b+-+")"
+instance * (Expr t) where * a b = "("+-+a+-+"*"+-+b+-+")"
+instance / (Expr t) where / a b = "("+-+a+-+"/ "+-+b+-+")"
+instance ^ (Expr TReal) where ^ a b = "pow("+-+a+-+","+-+b+-+")"
 
-(*.)  infixl 7 :: !a !b -> Expr | val a & val b
-(*.) a b = "("+++val a+++"*"+++val b+++")"
+(%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
+(%.) a b = "("+-+a+-+"%"+-+b+-+")"
 
-(/.)  infixl 7 :: !a !b -> Expr | val a & val b
-(/.) a b = "("+++val a+++"/ "+++val b+++")"
+(==.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(==.) a b = "("+-+a+-+"=="+-+b+-+")"
 
-(^.)  infixr 8 :: !a !b -> Expr | val a & val b
-(^.) a b = "pow("+++no_parens a+++","+++no_parens b+++")"
+(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<>.) a b = "("+-+a+-+"!="+-+b+-+")"
 
-(==.) infix 4 :: !a !b -> Expr | val a & val b
-(==.) a b = "("+++val a+++"=="+++val b+++")"
+(<.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<.) a b = "("+-+a+-+"<"+-+b+-+")"
 
-(<>.) infix  4 :: !a !b -> Expr | val a & val b
-(<>.) a b = "("+++val a+++"!="+++val b+++")"
+(>.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>.) a b = "("+-+a+-+">"+-+b+-+")"
 
-(<.) infix 4 :: !a !b -> Expr | val a & val b
-(<.) a b = "("+++val a+++"<"+++val b+++")"
+(<=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<=.) a b = "("+-+a+-+"<="+-+b+-+")"
 
-(>.) infix 4 :: !a !b -> Expr | val a & val b
-(>.) a b = "("+++val a+++">"+++val b+++")"
+(>=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>=.) a b = "("+-+a+-+">="+-+b+-+")"
 
-(<=.) infix 4 :: !a !b -> Expr | val a & val b
-(<=.) a b = "("+++val a+++"<="+++val b+++")"
+(&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(&&.) a b = "("+-+a+-+"&&"+-+b+-+")"
 
-(>=.) infix 4 :: !a !b -> Expr | val a & val b
-(>=.) a b = "("+++val a+++">="+++val b+++")"
+notB :: !(Expr TWord) -> Expr TWord
+notB a = "!("+-+a+-+")"
 
-(&&.) infixr 3 :: !a !b -> Expr | val a & val b
-(&&.) a b = "("+++val a+++"&&"+++val b+++")"
+(&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(&.) a b = "("+-+a+-+"&"+-+b+-+")"
 
-notB :: !a -> Expr | val a
-notB a = "!"+++val a
+(|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(|.) a b = "("+-+a+-+"|"+-+b+-+")"
 
-(&.) infixl 6 :: !a !b -> Expr | val a & val b
-(&.) a b = "("+++val a+++"&"+++val b+++")"
+(<<.) infix 7 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(<<.) a b = "("+-+a+-+"<<"+-+b+-+")"
 
-(|.) infixl 6 :: !a !b -> Expr | val a & val b
-(|.) a b = "("+++val a+++"|"+++val b+++")"
+(>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
+(>>.) a b = "("+-+a+-+">>"+-+b+-+")"
 
-(<<.) infix 7 :: !a !b -> Expr | val a & val b
-(<<.) a b = "("+++val a+++"<<"+++val b+++")"
+xorI :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+xorI a b = "("+-+a+-+"^"+-+b+-+")"
 
-(>>.) infix 7 :: !a !b -> Expr | val a & val b
-(>>.) a b = "("+++val a+++">>"+++val b+++")"
+~. :: !(Expr TWord) -> Expr TWord
+~. a = "(~"+-+a+-+")"
 
-xorI :: !a !b -> Expr | val a & val b
-xorI a b = "("+++val a+++"^"+++val b+++")"
+absR :: !(Expr TReal) -> Expr TReal
+absR e = "fabs("+-+e+-+")"
 
-~. :: !a -> Expr | val a
-~. a = "(~"+++val a+++")"
+acosR :: !(Expr TReal) -> Expr TReal
+acosR e = "acos("+-+e+-+")"
 
-absR :: !Expr -> Expr
-absR e = "fabs("+++no_parens e+++")"
+asinR :: !(Expr TReal) -> Expr TReal
+asinR e = "asin("+-+e+-+")"
 
-acosR :: !Expr -> Expr
-acosR e = "acos("+++no_parens e+++")"
+atanR :: !(Expr TReal) -> Expr TReal
+atanR e = "atan("+-+e+-+")"
 
-asinR :: !Expr -> Expr
-asinR e = "asin("+++no_parens e+++")"
+cosR :: !(Expr TReal) -> Expr TReal
+cosR e = "cos("+-+e+-+")"
 
-atanR :: !Expr -> Expr
-atanR e = "atan("+++no_parens e+++")"
+entierR :: !(Expr TReal) -> Expr TInt
+entierR e = "floor("+-+e+-+")"
 
-cosR :: !Expr -> Expr
-cosR e = "cos("+++no_parens e+++")"
+expR :: !(Expr TReal) -> Expr TReal
+expR e = "exp("+-+e+-+")"
 
-entierR :: !Expr -> Expr
-entierR e = "floor("+++no_parens e+++")"
+lnR :: !(Expr TReal) -> Expr TReal
+lnR e = "log("+-+e+-+")"
 
-expR :: !Expr -> Expr
-expR e = "exp("+++no_parens e+++")"
+log10R :: !(Expr TReal) -> Expr TReal
+log10R e = "log10("+-+e+-+")"
 
-lnR :: !Expr -> Expr
-lnR e = "log("+++no_parens e+++")"
+negR :: !(Expr TReal) -> Expr TReal
+negR e = "-("+-+e+-+")"
 
-log10R :: !Expr -> Expr
-log10R e = "log10("+++no_parens e+++")"
+sinR :: !(Expr TReal) -> Expr TReal
+sinR e = "sin("+-+e+-+")"
 
-negR :: !Expr -> Expr
-negR e = "-("+++no_parens e+++")"
+sqrtR :: !(Expr TReal) -> Expr TReal
+sqrtR e = "sqrt("+-+e+-+")"
 
-sinR :: !Expr -> Expr
-sinR e = "sin("+++no_parens e+++")"
+tanR :: !(Expr TReal) -> Expr TReal
+tanR e = "tan("+-+e+-+")"
 
-sqrtR :: !Expr -> Expr
-sqrtR e = "sqrt("+++no_parens e+++")"
+ItoR :: !(Expr TInt) -> Expr TReal
+ItoR e = "(BC_REAL)("+-+e+-+")"
 
-tanR :: !Expr -> Expr
-tanR e = "tan("+++no_parens e+++")"
+RtoI :: !(Expr TReal) -> Expr TInt
+RtoI e = "(BC_WORD_S)("+-+e+-+")"
 
-if_i64_or_i32_expr :: !a !b -> Expr | val a & val b
-if_i64_or_i32_expr a b = "IF_INT_64_OR_32("+++no_parens a+++","+++no_parens b+++")"
+if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
+if_i64_or_i32_expr a b = "IF_INT_64_OR_32("+-+a+-+","+-+b+-+")"
 
-if_expr :: !c !t !e -> Expr | val c & val t & val e 
-if_expr c t e = "("+++no_parens c+++" ? "+++no_parens t+++" : "+++no_parens e+++")"
+if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr c t e = "("+-+c+-+" ? "+-+t+-+" : "+-+e+-+")"
 
 begin_instruction :: !String !Target -> Target
-begin_instruction name t = append ("INSTRUCTION_BLOCK("+++name+++"):") t
+begin_instruction name t = append ("INSTRUCTION_BLOCK("+-+name+-+"):") t
 
 end_instruction :: !Target -> Target
 end_instruction t = append "\tEND_INSTRUCTION_BLOCK;" t
@@ -319,45 +302,68 @@ end_scope t = append "}" t
 nop :: !Target -> Target
 nop t = t
 
-(:.) infixr 9 :: !(Target -> Target) !(Target -> Target) !Target -> Target
+(:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 (:.) first then t = then (first t)
 
-get_output :: !Target -> [Expr]
-get_output t = reverse t.output
+instance typename TWord  where typename _ = "BC_WORD"
+instance typename TChar  where typename _ = "char"
+instance typename TShort where typename _ = "int16_t"
+instance typename TInt   where typename _ = "BC_WORD_S"
+instance typename TReal  where typename _ = "BC_REAL"
+instance typename (TPtr t) | typename t where typename (TPtr t) = typename t+-+"*"
 
-new_local :: !Type !Var !i !Target -> Target | val i
-new_local tp name e t
-= append ("\t"+++type tp+++name+++"="+++no_parens e+++";") t
+new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
+new_local tp e f t = f var (append ("\t"+-+typename tp+-+" "+-+var+-+"="+-+e+-+";") {t & var_counter=t.var_counter+1})
 where
-	type tp = case tp of
-		TWord    -> "BC_WORD "
-		TWordPtr -> "BC_WORD *"
-		TChar    -> "char "
-		TCharPtr -> "char *"
-		TShort   -> "int16_t "
-		TReal    -> "BC_REAL "
-		TInt     -> "BC_WORD_S "
+	var = "v"+-+toString t.var_counter
 
-local :: !Var -> Expr
-local v = v
+set :: !(Expr v) !(Expr e) !Target -> Target
+set v e t = append ("\t"+-+v+-+"="+-+e+-+";") t
 
-global :: !Var -> Expr
-global v = v
+instance .= TWord TWord  where .= v e t = set v e t
+instance .= TWord TChar  where .= v e t = set v e t
+instance .= TWord TInt   where .= v e t = set v e t
+instance .= TWord TShort where .= v e t = set v e t
+instance .= TChar TChar  where .= v e t = set v e t
+instance .= TInt  TInt   where .= v e t = set v e t
+instance .= TInt  TWord  where .= v e t = set v e t
+instance .= (TPtr t) (TPtr u) where .= v e t = set v e t
 
-set :: !var !v !Target -> Target | val var & val v
-set v e t = append ("\t"+++no_parens v+++"="+++no_parens e+++";") t
-
-add_local :: !Var !v !Target -> Target | val v
-add_local v e t = case no_parens e of
+add_local :: !(Expr v) !(Expr e) !Target -> Target
+add_local v e t = case e of
 	"0" -> t
-	"1" -> append ("\t"+++v+++"++;") t
-	e   -> append ("\t"+++v+++"+="+++e+++";") t
+	"1" -> append ("\t"+-+v+-+"++;") t
+	e   -> append ("\t"+-+v+-+"+="+-+e+-+";") t
 
-sub_local :: !Var !v !Target -> Target | val v
-sub_local v e t = case no_parens e of
+instance += TWord TWord where += v e t = add_local v e t
+
+sub_local :: !(Expr v) !(Expr e) !Target -> Target
+sub_local v e t = case e of
 	"0" -> t
-	"1" -> append ("\t"+++v+++"--;") t
-	e   -> append ("\t"+++v+++"-="+++e+++";") t
+	"1" -> append ("\t"+-+v+-+"--;") t
+	e   -> append ("\t"+-+v+-+"-="+-+e+-+";") t
+
+instance -= TWord  TWord  where -= v e t = sub_local v e t
+instance -= TShort TShort where -= v e t = sub_local v e t
+instance -= TInt   TInt   where -= v e t = sub_local v e t
+
+instance advance_ptr Int      where advance_ptr v e t = add_local v (toString e) t
+instance advance_ptr (Expr w) where advance_ptr v e t = add_local v e t
+
+instance rewind_ptr  Int      where rewind_ptr  v e t = sub_local v (toString e) t
+instance rewind_ptr  (Expr w) where rewind_ptr  v e t = sub_local v e t
+
+instance @  Int      where (@)  arr i = at`  arr (toString i)
+instance @  (Expr t) where (@)  arr i = at`  arr i
+
+instance @? Int      where (@?) arr i = ptr` arr (toString i)
+instance @? (Expr t) where (@?) arr i = ptr` arr i
+
+at` :: !(Expr (TPtr t)) !String -> Expr t
+at` arr i = "("+-+arr+-+")["+-+i+-+"]"
+
+ptr` :: !(Expr (TPtr t)) !String -> Expr (TPtr t)
+ptr` arr i = "&("+-+arr+-+")["+-+i+-+"]"
 
 begin_block :: !Target -> Target
 begin_block t = append "\tdo {" t
@@ -365,170 +371,98 @@ begin_block t = append "\tdo {" t
 end_block :: !Target -> Target
 end_block t = append "\t} while (0);" t
 
-while_do :: !c !(Target -> Target) !Target -> Target | val c
-while_do c f t = append "\t}" (f (append ("\twhile ("+++no_parens c+++") {") t))
+while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
+while_do c f t = append "\t}" (f (append ("\twhile ("+-+c+-+") {") t))
 
 break :: !Target -> Target
 break t = append "\tbreak;" t
 
-label :: !String !Target -> Target
-label l t = append (l+++":") t
+if_then :: !(Expr TWord) !(Target -> Target) !Target -> Target
+if_then c then t = append "\t}" (then (append ("\tif ("+-+c+-+") {") t))
 
-goto :: !String !Target -> Target
-goto l t = append ("\tgoto "+++l+++";") t
-
-if_then :: !c !(Target -> Target) !Target -> Target | val c
-if_then c then t = append "\t}" (then (append ("\tif ("+++no_parens c+++") {") t))
-
-else_if :: !c !(Target -> Target) !Target -> Target | val c
-else_if c then t = append "\t}" (then (append ("\t} else if ("+++no_parens c+++") {") (drop_last_line t)))
+else_if :: !(Expr TWord) !(Target -> Target) !Target -> Target
+else_if c then t = append "\t}" (then (append ("\t} else if ("+-+c+-+") {") (drop_last_line t)))
 
 else :: !(Target -> Target) !Target -> Target
 else e t = append "\t}" (e (append "\t} else {" (drop_last_line t)))
 
-if_break_else :: !c !(Target -> Target) !Target -> Target | val c
-if_break_else c else t = concat_up_to_mark (else (append ("\t\tif ("+++no_parens c+++") break;") (mark t)))
+if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
+if_break_else c else t = concat_up_to_mark (else (append ("\t\tif ("+-+c+-+") break;") (mark t)))
 
-(@) infix 9 :: !arr !i -> Expr | val arr & val i
-(@) arr i
-# arr = val arr
-# i = no_parens i
-| arr.[0]=='(' && not (has_enclosing_parens arr)
-	= "("+++arr+++")["+++i+++"]"
-	= arr+++"["+++i+++"]"
+instance ensure_hp (Expr TWord) where ensure_hp i t = append ("\tNEED_HEAP("+-+i+-+");") t
+instance ensure_hp Int where ensure_hp i t = append ("\tNEED_HEAP("+-+toString i+-+");") t
 
-(@~) infix 9 :: !arr !(!Int, !i) -> Expr | val arr & val i
-(@~) arr (bitwidth, i) = case bitwidth of
-	16 -> "((int16_t*)"+++val arr+++")["+++no_parens i+++"]"
+A :: Expr (TPtr TWord)
+A = "asp"
 
-(@?) infix 9 :: !arr !i -> Expr | val arr & val i
-(@?) arr i = "&"+++val arr+++"["+++no_parens i+++"]"
+B :: Expr (TPtr TWord)
+B = "bsp"
 
-Arg :: !Int -> Expr
-Arg i = "pc["+++toString i+++"]"
+Pc :: Expr (TPtr TWord)
+Pc = "pc"
 
-Pc_ptr :: !Int -> Expr
-Pc_ptr i = "&"+++Arg i
+Hp :: Expr (TPtr TWord)
+Hp = "hp"
 
-advance_pc :: !Int !Target -> Target
-advance_pc i t = append ("\tpc+="+++toString i+++";") t
-
-set_pc :: !v !Target -> Target | val v
-set_pc v t = append ("\tpc="+++no_parens v+++";") t
-
-A :: !i -> Expr | val i
-A e = "asp["+++no_parens e+++"]"
-
-A_ptr :: !i -> Expr | val i
-A_ptr e = case val e of
-	"0" -> "asp"
-	_   -> "&"+++A e
-
-set_a :: !i !v !Target -> Target | val i & val v
-set_a i x t = append ("\tasp["+++no_parens i+++"]="+++no_parens x+++";") t
-
-set_asp :: !Expr !Target -> Target
-set_asp x t = append ("\tasp="+++no_parens x+++";") t
-
-grow_a :: !i !Target -> Target | val i
-grow_a i t = append ("\tasp+="+++no_parens i+++";") t
-
-shrink_a :: !i !Target -> Target | val i
-shrink_a i t = append ("\tasp-="+++no_parens i+++";") t
-
-Hp :: !Expr -> Expr
-Hp e = "hp["+++e+++"]"
-
-Hp_ptr :: !Int -> Expr
-Hp_ptr i = case i of
-	0 -> "hp"
-	i -> "&hp["+++toString i+++"]"
-
-set_hp :: !i !v !Target -> Target | val i & val v
-set_hp i e t = append ("\thp["+++no_parens i+++"]="+++no_parens e+++";") t
-
-ensure_hp :: !i !Target -> Target | val i
-ensure_hp i t = append ("\tNEED_HEAP("+++no_parens i+++");") t
-
-advance_hp :: !i !Target -> Target | val i
-advance_hp i t = append ("\thp+="+++no_parens i+++";") t
-
-BOOL_ptr :: Expr
+BOOL_ptr :: Expr TWord
 BOOL_ptr = "(BC_WORD)&BOOL"
 
-CHAR_ptr :: Expr
+CHAR_ptr :: Expr TWord
 CHAR_ptr = "(BC_WORD)&CHAR"
 
-INT_ptr :: Expr
+INT_ptr :: Expr TWord
 INT_ptr = "(BC_WORD)&INT"
 
-REAL_ptr :: Expr
+REAL_ptr :: Expr TWord
 REAL_ptr = "(BC_WORD)&REAL"
 
-ARRAY__ptr :: Expr
+ARRAY__ptr :: Expr TWord
 ARRAY__ptr = "(BC_WORD)&__ARRAY__"
 
-STRING__ptr :: Expr
+STRING__ptr :: Expr TWord
 STRING__ptr = "(BC_WORD)&__STRING__"
 
-jmp_ap_ptr :: !Int -> Expr
-jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+++toString i+++"]"
+jmp_ap_ptr :: !Int -> Expr TWord
+jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+-+toString i+-+"]"
 
-cycle_ptr :: Expr
+cycle_ptr :: Expr TWord
 cycle_ptr = "(BC_WORD)&__interpreter_cycle_in_spine[1]"
 
-indirection_ptr :: Expr
+indirection_ptr :: Expr TWord
 indirection_ptr = "(BC_WORD)&__interpreter_indirection[5]"
 
-dNil_ptr :: Expr
+dNil_ptr :: Expr TWord
 dNil_ptr = "(BC_WORD)&d___Nil[1]"
 
-small_integer :: !i -> Expr | val i
-small_integer i = "(BC_WORD)(small_integers+2*"+++val i+++")"
+small_integer :: !(Expr TInt) -> Expr TWord
+small_integer i = "(BC_WORD)(small_integers+2*"+-+i+-+")"
 
-B :: !i -> Expr | val i
-B e = "bsp["+++no_parens e+++"]"
+caf_list :: Expr (TPtr (TPtr TWord))
+caf_list = "caf_list"
 
-B_ptr :: !i -> Expr | val i
-B_ptr e = case val e of
-	"0" -> "bsp"
-	_   -> "&"+++B e
+push_c :: !(Expr TWord) !Target -> Target
+push_c v t = append ("\t*++csp="+-+v+-+";") t
 
-set_b :: !i !v !Target -> Target | val i & val v
-set_b i x t = append ("\tbsp["+++no_parens i+++"]="+++no_parens x+++";") t
-
-set_bsp :: !Expr !Target -> Target
-set_bsp x t = append ("\tbsp="+++no_parens x+++";") t
-
-grow_b :: !i !Target -> Target | val i
-grow_b i t = append ("\tbsp-="+++no_parens i+++";") t
-
-shrink_b :: !i !Target -> Target | val i
-shrink_b i t = append ("\tbsp+="+++no_parens i+++";") t
-
-push_c :: !v !Target -> Target | val v
-push_c v t = append ("\t*++csp="+++no_parens v+++";") t
-
-pop_c :: Expr
+pop_c :: Expr TWord
 pop_c = "*csp--"
 
-memcpy :: !dest !src !n !Target -> Target | val dest & val src & val n
-memcpy d s n t = append ("\tmemcpy("+++no_parens d+++","+++no_parens s+++","+++no_parens n+++");") t
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
+memcpy d s n t = append ("\tmemcpy("+-+d+-+","+-+s+-+","+-+n+-+");") t
 
-strncmp :: !s1 !s2 !n -> Expr | val s1 & val s2 & val n
-strncmp s1 s2 n = "strncmp("+++no_parens s1+++","+++no_parens s2+++","+++no_parens n+++")"
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt
+strncmp s1 s2 n = "strncmp("+-+s1+-+","+-+s2+-+","+-+n+-+")"
 
-putchar :: !c !Target -> Target | val c
-putchar c t = append ("\tPUTCHAR("+++no_parens c+++");") t
+putchar :: !(Expr TChar) !Target -> Target
+putchar c t = append ("\tPUTCHAR("+-+c+-+");") t
 
-print_bool :: !c !Target -> Target | val c
-print_bool c t = append ("\tPRINTF(\"%s\","+++no_parens c+++" ? \"True\" : \"False\");") t
+print_bool :: !(Expr TWord) !Target -> Target
+print_bool c t = append ("\tPRINTF(\"%s\","+-+c+-+" ? \"True\" : \"False\");") t
 
-print_char :: !Bool !c !Target -> Target | val c
-print_char quotes c t = append (if quotes "\tPRINTF(\"'%c'\"," "\tPRINTF(\"%c\","+++no_parens c+++");") t
+print_char :: !Bool !(Expr TChar) !Target -> Target
+print_char quotes c t = append (if quotes "\tPRINTF(\"'%c'\"," "\tPRINTF(\"%c\","+-+c+-+");") t
 
-print_int :: !c !Target -> Target | val c
-print_int c t = append ("\tPRINTF(BC_WORD_S_FMT,"+++no_parens c+++");") t
+print_int :: !(Expr TInt) !Target -> Target
+print_int c t = append ("\tPRINTF(BC_WORD_S_FMT,"+-+c+-+");") t
 
-print_real :: !c !Target -> Target | val c
-print_real c t = append ("\tPRINTF(\"%.15g\","+++val c+++" + 0.0);") t
+print_real :: !(Expr TReal) !Target -> Target
+print_real c t = append ("\tPRINTF(\"%.15g\","+-+c+-+" + 0.0);") t

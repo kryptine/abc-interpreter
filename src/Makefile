@@ -37,6 +37,8 @@ override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE=199309L -D_XOPEN_SOURCE=500 -D_C99_SO
 endif
 ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation
+else
+override CFLAGS+=-Wno-parentheses-equality
 endif
 
 ifeq ($(filter optimized,$(MAKECMDGOALS)),optimized)
