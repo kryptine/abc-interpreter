@@ -35,7 +35,10 @@ int main(int argc, char **argv) {
 	size_t input_len=ftell(input_file);
 	fseek(input_file, 0, SEEK_SET);
 	uint32_t *bytecode=safe_malloc(input_len);
-	fread(bytecode, input_len, 1, input_file);
+	if (fread(bytecode, input_len, 1, input_file) != input_len) {
+		fprintf(stderr, "Error: reported file length incorrect.\n");
+		return -1;
+	}
 	fclose(input_file);
 
 	prepare_strip_bytecode(bytecode, 1);
