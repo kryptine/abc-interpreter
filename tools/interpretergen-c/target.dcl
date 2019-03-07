@@ -1,6 +1,7 @@
 definition module target
 
 import StdEnv
+import StdMaybe
 import interpretergen
 
 :: Target
@@ -8,7 +9,7 @@ import interpretergen
 
 start :: Target
 bootstrap :: ![String] -> [String]
-get_output :: !Target -> [String]
+collect_instructions :: ![Target] -> [String]
 
 instr_unimplemented :: !Target -> Target
 instr_halt :: !Target -> Target
@@ -82,9 +83,7 @@ if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
 
 begin_instruction :: !String !Target -> Target
 end_instruction :: !Target -> Target
-
-begin_scope :: !Target -> Target
-end_scope :: !Target -> Target
+alias :: !String !(Target -> Target) !Target -> Target
 
 nop :: !Target -> Target
 
@@ -125,9 +124,11 @@ end_block :: !Target -> Target
 while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
 break :: !Target -> Target
 
-if_then :: !(Expr TWord) !(Target -> Target) !Target -> Target
-else_if :: !(Expr TWord) !(Target -> Target) !Target -> Target
-else :: !(Target -> Target) !Target -> Target
+if_then_else ::
+	!(Expr TWord) !(Target -> Target)
+	![(Expr TWord, Target -> Target)]
+	!(Maybe (Target -> Target))
+	!Target -> Target
 if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
 
 class ensure_hp s :: !s !Target -> Target

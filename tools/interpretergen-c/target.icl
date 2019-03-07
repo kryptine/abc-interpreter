@@ -1,10 +1,12 @@
 implementation module target
 
 import StdEnv
+import StdMaybe
 import interpretergen
 
 :: Target =
 	{ output      :: ![String]
+	, instrs      :: ![String]
 	, var_counter :: !Int
 	}
 
@@ -18,7 +20,7 @@ import interpretergen
 }
 
 start :: Target
-start = {output=[], var_counter=0}
+start = {instrs=[], output=[], var_counter=0}
 
 bootstrap :: ![String] -> [String]
 bootstrap instrs = pre ++ instrs ++ post
@@ -53,8 +55,17 @@ where
 		, "#endif"
 		]
 
-get_output :: !Target -> [String]
-get_output t = reverse t.output
+collect_instructions :: ![Target] -> [String]
+collect_instructions is = flatten [get_output i \\ i <- is]
+where
+	get_output :: !Target -> [String]
+	get_output t
+	| t.var_counter > 0
+		= head ++ ["{":out] ++ ["}"]
+		= head ++ out
+	where
+		head = ["INSTRUCTION_BLOCK("+++i+++"):" \\ i <- t.instrs]
+		out = reverse t.output
 
 append e t :== {t & output=[e:t.output]}
 mark t :== append "MARK" t
@@ -288,16 +299,13 @@ if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
 if_expr c t e = "("+-+c+-+" ? "+-+t+-+" : "+-+e+-+")"
 
 begin_instruction :: !String !Target -> Target
-begin_instruction name t = append ("INSTRUCTION_BLOCK("+-+name+-+"):") t
+begin_instruction name t = {t & instrs=[name:t.instrs]}
 
 end_instruction :: !Target -> Target
 end_instruction t = append "\tEND_INSTRUCTION_BLOCK;" t
 
-begin_scope :: !Target -> Target
-begin_scope t = append "{" t
-
-end_scope :: !Target -> Target
-end_scope t = append "}" t
+alias :: !String !(Target -> Target) !Target -> Target
+alias name f t = f {t & instrs=[name:t.instrs]}
 
 nop :: !Target -> Target
 nop t = t
@@ -377,14 +385,18 @@ while_do c f t = append "\t}" (f (append ("\twhile ("+-+c+-+") {") t))
 break :: !Target -> Target
 break t = append "\tbreak;" t
 
-if_then :: !(Expr TWord) !(Target -> Target) !Target -> Target
-if_then c then t = append "\t}" (then (append ("\tif ("+-+c+-+") {") t))
-
-else_if :: !(Expr TWord) !(Target -> Target) !Target -> Target
-else_if c then t = append "\t}" (then (append ("\t} else if ("+-+c+-+") {") (drop_last_line t)))
-
-else :: !(Target -> Target) !Target -> Target
-else e t = append "\t}" (e (append "\t} else {" (drop_last_line t)))
+if_then_else ::
+	!(Expr TWord) !(Target -> Target)
+	![(Expr TWord, Target -> Target)]
+	!(Maybe (Target -> Target))
+	!Target -> Target
+if_then_else c then elifs else t
+# t = append "\t}" (then (append ("\tif ("+-+c+-+") {") t))
+# t = foldl (\t (c,b) -> append "\t}" (b (append ("\t} else if ("+-+c+-+") {") (drop_last_line t)))) t elifs
+= case else of
+	Just e
+		-> append "\t}" (e (append "\t} else {" (drop_last_line t)))
+		-> t
 
 if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
 if_break_else c else t = concat_up_to_mark (else (append ("\t\tif ("+-+c+-+") break;") (mark t)))

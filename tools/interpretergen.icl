@@ -13,29 +13,29 @@ Start w
 ($) infixr 0
 ($) f :== f
 
-all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
-	[ instr "absR" (Just 0) 1 $
+all_instructions t = bootstrap $ collect_instructions $ map (\i -> i t) $
+	[ instr "absR" (Just 0) $
 		new_local TReal (absR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "acosR" (Just 0) 1 $
+	, instr "acosR" (Just 0) $
 		new_local TReal (acosR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "addI" (Just 0) 0 $
+	, instr "addI" (Just 0) $
 		B @ 1 .= to_word (to_int (B @ 0) + to_int (B @ 1)) :.
 		shrink_b 1
-	, instr "addIo" (Just 0) 0 $
+	, instr "addIo" (Just 0) $
 		B @ 1 .= to_int (B @ 0) + to_int (B @ 1) :.
 		B @ 0 .= to_int (B @ 1) <. to_int (B @ 0)
-	, instr "addLU" (Just 0) 0 $
+	, instr "addLU" (Just 0) $
 		B @ 2 .= to_int (B @ 1) + to_int (B @ 2) :.
 		B @ 1 .= B @ 0 + if_expr (B @ 2 <. B @ 1) (lit_word 1) (lit_word 0) :.
 		shrink_b 1
-	, instr "addR" (Just 0) 1 $
+	, instr "addR" (Just 0) $
 		new_local TReal (to_real (B @ 0) + to_real (B @ 1)) \r ->
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	] ++
-	[ instr ("add_empty_node"+++toString n) Nothing 0 $
+	[ instr ("add_empty_node"+++toString n) Nothing $
 		ensure_hp 3 :.
 		Pc .= to_word_ptr (Pc @ 1) :.
 		Hp @ 0 .= cycle_ptr :.
@@ -45,22 +45,22 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp 3
 	\\ n <- [2..32]
 	] ++
-	[ instr "andI" (Just 0) 0 $
+	[ instr "andI" (Just 0) $
 		B @ 1 .= (B @ 0 &. B @ 1) :.
 		shrink_b 1
-	, instr "asinR" (Just 0) 1 $
+	, instr "asinR" (Just 0) $
 		new_local TReal (asinR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "atanR" (Just 0) 1 $
+	, instr "atanR" (Just 0) $
 		new_local TReal (atanR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "build0" (Just 1) 0 $
+	, instr "build0" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		A @ 1 .= to_word Hp :.
 		advance_ptr Hp 3 :.
 		grow_a 1
-	, instr "build1" (Just 1) 0 $
+	, instr "build1" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -68,7 +68,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp 3
 	, alias "build2" $
 	  alias "buildh2" $
-	  instr "buildhr20" (Just 1) 0 $
+	  instr "buildhr20" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -76,21 +76,21 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ -1 .= to_word Hp :.
 		shrink_a 1 :.
 		advance_ptr Hp 3
-	, instr "build3" (Just 1) 0 $
+	, instr "build3" (Just 1) $
 		ensure_hp 4 :.
 		Hp @ 0 .= Pc @ 1 :.
 		for [1..3] (\i -> Hp @ i .= A @ (1-i)) :.
 		A @ -2 .= to_word Hp :.
 		shrink_a 2 :.
 		advance_ptr Hp 4
-	, instr "build4" (Just 1) 0 $
+	, instr "build4" (Just 1) $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		for [1..4] (\i -> Hp @ i .= A @ (1-i)) :.
 		A @ -3 .= to_word Hp :.
 		shrink_a 3 :.
 		advance_ptr Hp 5
-	, instr "build" (Just 2) 1 $
+	, instr "build" (Just 2) $
 		new_local TWord (Pc @ 1) \s ->
 		ensure_hp (s + lit_word 1) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -100,18 +100,18 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		advance_ptr Hp (s + lit_word 1)
 	, alias "buildh0" $
-	  instr "buildAC" (Just 1) 0 $
+	  instr "buildAC" (Just 1) $
 		A @ 1 .= Pc @ 1 :.
 		grow_a 1
 	, alias "buildh1" $
-	  instr "buildhr10" (Just 1) 0 $
+	  instr "buildhr10" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
 		A @ 0 .= to_word Hp :.
 		advance_ptr Hp 2
 	, alias "buildh3" $
-	  instr "buildhr30" (Just 1) 0 $
+	  instr "buildhr30" (Just 1) $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -122,7 +122,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 2 :.
 		advance_ptr Hp 5
 	, alias "buildh4" $
-	  instr "buildhr40" (Just 1) 0 $
+	  instr "buildhr40" (Just 1) $
 		ensure_hp 6 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -134,7 +134,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 3 :.
 		advance_ptr Hp 6
 	, alias "buildh" $
-	  instr "buildhra0" (Just 2) 1 $
+	  instr "buildhra0" (Just 2) $
 		new_local TWord (Pc @ 1) \s_p_2 ->
 		ensure_hp s_p_2 :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -148,80 +148,82 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a (s_p_2 - lit_word 3) :.
 		A @ 0 .= to_word Hp :.
 		advance_ptr Hp s_p_2
-	, instr "buildBFALSE" (Just 0) 0 $
+	, instr "buildBFALSE" (Just 0) $
 		ensure_hp 2 :.
 		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
 		Hp @ 1 .= lit_word 0 :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildBTRUE" (Just 0) 0 $
+	, instr "buildBTRUE" (Just 0) $
 		ensure_hp 2 :.
 		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
 		Hp @ 1 .= lit_word 1 :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildB_b" (Just 1) 0 $
+	, instr "buildB_b" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
 		Hp @ 1 .= B @ (Pc @ 1) :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildC" (Just 1) 0 $
+	, instr "buildC" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= CHAR_ptr + lit_word 2 :.
 		Hp @ 1 .= Pc @ 1 :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildC_b" (Just 1) 0 $
+	, instr "buildC_b" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= CHAR_ptr + lit_word 2 :.
 		Hp @ 1 .= B @ (Pc @ 1) :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildI" (Just 1) 1 $
+	, instr "buildI" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \i ->
-		if_then (lit_int 0 <=. i &&. i <=. lit_int 32)
-			(A @ 1 .= small_integer i) :.
-		else (
+		if_then_else (lit_int 0 <=. i &&. i <=. lit_int 32)
+			(A @ 1 .= small_integer i)
+		[]
+		(else (
 			ensure_hp 2 :.
 			Hp @ 0 .= INT_ptr + lit_word 2 :.
 			Hp @ 1 .= to_word i :.
 			A @ 1 .= to_word Hp :.
 			advance_ptr Hp 2
-		) :.
+		)) :.
 		grow_a 1
-	, instr "buildI_b" (Just 1) 1 $
+	, instr "buildI_b" (Just 1) $
 		new_local TInt (to_int (B @ to_int (Pc @ 1))) \i ->
-		if_then (lit_int 0 <=. i &&. i <=. lit_int 32)
-			(A @ 1 .= small_integer i) :.
-		else (
+		if_then_else (lit_int 0 <=. i &&. i <=. lit_int 32)
+			(A @ 1 .= small_integer i)
+		[]
+		(else (
 			ensure_hp 2 :.
 			Hp @ 0 .= INT_ptr + lit_word 2 :.
 			Hp @ 1 .= to_word i :.
 			A @ 1 .= to_word Hp :.
 			advance_ptr Hp 2
-		) :.
+		)) :.
 		grow_a 1
-	, instr "buildR" (Just 1) 0 $
+	, instr "buildR" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= REAL_ptr + lit_word 2 :.
 		Hp @ 1 .= Pc @ 1 :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildR_b" (Just 1) 0 $
+	, instr "buildR_b" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= REAL_ptr + lit_word 2 :.
 		Hp @ 1 .= B @ (Pc @ 1) :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "buildhr01" (Just 1) 0 $
+	, instr "buildhr01" (Just 1) $
 		ensure_hp 2 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -229,7 +231,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 1 :.
 		advance_ptr Hp 2
-	, instr "buildhr02" (Just 1) 0 $
+	, instr "buildhr02" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -238,7 +240,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 2 :.
 		advance_ptr Hp 3
-	, instr "buildhr03" Nothing 0 $
+	, instr "buildhr03" Nothing $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -250,7 +252,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 3 :.
 		advance_ptr Hp 5
-	, instr "buildhr04" Nothing 0 $
+	, instr "buildhr04" Nothing $
 		ensure_hp 6 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -263,7 +265,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 4 :.
 		advance_ptr Hp 6
-	, instr "buildhr11" (Just 1) 0 $
+	, instr "buildhr11" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -271,7 +273,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 1 :.
 		advance_ptr Hp 3
-	, instr "buildhr12" Nothing 0 $
+	, instr "buildhr12" Nothing $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -282,7 +284,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 2 :.
 		advance_ptr Hp 5
-	, instr "buildhr13" Nothing 0 $
+	, instr "buildhr13" Nothing $
 		ensure_hp 6 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -294,7 +296,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 3 :.
 		advance_ptr Hp 6
-	, instr "buildhr21" Nothing 0 $
+	, instr "buildhr21" Nothing $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -306,7 +308,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		shrink_b 1 :.
 		advance_ptr Hp 5
-	, instr "buildhr22" Nothing 0 $
+	, instr "buildhr22" Nothing $
 		ensure_hp 6 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -319,7 +321,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		shrink_b 2 :.
 		advance_ptr Hp 6
-	, instr "buildhr31" Nothing 0 $
+	, instr "buildhr31" Nothing $
 		ensure_hp 6 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -332,7 +334,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 2 :.
 		shrink_b 1 :.
 		advance_ptr Hp 6
-	, instr "buildhra1" Nothing 1 $
+	, instr "buildhra1" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp (n_a + lit_word 3) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -348,7 +350,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp (n_a + lit_word 3) :.
 		Hp @ -1 .= B @ 0 :.
 		shrink_b 1
-	, instr "buildhr0b" Nothing 1 $
+	, instr "buildhr0b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 2) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -364,7 +366,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (n_b + lit_word 2)
-	, instr "buildhr1b" Nothing 1 $
+	, instr "buildhr1b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 3) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -379,7 +381,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_b n_b :.
 		A @ 0 .= to_word Hp :.
 		advance_ptr Hp (n_b + lit_word 3)
-	, instr "buildhr" (Just 3) 3 $
+	, instr "buildhr" (Just 3) $
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (n_ab + lit_word 2) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -397,7 +399,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		unrolled_loop [3..30] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-1) .= B @ (i-1)) :.
 		shrink_b n_b :.
 		advance_ptr Hp n_b
-	, instr "build_r01" (Just 2) 1 $
+	, instr "build_r01" (Just 2) $
 		ensure_hp 2 :.
 		new_local TInt (to_int (Pc @ 1)) \bo ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -405,7 +407,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "build_r02" (Just 2) 1 $
+	, instr "build_r02" (Just 2) $
 		ensure_hp 3 :.
 		new_local TInt (to_int (Pc @ 1)) \bo ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -414,7 +416,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3
-	, instr "build_r03" (Just 2) 1 $
+	, instr "build_r03" (Just 2) $
 		ensure_hp 5 :.
 		new_local TInt (to_int (Pc @ 1)) \bo ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -425,7 +427,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 5
-	, instr "build_r04" (Just 2) 1 $
+	, instr "build_r04" (Just 2) $
 		ensure_hp 6 :.
 		new_local TInt (to_int (Pc @ 1)) \bo ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -437,7 +439,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 6
-	, instr "build_r10" (Just 2) 1 $
+	, instr "build_r10" (Just 2) $
 		ensure_hp 2 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -445,7 +447,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 2
-	, instr "build_r11" (Just 3) 1 $
+	, instr "build_r11" (Just 3) $
 		ensure_hp 3 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -455,7 +457,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3
-	, instr "build_r12" (Just 3) 1 $
+	, instr "build_r12" (Just 3) $
 		ensure_hp 5 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -467,7 +469,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 5
-	, instr "build_r13" (Just 3) 1 $
+	, instr "build_r13" (Just 3) $
 		ensure_hp 6 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -480,7 +482,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 6
-	, instr "build_r20" (Just 2) 1 $
+	, instr "build_r20" (Just 2) $
 		ensure_hp 3 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -489,7 +491,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3
-	, instr "build_r21" (Just 3) 1 $
+	, instr "build_r21" (Just 3) $
 		ensure_hp 5 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -501,7 +503,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 5
-	, instr "build_r30" (Just 2) 1 $
+	, instr "build_r30" (Just 2) $
 		ensure_hp 5 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -512,7 +514,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 5
-	, instr "build_r31" (Just 3) 1 $
+	, instr "build_r31" (Just 3) $
 		ensure_hp 6 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -525,7 +527,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 6
-	, instr "build_r40" (Just 2) 1 $
+	, instr "build_r40" (Just 2) $
 		ensure_hp 6 :.
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		Hp @ 0 .= Pc @ 2 :.
@@ -537,7 +539,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 6
-	, instr "build_ra0" Nothing 2 $
+	, instr "build_ra0" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp (n_a + lit_word 2) :.
 		Hp @ 0 .= Pc @ 3 :.
@@ -550,7 +552,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (n_a + lit_word 2)
-	, instr "build_ra1" Nothing 3 $
+	, instr "build_ra1" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp (n_a + lit_word 3) :.
 		Hp @ 0 .= Pc @ 3 :.
@@ -565,7 +567,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		advance_ptr Hp (n_a + lit_word 3) :.
 		Hp @ -1 .= B @ bo
-	, instr "build_r0b" Nothing 2 $
+	, instr "build_r0b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 2) :.
 		Hp @ 0 .= Pc @ 3 :.
@@ -578,7 +580,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (n_b + lit_word 2)
-	, instr "build_r1b" Nothing 2 $
+	, instr "build_r1b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 3) :.
 		Hp @ 0 .= Pc @ 3 :.
@@ -591,7 +593,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (n_b + lit_word 3)
-	, instr "build_r" Nothing 2 $
+	, instr "build_r" Nothing $
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (n_ab + lit_word 2) :.
 		new_local (TPtr TWord) (A @? (Pc @ 2)) \ao_p ->
@@ -611,7 +613,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= bo_p @ 1 :.
 		unrolled_loop [3..30] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-1) .= bo_p @ (i-1)) :.
 		advance_ptr Hp n_b
-	, instr "build_u01" (Just 1) 0 $
+	, instr "build_u01" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -619,7 +621,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 1 :.
 		advance_ptr Hp 3
-	, instr "build_u02" (Just 1) 0 $
+	, instr "build_u02" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -628,7 +630,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 2 :.
 		advance_ptr Hp 3
-	, instr "build_u03" (Just 1) 0 $
+	, instr "build_u03" (Just 1) $
 		ensure_hp 4 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= B @ 0 :.
@@ -638,7 +640,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 3 :.
 		advance_ptr Hp 4
-	, instr "build_u11" (Just 1) 0 $
+	, instr "build_u11" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -646,7 +648,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 1 :.
 		advance_ptr Hp 3
-	, instr "build_u12" (Just 1) 0 $
+	, instr "build_u12" (Just 1) $
 		ensure_hp 4 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -655,7 +657,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 2 :.
 		advance_ptr Hp 4
-	, instr "build_u13" (Just 1) 0 $
+	, instr "build_u13" (Just 1) $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -665,7 +667,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b 3 :.
 		advance_ptr Hp 5
-	, instr "build_u21" (Just 1) 0 $
+	, instr "build_u21" (Just 1) $
 		ensure_hp 4 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -675,7 +677,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		shrink_b 1 :.
 		advance_ptr Hp 4
-	, instr "build_u22" (Just 1) 0 $
+	, instr "build_u22" (Just 1) $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -686,7 +688,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		shrink_b 2 :.
 		advance_ptr Hp 5
-	, instr "build_u31" (Just 1) 0 $
+	, instr "build_u31" (Just 1) $
 		ensure_hp 5 :.
 		Hp @ 0 .= Pc @ 1 :.
 		Hp @ 1 .= A @ 0 :.
@@ -697,7 +699,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 2 :.
 		shrink_b 1 :.
 		advance_ptr Hp 5
-	, instr "build_u0b" Nothing 1 $
+	, instr "build_u0b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 1) :.
 		Hp @ 0 .= (Pc @ 2) :.
@@ -708,7 +710,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b n_b :.
 		advance_ptr Hp (n_b + lit_word 1)
-	, instr "build_u1b" Nothing 1 $
+	, instr "build_u1b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 2) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -719,7 +721,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word Hp :.
 		shrink_b n_b :.
 		advance_ptr Hp (n_b + lit_word 2)
-	, instr "build_u2b" Nothing 1 $
+	, instr "build_u2b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b + lit_word 3) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -732,7 +734,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		shrink_b n_b :.
 		advance_ptr Hp (n_b + lit_word 3)
-	, instr "build_ua1" Nothing 1 $
+	, instr "build_ua1" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp (n_a + lit_word 2) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -744,7 +746,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp (n_a + lit_word 2) :.
 		Hp @ -1 .= B @ 0 :.
 		shrink_b 1
-	, instr "build_u" Nothing 1 $
+	, instr "build_u" Nothing $
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (n_ab + lit_word 1) :.
 		Hp @ 0 .= Pc @ 2 :.
@@ -762,7 +764,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		unrolled_loop [3..30] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-1) .= B @ (i-1)) :.
 		shrink_b n_b :.
 		advance_ptr Hp n_b
-	, instr "catAC" (Just 0) 9 $
+	, instr "catAC" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \s1 ->
 		new_local (TPtr TWord) (to_word_ptr (A @ -1)) \s2 ->
 		new_local TWord (s1 @ 1) \l1 ->
@@ -785,7 +787,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		memcpy s_p s1_p l1 :.
 		advance_ptr s_p l1 :.
 		memcpy s_p s2_p l2
-	, instr "cmpAC" (Just 0) 9 $
+	, instr "cmpAC" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \s1 ->
 		new_local (TPtr TWord) (to_word_ptr (A @ -1)) \s2 ->
 		shrink_a 2 :.
@@ -797,16 +799,16 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 0 .= strncmp s1_p s2_p (if_expr (l1 <. l2) l1 l2) :.
 		if_then (l1 <>. l2 &&. B @ 0 ==. lit_word 0)
 			(B @ 0 .= if_expr (l1 <. l2) (lit_word -1) (lit_word 1))
-	, instr "cosR" (Just 0) 1 $
+	, instr "cosR" (Just 0) $
 		new_local TReal (cosR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "create" (Just 0) 0 $
+	, instr "create" (Just 0) $
 		ensure_hp 3 :.
 		Hp @ 0 .= cycle_ptr :.
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3
-	, instr "creates" Nothing 1 $
+	, instr "creates" Nothing $
 		new_local TWord (Pc @ 1) \n_a_p_1 ->
 		ensure_hp n_a_p_1 :.
 		Hp @ 0 .= cycle_ptr :. // TODO
@@ -817,7 +819,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp n_a_p_1
-	, instr "create_array" Nothing 2 $
+	, instr "create_array" Nothing $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		shrink_b 1 :.
@@ -838,7 +840,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - s) .= n :.
 			s -= lit_word 1
 		)
-	, instr "create_arrayBOOL" (Just 0) 3 $
+	, instr "create_arrayBOOL" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (if_i64_or_i32_expr ((s + lit_word 7) >>. lit_word 3) ((s + lit_word 3) >>. lit_word 2)) \sw ->
 		ensure_hp (sw + lit_word 3) :.
@@ -863,7 +865,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - sw) .= n :.
 			sw -= lit_word 1
 		)
-	, instr "create_arrayCHAR" (Just 0) 3 $
+	, instr "create_arrayCHAR" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord
 			(if_i64_or_i32_expr
@@ -891,7 +893,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - sw) .= n :.
 			sw -= lit_word 1
 		)
-	, instr "create_arrayINT" Nothing 2 $
+	, instr "create_arrayINT" Nothing $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		Hp @ 0 .= ARRAY__ptr + lit_word 2 :.
@@ -913,7 +915,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - s) .= n :.
 			s -= lit_word 1
 		)
-	, instr "create_arrayREAL" Nothing 2 $
+	, instr "create_arrayREAL" Nothing $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		Hp @ 0 .= ARRAY__ptr + lit_word 2 :.
@@ -935,7 +937,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - s) .= n :.
 			s -= lit_word 1
 		)
-	, instr "create_array_" Nothing 2 $
+	, instr "create_array_" Nothing $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		shrink_b 1 :.
@@ -957,7 +959,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - s) .= n :.
 			s -= lit_word 1
 		)
-	, instr "create_array_BOOL" (Just 0) 2 $
+	, instr "create_array_BOOL" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (if_i64_or_i32_expr ((s + lit_word 7) >>. lit_word 3) ((s + lit_word 3) >>. lit_word 2) + lit_word 3) \sw ->
 		ensure_hp sw :.
@@ -968,7 +970,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		advance_ptr Hp sw :.
 		shrink_b 1
-	, instr "create_array_CHAR" (Just 0) 2 $
+	, instr "create_array_CHAR" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord
 			(if_i64_or_i32_expr
@@ -982,7 +984,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		advance_ptr Hp sw :.
 		shrink_b 1
-	, instr "create_array_INT" (Just 0) 1 $
+	, instr "create_array_INT" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		shrink_b 1 :.
@@ -992,7 +994,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (lit_word 3 + s)
-	, instr "create_array_REAL" (Just 0) 1 $
+	, instr "create_array_REAL" (Just 0) $
 		new_local TWord (B @ 0) \s ->
 		ensure_hp (s + lit_word 3) :.
 		shrink_b 1 :.
@@ -1002,7 +1004,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (lit_word 3 + s)
-	, instr "create_array_r" Nothing 2 $
+	, instr "create_array_r" Nothing $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (s * n_ab + lit_word 3) :.
@@ -1029,7 +1031,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			i += lit_word 1 :.
 			grow_b 1
 		) :.
-		if_then (n_ab >. lit_word 2) (
+		if_then_else (n_ab >. lit_word 2) (
 			while_do (s <>. lit_word 0) (
 				Hp @ 0 .= B @ 0 :.
 				Hp @ 1 .= B @ 1 :.
@@ -1041,23 +1043,24 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 				advance_ptr Hp n_ab :.
 				s -= lit_word 1
 			)
-		) :. else_if (n_ab ==. lit_word 1) (
-			while_do (s <>. lit_word 0) (
+		)
+		[ else_if (n_ab ==. lit_word 1)
+			(while_do (s <>. lit_word 0) (
 				Hp @ 0 .= B @ 0 :.
 				advance_ptr Hp 1 :.
 				s -= lit_word 1
-			)
-		) :. else_if (n_ab ==. lit_word 2) (
-			while_do (s <>. lit_word 0) (
+			))
+		, else_if (n_ab ==. lit_word 2)
+			(while_do (s <>. lit_word 0) (
 				Hp @ 0 .= B @ 0 :.
 				Hp @ 1 .= B @ 1 :.
 				advance_ptr Hp 2 :.
 				s -= lit_word 1
-			)
-		) :.
+			))
+		] no_else :.
 		shrink_b n_ab :.
 		A @ 0 .= to_word array
-	, instr "create_array_r_" Nothing 2 $
+	, instr "create_array_r_" Nothing $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (s * n_ab + lit_word 3) :.
@@ -1079,7 +1082,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			advance_ptr Hp n_ab :.
 			s -= lit_word 1
 		)
-	, instr "create_array_r_a" Nothing 2 $
+	, instr "create_array_r_a" Nothing $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (Pc @ 1) \n_a ->
 		new_local TWord (s * n_a) \a_n_a ->
@@ -1103,7 +1106,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Hp @ (lit_word 0 - a_n_a) .= n :.
 			a_n_a -= lit_word 1
 		)
-	, instr "create_array_r_b" (Just 2) 2 $
+	, instr "create_array_r_b" (Just 2) $
 		new_local TWord (B @ 0) \s ->
 		new_local TWord (Pc @ 1 * s + lit_word 3) \sw ->
 		ensure_hp sw :.
@@ -1114,30 +1117,30 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp sw
-	, instr "decI" (Just 0) 0 $
+	, instr "decI" (Just 0) $
 		B @ 0 .= B @ 0 - lit_word 1
-	, instr "divI" (Just 0) 0 $
+	, instr "divI" (Just 0) $
 		B @ 1 .= to_int (B @ 0) / to_int (B @ 1) :.
 		shrink_b 1
-	, instr "divLU" Nothing 0 instr_divLU
-	, instr "divR" (Just 0) 1 $
+	, instr "divLU" Nothing instr_divLU
+	, instr "divR" (Just 0) $
 		new_local TReal (to_real (B @ 0) / to_real (B @ 1)) \r ->
 		B @ 1 .= to_word r :.
 		shrink_b 1
-	, instr "entierR" (Just 0) 0 $
+	, instr "entierR" (Just 0) $
 		B @ 0 .= entierR (to_real (B @ 0))
-	, instr "eq_desc" (Just 2) 1 $
+	, instr "eq_desc" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= (n @ 0 ==. Pc @ 2) :.
 		grow_b 1
-	, instr "eq_desc_b" (Just 1) 0 $
+	, instr "eq_desc_b" (Just 1) $
 		B @ 0 .= (B @ 0 ==. Pc @ 1)
-	, instr "eq_nulldesc" (Just 2) 2 $
+	, instr "eq_nulldesc" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TShort (to_short_ptr (n @ 0) @ -1) \arity ->
 		B @ -1 .= n @ 0 ==. (Pc @ 2 + to_word arity * if_i64_or_i32_expr (lit_word 16) (lit_word 8)) :.
 		grow_b 1
-	, instr "eqAC" Nothing 3 $
+	, instr "eqAC" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \s1 ->
 		new_local (TPtr TWord) (to_word_ptr (A @ -1)) \s2 ->
 		shrink_a 2 :.
@@ -1165,7 +1168,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			)
 		) :.
 		if_then (l ==. lit_word 0) (B @ 0 .= lit_word 1)
-	, instr "eqAC_a" Nothing 3 $
+	, instr "eqAC_a" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \s1 ->
 		shrink_a 1 :.
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \s2 ->
@@ -1195,45 +1198,45 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		if_then (l ==. lit_word 0) (B @ 0 .= lit_word 1)
 	, alias "eqB" $
 	  alias "eqC" $
-	  instr "eqI" (Just 0) 0 $
+	  instr "eqI" (Just 0) $
 		B @ 1 .= (B @ 0 ==. B @ 1) :.
 		shrink_b 1
-	, instr "eqR" (Just 0) 0 $
+	, instr "eqR" (Just 0) $
 		B @ 1 .= (to_real (B @ 0) ==. to_real (B @ 1)) :.
 		shrink_b 1
-	, instr "eqB_aFALSE" (Just 1) 1 $
+	, instr "eqB_aFALSE" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= (n @ 1 ==. lit_word 0) :.
 		grow_b 1
-	, instr "eqB_aTRUE" (Just 1) 1 $
+	, instr "eqB_aTRUE" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= (n @ 1 <>. lit_word 0) :.
 		grow_b 1
-	, instr "eqB_bFALSE" (Just 1) 0 $
+	, instr "eqB_bFALSE" (Just 1) $
 		B @ -1 .= (B @ to_int (Pc @ 1)) ==. lit_word 0 :.
 		grow_b 1
-	, instr "eqB_bTRUE" (Just 1) 0 $
+	, instr "eqB_bTRUE" (Just 1) $
 		(B @ -1) .= (B @ to_int (Pc @ 1)) <>. lit_word 0 :.
 		grow_b 1
 	, alias "eqC_a" $
-	  instr "eqI_a" (Just 2) 1 $
+	  instr "eqI_a" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= (n @ 1 ==. Pc @ 2) :.
 		grow_b 1
 	, alias "eqC_b" $
-	  instr "eqI_b" (Just 2) 0 $
+	  instr "eqI_b" (Just 2) $
 		B @ -1 .= (B @ to_int (Pc @ 1) ==. Pc @ 2) :.
 		grow_b 1
-	, instr "eqR_b" (Just 2) 0 $
+	, instr "eqR_b" (Just 2) $
 		B @ -1 .= (to_real (B @ to_int (Pc @ 1)) ==. to_real (Pc @ 2)) :.
 		grow_b 1
-	, instr "eqD_b" (Just 1) 0 $
+	, instr "eqD_b" (Just 1) $
 		(B @ -1) .= (B @ 0 ==. Pc @ 1) :.
 		grow_b 1
-	, instr "expR" (Just 0) 1 $
+	, instr "expR" (Just 0) $
 		new_local TReal (expR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "fill" Nothing 2 $
+	, instr "fill" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \s ->
 		n @ 0 .= Pc @ 3 :.
@@ -1241,17 +1244,17 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 4 :.
 		unrolled_loop [5..32] (\i -> s <. lit_word i) (\i -> n @ i .= A @ (1-i)) :.
 		shrink_a s
-	, instr "fill3" (Just 2) 1 $
+	, instr "fill3" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		for [1..3] (\i -> n @ i .= A @ (1-i)) :.
 		shrink_a 3
-	, instr "fill4" (Just 2) 1 $
+	, instr "fill4" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		for [1..4] (\i -> n @ i .= A @ (1-i)) :.
 		shrink_a 4
-	, instr "fillh" Nothing 2 $
+	, instr "fillh" Nothing $
 		new_local TWord (Pc @ 1) \s_m_1 ->
 		ensure_hp s_m_1 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1264,120 +1267,120 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp s_m_1 :.
 		shrink_a (s_m_1 + lit_word 1)
 	, alias "fill0" $
-	  instr "fillh0" (Just 2) 1 $
+	  instr "fillh0" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2
 	, alias "fill1" $
-	  instr "fillh1" (Just 2) 1 $
+	  instr "fillh1" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= A @ 0 :.
 		shrink_a 1
 	, alias "fill2" $
-	  instr "fillh2" (Just 2) 1 $
+	  instr "fillh2" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= A @ 0 :.
 		n @ 2 .= A @ -1 :.
 		shrink_a 2
-	, instr "fill1_r0101" (Just 1) 1 $
+	, instr "fill1_r0101" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r0111" (Just 2) 1 $
+	, instr "fill1_r0111" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r02001" (Just 1) 1 $
+	, instr "fill1_r02001" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r02010" (Just 1) 1 $
+	, instr "fill1_r02010" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r02011" (Just 1) 1 $
+	, instr "fill1_r02011" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= B @ 0 :.
 		n @ 2 .= B @ 1 :.
 		shrink_b 2
-	, instr "fill1_r02101" (Just 2) 1 $
+	, instr "fill1_r02101" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r02110" (Just 2) 1 $
+	, instr "fill1_r02110" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r02111" (Just 2) 1 $
+	, instr "fill1_r02111" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= B @ 0 :.
 		n @ 2 .= B @ 1 :.
 		shrink_b 2
-	, instr "fill1_r11001" (Just 1) 1 $
+	, instr "fill1_r11001" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r11011" (Just 1) 1 $
+	, instr "fill1_r11011" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= A @ 0 :.
 		shrink_a 1 :.
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r11101" (Just 2) 1 $
+	, instr "fill1_r11101" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r11111" (Just 2) 1 $
+	, instr "fill1_r11111" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= A @ 0 :.
 		shrink_a 1 :.
 		n @ 2 .= B @ 0 :.
 		shrink_b 1
-	, instr "fill1_r20111" (Just 2) 1 $
+	, instr "fill1_r20111" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 1 .= A @ 0 :.
 		n @ 2 .= A @ -1 :.
 		shrink_a 2
-	, instr "fill1010" (Just 1) 1 $
+	, instr "fill1010" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= A @ 0 :.
 		shrink_a 1
-	, instr "fill1001" (Just 1) 1 $
+	, instr "fill1001" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 2 .= A @ 0 :.
 		shrink_a 1
-	, instr "fill1011" (Just 1) 1 $
+	, instr "fill1011" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 1 .= A @ 0 :.
 		n @ 2 .= A @ -1 :.
 		shrink_a 2
-	, instr "fill1101" (Just 2) 1 $
+	, instr "fill1101" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		n @ 2 .= A @ 0 :.
 		shrink_a 1
-	, instr "fill2a001" (Just 2) 3 $
+	, instr "fill2a001" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		a @ ao .= A @ 0 :.
 		shrink_a 1
-	, instr "fill2a011" (Just 2) 3 $
+	, instr "fill2a011" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		n @ 1 .= A @ 0 :.
 		a @ ao .= A @ -1 :.
 		shrink_a 2
-	, instr "fill2a002" (Just 3) 4 $
+	, instr "fill2a002" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1385,7 +1388,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao1 .= A @ 0 :.
 		a @ ao2 .= A @ -1 :.
 		shrink_a 2
-	, instr "fill2a012" (Just 3) 4 $
+	, instr "fill2a012" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1394,7 +1397,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao1 .= A @ -1 :.
 		a @ ao2 .= A @ -2 :.
 		shrink_a 3
-	, instr "fill2ab011" (Just 2) 3 $
+	, instr "fill2ab011" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -1402,7 +1405,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao .= B @ 0 :.
 		shrink_b 1 :.
 		shrink_a 1
-	, instr "fill2ab002" (Just 3) 4 $
+	, instr "fill2ab002" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1411,7 +1414,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao2 .= B @ 0 :.
 		shrink_a 1 :.
 		shrink_b 1
-	, instr "fill2ab003" (Just 4) 5 $
+	, instr "fill2ab003" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1422,13 +1425,13 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao3 .= B @ 0 :.
 		shrink_a 2 :.
 		shrink_b 1
-	, instr "fill2b001" (Just 2) 3 $
+	, instr "fill2b001" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		a @ ao .= B @ 0 :.
 		shrink_b 1
-	, instr "fill2b002" (Just 3) 4 $
+	, instr "fill2b002" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1436,14 +1439,14 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao1 .= B @ 0 :.
 		a @ ao2 .= B @ 1 :.
 		shrink_b 2
-	, instr "fill2b011" (Just 2) 3 $
+	, instr "fill2b011" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		n @ 1 .= B @ 0 :.
 		a @ ao .= B @ 1 :.
 		shrink_b 2
-	, instr "fill2b012" (Just 3) 4 $
+	, instr "fill2b012" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1452,7 +1455,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao1 .= B @ 1 :.
 		a @ ao2 .= B @ 2 :.
 		shrink_b 3
-	, instr "fill2ab013" (Just 4) 5 $
+	, instr "fill2ab013" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao2 ->
@@ -1464,7 +1467,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao3 .= B @ 0 :.
 		shrink_a 3 :.
 		shrink_b 1
-	, instr "fill2_r00" (Just 3) 5 $
+	, instr "fill2_r00" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		new_local TWord (Pc @ 2) \a_s_m_1 ->
@@ -1472,45 +1475,45 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		new_local TWord (lit_word 0) \i ->
 		while_do (bits >. lit_word 0) (
 			if_then (bits &. lit_word 1) (
-				if_then (i >=. a_s_m_1) (
+				if_then_else (i >=. a_s_m_1) (
 					a @ i .= B @ 0 :.
 					shrink_b 1
-				) :. else (
+				) [] (else (
 					a @ i .= A @ 0 :.
 					shrink_a 1
-				)
+				))
 			) :.
 			i += lit_word 1 :.
 			bits .= bits / lit_word 2
 		)
-	, instr "fill2_r01" (Just 3) 5 $
+	, instr "fill2_r01" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		new_local TWord (Pc @ 2) \a_s ->
 		new_local TWord (Pc @ 3) \bits ->
-		if_then (a_s ==. lit_word 0) (
+		if_then_else (a_s ==. lit_word 0) (
 			n @ 1 .= B @ 0 :.
 			shrink_b 1
-		) :. else (
+		) [] (else (
 			n @ 1 .= A @ 0 :.
 			shrink_a 1
-		) :.
+		)) :.
 		a_s -= lit_word 1 :.
 		new_local TWord (lit_word 0) \i ->
 		while_do (bits >. lit_word 0) (
 			if_then (bits &. lit_word 1) (
-				if_then (i >=. a_s) (
+				if_then_else (i >=. a_s) (
 					a @ i .= B @ 0 :.
 					shrink_b 1
-				) :. else (
+				) [] (else (
 					a @ i .= A @ 0 :.
 					shrink_a 1
-				)
+				))
 			) :.
 			i += lit_word 1 :.
 			bits .= bits / lit_word 2
 		)
-	, instr "fill2_r10" (Just 4) 5 $
+	, instr "fill2_r10" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -1519,46 +1522,46 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		new_local TWord (lit_word 0) \i ->
 		while_do (bits >. lit_word 0) (
 			if_then (bits &. lit_word 1) (
-				if_then (i >=. a_s_m_1) (
+				if_then_else (i >=. a_s_m_1) (
 					a @ i .= B @ 0 :.
 					shrink_b 1
-				) :. else (
+				) [] (else (
 					a @ i .= A @ 0 :.
 					shrink_a 1
-				)
+				))
 			) :.
 			i += lit_word 1 :.
 			bits .= bits / lit_word 2
 		)
-	, instr "fill2_r11" (Just 4) 5 $
+	, instr "fill2_r11" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		new_local TWord (Pc @ 3) \a_s ->
 		new_local TWord (Pc @ 4) \bits ->
-		if_then (a_s ==. lit_word 0) (
+		if_then_else (a_s ==. lit_word 0) (
 			n @ 1 .= B @ 0 :.
 			shrink_b 1
-		) :. else (
+		) [] (else (
 			n @ 1 .= A @ 0 :.
 			shrink_a 1
-		) :.
+		)) :.
 		a_s -= lit_word 1 :.
 		new_local TWord (lit_word 0) \i ->
 		while_do (bits >. lit_word 0) (
 			if_then (bits &. lit_word 1) (
-				if_then (i >=. a_s) (
+				if_then_else (i >=. a_s) (
 					a @ i .= B @ 0 :.
 					shrink_b 1
-				) :. else (
+				) [] (else (
 					a @ i .= A @ 0 :.
 					shrink_a 1
-				)
+				))
 			) :.
 			i += lit_word 1 :.
 			bits .= bits / lit_word 2
 		)
-	, instr "fill3a10" Nothing 2 $
+	, instr "fill3a10" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \ns ->
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \nd ->
 		ns @ 0 .= cycle_ptr :.
@@ -1567,7 +1570,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		nd @ 1 .= A @ -1 :.
 		nd @ 2 .= ns @ 2 :.
 		shrink_a 2
-	, instr "fill3a11" Nothing 4 $
+	, instr "fill3a11" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \ns ->
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \nd ->
 		new_local TInt (to_int (Pc @ 3)) \ao1 ->
@@ -1579,7 +1582,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		nd @ 2 .= ns @ 2 :.
 		a @ ao1 .= A @ -2 :.
 		shrink_a 3
-	, instr "fill3a12" Nothing 5 $
+	, instr "fill3a12" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \ns ->
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \nd ->
 		new_local TInt (to_int (Pc @ 3)) \ao1 ->
@@ -1593,7 +1596,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ ao1 .= A @ -2 :.
 		a @ ao2 .= A @ -3 :.
 		shrink_a 4
-	, instr "fill3aaab13" Nothing 6 $
+	, instr "fill3aaab13" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \ns ->
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \nd ->
 		new_local TInt (to_int (Pc @ 3)) \ao1 ->
@@ -1610,21 +1613,21 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		a @ bo1 .= B @ 0 :.
 		shrink_b 1 :.
 		shrink_a 4
-	, instr "fillcaf" Nothing 4 $
+	, instr "fillcaf" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \n ->
 		new_local TWord (Pc @ 2) \n_a ->
 		new_local TWord (Pc @ 3) \n_b ->
 		advance_ptr Pc 4 :.
 		new_local TWord (lit_word 0) \ui ->
-		if_then (n_a <>. lit_word 0) (
+		if_then_else (n_a <>. lit_word 0) (
 			n @ 0 .= n_a :.
 			while_do (ui <>. n_a) (
 				n @ (lit_word 1 + ui) .= A @ (lit_word 0 - ui) :.
 				ui += lit_word 1
 			)
-		) :. else (
+		) [] (else (
 			n @ 0 .= lit_word 1
-		) :.
+		)) :.
 		new_local TWord (lit_word 1 + n_a) \bo1 ->
 		ui .= lit_word 0 :.
 		while_do (ui <>. n_b) (
@@ -1636,7 +1639,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			a @ -1 .= to_word n :.
 			caf_list @ 1 .= n
 		)
-	, instr "fillh3" (Just 2) 1 $
+	, instr "fillh3" (Just 2) $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
@@ -1646,7 +1649,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= A @ -2 :.
 		shrink_a 3 :.
 		advance_ptr Hp 2
-	, instr "fillh4" (Just 2) 1 $
+	, instr "fillh4" (Just 2) $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 2 :.
@@ -1657,51 +1660,51 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 2 .= A @ -3 :.
 		shrink_a 4 :.
 		advance_ptr Hp 3
-	, instr "fillB_b" (Just 2) 1 $
+	, instr "fillB_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= BOOL_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
-	, instr "fillC_b" (Just 2) 1 $
+	, instr "fillC_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= CHAR_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
-	, instr "fillI" (Just 2) 1 $
+	, instr "fillI" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
 		n @ 1 .= Pc @ 2
-	, instr "fillI_b" (Just 2) 1 $
+	, instr "fillI_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
-	, instr "fillR_b" (Just 2) 1 $
+	, instr "fillR_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= REAL_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
-	, instr "fill_a" (Just 2) 2 $
+	, instr "fill_a" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n_s ->
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n_d ->
 		for [0..2] (\i -> n_d @ i .= n_s @ i)
-	, instr "fill_a01_pop_rtn" Nothing 2 $
+	, instr "fill_a01_pop_rtn" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n_s ->
 		new_local (TPtr TWord) (to_word_ptr (A @ -1)) \n_d ->
 		shrink_a 1 :.
 		Pc .= to_word_ptr pop_c :.
 		for [0..2] (\i -> n_d @ i .= n_s @ i)
-	, instr "fill_r01" (Just 3) 1 $
+	, instr "fill_r01" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 3 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
-	, instr "fill_r10" (Just 3) 1 $
+	, instr "fill_r10" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 3 :.
 		n @ 1 .= A @ to_int (Pc @ 2)
-	, instr "fill_r02" (Just 3) 2 $
+	, instr "fill_r02" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
 		n @ 0 .= Pc @ 3 :.
 		n @ 1 .= B @ bo :.
 		n @ 2 .= B @ (bo + lit_int 1)
-	, instr "fill_r03" (Just 3) 2 $
+	, instr "fill_r03" (Just 3) $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \bo ->
@@ -1711,12 +1714,12 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= B @ (bo + lit_int 1) :.
 		Hp @ 1 .= B @ (bo + lit_int 2) :.
 		advance_ptr Hp 2
-	, instr "fill_r11" (Just 4) 1 $
+	, instr "fill_r11" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= Pc @ 4 :.
 		n @ 1 .= A @ to_int (Pc @ 2) :.
 		n @ 2 .= B @ to_int (Pc @ 3)
-	, instr "fill_r12" (Just 4) 2 $
+	, instr "fill_r12" (Just 4) $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 3)) \bo ->
@@ -1726,7 +1729,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= B @ bo :.
 		Hp @ 1 .= B @ (bo + lit_int 1) :.
 		advance_ptr Hp 2
-	, instr "fill_r13" (Just 4) 2 $
+	, instr "fill_r13" (Just 4) $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 3)) \bo ->
@@ -1737,13 +1740,13 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= B @ (bo + lit_int 1) :.
 		Hp @ 2 .= B @ (bo + lit_int 2) :.
 		advance_ptr Hp 3
-	, instr "fill_r20" (Just 3) 2 $
+	, instr "fill_r20" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		n @ 0 .= Pc @ 3 :.
 		n @ 1 .= A @ ao :.
 		n @ 2 .= A @ (ao - lit_int 1)
-	, instr "fill_r21" (Just 4) 2 $
+	, instr "fill_r21" (Just 4) $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
@@ -1753,7 +1756,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= A @ (ao - lit_int 1) :.
 		Hp @ 1 .= B @ to_int (Pc @ 3) :.
 		advance_ptr Hp 2
-	, instr "fill_r22" (Just 4) 2 $
+	, instr "fill_r22" (Just 4) $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
@@ -1765,7 +1768,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= B @ bo :.
 		Hp @ 2 .= B @ (bo + lit_int 1) :.
 		advance_ptr Hp 3
-	, instr "fill_r30" (Just 3) 2 $
+	, instr "fill_r30" (Just 3) $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
@@ -1775,7 +1778,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= A @ (ao - lit_int 1) :.
 		Hp @ 1 .= A @ (ao - lit_int 2) :.
 		advance_ptr Hp 2
-	, instr "fill_r31" (Just 4) 2 $
+	, instr "fill_r31" (Just 4) $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
@@ -1786,7 +1789,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= A @ (ao - lit_int 2) :.
 		Hp @ 2 .= B @ to_int (Pc @ 3) :.
 		advance_ptr Hp 3
-	, instr "fill_r40" (Just 3) 2 $
+	, instr "fill_r40" (Just 3) $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
@@ -1797,7 +1800,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= A @ (ao - lit_int 2) :.
 		Hp @ 2 .= A @ (ao - lit_int 3) :.
 		advance_ptr Hp 3
-	, instr "fill_ra0" Nothing 4 $
+	, instr "fill_ra0" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp (n_a - lit_word 1) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1810,7 +1813,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 5 :.
 		unrolled_loop [6..32] (\i -> n_a <. lit_word i) (\i -> Hp @ (i-2) .= ao_p @ (1-i)) :.
 		advance_ptr Hp (n_a - lit_word 1)
-	, instr "fill_ra1" Nothing 4 $
+	, instr "fill_ra1" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		ensure_hp n_a :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1825,7 +1828,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 6 :.
 		advance_ptr Hp n_a :.
 		Hp @ -1 .= B @ bo
-	, instr "fill_r0b" Nothing 4 $
+	, instr "fill_r0b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp (n_b - lit_word 1) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1838,7 +1841,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [0..3] (\i -> Hp @ i .= bo_p @ (i+1)) :.
 		unrolled_loop [6..31] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-2) .= bo_p @ (i-1)) :.
 		advance_ptr Hp (n_b - lit_word 1)
-	, instr "fill_r1b" Nothing 4 $
+	, instr "fill_r1b" Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		ensure_hp n_b :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1851,7 +1854,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [0..3] (\i -> Hp @ i .= bo_p @ i) :.
 		unrolled_loop [5..31] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-1) .= bo_p @ (i-1)) :.
 		advance_ptr Hp n_b
-	, instr "fill_r" Nothing 8 $
+	, instr "fill_r" Nothing $
 		new_local TWord (Pc @ 1) \n_ab ->
 		ensure_hp (n_ab - lit_word 1) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
@@ -1872,30 +1875,30 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 1 .= bo_p @ 1 :.
 		unrolled_loop [3..30] (\i -> n_b <. lit_word i) (\i -> Hp @ (i-1) .= bo_p @ (i-1)) :.
 		advance_ptr Hp n_b
-	, instr "get_node_arity" (Just 1) 1 $
+	, instr "get_node_arity" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= to_short_ptr (n @ 0) @ -1 :.
 		grow_b 1
-	, instr "gtI" (Just 0) 0 $
+	, instr "gtI" (Just 0) $
 		B @ 1 .= (to_int (B @ 0) >. to_int (B @ 1)) :.
 		shrink_b 1
-	, instr "halt" Nothing 0 instr_halt
-	, instr "incI" (Just 0) 0 $
+	, instr "halt" Nothing instr_halt
+	, instr "incI" (Just 0) $
 		B @ 0 .= B @ 0 + lit_word 1
-	, instr "is_record" (Just 1) 1 $
+	, instr "is_record" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= to_short_ptr (n @ 0) @ -1 >. lit_short 127 :.
 		grow_b 1
-	, instr "jmp" Nothing 0 $
+	, instr "jmp" Nothing $
 		Pc .= to_word_ptr (Pc @ 1)
-	, instr "jmp_eval" Nothing 1 $
+	, instr "jmp_eval" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		if_then ((n @ 0 &. lit_word 2) <>. lit_word 0) (
 			Pc .= to_word_ptr pop_c :.
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (n @ 0)
-	, instr "jmp_eval_upd" Nothing 3 $
+	, instr "jmp_eval_upd" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n1 ->
 		new_local TWord (n1 @ 0) \d ->
 		if_then ((d &. lit_word 2) <>. lit_word 0) (
@@ -1908,24 +1911,24 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (d - if_i64_or_i32_expr (lit_word 40) (lit_word 20))
-	, instr "jmp_false" Nothing 0 $
+	, instr "jmp_false" Nothing $
 		shrink_b 1 :.
 		if_then (B @ -1) (
 			advance_ptr Pc 2 :.
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (Pc @ 1)
-	, instr "jmp_true" Nothing 0 $
+	, instr "jmp_true" Nothing $
 		shrink_b 1 :.
 		if_then (notB (B @ -1)) (
 			advance_ptr Pc 2 :.
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (Pc @ 1)
-	, instr "jsr" Nothing 0 $
+	, instr "jsr" Nothing $
 		push_c (to_word (Pc @? 2)) :.
 		Pc .= to_word_ptr (Pc @ 1)
-	, instr "jsr_eval" Nothing 2 $
+	, instr "jsr_eval" Nothing $
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local (TPtr TWord) (to_word_ptr (A @ ao)) \n ->
 		if_then (n @ 0 &. lit_word 2 <>. lit_word 0) (
@@ -1936,7 +1939,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Pc .= to_word_ptr (n @ 0) :.
 		A @ ao .= A @ 0 :.
 		A @ 0 .= to_word n
-	, instr "jsr_eval0" Nothing 1 $
+	, instr "jsr_eval0" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		if_then (n @ 0 &. lit_word 2 <>. lit_word 0) (
 			advance_ptr Pc 1 :.
@@ -1945,7 +1948,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		push_c (to_word (Pc @? 1)) :.
 		Pc .= to_word_ptr (n @ 0)
 	] ++
-	[ instr ("jsr_eval"+++toString i) Nothing 1 $
+	[ instr ("jsr_eval"+++toString i) Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ (0-i))) \n ->
 		if_then (n @ 0 &. lit_word 2 <>. lit_word 0) (
 			advance_ptr Pc 2 :.
@@ -1957,59 +1960,59 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= to_word n
 	\\ i <- [1..3]
 	] ++
-	[ instr "lnR" (Just 0) 1 $
+	[ instr "lnR" (Just 0) $
 		new_local TReal (lnR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "log10R" (Just 0) 1 $
+	, instr "log10R" (Just 0) $
 		new_local TReal (log10R (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, alias "ltC" $
-	  instr "ltI" (Just 0) 0 $
+	  instr "ltI" (Just 0) $
 		B @ 1 .= (to_int (B @ 0) <. to_int (B @ 1)) :.
 		shrink_b 1
-	, instr "ltR" (Just 0) 0 $
+	, instr "ltR" (Just 0) $
 		B @ 1 .= (to_real (B @ 0) <. to_real (B @ 1)) :.
 		shrink_b 1
-	, instr "ltU" (Just 0) 0 $
+	, instr "ltU" (Just 0) $
 		B @ 1 .= (B @ 0 <. B @ 1) :.
 		shrink_b 1
-	, instr "mulI" (Just 0) 0 $
+	, instr "mulI" (Just 0) $
 		B @ 1 .= to_int (B @ 0) * to_int (B @ 1) :.
 		shrink_b 1
-	, instr "mulIo" (Just 0) 2 $
+	, instr "mulIo" (Just 0) $
 		new_local TInt (to_int (B @ 0)) \x ->
 		new_local TInt (to_int (B @ 1)) \y ->
 		B @ 1 .= x * y :.
 		B @ 0 .= (x <>. lit_int 0 &&. to_int (B @ 1) / x <>. y)
-	, instr "mulR" (Just 0) 1 $
+	, instr "mulR" (Just 0) $
 		new_local TReal (to_real (B @ 0) * to_real (B @ 1)) \r ->
 		B @ 1 .= to_word r :.
 		shrink_b 1
-	, instr "mulUUL" Nothing 0 instr_mulUUL
-	, instr "neI" (Just 0) 0 $
+	, instr "mulUUL" Nothing instr_mulUUL
+	, instr "neI" (Just 0) $
 		B @ 1 .= (B @ 0 <>. B @ 1) :.
 		shrink_b 1
-	, instr "negI" (Just 0) 0 $
+	, instr "negI" (Just 0) $
 		B @ 0 .= (lit_int 0 - to_int (B @ 0))
-	, instr "negR" (Just 0) 1 $
+	, instr "negR" (Just 0) $
 		new_local TReal (negR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "notB" (Just 0) 0 $
+	, instr "notB" (Just 0) $
 		B @ 0 .= (B @ 0 ==. lit_word 0)
-	, instr "notI" (Just 0) 0 $
+	, instr "notI" (Just 0) $
 		B @ 0 .= ~. (B @ 0)
-	, instr "orI" (Just 0) 0 $
+	, instr "orI" (Just 0) $
 		B @ 1 .= B @ 0 |. B @ 1 :.
 		shrink_b 1
-	, instr "pop_a" (Just 1) 0 $
+	, instr "pop_a" (Just 1) $
 		A .= to_word_ptr (to_word A + Pc @ 1)
-	, instr "pop_b" (Just 1) 0 $
+	, instr "pop_b" (Just 1) $
 		B .= to_word_ptr (to_word B + Pc @ 1)
-	, instr "powR" (Just 0) 1 $
+	, instr "powR" (Just 0) $
 		new_local TReal (to_real (B @ 0) ^ to_real (B @ 1)) \r ->
 		B @ 1 .= to_word r :.
 		shrink_b 1
-	, instr "print" Nothing 3 $
+	, instr "print" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \s ->
 		new_local TWord (s @ 0) \l ->
 		new_local (TPtr TChar) (to_char_ptr (s @? 1)) \cs ->
@@ -2019,17 +2022,18 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			advance_ptr cs 1 :.
 			l -= lit_word 1
 		)
-	, instr "printD" Nothing 3 $
+	, instr "printD" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (B @ 0)) \s ->
 		shrink_b 1 :.
 		if_then (to_word s &. lit_word 2) // record descriptor in unboxed array
 			(s .= to_word_ptr (to_word s - lit_word 2)) :.
 		new_local TWord (s @ 0) \l ->
-		if_then (((l >>. lit_word 16) >>. lit_word 3) >. lit_word 0) // function
-			(advance_ptr s (((l >>. lit_word 16) >>. lit_word 3) * lit_word 2 + lit_word 3)) :.
-		else_if (l >. lit_word 256) // record, skip arity and type string
+		if_then_else (((l >>. lit_word 16) >>. lit_word 3) >. lit_word 0) // function
+			(advance_ptr s (((l >>. lit_word 16) >>. lit_word 3) * lit_word 2 + lit_word 3))
+		[ else_if (l >. lit_word 256) // record, skip arity and type string
 			(advance_ptr s (lit_word 2 +
-				(s @ 1 + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) / if_i64_or_i32_expr (lit_word 8) (lit_word 4))) :.
+				(s @ 1 + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) / if_i64_or_i32_expr (lit_word 8) (lit_word 4)))
+		] no_else :.
 		l .= s @ 0 :.
 		new_local (TPtr TChar) (to_char_ptr (s @? 1)) \cs ->
 		advance_ptr Pc 1 :.
@@ -2038,18 +2042,18 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			advance_ptr cs 1 :.
 			l -= lit_word 1
 		)
-	, instr "print_symbol_sc" (Just 1) 2 $
+	, instr "print_symbol_sc" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (n @ 0) \d ->
-		if_then (d ==. INT_ptr + lit_word 2)
-			(print_int (to_int (n @ 1))) :.
-		else_if (d ==. BOOL_ptr + lit_word 2)
-			(print_bool (n @ 1)) :.
-		else_if (d ==. CHAR_ptr + lit_word 2)
-			(print_char True (to_char (n @ 1))) :.
-		else_if (d ==. REAL_ptr + lit_word 2)
-			(print_real (to_real (n @ 1))) :.
-		else (
+		if_then_else (d ==. INT_ptr + lit_word 2)
+			(print_int (to_int (n @ 1)))
+		[ else_if (d ==. BOOL_ptr + lit_word 2)
+			(print_bool (n @ 1))
+		, else_if (d ==. CHAR_ptr + lit_word 2)
+			(print_char True (to_char (n @ 1)))
+		, else_if (d ==. REAL_ptr + lit_word 2)
+			(print_real (to_real (n @ 1)))
+		] (else (
 			new_local (TPtr TWord) (to_word_ptr
 				(d + if_i64_or_i32_expr (lit_word 22) (lit_word 10)
 					+ if_i64_or_i32_expr (lit_word 2) (lit_word 1) * (to_word (to_short_ptr d @ 0)))) \s ->
@@ -2074,17 +2078,17 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 				advance_ptr cs 1 :.
 				l -= lit_word 1
 			)
-		)
-	, instr "print_char" (Just 0) 0 $
+		))
+	, instr "print_char" (Just 0) $
 		print_char False (to_char (B @ 0)) :.
 		shrink_b 1
-	, instr "print_int" (Just 0) 0 $
+	, instr "print_int" (Just 0) $
 		print_int (to_int (B @ 0)) :.
 		shrink_b 1
-	, instr "print_real" (Just 0) 0 $
+	, instr "print_real" (Just 0) $
 		print_real (to_real (B @ 0)) :.
 		shrink_b 1
-	, instr "print_string" Nothing 2 $
+	, instr "print_string" Nothing $
 		new_local (TPtr TChar) (to_char_ptr (A @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8))) \s ->
 		shrink_a 1 :.
 		advance_ptr Pc 1 :.
@@ -2094,16 +2098,16 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			advance_ptr s 1 :.
 			l -= lit_word 1
 		)
-	, instr "pushBFALSE" (Just 0) 0 $
+	, instr "pushBFALSE" (Just 0) $
 		B @ -1 .= lit_word 0 :.
 		grow_b 1
-	, instr "pushBTRUE" (Just 0) 0 $
+	, instr "pushBTRUE" (Just 0) $
 		B @ -1 .= lit_word 1 :.
 		grow_b 1
 	, alias "pushC" $
 	  alias "pushD" $
 	  alias "pushI" $
-	  instr "pushR" (Just 1) 0 $
+	  instr "pushR" (Just 1) $
 		B @ -1 .= Pc @ 1 :.
 		grow_b 1
 	, alias "pushB_a" $
@@ -2112,28 +2116,28 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	  alias "pushR_a" $
 	  alias "push_r_args_b0b11" $
 	  alias "push_r_args01" $
-	  instr "push_arraysize_a" (Just 1) 1 $
+	  instr "push_arraysize_a" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= n @ 1 :.
 		grow_b 1
 	, alias "pushB0_pop_a1" $
 	  alias "pushC0_pop_a1" $
-	  instr "pushI0_pop_a1" (Just 0) 1 $
+	  instr "pushI0_pop_a1" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		shrink_a 1 :.
 		B @ -1 .= n @ 1 :.
 		grow_b 1
-	, instr "pushD_a" (Just 1) 1 $
+	, instr "pushD_a" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= n @ 0 :.
 		grow_b 1
 	, alias "pushF_a" $
-	  instr "push_r_args02" (Just 1) 1 $
+	  instr "push_r_args02" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -2 .= n @ 1 :.
 		B @ -1 .= n @ 2 :.
 		grow_b 2
-	, instr "pushcaf" Nothing 4 $
+	, instr "pushcaf" Nothing $
 		new_local TWord (Pc @ 1 + lit_word 1) \na ->
 		new_local TWord (Pc @ 2) \ntotal ->
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 3)) \n ->
@@ -2151,21 +2155,21 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			i += lit_word 1
 		) :.
 		grow_b (ntotal - na)
-	, instr "pushcaf10" (Just 1) 0 $
+	, instr "pushcaf10" (Just 1) $
 		A @ 1 .= to_word_ptr (Pc @ 1) @ 1 :.
 		grow_a 1
-	, instr "pushcaf11" (Just 1) 1 $
+	, instr "pushcaf11" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \n ->
 		A @ 1 .= n @ 1 :.
 		grow_a 1 :.
 		B @ -1 .= n @ 2 :.
 		grow_b 1
-	, instr "pushcaf20" (Just 1) 1 $
+	, instr "pushcaf20" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \n ->
 		A @ 2 .= n @ 1 :.
 		A @ 1 .= n @ 2 :.
 		grow_a 2
-	, instr "pushcaf31" (Just 1) 1 $
+	, instr "pushcaf31" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 1)) \n ->
 		A @ 3 .= n @ 1 :.
 		A @ 2 .= n @ 2 :.
@@ -2173,10 +2177,10 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 3 :.
 		(B @ -1) .= n @ 4 :.
 		grow_b 1
-	, instr "push_a" (Just 1) 0 $
+	, instr "push_a" (Just 1) $
 		A @ 1 .= A @ to_int (Pc @ 1) :.
 		grow_a 1
-	, instr "push_arg" (Just 2) 2 $
+	, instr "push_arg" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 1 .= a @ to_int (Pc @ 2) :.
@@ -2186,35 +2190,35 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	  alias "push_array" $
 	  alias "push_r_args10" $
 	  alias "push_r_args_a1" $
-	  instr "pushA_a" (Just 1) 1 $
+	  instr "pushA_a" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 1 .= n @ 1 :.
 		grow_a 1
-	, instr "push_arg2" (Just 1) 1 $
+	, instr "push_arg2" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 1 .= n @ 2 :.
 		grow_a 1
 	, alias "push_arg2l" $
-	  instr "push_r_args_a2l" (Just 1) 2 $
+	  instr "push_r_args_a2l" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 1 .= a @ 0 :.
 		grow_a 1
 	, alias "push_arg3" $
-	  instr "push_r_args_a3" (Just 1) 2 $
+	  instr "push_r_args_a3" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 1 .= a @ 1 :.
 		grow_a 1
 	, alias "push_arg4" $
-	  instr "push_r_args_a4" (Just 1) 2 $
+	  instr "push_r_args_a4" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 1 .= a @ 2 :.
 		grow_a 1
 	, alias "push_args" $
 	  alias "push_args_u" $
-	  instr "push_r_argsa0" Nothing 3 $
+	  instr "push_r_argsa0" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \n_a ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2224,13 +2228,13 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 3 :.
 		unrolled_loop [5..31] (\i -> n_a <=. lit_word i) (\i -> A @ (0-i) .= a @ (i-1))
 	, alias "push_args2" $
-	  instr "push_r_args20" (Just 1) 1 $
+	  instr "push_r_args20" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 2 .= n @ 1 :.
 		A @ 1 .= n @ 2 :.
 		grow_a 2
 	, alias "push_args3" $
-	  instr "push_r_args30" (Just 1) 1 $
+	  instr "push_r_args30" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 3 .= n @ 1 :.
@@ -2238,7 +2242,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= a @ 1 :.
 		grow_a 3
 	, alias "push_args4" $
-	  instr "push_r_args40" (Just 1) 1 $
+	  instr "push_r_args40" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 4 .= n @ 1 :.
@@ -2246,36 +2250,36 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 2 .= a @ 1 :.
 		A @ 1 .= a @ 2 :.
 		grow_a 4
-	, instr "push_arg_b" Nothing 3 $
+	, instr "push_arg_b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (B @ 0) \ui ->
 		advance_ptr Pc 2 :.
-		if_then (ui <. lit_word 2) (
+		if_then_else (ui <. lit_word 2) (
 			A @ 1 .= n @ 1
-		) :. else (
+		) [] (else (
 			new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 			ui -= lit_word 2 :.
-			if_then (ui ==. lit_word 0 &&. B @ 1 ==. lit_word 2)
-				(A @ 1 .= to_word a) :.
-			else
-				(A @ 1 .= a @ ui)
-		) :.
+			if_then_else (ui ==. lit_word 0 &&. B @ 1 ==. lit_word 2)
+				(A @ 1 .= to_word a)
+				[]
+				(else (A @ 1 .= a @ ui))
+		)) :.
 		grow_a 1 :.
 		shrink_b 2
-	, instr "push_a_b" (Just 1) 0 $
+	, instr "push_a_b" (Just 1) $
 		B @ -1 .= A @ to_int (Pc @ 1) :.
 		grow_b 1
-	, instr "push_b" (Just 1) 0 $
+	, instr "push_b" (Just 1) $
 		B @ -1 .= B @ to_int (Pc @ 1) :.
 		grow_b 1
-	, instr "push_node_" Nothing 2 $
+	, instr "push_node_" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a ->
 		grow_a n_a :.
 		A @ 0 .= n @ 1 :.
 		advance_ptr Pc 2 :.
 		unrolled_loop [2..32] (\i -> n_a <. lit_word i) (\i -> A @ (1-i) .= n @ i)
-	, instr "push_node" Nothing 2 $
+	, instr "push_node" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a ->
 		n @ 0 .= Pc @ 2 :.
@@ -2285,14 +2289,14 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 3 :.
 		unrolled_loop [6..32] (\i -> n_a <. lit_word i) (\i -> A @ (1-i) .= n @ i)
 	] ++
-	[ instr ("push_node"+++toString i) (Just 1) 1 $
+	[ instr ("push_node"+++toString i) (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		n @ 0 .= Pc @ 1 :.
 		for [1..i] (\j -> A @ (i+1-j) .= n @ j) :.
 		if (i==0) nop (grow_a i)
 	\\ i <- [0..4]
 	] ++
-	[ instr ("push_node_u"+++toString as+++toString bs) (Just 1) 1 $
+	[ instr ("push_node_u"+++toString as+++toString bs) (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		n @ 0 .= Pc @ 1 :.
 		if (as==0)
@@ -2302,7 +2306,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_b bs
 	\\ (as,bs) <- [(0,1),(0,2),(0,3),(1,1),(1,2),(1,3),(2,1),(2,2),(3,1)]
 	] ++
-	[ instr "push_node_ua1" Nothing 2 $
+	[ instr "push_node_ua1" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a ->
 		n @ 0 .= Pc @ 2 :.
@@ -2312,7 +2316,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ -1 .= n @ (n_a + lit_word 1) :.
 		grow_b 1 :.
 		unrolled_loop [4..32] (\i -> n_a <. lit_word i) (\i -> A @ (1-i) .= n @ i)
-	, instr "push_node_u0b" Nothing 2 $
+	, instr "push_node_u0b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_b ->
 		n @ 0 .= Pc @ 2 :.
@@ -2320,7 +2324,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [0..3] (\i -> B @ i .= n @ (i+1)) :.
 		advance_ptr Pc 3 :.
 		unrolled_loop [5..32] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= n @ i)
-	, instr "push_node_u1b" Nothing 2 $
+	, instr "push_node_u1b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_b ->
 		n @ 0 .= Pc @ 2 :.
@@ -2330,7 +2334,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [0..3] (\i -> B @ i .= n @ (i+2)) :.
 		advance_ptr Pc 3 :.
 		unrolled_loop [5..32] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= n @ (i+1))
-	, instr "push_node_u" Nothing 4 $
+	, instr "push_node_u" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a ->
 		n @ 0 .= Pc @ 2 :.
@@ -2346,14 +2350,14 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 1 .= n @ 1 :.
 		unrolled_loop [3..32] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= n @ (i-1))
 	] ++
-	[ instr "push_r_args11" (Just 1) 1 $
+	[ instr "push_r_args11" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 1 .= n @ 1 :.
 		grow_a 1 :.
 		B @ -1 .= n @ 2 :.
 		grow_b 1
 	] ++
-	[ instr ("push_r_args"+++toString as+++toString bs) (Just 1) 2 $
+	[ instr ("push_r_args"+++toString as+++toString bs) (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		if (as==0)
@@ -2366,7 +2370,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_b bs
 	\\ (as,bs) <- [(0,3),(0,4),(1,2),(1,3),(2,1),(2,2),(3,1)]
 	] ++
-	[ instr "push_r_argsa1" Nothing 3 $
+	[ instr "push_r_argsa1" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \n_a ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2377,7 +2381,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_b 1 :.
 		advance_ptr Pc 3 :.
 		unrolled_loop [5..32] (\i -> n_a <. lit_word i) (\i -> A @ (1-i) .= a @ (i-2))
-	, instr "push_r_args0b" Nothing 3 $
+	, instr "push_r_args0b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2386,7 +2390,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 0 .= n @ 1 :.
 		for [0..3] (\i -> B @ (i+1) .= a @ i) :.
 		unrolled_loop [6..32] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= a @ (i-2))
-	, instr "push_r_args1b" Nothing 3 $
+	, instr "push_r_args1b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2396,7 +2400,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 3 :.
 		for [0..3] (\i -> B @ i .= a @ i) :.
 		unrolled_loop [5..31] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= a @ (i-1))
-	, instr "push_r_args" Nothing 5 $
+	, instr "push_r_args" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \n_a ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2412,36 +2416,36 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 1 .= a @ 1 :.
 		unrolled_loop [3..32] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= a @ (i-1))
 	] ++
-	[ instr "push_r_args_aa1" (Just 2) 1 $
+	[ instr "push_r_args_aa1" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 1 .= to_word_ptr (n @ 2 + Pc @ 2) @ 0 :.
 		grow_a 1
-	, instr "push_r_args_a" (Just 4) 4 $
+	, instr "push_r_args_a" (Just 4) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \size ->
 		new_local TWord (Pc @ 3) \arg_no ->
 		new_local TWord (Pc @ 4) \nr_args ->
-		if_then (size <. lit_word 3) (
+		if_then_else (size <. lit_word 3) (
 			A @ 1 .= n @ 2 :.
 			A @ 2 .= n @ 1
-		) :. else (
-			if_then (arg_no ==. lit_word 1) (
+		) [] (else (
+			if_then_else (arg_no ==. lit_word 1) (
 				A @ nr_args .= n @ 1 :.
 				grow_a 1 :.
 				nr_args -= lit_word 1 :.
 				arg_no -= lit_word 1
-			) :. else (
+			) [] (else (
 				arg_no -= lit_word 2
-			) :.
+			)) :.
 			n .= to_word_ptr (n @ 2) :.
 			new_local TWord (lit_word 0) \i ->
 			while_do (i <. arg_no + nr_args) (
 				A @ (nr_args - arg_no + i + lit_word 1) .= n @ i :.
 				i += lit_word 1
 			)
-		) :.
+		)) :.
 		grow_a nr_args
-	, instr "push_r_args_b" Nothing 4 $
+	, instr "push_r_args_b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 2)) \a ->
 		new_local TWord (Pc @ 3) \n_args ->
@@ -2449,51 +2453,51 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 0 .= a @ 0 :.
 		advance_ptr Pc 4 :.
 		unrolled_loop [2..33] (\i -> n_args <. lit_word i) (\i -> B @ (i-1) .= a @ (i-1))
-	, instr "push_r_args_b2l1" (Just 1) 2 $
+	, instr "push_r_args_b2l1" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		B @ -1 .= a @ 0 :.
 		grow_b 1
-	, instr "push_r_args_b1l2" (Just 1) 2 $
+	, instr "push_r_args_b1l2" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		B @ -2 .= n @ 1 :.
 		B @ -1 .= a @ 0 :.
 		grow_b 2
-	, instr "push_r_args_b22" (Just 1) 2 $
+	, instr "push_r_args_b22" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		B @ -2 .= a @ 0 :.
 		B @ -1 .= a @ 1 :.
 		grow_b 2
-	, instr "push_r_args_b31" (Just 1) 2 $
+	, instr "push_r_args_b31" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		(B @ -1) .= (a @ 1) :.
 		grow_b 1
-	, instr "push_r_args_b41" (Just 1) 2 $
+	, instr "push_r_args_b41" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		B @ -1 .= a @ 2 :.
 		grow_b 1
-	, instr "remI" (Just 0) 0 $
+	, instr "remI" (Just 0) $
 		B @ 1 .= to_int (B @ 0) %. to_int (B @ 1) :.
 		shrink_b 1
-	, instr "replace" (Just 0) 2 $
+	, instr "replace" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		new_local TWord (B @ 0 + lit_word 3) \i ->
 		A @ 0 .= array @ i :.
 		array @ i .= A @ -1 :.
 		A @ -1 .= to_word array :.
 		shrink_b 1
-	, instr "replaceBOOL" (Just 0) 3 $
+	, instr "replaceBOOL" (Just 0) $
 		new_local (TPtr TChar) (to_char_ptr (A @ 0)) \array ->
 		new_local TWord (B @ 0 + if_i64_or_i32_expr (lit_word 24) (lit_word 12)) \i ->
 		new_local TChar (array @ i) \v ->
 		array @ i .= to_char (B @ 1) :.
 		B @ 1 .= to_word v :.
 		shrink_b 1
-	, instr "replaceCHAR" (Just 0) 3 $
+	, instr "replaceCHAR" (Just 0) $
 		new_local (TPtr TChar) (to_char_ptr (A @ 0)) \array ->
 		new_local TWord (B @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8)) \i ->
 		new_local TChar (array @ i) \v ->
@@ -2501,14 +2505,14 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 1 .= to_word v :.
 		shrink_b 1
 	, alias "replaceINT" $
-	  instr "replaceREAL" (Just 0) 3 $
+	  instr "replaceREAL" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		new_local TWord (B @ 0 + lit_word 3) \i ->
 		new_local TWord (array @ i) \v ->
 		array @ i .= B @ 1 :.
 		B @ 1 .= v :.
 		shrink_b 1
-	, instr "replace_r" Nothing 7 $
+	, instr "replace_r" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		new_local TWord (Pc @ 2) \n_b ->
 		new_local TWord ((n_a + n_b) * B @ 0 + lit_word 3) \array_o ->
@@ -2528,7 +2532,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			B @ i .= temp) :.
 		A @ (lit_word 0 - n_a) .= to_word array
 	, alias "repl_args" $
-	  instr "repl_r_argsa0" Nothing 3 $
+	  instr "repl_r_argsa0" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a_m_1 ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2537,32 +2541,34 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [0..3] (\i -> A @ (-1-i) .= a @ i) :.
 		advance_ptr Pc 2 :.
 		unrolled_loop [5..31] (\i -> n_a_m_1 <. lit_word i) (\i -> A @ (0-i) .= a @ (i-1))
-	, instr "repl_args_b" Nothing 3 $
+	, instr "repl_args_b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (B @ 0) \n_a_m_1 ->
 		shrink_b 2 :.
 		grow_a (n_a_m_1 - lit_word 1) :.
 		advance_ptr Pc 1 :.
 		A @ 0 .= n @ 1 :.
-		if_then (n_a_m_1 ==. lit_word 2) (
+		if_then_else (n_a_m_1 ==. lit_word 2) (
 			A @ -1 .= n @ 2
-		) :. else_if (n_a_m_1 >. lit_word 2) (
+		)
+		[ else_if (n_a_m_1 >. lit_word 2) (
 			new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 			A @ -1 .= a @ 0 :.
 			A @ -2 .= a @ 1 :.
-			unrolled_loop [4..32] (\i -> n_a_m_1 <. lit_word i) (\i -> A @ (1-i) .= a @ (i-2))
-		)
+			unrolled_loop [4..32] (\i -> n_a_m_1 <. lit_word i) (\i -> A @ (1-i) .= a @ (i-2)))
+		]
+		no_else
 	, alias "push_r_args_b0221" $
-	  instr "push_r_args_b1111" (Just 1) 1 $
+	  instr "push_r_args_b1111" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= n @ 2 :.
 		grow_b 1
-	, instr "push_r_args_b1" (Just 2) 2 $
+	, instr "push_r_args_b1" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 2)) \a ->
 		B @ -1 .= a @ 0 :.
 		grow_b 1
-	, instr "push_r_args_b2" (Just 2) 2 $
+	, instr "push_r_args_b2" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 2)) \a ->
 		B @ -2 .= a @ 0 :.
@@ -2570,17 +2576,17 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_b 2
 	, alias "repl_args1" $
 	  alias "repl_r_args10" $
-	  instr "repl_r_args_aab11" (Just 0) 1 $
+	  instr "repl_r_args_aab11" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		A @ 0 .= n @ 1
 	, alias "repl_args2" $
-	  instr "repl_r_args20" (Just 0) 1 $
+	  instr "repl_r_args20" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		A @ 1 .= n @ 1 :.
 		A @ 0 .= n @ 2 :.
 		grow_a 1
 	, alias "repl_args3" $
-	  instr "repl_r_args30" (Just 0) 1 $
+	  instr "repl_r_args30" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 2 .= n @ 1 :.
@@ -2588,7 +2594,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= a @ 1 :.
 		grow_a 2
 	, alias "repl_args4" $
-	  instr "repl_r_args40" (Just 0) 1 $
+	  instr "repl_r_args40" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 3 .= n @ 1 :.
@@ -2597,24 +2603,24 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 0 .= a @ 2 :.
 		grow_a 3
 	, alias "push_arraysize" $
-	  instr "repl_r_args01" (Just 0) 1 $
+	  instr "repl_r_args01" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		shrink_a 1 :.
 		B @ -1 .= n @ 1 :.
 		grow_b 1
-	, instr "repl_r_args02" (Just 0) 1 $
+	, instr "repl_r_args02" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		shrink_a 1 :.
 		B @ -2 .= n @ 1 :.
 		B @ -1 .= n @ 2 :.
 		grow_b 2
-	, instr "repl_r_args11" (Just 0) 1 $
+	, instr "repl_r_args11" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		A @ 0 .= n @ 1 :.
 		B @ -1 .= n @ 2 :.
 		grow_b 1
 	] ++
-	[ instr ("repl_r_args"+++toString as+++toString bs) (Just 0) 2 $
+	[ instr ("repl_r_args"+++toString as+++toString bs) (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		(case as of
@@ -2627,7 +2633,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_b bs
 	\\ (as,bs) <- [(0,3),(0,4),(1,2),(1,3),(1,4),(2,1),(2,2),(2,3),(2,4),(3,1),(3,2),(3,3),(3,4)]
 	] ++
-	[ instr "repl_r_args0b" Nothing 3 $
+	[ instr "repl_r_args0b" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		shrink_a 1 :.
 		new_local TWord (Pc @ 1) \n_b ->
@@ -2638,7 +2644,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		for [1..3] (\i -> B @ i .= a @ (i-1)) :.
 		unrolled_loop [4..31] (\i -> n_b <=. lit_word i) (\i -> B @ i .= a @ (i-1))
 	] ++
-	[ instr ("repl_r_args"+++toString as+++"b") Nothing 3 $
+	[ instr ("repl_r_args"+++toString as+++"b") Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -2651,7 +2657,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		unrolled_loop [4..32-as] (\i -> n_b <=. lit_word i) (\i -> B @ i .= a @ (i+as-1))
 	\\ as <- [1..3]
 	] ++
-	[ instr "repl_r_argsa1" Nothing 3 $
+	[ instr "repl_r_argsa1" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a_m_1 ->
 		advance_ptr Pc 2 :.
@@ -2663,7 +2669,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ -1 .= a @ n_a_m_1 :.
 		grow_b 1 :.
 		unrolled_loop [3..31] (\i -> n_a_m_1 <. lit_word i) (\i -> A @ (0-i) .= a @ (i-1))
-	, instr "repl_r_args" Nothing 4 $
+	, instr "repl_r_args" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \n_a_m_1 ->
 		grow_a n_a_m_1 :.
@@ -2678,72 +2684,72 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ 0 .= n @ 0 :.
 		B @ 1 .= n @ 1 :.
 		unrolled_loop [2..29] (\i -> n_b <=. lit_word i) (\i -> B @ i .= n @ i)
-	, instr "repl_r_args_a2021" (Just 0) 1 $
+	, instr "repl_r_args_a2021" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		A @ 0 .= n @ 2
-	, instr "repl_r_args_a21" (Just 0) 1 $
+	, instr "repl_r_args_a21" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 0 .= a @ 0
-	, instr "repl_r_args_a31" (Just 0) 1 $
+	, instr "repl_r_args_a31" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 0 .= a @ 1
-	, instr "repl_r_args_a41" (Just 0) 1 $
+	, instr "repl_r_args_a41" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		A @ 0 .= a @ 2
-	, instr "repl_r_args_aa1" (Just 1) 2 $
+	, instr "repl_r_args_aa1" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 1)) \a ->
 		A @ 0 .= a @ 0
-	, instr "repl_r_args_a" Nothing 5 $
+	, instr "repl_r_args_a" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (Pc @ 2) \size ->
 		new_local TWord (Pc @ 3) \arg_no ->
 		new_local TWord (Pc @ 4) \nr_args ->
 		advance_ptr Pc 4 :.
-		if_then (size <. lit_word 3) (
+		if_then_else (size <. lit_word 3) (
 			A @ 0 .= n @ 2 :.
 			A @ 1 .= n @ 1
-		) :. else (
-			if_then (arg_no ==. lit_word 1) (
+		) [] (else (
+			if_then_else (arg_no ==. lit_word 1) (
 				nr_args -= lit_word 1 :.
 				A @ nr_args .= n @ 1 :.
 				grow_a 1 :.
 				arg_no -= lit_word 1
-			) :. else (
+			) [] (else (
 				arg_no -= lit_word 2
-			) :.
+			)) :.
 			n .= to_word_ptr (n @ 2) :.
 			new_local TWord (lit_word 0) \i ->
 			while_do (i <. arg_no + nr_args) (
 				A @ (nr_args - arg_no + i) .= n @ i :.
 				i += lit_word 1
 			)
-		) :.
+		)) :.
 		grow_a (nr_args - lit_word 1)
-	, instr "rtn" Nothing 0 $
+	, instr "rtn" Nothing $
 		Pc .= to_word_ptr pop_c
-	, instr "select" (Just 0) 1 $
+	, instr "select" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		A @ 0 .= array @ (lit_word 3 + B @ 0) :.
 		shrink_b 1
-	, instr "selectBOOL" (Just 0) 1 $
+	, instr "selectBOOL" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		B @ 0 .= to_char_ptr (array @? 3) @ (B @ 0) :.
 		shrink_a 1
-	, instr "selectCHAR" (Just 0) 1 $
+	, instr "selectCHAR" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		B @ 0 .= to_char_ptr (array @? 2) @ (B @ 0) :.
 		shrink_a 1
 	, alias "selectINT" $
-	  instr "selectREAL" (Just 0) 1 $
+	  instr "selectREAL" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		B @ 0 .= array @ (lit_word 3 + B @ 0) :.
 		shrink_a 1
 	] ++
-	[ instr ("select_r"+++toString as+++toString bs) (Just 0) 1 $
+	[ instr ("select_r"+++toString as+++toString bs) (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
 		advance_ptr elems (lit_word (as+bs) * B @ 0 + lit_word 3) :.
 		for [0..as-1] (\i -> A @ (as-i-1) .= elems @ i) :.
@@ -2758,7 +2764,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			_ -> grow_b (bs-1))
 	\\ (as,bs) <- [(0,1),(0,2),(0,3),(0,4),(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1),(2,2),(2,3),(2,4)]
 	] ++
-	[ instr ("select_r"+++toString as+++"b") Nothing 2 $
+	[ instr ("select_r"+++toString as+++"b") Nothing $
 		new_local TWord (Pc @ 1) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
 		advance_ptr elems ((n_b + lit_word as) * B @ 0 + lit_word 3) :.
@@ -2774,7 +2780,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		unrolled_loop [6..33-as] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= elems @ (i-1))
 	\\ as <- [0,1,2]
 	] ++
-	[ instr "select_r" Nothing 4 $
+	[ instr "select_r" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		new_local TWord (Pc @ 2) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
@@ -2787,19 +2793,19 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 4 :.
 		grow_b n_b :.
 		unrolled_loop [1..30] (\i -> n_b <. lit_word i) (\i -> B @ (i-1) .= elems @ (i-1))
-	, instr "shiftlI" (Just 0) 0 $
+	, instr "shiftlI" (Just 0) $
 		B @ 1 .= B @ 0 <<. B @ 1 :.
 		shrink_b 1
-	, instr "shiftrI" (Just 0) 0 $
+	, instr "shiftrI" (Just 0) $
 		B @ 1 .= to_word (to_int (B @ 0) >>. to_int (B @ 1)) :.
 		shrink_b 1
-	, instr "shiftrU" (Just 0) 0 $
+	, instr "shiftrU" (Just 0) $
 		B @ 1 .= B @ 0 >>. B @ 1 :.
 		shrink_b 1
-	, instr "sinR" (Just 0) 1 $
+	, instr "sinR" (Just 0) $
 		new_local TReal (sinR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "sliceAC" Nothing 5 $
+	, instr "sliceAC" Nothing $
 		new_local TInt (to_int (B @ 0)) \first_i ->
 		new_local TInt (to_int (B @ 1) + lit_int 1) \end_i ->
 		if_then (first_i <. lit_int 0) (first_i .= lit_int 0) :.
@@ -2816,78 +2822,78 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Pc 1 :.
 		memcpy (Hp @? 2) (to_char_ptr (to_word (s @? 2) + to_word first_i)) l :.
 		advance_ptr Hp lw
-	, instr "sqrtR" (Just 0) 1 $
+	, instr "sqrtR" (Just 0) $
 		new_local TReal (sqrtR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "subI" (Just 0) 0 $
+	, instr "subI" (Just 0) $
 		B @ 1 .= to_int (B @ 0) - to_int (B @ 1) :.
 		shrink_b 1
-	, instr "subIo" (Just 0) 0 $
+	, instr "subIo" (Just 0) $
 		B @ 1 .= to_int (B @ 0) - to_int (B @ 1) :.
 		B @ 0 .= (to_int (B @ 1) >. to_int (B @ 0))
-	, instr "subLU" (Just 0) 0 $
+	, instr "subLU" (Just 0) $
 		B @ 2 .= to_int (B @ 1) - to_int (B @ 2) :.
 		B @ 1 .= B @ 0 + if_expr (B @ 2 >. B @ 1) (lit_word 1) (lit_word 0) :.
 		shrink_b 1
-	, instr "subR" (Just 0) 1 $
+	, instr "subR" (Just 0) $
 		new_local TReal (to_real (B @ 0) - to_real (B @ 1)) \r ->
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	] ++
-	[ instr ("swap_a"+++toString i) (Just 0) 1 $
+	[ instr ("swap_a"+++toString i) (Just 0) $
 		new_local TWord (A @ 0) \d ->
 		A @ 0 .= A @ (0-i) :.
 		A @ (0-i) .= d
 	\\ i <- [1..3]
 	] ++
-	[ instr "swap_a" (Just 1) 2 $
+	[ instr "swap_a" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		new_local TWord (A @ 0) \d ->
 		A @ 0 .= A @ ao :.
 		A @ ao .= d
-	, instr "swap_b1" (Just 0) 1 $
+	, instr "swap_b1" (Just 0) $
 		new_local TWord (B @ 0) \d ->
 		B @ 0 .= B @ 1 :.
 		B @ 1 .= d
-	, instr "tanR" (Just 0) 1 $
+	, instr "tanR" (Just 0) $
 		new_local TReal (tanR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "testcaf" (Just 1) 0 $
+	, instr "testcaf" (Just 1) $
 		B @ -1 .= to_word_ptr (Pc @ 1) @ 0 :.
 		grow_b 1
-	, instr "update" (Just 0) 1 $
+	, instr "update" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		array @ (lit_word 3 + B @ 0) .= A @ -1 :.
 		shrink_b 1 :.
 		A @ -1 .= to_word array :.
 		shrink_a 1
-	, instr "updateBOOL" (Just 0) 1 $
+	, instr "updateBOOL" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		to_char_ptr (array @? 3) @ (B @ 0) .= to_char (B @ 1) :.
 		shrink_b 2
-	, instr "updateCHAR" (Just 0) 1 $
+	, instr "updateCHAR" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		to_char_ptr (array @? 2) @ (B @ 0) .= to_char (B @ 1) :.
 		shrink_b 2
 	, alias "updateINT" $
-	  instr "updateREAL" (Just 0) 1 $
+	  instr "updateREAL" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		array @ (lit_word 3 + B @ 0) .= B @ 1 :.
 		shrink_b 2
-	, instr "update_a" (Just 2) 0 $
+	, instr "update_a" (Just 2) $
 		A @ to_int (Pc @ 2) .= A @ to_int (Pc @ 1)
-	, instr "update_b" (Just 2) 0 $
+	, instr "update_b" (Just 2) $
 		B @ to_int (Pc @ 2) .= B @ to_int (Pc @ 1)
-	, instr "updatepop_a" (Just 2) 1 $
+	, instr "updatepop_a" (Just 2) $
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		A @ ao .= A @ to_int (Pc @ 1) :.
 		A .= A @? ao
-	, instr "updatepop_b" (Just 2) 1 $
+	, instr "updatepop_b" (Just 2) $
 		new_local TInt (to_int (Pc @ 2)) \bo ->
 		B @ bo .= B @ to_int (Pc @ 1) :.
 		B .= B @? bo
 	] ++
-	[ instr ("update_r"+++toString as+++toString bs) Nothing 3 $
+	[ instr ("update_r"+++toString as+++toString bs) Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
 		advance_ptr elems (lit_word 3 + (lit_word (as+bs) * B @ 0)) :.
 		advance_ptr Pc 1 :.
@@ -2900,7 +2906,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	\\ as <- [0..3]
 	,  bs <- if (as==0) [1..4] [0..4]
 	] ++
-	[ instr ("update_r"+++toString as+++"b") Nothing 2 $
+	[ instr ("update_r"+++toString as+++"b") Nothing $
 		new_local TWord (Pc @ 1) \n ->
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
 		advance_ptr elems ((n+lit_word as) * B @ 0 + lit_word 3) :.
@@ -2914,7 +2920,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_b (n + lit_word 1)
 	\\ as <- [0..3]
 	] ++
-	[ instr "update_r" Nothing 3 $
+	[ instr "update_r" Nothing $
 		new_local TWord (Pc @ 1) \n_a ->
 		new_local TWord (Pc @ 2) \n_b ->
 		advance_ptr Pc 3 :.
@@ -2930,10 +2936,10 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		elems @ 1 .= B @ 2 :.
 		unrolled_loop [3..30] (\i -> n_b <. lit_word i) (\i -> elems @ (i-1) .= B @ i) :.
 		shrink_b (n_b + lit_word 1)
-	, instr "xorI" (Just 0) 0 $
+	, instr "xorI" (Just 0) $
 		B @ 1 .= xorI (B @ 0) (B @ 1) :.
 		shrink_b 1
-	, instr "CtoAC" (Just 0) 0 $
+	, instr "CtoAC" (Just 0) $
 		ensure_hp 3 :.
 		Hp @ 0 .= STRING__ptr + lit_word 2 :.
 		Hp @ 1 .= lit_word 1 :.
@@ -2942,7 +2948,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		shrink_b 1 :.
 		advance_ptr Hp 3
-	, instr "ItoAC" Nothing 6 $
+	, instr "ItoAC" Nothing $
 		new_local TWord (B @ 0) \ui ->
 		new_local TInt (to_int ui) \i ->
 		new_local TWord (lit_word 1) \l ->
@@ -2981,23 +2987,23 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		) :.
 		rewind_ptr p 1 :.
 		p @ 0 .= lit_char '0' + to_char ui
-	, instr "ItoC" (Just 0) 0 $
+	, instr "ItoC" (Just 0) $
 		B @ 0 .= to_char (B @ 0)
-	, instr "ItoR" (Just 0) 1 $
+	, instr "ItoR" (Just 0) $
 		new_local TReal (ItoR (to_int (B @ 0))) \r ->
 		B @ 0 .= to_word r
-	, instr "RtoI" (Just 0) 1 $
+	, instr "RtoI" (Just 0) $
 		new_local TReal (to_real (B @ 0)) \r ->
 		B @ 0 .= to_word (RtoI r)
-	, instr "addIi" (Just 1) 0 $
+	, instr "addIi" (Just 1) $
 		B @ 0 .= (to_int (B @ 0) + to_int (Pc @ 1))
-	, instr "andIi" (Just 1) 0 $
+	, instr "andIi" (Just 1) $
 		B @ 0 .= B @ 0 &. Pc @ 1
-	, instr "andIio" (Just 2) 0 $
+	, instr "andIio" (Just 2) $
 		B @ -1 .= B @ to_int (Pc @ 1) &. Pc @ 2 :.
 		grow_b 1
 	] ++
-	[ instr ("buildh0_dup"+++if (n==1) "" (toString n)+++"_a") (Just 2) 2 $
+	[ instr ("buildh0_dup"+++if (n==1) "" (toString n)+++"_a") (Just 2) $
 		new_local TWord (Pc @ 1) \v ->
 		new_local TInt (to_int (Pc @ 2)) \ao ->
 		A @ 1 .= v :.
@@ -3006,13 +3012,13 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1
 	\\ n <- [1..3]
 	] ++
-	[ instr "buildh0_put_a" (Just 2) 0 $
+	[ instr "buildh0_put_a" (Just 2) $
 		A @ to_int (Pc @ 2) .= Pc @ 1
-	, instr "buildh0_put_a_jsr" Nothing 0 $
+	, instr "buildh0_put_a_jsr" Nothing $
 		A @ to_int (Pc @ 2) .= Pc @ 1 :.
 		push_c (to_word (Pc @? 4)) :.
 		Pc .= to_word_ptr (Pc @ 3)
-	, instr "buildo1" (Just 2) 0 $
+	, instr "buildo1" (Just 2) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 2 :.
 		Hp @ 1 .= A @ to_int (Pc @ 1) :.
@@ -3020,7 +3026,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a 1 :.
 		advance_ptr Hp 3
 	, alias "buildho2" $
-	  instr "buildo2" (Just 3) 0 $
+	  instr "buildo2" (Just 3) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 3 :.
 		Hp @ 1 .= A @ to_int (Pc @ 1) :.
@@ -3028,35 +3034,35 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3
-	, instr "dup_a" (Just 1) 0 $
+	, instr "dup_a" (Just 1) $
 		A @ to_int (Pc @ 1) .= A @ 0
-	, instr "dup2_a" (Just 1) 2 $
+	, instr "dup2_a" (Just 1) $
 		new_local TWord (A @ 0) \v ->
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		A @ (ao - lit_int 1) .= v :.
 		A @ ao .= v
-	, instr "dup3_a" (Just 1) 2 $
+	, instr "dup3_a" (Just 1) $
 		new_local TWord (A @ 0) \v ->
 		new_local TInt (to_int (Pc @ 1)) \ao ->
 		A @ (ao - lit_int 2) .= v :.
 		A @ (ao - lit_int 1) .= v :.
 		A @ ao .= v
-	, instr "exchange_a" (Just 2) 3 $
+	, instr "exchange_a" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \ao1 ->
 		new_local TInt (to_int (Pc @ 2)) \ao2 ->
 		new_local TWord (A @ ao1) \v ->
 		A @ ao1 .= A @ ao2 :.
 		A @ ao2 .= v
-	, instr "geC" (Just 0) 0 $
+	, instr "geC" (Just 0) $
 		B @ 1 .= to_int (B @ 0) >=. to_int (B @ 1) :.
 		shrink_b 1
-	, instr "jmp_b_false" (Just 2) 0 $
+	, instr "jmp_b_false" (Just 2) $
 		if_then (B @ to_int (Pc @ 1) ==. lit_word 0) (
 			Pc .= to_word_ptr (Pc @ 2) :.
 			end_instruction
 		)
 	] ++
-	[ instr ("jmp_"+++name+++"I") (Just 1) 0 $
+	[ instr ("jmp_"+++name+++"I") (Just 1) $
 		if_then (op (to_int (B @ 0)) (to_int (B @ 1))) (
 			shrink_b 2 :.
 			Pc .= to_word_ptr (Pc @ 1) :.
@@ -3065,7 +3071,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_b 2
 	\\ (name,op) <- [("eq",(==.)),("ne",(<>.)),("ge",(>=.)),("lt",(<.))]
 	] ++
-	[ instr ("jmp_"+++name+++"_desc") (Just 3) 1 $
+	[ instr ("jmp_"+++name+++"_desc") (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		if_then (op (n @ 0) (Pc @ 2)) (
 			Pc .= to_word_ptr (Pc @ 3) :.
@@ -3074,7 +3080,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	\\ (name,op) <- [("eq",(==.)),("ne",(<>.))]
 	] ++
 	[ alias ("jmp_"+++name+++"C_b") $
-	  instr ("jmp_"+++name+++"I_b") (Just 3) 1 $
+	  instr ("jmp_"+++name+++"I_b") (Just 3) $
 		new_local TInt (to_int (Pc @ 1)) \bo ->
 		if_then (op (to_int (B @ bo)) (to_int (Pc @ 2))) (
 			Pc .= to_word_ptr (Pc @ 3) :.
@@ -3083,7 +3089,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	\\ (name,op) <- [("eq",(==.)),("ne",(<>.))]
 	] ++
 	[ alias "jmp_eqC_b2" $
-	  instr "jmp_eqI_b2" (Just 5) 1 $
+	  instr "jmp_eqI_b2" (Just 5) $
 		new_local TWord (B @ to_int (Pc @ 1)) \v ->
 		if_then (v ==. Pc @ 2) (
 			Pc .= to_word_ptr (Pc @ 3) :.
@@ -3093,12 +3099,12 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Pc .= to_word_ptr (Pc @ 5) :.
 			end_instruction
 		)
-	, instr "jmp_eqD_b" (Just 2) 0 $
+	, instr "jmp_eqD_b" (Just 2) $
 		if_then (B @ 0 ==. Pc @ 1) (
 			Pc .= to_word_ptr (Pc @ 2) :.
 			end_instruction
 		)
-	, instr "jmp_eqD_b2" (Just 4) 1 $
+	, instr "jmp_eqD_b2" (Just 4) $
 		new_local TWord (B @ 0) \v ->
 		if_then (v ==. Pc @ 1) (
 			Pc .= to_word_ptr (Pc @ 2) :.
@@ -3108,7 +3114,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Pc .= to_word_ptr (Pc @ 4) :.
 			end_instruction
 		)
-	, instr "jmp_eqACio" Nothing 3 $
+	, instr "jmp_eqACio" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \s1 ->
 		shrink_a 1 :.
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 2)) \s2 ->
@@ -3136,52 +3142,52 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			)
 		) :.
 		if_then (l ==. lit_word 0) (Pc .= to_word_ptr (Pc @ -1))
-	, instr "jmp_o_geI" (Just 2) 0 $
+	, instr "jmp_o_geI" (Just 2) $
 		if_then (to_int (B @ to_int (Pc @ 1)) >=. to_int (B @ 0)) (
 			shrink_b 1 :.
 			Pc .= to_word_ptr (Pc @ 2) :.
 			end_instruction
 		) :.
 		shrink_b 1
-	, instr "jmp_o_geI_arraysize_a" (Just 3) 1 $
+	, instr "jmp_o_geI_arraysize_a" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
 		if_then (to_int (B @ to_int (Pc @ 1)) >=. to_int (n @ 1)) (
 			Pc .= to_word_ptr (Pc @ 3) :.
 			end_instruction
 		)
-	, instr "ltIi" (Just 1) 0 $
+	, instr "ltIi" (Just 1) $
 		B @ 0 .= (to_int (B @ 0) <. to_int (Pc @ 1))
-	, instr "pop_a_jmp" Nothing 0 $
+	, instr "pop_a_jmp" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "pop_a_jsr" Nothing 0 $
+	, instr "pop_a_jsr" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
 		push_c (to_word (Pc @? 3)) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "pop_a_rtn" Nothing 0 $
+	, instr "pop_a_rtn" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
 		Pc .= to_word_ptr pop_c
-	, instr "pop_ab_rtn" Nothing 0 $
+	, instr "pop_ab_rtn" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
 		B .= to_word_ptr (to_word B + Pc @ 2) :.
 		Pc .= to_word_ptr pop_c
-	, instr "pop_b_jmp" Nothing 0 $
+	, instr "pop_b_jmp" Nothing $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "pop_b_jsr" Nothing 0 $
+	, instr "pop_b_jsr" Nothing $
 		B .= (to_word_ptr (to_word B + Pc @ 1)) :.
 		push_c (to_word (Pc @? 3)) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "pop_b_pushBFALSE" (Just 1) 0 $
+	, instr "pop_b_pushBFALSE" (Just 1) $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
 		B @ 0 .= lit_word 0
-	, instr "pop_b_pushBTRUE" (Just 1) 0 $
+	, instr "pop_b_pushBTRUE" (Just 1) $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
 		B @ 0 .= lit_word 1
-	, instr "pop_b_rtn" Nothing 0 $
+	, instr "pop_b_rtn" Nothing $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
 		Pc .= to_word_ptr pop_c
-	, instr "pushD_a_jmp_eqD_b2" (Just 5) 2 $
+	, instr "pushD_a_jmp_eqD_b2" (Just 5) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (n @ 0) \v ->
 		B @ -1 .= v :.
@@ -3194,40 +3200,40 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 			Pc .= to_word_ptr (Pc @ 5) :.
 			end_instruction
 		)
-	, instr "push_a_jsr" Nothing 0 $
+	, instr "push_a_jsr" Nothing $
 		A @ 1 .= A @ to_int (Pc @ 1) :.
 		grow_a 1 :.
 		push_c (to_word (Pc @? 3)) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "push_a2" (Just 2) 1 $
+	, instr "push_a2" (Just 2) $
 		new_local TWord (A @ to_int (Pc @ 1)) \v ->
 		A @ 1 .= v :.
 		v .= A @ to_int (Pc @ 2) :.
 		A @ 2 .= v :.
 		grow_a 2
-	, instr "push_ab" (Just 2) 1 $
+	, instr "push_ab" (Just 2) $
 		new_local TWord (A @ to_int (Pc @ 1)) \v ->
 		A @ 1 .= v :.
 		grow_a 1 :.
 		v .= B @ to_int (Pc @ 2) :.
 		B @ -1 .= v :.
 		grow_b 1
-	, instr "push_b_incI" (Just 1) 1 $
+	, instr "push_b_incI" (Just 1) $
 		new_local TWord (B @ to_int (Pc @ 1)) \v ->
 		B @ -1 .= v + lit_word 1 :.
 		grow_b 1
-	, instr "push_b_jsr" Nothing 0 $
+	, instr "push_b_jsr" Nothing $
 		B @ -1 .= B @ to_int (Pc @ 1) :.
 		grow_b 1 :.
 		push_c (to_word (Pc @? 3)) :.
 		Pc .= to_word_ptr (Pc @ 2)
-	, instr "push_b2" (Just 2) 1 $
+	, instr "push_b2" (Just 2) $
 		new_local TWord (B @ to_int (Pc @ 1)) \v ->
 		B @ -1 .= v :.
 		v .= B @ to_int (Pc @ 2) :.
 		B @ -2 .= v :.
 		grow_b 2
-	, instr "push_jsr_eval" Nothing 1 $
+	, instr "push_jsr_eval" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		A @ 1 .= to_word n :.
 		grow_a 1 :.
@@ -3235,120 +3241,120 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		if_then ((n @ 0) &. lit_word 2 <>. lit_word 0) end_instruction :.
 		push_c (to_word Pc) :.
 		Pc .= to_word_ptr (n @ 0)
-	, instr "push_update_a" (Just 2) 1 $
+	, instr "push_update_a" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \ao_1 ->
 		A @ 1 .= A @ ao_1 :.
 		A @ ao_1 .= A @ to_int (Pc @ 2) :.
 		grow_a 1
-	, instr "push2_a" (Just 1) 1 $
+	, instr "push2_a" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \ao_s ->
 		A @ 1 .= A @ ao_s :.
 		A @ 2 .= A @ (ao_s + lit_int 1) :.
 		grow_a 2
-	, instr "push2_b" (Just 1) 1 $
+	, instr "push2_b" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \bo_s ->
 		B @ -1 .= B @ bo_s :.
 		B @ -2 .= B @ (bo_s - lit_int 1) :.
 		grow_b 2
-	, instr "push3_a" (Just 1) 1 $
+	, instr "push3_a" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \ao_s ->
 		A @ 1 .= A @ ao_s :.
 		A @ 2 .= A @ (ao_s + lit_int 1) :.
 		A @ 3 .= A @ (ao_s + lit_int 2) :.
 		grow_a 3
-	, instr "push3_b" (Just 1) 1 $
+	, instr "push3_b" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \bo_s ->
 		B @ -1 .= B @ bo_s :.
 		B @ -2 .= B @ (bo_s - lit_int 1) :.
 		B @ -3 .= B @ (bo_s - lit_int 2) :.
 		grow_b 3
-	, instr "put_a" (Just 1) 0 $
+	, instr "put_a" (Just 1) $
 		A @ to_int (Pc @ 1) .= A @ 0 :.
 		shrink_a 1
-	, instr "put_b" (Just 1) 0 $
+	, instr "put_b" (Just 1) $
 		B @ to_int (Pc @ 1) .= B @ 0 :.
 		shrink_b 1
-	, instr "selectoo" (Just 2) 1 $
+	, instr "selectoo" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
 		A @ 1 .= array @ (lit_word 3 + B @ to_int (Pc @ 2)) :.
 		grow_a 1
-	, instr "selectCHARoo" (Just 2) 1 $
+	, instr "selectCHARoo" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
 		B @ -1 .= to_char_ptr (array @? 2) @ (B @ to_int (Pc @ 2)) :.
 		grow_b 1
 	] ++
-	[ instr ("update"+++toString n+++"_a") (Just 2) 2 $
+	[ instr ("update"+++toString n+++"_a") (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \ao_s ->
 		new_local TInt (to_int (Pc @ 2)) \ao_d ->
 		for [1-n..0] (\i -> A @ (ao_d + lit_int i) .= A @ (ao_s + lit_int i))
 	\\ n <- [2..4]
 	] ++
-	[ instr ("update"+++toString n+++"_b") (Just 2) 2 $
+	[ instr ("update"+++toString n+++"_b") (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \bo_s ->
 		new_local TInt (to_int (Pc @ 2)) \bo_d ->
 		for [n-1,n-2..0] (\i -> B @ (bo_d + lit_int i) .= B @ (bo_s + lit_int i))
 	\\ n <- [2,3]
 	] ++
-	[ instr "update2pop_a" (Just 2) 2 $
+	[ instr "update2pop_a" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \ao_s ->
 		new_local TInt (to_int (Pc @ 2)) \ao_d ->
 		A @ (ao_d - lit_int 1) .= A @ (ao_s - lit_int 1) :.
 		A @ ao_d .= A @ ao_s :.
 		A .= A @? ao_d
-	, instr "update2pop_b" (Just 2) 2 $
+	, instr "update2pop_b" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \bo_s ->
 		new_local TInt (to_int (Pc @ 2)) \bo_d ->
 		B @ (bo_d + lit_int 1) .= B @ (bo_s + lit_int 1) :.
 		B @ bo_d .= B @ bo_s :.
 		B .= B @? bo_d
-	, instr "update3pop_a" (Just 2) 2 $
+	, instr "update3pop_a" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \ao_s ->
 		new_local TInt (to_int (Pc @ 2)) \ao_d ->
 		A @ (ao_d - lit_int 2) .= A @ (ao_s - lit_int 2) :.
 		A @ (ao_d - lit_int 1) .= A @ (ao_s - lit_int 1) :.
 		A @ ao_d .= A @ ao_s :.
 		A .= A @? ao_d
-	, instr "update3pop_b" (Just 2) 2 $
+	, instr "update3pop_b" (Just 2) $
 		new_local TInt (to_int (Pc @ 1)) \bo_s ->
 		new_local TInt (to_int (Pc @ 2)) \bo_d ->
 		B @ (bo_d+lit_int 2) .= B @ (bo_s+lit_int 2) :.
 		B @ (bo_d+lit_int 1) .= B @ (bo_s+lit_int 1) :.
 		B @ bo_d .= B @ bo_s :.
 		B .= B @? bo_d
-	, instr "updates2_a" (Just 3) 2 $
+	, instr "updates2_a" (Just 3) $
 		new_local TInt (to_int (Pc @ 2)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
 		ao_2 .= to_int (Pc @ 1) :.
 		A @ ao_1 .= A @ ao_2
-	, instr "updates2_a_pop_a" (Just 4) 2 $
+	, instr "updates2_a_pop_a" (Just 4) $
 		new_local TInt (to_int (Pc @ 2)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
 		ao_2 .= Pc @ 1 :.
 		A @ ao_1 .= A @ ao_2 :.
 		A .= to_word_ptr (to_word A - Pc @ 4)
-	, instr "updates2_b" (Just 3) 2 $
+	, instr "updates2_b" (Just 3) $
 		new_local TInt (to_int (Pc @ 2)) \bo_1 ->
 		new_local TInt (to_int (Pc @ 3)) \bo_2 ->
 		B @ bo_2 .= B @ bo_1 :.
 		bo_2 .= to_int (Pc @ 1) :.
 		B @ bo_1 .= B @ bo_2
-	, instr "updates2pop_a" (Just 3) 2 $
+	, instr "updates2pop_a" (Just 3) $
 		new_local TInt (to_int (Pc @ 2)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 3)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
 		ao_2 .= Pc @ 1 :.
 		A @ ao_1 .= A @ ao_2 :.
 		A .= A @? ao_1
-	, instr "updates2pop_b" (Just 3) 2 $
+	, instr "updates2pop_b" (Just 3) $
 		new_local TInt (to_int (Pc @ 2)) \bo_1 ->
 		new_local TInt (to_int (Pc @ 3)) \bo_2 ->
 		B @ bo_2 .= B @ bo_1 :.
 		bo_2 .= Pc @ 1 :.
 		B @ bo_1 .= (B @ bo_2) :.
 		B .= B @? bo_1
-	, instr "updates3_a" (Just 4) 2 $
+	, instr "updates3_a" (Just 4) $
 		new_local TInt (to_int (Pc @ 3)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 4)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
@@ -3356,7 +3362,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ ao_1 .= A @ ao_2 :.
 		ao_1 .= to_int (Pc @ 1) :.
 		A @ ao_2 .= A @ ao_1
-	, instr "updates3_b" (Just 4) 2 $
+	, instr "updates3_b" (Just 4) $
 		new_local TInt (to_int (Pc @ 3)) \bo_1 ->
 		new_local TInt (to_int (Pc @ 4)) \bo_2 ->
 		B @ bo_2 .= B @ bo_1 :.
@@ -3364,7 +3370,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		B @ bo_1 .= B @ bo_2 :.
 		bo_1 .= Pc @ 1 :.
 		B @ bo_2 .= B @ bo_1
-	, instr "updates3pop_a" (Just 4) 2 $
+	, instr "updates3pop_a" (Just 4) $
 		new_local TInt (to_int (Pc @ 3)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 4)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
@@ -3373,7 +3379,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		ao_1 .= Pc @ 1 :.
 		A @ ao_2 .= A @ ao_1 :.
 		A .= A @? ao_2
-	, instr "updates3pop_b" (Just 4) 2 $
+	, instr "updates3pop_b" (Just 4) $
 		new_local TInt (to_int (Pc @ 3)) \bo_1 ->
 		new_local TInt (to_int (Pc @ 4)) \bo_2 ->
 		B @ bo_2 .= B @ bo_1 :.
@@ -3382,7 +3388,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		bo_1 .= Pc @ 1 :.
 		B @ bo_2 .= B @ bo_1 :.
 		B .= B @? bo_2
-	, instr "updates4_a" (Just 5) 2 $
+	, instr "updates4_a" (Just 5) $
 		new_local TInt (to_int (Pc @ 4)) \ao_1 ->
 		new_local TInt (to_int (Pc @ 5)) \ao_2 ->
 		A @ ao_2 .= A @ ao_1 :.
@@ -3392,42 +3398,42 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		A @ ao_2 .= A @ ao_1 :.
 		ao_2 .= Pc @ 1 :.
 		A @ ao_1 .= A @ ao_2
-	, instr "jsr_ap1" Nothing 2 $
+	, instr "jsr_ap1" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		push_c (to_word (Pc @? 1)) :.
 		new_local TWord (n @ 0) \d ->
 		Pc .= to_word_ptr (to_word_ptr (d + if_i64_or_i32_expr (lit_word 6) (lit_word 2)) @ 0)
-	, instr "jmp_ap1" Nothing 2 $
+	, instr "jmp_ap1" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (n @ 0) \d ->
 		Pc .= to_word_ptr (to_word_ptr (d + if_i64_or_i32_expr (lit_word 6) (lit_word 2)) @ 0)
 	] ++ flatten
-	[[instr ("jsr_ap"+++toString ns) Nothing 3 $
+	[[instr ("jsr_ap"+++toString ns) Nothing $
 		push_c (to_word (Pc @? 1)) :.
 		jmp_instr
-	 ,instr ("jmp_ap"+++toString ns) Nothing 3
+	 ,instr ("jmp_ap"+++toString ns) Nothing
 		jmp_instr
 	 ]
 	\\ ns <- [2..32]
 	, let jmp_instr =
 			new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 			new_local TWord (n @ 0) \d ->
-			if_then (to_short_ptr d @ 0 ==. lit_short (8*ns)) (
+			if_then_else (to_short_ptr d @ 0 ==. lit_short (8*ns)) (
 				new_local TShort (to_short_ptr d @ -1) \arity ->
 				Pc .= to_word_ptr (to_word_ptr (d + (lit_word (ns*2-1) * if_i64_or_i32_expr (lit_word 8) (lit_word 4)) - lit_word 2) @ 0) :.
 				rewind_ptr Pc 3 :.
-				if_then (arity <=. lit_short 1) (
-					if_then (arity <. lit_short 1) (
+				if_then_else (arity <=. lit_short 1) (
+					if_then_else (arity <. lit_short 1) (
 						shrink_a 1
-					) :. else (
+					) [] (else (
 						A @ 0 .= n @ 1
-					)
-				) :. else (
+					))
+				) [] (else (
 					new_local (TPtr TWord) (to_word_ptr (n @ 2)) \args ->
 					new_local TWord (n @ 1) \a1 ->
-					if_then (arity ==. lit_short 2) (
+					if_then_else (arity ==. lit_short 2) (
 						A @ 0 .= to_word args
-					) :. else (
+					) [] (else (
 						A @ 0 .= args @ (arity - lit_short 2) :.
 						arity -= lit_short 2 :.
 						while_do (arity <>. lit_short 0) (
@@ -3435,16 +3441,16 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 							grow_a 1 :.
 							arity -= lit_short 1
 						)
-					) :.
+					)) :.
 					A @ 1 .= a1 :.
 					grow_a 1
-				)
-			) :. else (
+				))
+			) [] (else (
 				push_c (jmp_ap_ptr (ns-2)) :.
 				Pc .= to_word_ptr (to_word_ptr (d + if_i64_or_i32_expr (lit_word 6) (lit_word 2)) @ 0)
-			)
+			))
 	] ++
-	[ instr "add_arg0" Nothing 1 $
+	[ instr "add_arg0" Nothing $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		Pc .= to_word_ptr pop_c :.
@@ -3453,7 +3459,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= n @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8) :.
 		shrink_a 1 :.
 		advance_ptr Hp 2
-	, instr "add_arg1" Nothing 1 $
+	, instr "add_arg1" Nothing $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		Pc .= to_word_ptr pop_c :.
@@ -3463,7 +3469,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		Hp @ 0 .= n @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8) :.
 		shrink_a 1 :.
 		advance_ptr Hp 3
-	, instr "add_arg2" Nothing 1 $
+	, instr "add_arg2" Nothing $
 		ensure_hp 5 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		Pc .= to_word_ptr pop_c :.
@@ -3476,7 +3482,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		shrink_a 1 :.
 		advance_ptr Hp 5
 	] ++
-	[ instr ("add_arg"+++toString ns) Nothing 2 $
+	[ instr ("add_arg"+++toString ns) Nothing $
 		ensure_hp (2+ns) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
@@ -3490,7 +3496,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		advance_ptr Hp (ns+3)
 	\\ ns <- [3..32]
 	] ++
-	[ instr ("eval_upd"+++toString i) Nothing 1 $
+	[ instr ("eval_upd"+++toString i) Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		n @ 0 .= indirection_ptr :.
 		if (i==0) nop (A @ (i-1) .= n @ 1) :.
@@ -3500,7 +3506,7 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		grow_a (i-1)
 	\\ i <- [0..32]
 	] ++
-	[ instr "push_a_r_args" Nothing 6 $
+	[ instr "push_a_r_args" Nothing $
 		/* Unboxed array of records in asp[0], index in bsp[0].
 		 * Copy elements to the stacks and push type string to B-stack. */
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
@@ -3526,39 +3532,41 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 		) :.
 		advance_ptr d 2 :.
 		B @ 0 .= to_word d - lit_word 2
-	, instr "push_r_arg_t" (Just 0) 0 $
+	, instr "push_r_arg_t" (Just 0) $
 		B @ 0 .= to_word (to_char_ptr (B @ 0) @ 0)
-	, instr "push_t_r_a" (Just 1) 1 $
+	, instr "push_t_r_a" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		B @ -1 .= n @ 0 + if_i64_or_i32_expr (lit_word 14) (lit_word 6) :.
 		grow_b 1
-	, instr "push_t_r_args" (Just 0) 4 $
+	, instr "push_t_r_args" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		shrink_a 1 :.
 		new_local (TPtr TWord) (to_word_ptr (n @ 0)) \d ->
 		new_local TShort (to_short_ptr d @ 0) \a_arity ->
 		new_local TShort (to_short_ptr d @ -1 - lit_short 256 - a_arity) \b_arity ->
-		if_then (a_arity + b_arity <. lit_short 3) (
-			if_then (a_arity ==. lit_short 2) (
+		if_then_else (a_arity + b_arity <. lit_short 3) (
+			if_then_else (a_arity ==. lit_short 2) (
 				A @ 1 .= n @ 2 :.
 				A @ 2 .= n @ 1 :.
 				grow_a 2
-			) :. else_if (a_arity ==. lit_short 1) (
+			)
+			[ else_if (a_arity ==. lit_short 1) (
 				A @ 1 .= n @ 1 :.
 				grow_a 1 :.
 				if_then (b_arity ==. lit_short 1) (
 					B @ -1 .= n @ 2 :.
 					grow_b 1
-				)
-			) :. else_if (b_arity ==. lit_short 2) (
+				))
+			, else_if (b_arity ==. lit_short 2) (
 				B @ -1 .= n @ 2 :.
 				B @ -2 .= n @ 1 :.
-				grow_b 2
-			) :. else_if (b_arity ==. lit_short 1) (
+				grow_b 2)
+			, else_if (b_arity ==. lit_short 1) (
 				B @ -1 .= n @ 1 :.
 				grow_b 1
-			)
-		) :. else (
+			)]
+			no_else
+		) [] (else (
 			new_local (TPtr TWord) (to_word_ptr (n @ 2)) \args ->
 			new_local TShort (a_arity + b_arity - lit_short 2) \i ->
 			while_do (b_arity >. lit_short 0 &&. i >=. lit_short 0) (
@@ -3573,18 +3581,18 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 				a_arity -= lit_short 1 :.
 				grow_a 1
 			) :.
-			if_then (a_arity >. lit_short 0) (
+			if_then_else (a_arity >. lit_short 0) (
 				A @ 1 .= n @ 1 :.
 				grow_a 1
-			) :. else (
+			) [] (else (
 				B @ -1 .= n @ 1 :.
 				grow_b 1
-			)
-		) :.
+			))
+		)) :.
 		advance_ptr d 2 :.
 		B @ -1 .= to_word d - lit_word 2 :.
 		grow_b 1
-	, instr "push_r_arg_D" (Just 0) 1 $
+	, instr "push_r_arg_D" (Just 0) $
 		/* Pop a pointer to the end of the type string of a record from bsp;
 		 * set bsp[0] to the bsp[0]'th 'child descriptor' in that record. */
 		new_local TWord (B @ 0) \d ->
@@ -3617,22 +3625,17 @@ all_instructions t = bootstrap $ flatten $ map (\i -> get_output (i t)) $
 	  alias "A_data_IlI" $
 	  alias "A_data_IlIla" $
 	  alias "A_data_a" $
-	  instr "A_data_la" Nothing 0 $
+	  instr "A_data_la" Nothing $
 		instr_unimplemented
 	]
 where
-	instr name nargs nlocals f t
+	instr name nargs f t
 	# t = begin_instruction name t
-	# t = if (nlocals==0) t (begin_scope t)
 	# t = f t
 	# t = case nargs of
 		Just n  -> advance_ptr Pc (n+1) t
 		Nothing -> t
-	# t = end_instruction t
-	# t = if (nlocals==0) t (end_scope t)
-	= t
-
-	alias n i t = i (begin_instruction n t)
+	= end_instruction t
 
 	for :: ![a] !(a Target -> Target) !Target -> Target
 	for xs f t = foldl (flip f) t xs
@@ -3645,3 +3648,8 @@ where
 	shrink_a i = rewind_ptr  A i
 	grow_b   i = rewind_ptr  B i
 	shrink_b i = advance_ptr B i
+
+	if_then c t = if_then_else c t [] Nothing
+	else_if c t = (c,t)
+	else = Just
+	no_else = Nothing
