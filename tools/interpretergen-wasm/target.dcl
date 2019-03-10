@@ -89,8 +89,9 @@ nop :: !Target -> Target
 
 (:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 
-class typename t :: t -> String
+class typename a :: !a -> String
 instance typename TWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
+
 new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
@@ -104,7 +105,7 @@ class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance += TWord TWord
 
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance -= TWord  TWord, TShort TShort, TInt TInt
+instance -= TWord  TWord, TShort TShort
 
 class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
 instance advance_ptr Int, (Expr w)

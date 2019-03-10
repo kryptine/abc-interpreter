@@ -1,7 +1,9 @@
-BIN:=interpretergenc
+BIN:=$(addprefix interpretergen,c wasm)
 
-interpretergenc: .FORCE
-	clm -nr -nt -I interpretergen-c interpretergen -o $@
+all: $(BIN)
+
+$(BIN): interpretergen%: interpretergen-% .FORCE
+	clm -h 10m -IL ArgEnv -nr -nt -I $< interpretergen -o $@
 
 clean:
 	$(RM) $(BIN)
@@ -10,3 +12,4 @@ clean:
 		-or -name 'Clean System Files' -empty -delete
 
 .FORCE:
+.PHONY: all clean

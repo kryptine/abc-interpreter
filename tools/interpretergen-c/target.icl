@@ -55,8 +55,8 @@ where
 		, "#endif"
 		]
 
-collect_instructions :: ![Target] -> [String]
-collect_instructions is = flatten [get_output i \\ i <- is]
+collect_instructions :: ![String] ![Target] -> [String]
+collect_instructions _ is = flatten [get_output i \\ i <- is]
 where
 	get_output :: !Target -> [String]
 	get_output t

@@ -2,18 +2,38 @@ implementation module interpretergen
 
 import StdEnv
 import StdMaybe
+import ArgEnv
 import target
 
 Start w
+# args = getCommandLine
+| size args <> 2 = abort "Usage: GEN path/to/abc_instructions.h"
+
+# (ok,f,w) = fopen args.[1] FReadText w
+| not ok = abort "Failed to read abc_instructions.h\n"
+# (instrs,f) = fetch_instructions [] f
+# (_,w) = fclose f w
+
 # (io,w) = stdio w
-# io = foldl (\io e -> io <<< e <<< "\n") io (all_instructions start)
+# io = foldl (\io e -> io <<< e <<< "\n") io (all_instructions instrs start)
 # (_,w) = fclose io w
 = w
+where
+	fetch_instructions :: ![String] !*File -> *(![String], !*File)
+	fetch_instructions is f
+	# (e,f) = fend f
+	| e = (reverse is,f)
+	# (l,f) = freadline f
+	| l%(0,12) <> "\tINSTRUCTION(" = fetch_instructions is f
+	# i = l%(13,find_closing_paren 13 l-1)
+	= fetch_instructions [i:is] f
+	where
+		find_closing_paren i s = if (s.[i]==')') i (find_closing_paren (i+1) s)
 
 ($) infixr 0
 ($) f :== f
 
-all_instructions t = bootstrap $ collect_instructions $ map (\i -> i t) $
+all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i -> i t) $
 	[ instr "absR" (Just 0) $
 		new_local TReal (absR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
