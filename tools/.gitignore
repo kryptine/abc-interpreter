@@ -1,2 +1,3 @@
+add_symbols_to_wasm_jitted_interpreter
 interpretergenc
 interpretergenwasm

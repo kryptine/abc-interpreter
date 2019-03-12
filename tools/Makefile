@@ -1,12 +1,20 @@
-BIN:=$(addprefix interpretergen,c wasm)
+BIN:=add_symbols_to_wasm_jitted_interpreter
+CFLAGS:=-Wall -Wextra -Werror -pedantic -lelf
 
-all: $(BIN)
+INTERPRETERGEN:=$(addprefix interpretergen,c wasm)
+CLM:=clm
+CLMFLAGS:=-h 10m -IL ArgEnv -nr -nt
 
-$(BIN): interpretergen%: interpretergen-% .FORCE
-	clm -h 10m -IL ArgEnv -nr -nt -I $< interpretergen -o $@
+all: $(INTERPRETERGEN)
+
+$(BIN): %: %.c
+	$(CC) $(CFLAGS) $< -o $@
+
+$(INTERPRETERGEN): interpretergen%: interpretergen-% .FORCE
+	$(CLM) $(CLMFLAGS) -I $< interpretergen -o $@
 
 clean:
-	$(RM) $(BIN)
+	$(RM) $(BIN) $(INTERPRETERGEN)
 	find . \
 		-name '*.abc' -delete -or -name '*.o' -delete \
 		-or -name 'Clean System Files' -empty -delete
