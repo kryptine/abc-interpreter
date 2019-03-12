@@ -11,5 +11,6 @@
 *.opt.abc
 *.obc
 *.bc
+*.ubc
 
 *.graph
