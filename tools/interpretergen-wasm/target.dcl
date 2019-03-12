@@ -113,8 +113,8 @@ instance advance_ptr Int, (Expr w)
 class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
 instance rewind_ptr Int, (Expr w)
 
-class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t
-class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t)
+class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t | typename t
+class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t) | typename t
 
 instance @  Int, (Expr t)
 instance @? Int, (Expr t)

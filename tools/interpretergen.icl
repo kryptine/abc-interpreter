@@ -1157,8 +1157,8 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		B @ 0 .= (B @ 0 ==. Pc @ 1)
 	, instr "eq_nulldesc" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
-		new_local TShort (to_short_ptr (n @ 0) @ -1) \arity ->
-		B @ -1 .= n @ 0 ==. (Pc @ 2 + to_word arity * if_i64_or_i32_expr (lit_word 16) (lit_word 8)) :.
+		new_local TWord (to_word (to_short_ptr (n @ 0) @ -1)) \arity ->
+		B @ -1 .= n @ 0 ==. (Pc @ 2 + arity * if_i64_or_i32_expr (lit_word 16) (lit_word 8)) :.
 		grow_b 1
 	, instr "eqAC" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \s1 ->

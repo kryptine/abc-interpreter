@@ -39,8 +39,8 @@ import interpretergen
 	| E.u: Eload32 !(Expr u)
 	| E.u: Estore32 !(Expr u) !(Expr TWord)
 
-	| EDeref !(Expr (TPtr t)) !(Expr TWord)
-	| ERef !(Expr t) !(Expr TWord)
+	| EDeref !String !String !(Expr (TPtr t)) !(Expr TWord)
+	| ERef !String !String !(Expr t) !(Expr TWord)
 
 	| Ei64_reinterpret_f64 !(Expr TReal)
 	| Ei64_trunc_f64_s !(Expr TReal)
@@ -97,44 +97,55 @@ where
 		EGlobal l  -> "(global.get $"+++l+++")"
 
 		ETee v e -> case v of
-			ELocal _ l -> "(local.tee $"+++l+++" "+++toString e+++")"
-			_ -> abort "missing case in toString_ETee\n"
+			ELocal _ l
+				-> "(local.tee $"+++l+++" "+++toString e+++")"
+				-> abort "missing case in toString_ETee\n"
 		ESet v e -> case v of
-			EGlobal l -> "(global.set $"+++l+++" "+++toString e+++")"
-			ELocal _ l -> "(local.set $"+++l+++" "+++toString e+++")"
-			EDeref m i -> "(i64.store (i32.wrap_i64 (i64.add "+++toString m+++"(i64.mul "+++toString i+++" (i64.const 8))))"+++i32_to_64 e+++")" // TODO: add bitwidth
-			_ -> abort "missing case in toString_ESet\n"
+			EGlobal l
+				-> "(global.set $"+++l+++" "+++toString e+++")"
+			ELocal _ l
+				-> "(local.set $"+++l+++" "+++toString e+++")"
+			EDeref _ sw m i
+				-> "(i64.store"+++sw+++" (i32.wrap_i64 (i64.add "+++toString m+++"(i64.mul "+++toString i+++" (i64.const 8))))"+++i32_to_64 e+++")" // TODO: add bitwidth
+				-> abort "missing case in toString_ESet\n"
 
 		Eload32 i    -> "(i64.load (i32.wrap_i64 "+++toString i+++"))"
 		Estore32 i e -> "(i64.store (i32.wrap_i64 "+++toString i+++")"+++i32_to_64 e+++")"
 
-		EDeref m i -> "(i64.load (i32.wrap_i64 "+++toString (ERef m i)+++"))"
-		ERef m i   -> "(i64.add "+++toString m+++toString (Emul (Ei64_const 8) i)+++")" // TODO bitwidth
+		EDeref lw sw m i
+			-> "(i64.load"+++lw+++" (i32.wrap_i64 "+++toString (ERef lw sw m i)+++"))"
+		ERef lw sw m i
+			-> "(i64.add "+++toString m+++toString (Emul (Ei64_const width) i)+++")"
+			with
+				width = case sw of
+					"8"  -> 1
+					"16" -> 2
+					_    -> 8
 
 		Ei64_reinterpret_f64 r -> "(i64.reinterpret_f64 "+++toString r+++")"
 		Ei64_trunc_f64_s r     -> "(i64.trunc_f64_s "+++toString r+++")"
 		Ef64_convert_i64_s i   -> "(f64.convert_i64_s "+++toString i+++")"
 		Ef64_reinterpret_i64 i -> "(f64.reinterpret_i64 "+++toString i+++")"
 
-		Eadd a b   -> "("+++type a+++".add"+++concat [a,b]+++")"
-		Esub a b   -> "("+++type a+++".sub"+++concat [a,b]+++")"
-		Emul a b   -> "("+++type a+++".mul"+++concat [a,b]+++")"
-		Ediv_s a b -> "("+++signed_op (type a) "div"+++concat [a,b]+++")"
-		Erem_s a b -> "("+++type a+++".rem_s"+++concat [a,b]+++")"
+		Eadd a b   -> "("+++f_or_i64 a+++".add"+++concat [a,b]+++")"
+		Esub a b   -> "("+++f_or_i64 a+++".sub"+++concat [a,b]+++")"
+		Emul a b   -> "("+++f_or_i64 a+++".mul"+++concat [a,b]+++")"
+		Ediv_s a b -> "("+++signed_op (f_or_i64 a) "div"+++concat [a,b]+++")"
+		Erem_s a b -> "("+++f_or_i64 a+++".rem_s"+++concat [a,b]+++")"
 
-		Eeqz e -> "("+++type e+++".eqz "+++toString e+++")"
+		Eeqz e -> "("+++f_or_i64 e+++".eqz "+++toString e+++")"
 
 		Eabs e   -> "("+++type e+++".abs "+++toString e+++")"
 		Efloor e -> "("+++type e+++".floor "+++toString e+++")"
 		Eneg e   -> "("+++type e+++".neg "+++toString e+++")"
 		Esqrt e  -> "("+++type e+++".sqrt "+++toString e+++")"
 
-		Eeq a b   -> "("+++type a+++".eq"+++concat [a,b]+++")"
-		Ene a b   -> "("+++type a+++".ne"+++concat [a,b]+++")"
-		Elt_s a b -> "("+++signed_op (type a) "lt"+++concat [a,b]+++")"
-		Egt_s a b -> "("+++signed_op (type a) "gt"+++concat [a,b]+++")"
-		Ele_s a b -> "("+++signed_op (type a) "le"+++concat [a,b]+++")"
-		Ege_s a b -> "("+++signed_op (type a) "ge"+++concat [a,b]+++")"
+		Eeq a b   -> "("+++f_or_i64 a+++".eq"+++concat [a,b]+++")"
+		Ene a b   -> "("+++f_or_i64 a+++".ne"+++concat [a,b]+++")"
+		Elt_s a b -> "("+++signed_op (f_or_i64 a) "lt"+++concat [a,b]+++")"
+		Egt_s a b -> "("+++signed_op (f_or_i64 a) "gt"+++concat [a,b]+++")"
+		Ele_s a b -> "("+++signed_op (f_or_i64 a) "le"+++concat [a,b]+++")"
+		Ege_s a b -> "("+++signed_op (f_or_i64 a) "ge"+++concat [a,b]+++")"
 
 		Eand a b   -> "("+++type a+++".and"+++concat [a,b]+++")"
 		Eor a b    -> "("+++type a+++".or"+++concat [a,b]+++")"
@@ -143,6 +154,11 @@ where
 		Eshr_s a b -> "("+++type a+++".shr_s"+++concat [a,b]+++")"
 	where
 		signed_op t op = if (t.[0]=='f') (t+++"."+++op) (t+++"."+++op+++"_s")
+
+		f_or_i64 e = case type e of
+			"i8"  -> "i64"
+			"i16" -> "i64"
+			t     -> t
 
 		i32_to_64 e = case type e of
 			"i32"
@@ -215,8 +231,8 @@ where
 
 		ELocal t _ -> Just t
 
-		EDeref _ _ -> Just "i64" // TODO
-		ERef _ _ -> Just "i64" // TODO
+		EDeref _ _ _ _ -> Just "i64" // TODO
+		ERef _ _ _ _ -> Just "i64" // TODO
 
 		ECall c _
 			| c=="clean_strncmp" -> Just "i32"
@@ -267,7 +283,8 @@ where
 		, "(func $clean_print_int (import \"clean\" \"print_int\") (param i32))"
 		, "(func $clean_print_char (import \"clean\" \"print_char\") (param i32))"
 		, "(func $clean_print_real (import \"clean\" \"print_real\") (param f64))"
-		, "(func (export \"interpret\") (result i32)"
+		, "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))"
+		, "(func (export \"interpret\") (param $init-pc i32) (result i32)"
 		, "(local $pc i64)"
 		, "(local $asp i64)"
 		, "(local $bsp i64)"
@@ -281,12 +298,12 @@ where
 		[ "(local $vf"+++toString n+++" f64)"
 		\\ n <- [0..0] // TODO look this up from list of targets
 		] ++
-		[ "(local.set $pc (i64.const 0))"
-		, "(local.set $asp (i64.const 1000))" // TODO
-		, "(local.set $bsp (i64.const 1000))" // TODO
-		, "(local.set $csp (i64.const 1000))" // TODO
-		, "(local.set $hp (i64.const 1000))" // TODO
-		, "(local.set $hp_free (i64.const 1000))" // TODO
+		[ "(local.set $pc (i64.extend_i32_u (local.get $init-pc)))"
+		, "(local.set $asp (i64.const 131072))" // TODO
+		, "(local.set $bsp (i64.const 393216))" // TODO
+		, "(local.set $csp (i64.const 262144))" // TODO
+		, "(local.set $hp (i64.const 393224))" // TODO
+		, "(local.set $hp_free (i64.const 1048576))" // TODO
 		, "(loop $abc-loop"
 		, "(block $abc-gc"
 		]
@@ -301,13 +318,13 @@ where
 		]
 
 	block_start t = "(block $instr_"+++hd t.instrs
-	block_body t = head ++ out
+	block_body t = [")":head ++ reverse t.output]
 	where
 		head = reverse [";; "+++i \\ i <- t.instrs]
-		out = [")":reverse t.output]
 
 	switch =
 		[ "(block $instr_illegal"
+		//, "\t(call $clean_debug_instr (i32.wrap_i64 (local.get $pc)) (i32.load (i32.wrap_i64 (local.get $pc))))"
 		, "\t(br_table " +++
 			foldr (+++) "" [find_label i is \\ i <- instrs_order] +++
 			"$instr_illegal (i32.load (i32.wrap_i64 (local.get $pc))))"
@@ -485,8 +502,8 @@ nop t = t
 
 class typename a :: !a -> String
 instance typename TWord                 where typename _ = "i64"
-instance typename TChar                 where typename _ = "i64"
-instance typename TShort                where typename _ = "i64"
+instance typename TChar                 where typename _ = "i8"
+instance typename TShort                where typename _ = "i16"
 instance typename TInt                  where typename _ = "i64"
 instance typename TReal                 where typename _ = "f64"
 instance typename (TPtr t) | typename t where typename _ = "i64"
@@ -528,17 +545,49 @@ sub_local v e t = case e of
 instance -= TWord  TWord  where -= v e t = sub_local v e t
 instance -= TShort TShort where -= v e t = sub_local v e t
 
+// TODO: pointer width
 instance advance_ptr Int      where advance_ptr v e t = add_local v (Ei64_const (8*e)) t
 instance advance_ptr (Expr w) where advance_ptr v e t = add_local v (cast_expr (Emul (Ei64_const 8) e)) t
 
+// TODO: pointer width
 instance rewind_ptr  Int      where rewind_ptr  v e t = sub_local v (Ei64_const (8*e)) t
 instance rewind_ptr  (Expr w) where rewind_ptr  v e t = sub_local v (cast_expr (Emul (Ei64_const 8) e)) t
 
-instance @  Int      where (@)  arr i = EDeref arr (Ei64_const i)
-instance @  (Expr t) where (@)  arr i = EDeref arr (cast_expr i)
+instance @ Int
+where
+	(@) arr i = EDeref load_width store_width arr (Ei64_const i)
+	where
+		(load_width,store_width) = load_and_store_widths arr
 
-instance @? Int      where (@?) arr i = ERef arr (Ei64_const i)
-instance @? (Expr t) where (@?) arr i = ERef arr (cast_expr i)
+instance @ (Expr t)
+where
+	(@) arr i = EDeref load_width store_width arr (cast_expr i)
+	where
+		(load_width,store_width) = load_and_store_widths arr
+
+instance @? Int
+where
+	(@?) arr i = ERef load_width store_width arr (Ei64_const i) // TODO pointer width
+	where
+		(load_width,store_width) = load_and_store_widths arr
+
+instance @? (Expr t)
+where
+	(@?) arr i = ERef load_width store_width arr (cast_expr i) // TODO pointer width
+	where
+		(load_width,store_width) = load_and_store_widths arr
+
+load_and_store_widths :: !(Expr (TPtr t)) -> (!String, !String) | typename t
+load_and_store_widths e = case typename (get_type e) of
+	"i8"  -> ("8_s","8")
+	"i16" -> ("16_s","16")
+	_     -> ("","")
+where
+	get_type :: !(Expr (TPtr t)) -> t
+	get_type _ = code {
+		pop_a 1
+		buildI 123 | non-aborting undef
+	}
 
 begin_block :: !Target -> Target
 begin_block t = append "(block" t // TODO
@@ -627,11 +676,11 @@ caf_list :: Expr (TPtr (TPtr TWord))
 caf_list = Ei64_const 2 // TODO
 
 push_c :: !(Expr TWord) !Target -> Target
-push_c v t = append (ESet (ELocal "i64" "csp") (Eadd (ELocal "i64" "csp") (Ei64_const 4)))
+push_c v t = append (ESet (ELocal "i64" "csp") (Eadd (ELocal "i64" "csp") (Ei64_const 8)))
 	(append (Estore32 (ELocal "i64" "csp") v) t)
 
 pop_c :: Expr TWord
-pop_c = Eload32 (ETee (ELocal "i64" "csp") (Esub (ELocal "i64" "csp") (Ei64_const 4)))
+pop_c = Eload32 (ETee (ELocal "i64" "csp") (Esub (ELocal "i64" "csp") (Ei64_const 8)))
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
 memcpy d s n t = append (ECall "clean_memcpy" (d -- s -- n -- ELNil)) t
