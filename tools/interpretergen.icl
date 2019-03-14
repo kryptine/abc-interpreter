@@ -1695,7 +1695,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 	, instr "fillI_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
-		n @ 1 .= B @ to_int (Pc @ 2)
+		n @ 1 .= B @ to_int (Pc @ 2) // TODO: this kind of loads can be optimised for wasm by storing the B-offset*8
 	, instr "fillR_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= REAL_ptr + lit_word 2 :.
@@ -1708,7 +1708,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n_s ->
 		new_local (TPtr TWord) (to_word_ptr (A @ -1)) \n_d ->
 		shrink_a 1 :.
-		Pc .= to_word_ptr pop_c :.
+		pop_pc_from_c :.
 		for [0..2] (\i -> n_d @ i .= n_s @ i)
 	, instr "fill_r01" (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
@@ -1914,7 +1914,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 	, instr "jmp_eval" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		if_then ((n @ 0 &. lit_word 2) <>. lit_word 0) (
-			Pc .= to_word_ptr pop_c :.
+			pop_pc_from_c :.
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (n @ 0)
@@ -1923,7 +1923,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		new_local TWord (n1 @ 0) \d ->
 		if_then ((d &. lit_word 2) <>. lit_word 0) (
 			new_local (TPtr TWord) (to_word_ptr (A @ -1)) \n2 ->
-			Pc .= to_word_ptr pop_c :.
+			pop_pc_from_c :.
 			n2 @ 0 .= d :.
 			n2 @ 1 .= n1 @ 1 :.
 			n2 @ 2 .= n1 @ 2 :.
@@ -2750,7 +2750,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		)) :.
 		grow_a (nr_args - lit_word 1)
 	, instr "rtn" Nothing $
-		Pc .= to_word_ptr pop_c
+		pop_pc_from_c
 	, instr "select" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		A @ 0 .= array @ (lit_word 3 + B @ 0) :.
@@ -3186,11 +3186,11 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		Pc .= to_word_ptr (Pc @ 2)
 	, instr "pop_a_rtn" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
-		Pc .= to_word_ptr pop_c
+		pop_pc_from_c
 	, instr "pop_ab_rtn" Nothing $
 		A .= to_word_ptr (to_word A + Pc @ 1) :.
 		B .= to_word_ptr (to_word B + Pc @ 2) :.
-		Pc .= to_word_ptr pop_c
+		pop_pc_from_c
 	, instr "pop_b_jmp" Nothing $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
 		Pc .= to_word_ptr (Pc @ 2)
@@ -3206,7 +3206,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		B @ 0 .= lit_word 1
 	, instr "pop_b_rtn" Nothing $
 		B .= to_word_ptr (to_word B + Pc @ 1) :.
-		Pc .= to_word_ptr pop_c
+		pop_pc_from_c
 	, instr "pushD_a_jmp_eqD_b2" (Just 5) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TWord (n @ 0) \v ->
@@ -3473,7 +3473,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 	[ instr "add_arg0" Nothing $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
-		Pc .= to_word_ptr pop_c :.
+		pop_pc_from_c :.
 		Hp @ 1 .= A @ -1 :.
 		A @ -1 .= to_word Hp :.
 		Hp @ 0 .= n @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8) :.
@@ -3482,7 +3482,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 	, instr "add_arg1" Nothing $
 		ensure_hp 3 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
-		Pc .= to_word_ptr pop_c :.
+		pop_pc_from_c :.
 		Hp @ 2 .= A @ -1 :.
 		Hp @ 1 .= n @ 1 :.
 		A @ -1 .= to_word Hp :.
@@ -3492,7 +3492,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 	, instr "add_arg2" Nothing $
 		ensure_hp 5 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
-		Pc .= to_word_ptr pop_c :.
+		pop_pc_from_c :.
 		Hp @ 4 .= A @ -1 :.
 		Hp @ 0 .= n @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8) :.
 		Hp @ 1 .= n @ 1 :.
@@ -3506,7 +3506,7 @@ all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i ->
 		ensure_hp (2+ns) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
-		Pc .= to_word_ptr pop_c :.
+		pop_pc_from_c :.
 		Hp @ 0 .= n @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8) :.
 		Hp @ 1 .= n @ 1 :.
 		Hp @ 2 .= to_word (Hp @? 3) :.

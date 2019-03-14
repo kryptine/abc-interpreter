@@ -107,10 +107,10 @@ instance += TWord TWord
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance -= TWord  TWord, TShort TShort
 
-class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | typename v
 instance advance_ptr Int, (Expr w)
 
-class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | typename v
 instance rewind_ptr Int, (Expr w)
 
 class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t | typename t
@@ -155,7 +155,7 @@ small_integer :: !(Expr TInt) -> Expr TWord
 caf_list :: Expr (TPtr (TPtr TWord))
 
 push_c :: !(Expr TWord) !Target -> Target
-pop_c :: Expr TWord
+pop_pc_from_c :: !Target -> Target
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
 strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt

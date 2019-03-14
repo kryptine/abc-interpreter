@@ -11,6 +11,7 @@ $(BIN): %: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
 $(INTERPRETERGEN): interpretergen%: interpretergen-% .FORCE
+	$(RM) Clean\ System\ Files/interpretergen.abc
 	$(CLM) $(CLMFLAGS) -I $< interpretergen -o $@
 
 clean:

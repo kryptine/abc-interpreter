@@ -154,7 +154,7 @@ small_integer :: !(Expr TInt) -> Expr TWord
 caf_list :: Expr (TPtr (TPtr TWord))
 
 push_c :: !(Expr TWord) !Target -> Target
-pop_c :: Expr TWord
+pop_pc_from_c :: !Target -> Target
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
 strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt

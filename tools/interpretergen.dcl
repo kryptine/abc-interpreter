@@ -19,3 +19,4 @@ class to_real  t :: !(Expr t) -> Expr TReal
 class to_word_ptr t  :: !(Expr t) -> Expr (TPtr TWord)
 class to_char_ptr t  :: !(Expr t) -> Expr (TPtr TChar)
 class to_short_ptr t :: !(Expr t) -> Expr (TPtr TShort)
+class to_int_ptr t   :: !(Expr t) -> Expr (TPtr TInt)

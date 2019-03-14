@@ -455,8 +455,8 @@ caf_list = "caf_list"
 push_c :: !(Expr TWord) !Target -> Target
 push_c v t = append ("\t*++csp="+-+v+-+";") t
 
-pop_c :: Expr TWord
-pop_c = "*csp--"
+pop_pc_from_c :: !Target -> Target
+pop_pc_from_c t = append "\tpc=(BC_WORD*)*csp--;" t
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
 memcpy d s n t = append ("\tmemcpy("+-+d+-+","+-+s+-+","+-+n+-+");") t

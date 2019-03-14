@@ -1,5 +1,7 @@
 WAT2WASM?=wat2wasm
 
+all: abc_interpreter.wasm abc_instructions.js
+
 abc_interpreter.wasm: abc_interpreter.wat
 	$(WAT2WASM) $< -o $@
 
