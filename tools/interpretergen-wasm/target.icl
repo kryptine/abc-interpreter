@@ -298,7 +298,8 @@ where
 		, "(func $clean_print_real (import \"clean\" \"print_real\") (param f64))"
 		, "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))"
 		, "(func $clean_illegal_instr (import \"clean\" \"illegal_instr\") (param i32 i32))"
-		, "(func $clean_gc_needed (import \"clean\" \"gc_needed\") (param i32))"
+		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
+		, "(func $clean_gc (import \"clean\" \"gc\") (param i32) (result i64))"
 		, "(func $clean_halt (import \"clean\" \"halt\") (param i32 i32 i32))"
 		, "(global $pc      (export \"pc\")      (mut i64) (i64.const 0))"
 		, "(global $asp     (export \"asp\")     (mut i64) (i64.const 0))"
@@ -328,10 +329,13 @@ where
 		, "(block $abc-gc"
 		]
 	end =
-		[ "(unreachable)"
-		, ")" // block abc-gc
-		, "(call $clean_gc_needed (i32.wrap_i64 (global.get $pc)))"
-		, "(unreachable)"
+		[ ")" // block abc-gc
+		, "(global.set $vi0 (call $clean_gc (i32.wrap_i64 (global.get $asp))))"
+		, "(global.set $hp (i64.shr_u (global.get $vi0) (i64.const 32)))"
+		, "(if (i64.le_s (i64.and (global.get $vi0) (i64.const 0xffffffff)) (global.get $hp_free))"
+		, "\t(then (call $clean_out_of_memory) (unreachable)))"
+		, "(global.set $hp_free (i64.and (global.get $vi0) (i64.const 0xffffffff)))"
+		, "(br $abc-loop)"
 		, ")" // loop abc-loop
 		, "(unreachable)"
 		, ")" // func
@@ -345,7 +349,7 @@ where
 
 	switch =
 		[ "(block $instr_illegal"
-		//, "\t(call $clean_debug_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))"
+		, "\t(call $clean_debug_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))"
 		, "\t(br_table " +++
 			foldr (+++) "" [find_label i is \\ i <- instrs_order] +++
 			"$instr_illegal (i32.load (i32.wrap_i64 (global.get $pc))))"
@@ -695,8 +699,8 @@ where
 instance ensure_hp (Expr TWord)
 where
 	ensure_hp i t = if_then_else
-		(Elt_s Hp_free i)
-		(append (EBr "abc-gc"))
+		(Elt_s Hp_free (Ei64_const 0))
+		(Hp_free += i :. append (EBr "abc-gc"))
 		[]
 		Nothing
 		(append (ESet Hp_free (Esub Hp_free i)) t)

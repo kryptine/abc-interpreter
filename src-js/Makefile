@@ -1,8 +1,10 @@
 WAT2WASM?=wat2wasm
 
-all: abc_interpreter.wasm abc_instructions.js
+WASM:=abc_interpreter.wasm gc.wasm
 
-abc_interpreter.wasm: abc_interpreter.wat
+all: $(WASM) abc_instructions.js
+
+%.wasm: %.wat
 	$(WAT2WASM) $< -o $@
 
 abc_interpreter.wat: .FORCE

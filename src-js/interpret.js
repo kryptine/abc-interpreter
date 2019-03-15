@@ -1,6 +1,8 @@
 if (typeof scriptArgs == 'undefined')
 	scriptArgs = arguments;
 
+var DEBUG=false;
+
 var progbytes = read(scriptArgs[scriptArgs.length-1], 'binary');
 var prog = 'buffer' in progbytes
 	? new Uint32Array(progbytes.buffer) // spidermonkey
@@ -42,29 +44,55 @@ for (var i in prog) {
 }
 
 loadRelativeToScript('abc_instructions.js');
-var wasm = os.file.readRelativeToScript('abc_interpreter.wasm', 'binary');
-wasm = new Uint8Array(wasm);
 
-(async function(wasm){
-	wasm = await WebAssembly.instantiate(wasm,
+var gc = os.file.readRelativeToScript('gc.wasm', 'binary');
+gc = new Uint8Array(gc);
+
+var intp = os.file.readRelativeToScript('abc_interpreter.wasm', 'binary');
+intp = new Uint8Array(intp);
+
+(async function(gc, intp){
+	gc = await WebAssembly.instantiate(gc,
+		{
+			clean: {
+				memory: memory,
+
+				debug: function(where,n1,n2,n3) {
+					if (!DEBUG)
+						return;
+					where=[
+						'garbage collection!',
+						'copy-a',
+						'update-a',
+						'copy-thunk',
+						'copy-hnf',
+						'update-thunk',
+						'update-hnf',
+					][where];
+					console.log(where,n1,n2,n3);
+				},
+			}
+		}
+	);
+	gc.instance.exports.setup(hp, heap_size);
+
+	intp = await WebAssembly.instantiate(intp,
 		{
 			clean: {
 				memory: memory,
 
 				debug_instr: function (addr, instr) {
-					/*console.log(
-						wasm.instance.exports.get_asp(),
-						wasm.instance.exports.get_bsp(),
-						wasm.instance.exports.get_csp(),
-						wasm.instance.exports.get_hp());*/
-					//console.log(addr+'\t'+(addr/8-133)+'\t'+abc_instructions[instr]);
+					if (!DEBUG)
+						return;
+					console.log((addr/8-133)+'\t'+abc_instructions[instr]);
 				},
 				illegal_instr: function (addr, instr) {
 					crash('illegal instruction '+instr+' ('+abc_instructions[instr]+') at address '+(addr/8-1));
 				},
-				gc_needed: function (addr, instr) {
-					crash('gc needed at '+(addr/8-1)+' ('+abc_instructions[membuffer[addr/4]]+')');
+				out_of_memory: function () {
+					crash('out of memory');
 				},
+				gc: gc.instance.exports.gc,
 				halt: function (pc, hp_free, hp_size) {
 					console.log('halt at', (pc/8)-code_offset);
 					console.log(hp_size-hp_free, hp_free, hp_size);
@@ -108,11 +136,11 @@ wasm = new Uint8Array(wasm);
 	);
 
 	if (scriptArgs.indexOf('--extract-code') >= 0) {
-		var obj = wasmExtractCode(wasm.module, 'best');
+		var obj = wasmExtractCode(intp.module, 'best');
 
 		var exports = {};
-		for (var f in wasm.instance.exports)
-			exports[wasm.instance.exports[f].name] = f;
+		for (var f in intp.instance.exports)
+			exports[intp.instance.exports[f].name] = f;
 
 		obj.segments.filter(seg => seg.kind == 0).map(function (seg) {
 			var name = seg.funcIndex in exports ? exports[seg.funcIndex] : ('_'+seg.funcIndex);
@@ -124,7 +152,7 @@ wasm = new Uint8Array(wasm);
 		});
 	}
 
-	var r=wasm.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
+	var r=intp.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
 	if (r!=0)
 		console.log('failed with return code', r);
-})(wasm);
+})(gc, intp);
