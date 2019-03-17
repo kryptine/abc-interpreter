@@ -8,7 +8,78 @@
 	(global $end-heap (mut i32) (i32.const 0))
 	(global $in-first-semispace (mut i32) (i32.const 1))
 
-	(func (export "setup") (param i32 i32)
+	(func (export "strncmp") (param $s1 i32) (param $s2 i32) (param $n i32) (result i32)
+		(local $n4 i32)
+		(local $c1 i32)
+		(local $c2 i32)
+
+		(local.set $n4 (i32.shr_u (local.get $n) (i32.const 2)))
+
+		(block $end-check-words
+			(br_if $end-check-words (i32.eqz (local.get $n4)))
+			(loop $check-words
+				(br_if $end-check-words (i32.eqz (local.get $n4)))
+
+				(local.set $c1 (i32.load8_s (local.get $s1)))
+				(local.set $c2 (i32.load8_s (local.get $s2)))
+				(if
+					(i32.or (i32.eqz (local.get $c1)) (i32.ne (local.get $c1) (local.get $c2)))
+					(then (return (i32.sub (local.get $c1) (local.get $c2))))
+				)
+
+				(local.set $c1 (i32.load8_s offset=1 (local.get $s1)))
+				(local.set $c2 (i32.load8_s offset=1 (local.get $s2)))
+				(if
+					(i32.or (i32.eqz (local.get $c1)) (i32.ne (local.get $c1) (local.get $c2)))
+					(then (return (i32.sub (local.get $c1) (local.get $c2))))
+				)
+
+				(local.set $c1 (i32.load8_s offset=2 (local.get $s1)))
+				(local.set $c2 (i32.load8_s offset=2 (local.get $s2)))
+				(if
+					(i32.or (i32.eqz (local.get $c1)) (i32.ne (local.get $c1) (local.get $c2)))
+					(then (return (i32.sub (local.get $c1) (local.get $c2))))
+				)
+
+				(local.set $c1 (i32.load8_s offset=3 (local.get $s1)))
+				(local.set $c2 (i32.load8_s offset=3 (local.get $s2)))
+				(if
+					(i32.or (i32.eqz (local.get $c1)) (i32.ne (local.get $c1) (local.get $c2)))
+					(then (return (i32.sub (local.get $c1) (local.get $c2))))
+				)
+
+				(local.set $s1 (i32.add (local.get $s1) (i32.const 4)))
+				(local.set $s2 (i32.add (local.get $s2) (i32.const 4)))
+				(local.set $n4 (i32.sub (local.get $n4) (i32.const 1)))
+
+				(br $check-words)
+			)
+		)
+
+		(local.set $n (i32.and (local.get $n) (i32.const 3)))
+		(block $end-check-bytes
+			(loop $check-bytes
+				(br_if $end-check-bytes (i32.eqz (local.get $n)))
+
+				(local.set $c1 (i32.load8_u (local.get $s1)))
+				(local.set $c2 (i32.load8_u (local.get $s2)))
+				(if
+					(i32.or (i32.eqz (local.get $c1)) (i32.ne (local.get $c1) (local.get $c2)))
+					(then (return (i32.sub (local.get $c1) (local.get $c2))))
+				)
+
+				(local.set $s1 (i32.add (local.get $s1) (i32.const 1)))
+				(local.set $s2 (i32.add (local.get $s2) (i32.const 1)))
+				(local.set $n (i32.sub (local.get $n) (i32.const 1)))
+
+				(br $check-bytes)
+			)
+		)
+
+		(i32.sub (local.get $c1) (local.get $c2))
+	)
+
+	(func (export "setup_gc") (param i32 i32)
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))
 		(global.set $end-heap (i32.add (local.get 0) (i32.add (local.get 1) (local.get 1))))
@@ -67,9 +138,8 @@
 					)
 				)
 
-				(local.set $d (local.get $new))
+				(i32.store offset=8 (local.get $asp) (local.get $new))
 				(local.set $new (call $copy (local.get $n) (local.get $new)))
-				(i32.store offset=8 (local.get $asp) (local.get $d))
 				(br $copy-asp)
 			)
 		)
@@ -103,15 +173,25 @@
 							)
 						)
 						(if
+							;; _STRING_+2
+							(i32.eq (local.get $d) (i32.const 50))
+							(then
+								(local.set $a-arity (i32.load offset=8 (local.get $n))) ;; length
+								(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
+								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $a-arity) (i32.const 3)) (i32.const 16))))
+								(br $update-refs)
+							)
+						)
+						(if
 							;; _ARRAY_+2
 							(i32.eq (local.get $d) (i32.const 10))
 							(then
 								(local.set $a-arity (i32.load offset=8 (local.get $n))) ;; length
 								(local.set $d (i32.load offset=16 (local.get $n))) ;; child descriptor
 								(if
-									(i32.and ;; unboxed INT/BOOL/REAL
-										(i32.le_u (i32.const 90) (local.get $d))
-										(i32.le_u (local.get $d) (i32.const 210))
+									(i32.or ;; unboxed INT/REAL
+										(i32.eq (i32.const 170) (local.get $d))
+										(i32.eq (local.get $d) (i32.const 210))
 									)
 									(then
 										(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $a-arity) (i32.const 3)) (i32.const 24))))
@@ -120,7 +200,7 @@
 								)
 								(if
 									(i32.eqz (i32.eqz (local.get $d)))
-									(then (unreachable)) ;; TODO: unboxed record arrays
+									(then (unreachable)) ;; TODO: unboxed record arrays; {#Bool}
 								)
 								(local.set $n (i32.add (local.get $n) (i32.const 24)))
 								(loop $update-array
@@ -217,36 +297,34 @@
 						(br $update-thunk-refs)
 					)
 				)
-				(if
-					(i32.lt_s (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 2))
-					(then
-						(local.set $n (i32.add (local.get $n) (i32.shl (i32.sub (i32.const 2) (i32.add (local.get $a-arity) (local.get $b-arity))) (i32.const 3))))
-					)
-					(else
-						(local.set $n (i32.add (local.get $n) (i32.shl (local.get $b-arity) (i32.const 3))))
+				(local.set $n
+					(i32.add
+						(local.get $n)
+						(i32.shl
+							(select
+								(i32.sub (i32.const 2) (i32.add (local.get $a-arity) (local.get $b-arity)))
+								(local.get $b-arity)
+								(i32.lt_s (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 2))
+							)
+							(i32.const 3)
+						)
 					)
 				)
-
 				(br $update-refs)
 			)
 		)
 
 		;; return
-		(if
-			(result i64)
-			(global.get $in-first-semispace)
-			(then
-				(global.set $in-first-semispace (i32.const 0))
-				(i64.or
-					(i64.shl (i64.extend_i32_u (local.get $new)) (i64.const 32))
-					(i64.extend_i32_u (i32.div_u (i32.sub (global.get $end-heap) (local.get $new)) (i32.const 8)))
-				)
-			)
-			(else
-				(global.set $in-first-semispace (i32.const 1))
-				(i64.or
-					(i64.shl (i64.extend_i32_u (local.get $new)) (i64.const 32))
-					(i64.extend_i32_u (i32.div_u (i32.sub (global.get $half-heap) (local.get $new)) (i32.const 8)))
+		(global.set $in-first-semispace (i32.sub (i32.const 1) (global.get $in-first-semispace)))
+		(i64.or
+			(i64.shl (i64.extend_i32_u (local.get $new)) (i64.const 32))
+			(i64.extend_i32_u
+				(i32.div_u
+					(i32.sub
+						(select (global.get $half-heap) (global.get $end-heap) (global.get $in-first-semispace))
+						(local.get $new)
+					)
+					(i32.const 8)
 				)
 			)
 		)
@@ -282,6 +360,28 @@
 					)
 				)
 				(if
+					;; _STRING_+2
+					(i32.eq (local.get $d) (i32.const 50))
+					(then
+						(local.set $a-arity (i32.load offset=8 (local.get $from))) ;; length
+						(i32.store offset=8 (local.get $to) (local.get $a-arity))
+						(local.set $to (i32.add (local.get $to) (i32.const 16)))
+						(local.set $from (i32.add (local.get $from) (i32.const 16)))
+						(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
+						(block $end-copy-string
+							(loop $copy-string
+								(br_if $end-copy-string (i32.eqz (local.get $a-arity)))
+								(i64.store (local.get $to) (i64.load (local.get $from)))
+								(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+								(local.set $to (i32.add (local.get $to) (i32.const 8)))
+								(local.set $from (i32.add (local.get $from) (i32.const 8)))
+								(br $copy-string)
+							)
+						)
+						(return (local.get $to))
+					)
+				)
+				(if
 					;; _ARRAY_+2
 					(i32.eq (local.get $d) (i32.const 10))
 					(then
@@ -291,15 +391,15 @@
 							(i32.eqz
 								(i32.or
 									(i32.eqz (local.get $d)) ;; boxed
-									(i32.and ;; unboxed INT/BOOL/REAL
-										(i32.le_u (i32.const 90) (local.get $d))
-										(i32.le_u (local.get $d) (i32.const 210))
+									(i32.or ;; unboxed INT/REAL
+										(i32.eq (i32.const 170) (local.get $d))
+										(i32.eq (local.get $d) (i32.const 210))
 									)
 								)
 							)
 							(then
 								;;(call $debug (i32.const 4) (local.get $d) (i32.const -1) (i32.const -2))
-								(unreachable) ;; TODO: unboxed record arrays
+								(unreachable) ;; TODO: unboxed record arrays; {#Bool}
 							)
 						)
 						(i32.store offset=8 (local.get $to) (local.get $a-arity))
@@ -330,14 +430,12 @@
 				)
 				;; No basic type
 				(local.set $a-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+				(local.set $b-arity (i32.const 0))
 				(if
 					(i32.gt_s (local.get $a-arity) (i32.const 256))
 					(then
 						(local.set $a-arity (i32.load16_s (local.get $d)))
 						(local.set $b-arity (i32.sub (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (local.get $a-arity)) (i32.const 256)))
-					)
-					(else
-						(local.set $b-arity (i32.const 0))
 					)
 				)
 				;; "copy-hnf"
@@ -388,14 +486,11 @@
 			)
 		)
 
-		(if
+		(select
+			(i32.add (local.get $to) (i32.shl (i32.sub (i32.const 3) (local.get $ab-arity)) (i32.const 3)))
+			(i32.add (local.get $to) (i32.const 8))
 			(i32.lt_s (local.get $ab-arity) (i32.const 2))
-			(then
-				(local.set $to (i32.add (local.get $to) (i32.shl (i32.sub (i32.const 2) (local.get $ab-arity)) (i32.const 3))))
-			)
 		)
-
-		(i32.add (local.get $to) (i32.const 8))
 	)
 
 	(func $update-ref (param $ref i32) (param $hp i32) (result i32)

@@ -10,6 +10,44 @@ var prog = 'buffer' in progbytes
 
 var stack_size=(512<<10)*2*8;
 var heap_size=2<<20;
+
+function string_to_size(s) {
+	var res=0;
+	var i=0;
+
+	while ('0'<=s[i] && s[i]<='9') {
+		res*=10;
+		res+=s.charCodeAt(i)-48;
+		i++;
+	}
+
+	if (i>=s.length)
+		return res;
+
+	switch (s[i]) {
+		case 'm':
+		case 'M':
+			res<<=10;
+		case 'k':
+		case 'K':
+			res<<=10;
+			break;
+		default:
+			return -1;
+	}
+
+	if (i==s.length)
+		return res;
+	return -1;
+}
+
+var heapi=scriptArgs.indexOf('-h');
+if (heapi>=0)
+	heap_size=string_to_size(scriptArgs[heapi+1]);
+var stacki=scriptArgs.indexOf('-s');
+if (stacki>=0)
+	stack_size=string_to_size(scriptArgs[stacki+1]);
+
 var asp=4*prog.length;
 var bsp=asp+stack_size;
 var csp=asp+stack_size/2;
@@ -45,25 +83,29 @@ for (var i in prog) {
 
 loadRelativeToScript('abc_instructions.js');
 
-var gc = os.file.readRelativeToScript('gc.wasm', 'binary');
-gc = new Uint8Array(gc);
+var util = os.file.readRelativeToScript('util.wasm', 'binary');
+util = new Uint8Array(util);
 
 var intp = os.file.readRelativeToScript('abc_interpreter.wasm', 'binary');
 intp = new Uint8Array(intp);
 
-(async function(gc, intp){
-	gc = await WebAssembly.instantiate(gc,
+(async function(util, intp){
+	util = await WebAssembly.instantiate(util,
 		{
 			clean: {
 				memory: memory,
 
 				debug: function(where,n1,n2,n3) {
+					//if (where==0) {
+					//	console.log('garbage collection');
+					//	return;
+					//}
 					if (!DEBUG)
 						return;
 					where=[
 						'garbage collection!',
 						'copy-a',
-						'update-a',
+						undefined,
 						'copy-thunk',
 						'copy-hnf',
 						'update-thunk',
@@ -74,7 +116,7 @@ intp = new Uint8Array(intp);
 			}
 		}
 	);
-	gc.instance.exports.setup(hp, heap_size);
+	util.instance.exports.setup_gc(hp, heap_size);
 
 	intp = await WebAssembly.instantiate(intp,
 		{
@@ -92,7 +134,7 @@ intp = new Uint8Array(intp);
 				out_of_memory: function () {
 					crash('out of memory');
 				},
-				gc: gc.instance.exports.gc,
+				gc: util.instance.exports.gc,
 				halt: function (pc, hp_free, hp_size) {
 					console.log('halt at', (pc/8)-code_offset);
 					console.log(hp_size-hp_free, hp_free, hp_size);
@@ -105,11 +147,7 @@ intp = new Uint8Array(intp);
 						mem[dest+i]=mem[src+i];
 					}
 				},
-				strncmp: function (s1,s2,n) {
-					// TODO
-					console.log('strncmp',s1,s2,n);
-					return 0;
-				},
+				strncmp: util.instance.exports.strncmp,
 				putchar: function (v) {
 					putstr(String.fromCharCode(v));
 				},
@@ -155,4 +193,4 @@ intp = new Uint8Array(intp);
 	var r=intp.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
 	if (r!=0)
 		console.log('failed with return code', r);
-})(gc, intp);
+})(util, intp);

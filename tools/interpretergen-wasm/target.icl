@@ -664,7 +664,7 @@ while_do c f t =
 	(append "(block" t))))))
 
 break :: !Target -> Target
-break t = abort ("break needed for "+++hd t.instrs+++"\n")
+break t = append "(br 1)" t
 
 if_then_else ::
 	!(Expr TWord) !(Target -> Target)

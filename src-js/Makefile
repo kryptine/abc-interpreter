@@ -1,6 +1,6 @@
 WAT2WASM?=wat2wasm
 
-WASM:=abc_interpreter.wasm gc.wasm
+WASM:=abc_interpreter.wasm util.wasm
 
 all: $(WASM) abc_instructions.js
 
