@@ -79,7 +79,7 @@ RtoI    :: !(Expr TReal) -> Expr TInt
 
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 
-if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t | typename t
 
 begin_instruction :: !String !Target -> Target
 end_instruction :: !Target -> Target

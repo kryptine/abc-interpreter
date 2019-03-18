@@ -190,7 +190,7 @@
 								(local.set $d (i32.load offset=16 (local.get $n))) ;; child descriptor
 								(if
 									(i32.or ;; unboxed INT/REAL
-										(i32.eq (i32.const 170) (local.get $d))
+										(i32.eq (local.get $d) (i32.const 170))
 										(i32.eq (local.get $d) (i32.const 210))
 									)
 									(then
@@ -198,16 +198,46 @@
 										(br $update-refs)
 									)
 								)
+								(if ;; unboxed BOOL
+									(i32.eq (local.get $d) (i32.const 90))
+									(then
+										(local.set $n (i32.add (local.get $n) (i32.add (local.get $a-arity) (i32.const 24))))
+										(br $update-refs)
+									)
+								)
+
 								(if
-									(i32.eqz (i32.eqz (local.get $d)))
-									(then (unreachable)) ;; TODO: unboxed record arrays; {#Bool}
+									(i32.eqz (local.get $d))
+									(then
+										(local.set $d (local.get $a-arity)) ;; length
+										(local.set $a-arity (i32.const 1))
+										(local.set $b-arity (i32.const 0))
+									)
+									(else ;; unboxed record
+										(local.set $ab-arity (local.get $d)) ;; temp
+										(local.set $d (local.get $a-arity)) ;; length
+										(local.set $a-arity (i32.load16_s (local.get $ab-arity)))
+										(local.set $ab-arity (i32.sub (i32.load16_s (i32.sub (local.get $ab-arity) (i32.const 2))) (i32.const 256)))
+										(local.set $b-arity (i32.mul (i32.sub (local.get $ab-arity) (local.get $a-arity)) (i32.const 8)))
+									)
 								)
 								(local.set $n (i32.add (local.get $n) (i32.const 24)))
 								(loop $update-array
-									(br_if $update-refs (i32.eqz (local.get $a-arity)))
-									(local.set $new (call $update-ref (local.get $n) (local.get $new)))
-									(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
-									(local.set $n (i32.add (local.get $n) (i32.const 8)))
+									(br_if $update-refs (i32.eqz (local.get $d)))
+
+									(local.set $ab-arity (local.get $a-arity))
+									(block $end-update-array-pointers
+										(loop $update-array-pointers
+											(br_if $end-update-array-pointers (i32.eqz (local.get $ab-arity)))
+											(local.set $new (call $update-ref (local.get $n) (local.get $new)))
+											(local.set $n (i32.add (local.get $n) (i32.const 8)))
+											(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 1)))
+											(br $update-array-pointers)
+										)
+									)
+
+									(local.set $d (i32.sub (local.get $d) (i32.const 1)))
+									(local.set $n (i32.add (local.get $n) (local.get $b-arity)))
 									(br $update-array)
 								)
 							)
@@ -216,6 +246,7 @@
 							(i32.lt_u (local.get $d) (i32.mul (i32.const 131) (i32.const 8))) ;; built-in
 							(then
 								;; TODO: add more basic types
+								(call $debug (i32.const 2) (i32.const 0) (local.get $d) (i32.const 2))
 								(unreachable)
 							)
 						)
@@ -302,7 +333,7 @@
 						(local.get $n)
 						(i32.shl
 							(select
-								(i32.sub (i32.const 2) (i32.add (local.get $a-arity) (local.get $b-arity)))
+								(i32.sub (i32.const 2) (local.get $a-arity))
 								(local.get $b-arity)
 								(i32.lt_s (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 2))
 							)
@@ -387,8 +418,14 @@
 					(then
 						(local.set $a-arity (i32.load offset=8 (local.get $from))) ;; length
 						(local.set $d (i32.load offset=16 (local.get $from))) ;; child descriptor
+
+						(i32.store offset=8 (local.get $to) (local.get $a-arity))
+						(i32.store offset=16 (local.get $to) (local.get $d))
+						(local.set $to (i32.add (local.get $to) (i32.const 24)))
+						(local.set $from (i32.add (local.get $from) (i32.const 24)))
+
 						(if
-							(i32.eqz
+							(i32.eqz ;; not
 								(i32.or
 									(i32.eqz (local.get $d)) ;; boxed
 									(i32.or ;; unboxed INT/REAL
@@ -398,14 +435,19 @@
 								)
 							)
 							(then
-								;;(call $debug (i32.const 4) (local.get $d) (i32.const -1) (i32.const -2))
-								(unreachable) ;; TODO: unboxed record arrays; {#Bool}
+								(if
+									(i32.eq (local.get $d) (i32.const 90))
+									(then ;; BOOL
+										(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
+									)
+									(else ;; unboxed record
+										(local.set $a-arity (i32.mul (local.get $a-arity)
+											(i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256))))
+									)
+								)
 							)
 						)
-						(i32.store offset=8 (local.get $to) (local.get $a-arity))
-						(i32.store offset=16 (local.get $to) (local.get $d))
-						(local.set $to (i32.add (local.get $to) (i32.const 24)))
-						(local.set $from (i32.add (local.get $from) (i32.const 24)))
+
 						(block $end-copy-array
 							(loop $copy-array
 								(br_if $end-copy-array (i32.eqz (local.get $a-arity)))
@@ -422,9 +464,8 @@
 				(if
 					(i32.lt_u (local.get $d) (i32.mul (i32.const 131) (i32.const 8))) ;; built-in
 					(then
-						;; "copy-hnf"
-						;;(call $debug (i32.const 4) (local.get $d) (i32.const -1) (i32.const -1))
 						;; TODO: add more basic types
+						(call $debug (i32.const 2) (i32.const 0) (i32.const 0) (i32.const 4))
 						(unreachable)
 					)
 				)
@@ -473,6 +514,7 @@
 		;; thunk, "copy-thunk"
 		(local.set $ab-arity (i32.and (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 0xff)))
 		;;(call $debug (i32.const 3) (local.get $from) (local.get $d) (local.get $ab-arity))
+		(if (i32.eq (local.get $ab-arity) (i32.const 0xff)) (local.set $ab-arity (i32.const 1))) ;; -1 for selectors etc.
 
 		(local.set $d (local.get $ab-arity))
 		(block $end-copy-thunk

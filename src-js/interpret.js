@@ -31,6 +31,7 @@ function string_to_size(s) {
 		case 'k':
 		case 'K':
 			res<<=10;
+			i++;
 			break;
 		default:
 			return -1;
@@ -41,12 +42,12 @@ function string_to_size(s) {
 	return -1;
 }
 
-var heapi=scriptArgs.indexOf('-h');
+var heapi=scriptArgs.lastIndexOf('-h');
 if (heapi>=0)
 	heap_size=string_to_size(scriptArgs[heapi+1]);
 heap_size=Math.floor(heap_size/8)*8;
 
-var stacki=scriptArgs.indexOf('-s');
+var stacki=scriptArgs.lastIndexOf('-s');
 if (stacki>=0)
 	stack_size=string_to_size(scriptArgs[stacki+1]);
 stack_size*=8;
@@ -108,7 +109,7 @@ intp = new Uint8Array(intp);
 					where=[
 						'garbage collection!',
 						'copy-a',
-						undefined,
+						'unimplemented',
 						'copy-thunk',
 						'copy-hnf',
 						'update-thunk',

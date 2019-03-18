@@ -27,7 +27,7 @@ import interpretergen
 	| EEnd
 	| ECall !Label !ExprList
 
-	| EIf` !(Expr TWord) !(Expr t) !(Expr t)
+	| E.u: EIf` !(Expr TWord) !(Expr u) !(Expr u) & typename u
 
 	| Ei64_const !Int
 
@@ -91,7 +91,8 @@ where
 		EEnd       -> ")"
 		ECall l as -> "(call $"+++l+++print_args (starts_with 0 "clean_" l) as+++")"
 
-		EIf` c t e -> "(if (result i64)"+++i64_to_cond c+++"(then"+++toString t+++")(else"+++toString e+++"))" // TODO not always i64
+		EIf` c t e -> "(if (result "+++type t+++")"+++i64_to_cond c
+			+++"(then"+++toString t+++")(else"+++toString e+++"))"
 
 		Ei64_const i -> "(i64.const "+++toString i+++")"
 
@@ -376,33 +377,33 @@ where
 append e t :== {t & output=[toString e:t.output]}
 
 instr_unimplemented :: !Target -> Target
-instr_unimplemented t = append "(unreachable)" t // TODO
+instr_unimplemented t = append "(call $clean_illegal_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))" t
 
 instr_halt :: !Target -> Target
 instr_halt t = append "(return (i32.const 0))"
 	(append "(call $clean_halt (i32.wrap_i64 (global.get $pc)) (i32.wrap_i64 (global.get $hp_free)) (i32.wrap_i64 (global.get $hp_size)))" t)
 
 instr_divLU :: !Target -> Target
-instr_divLU t = append "(unreachable)" t // TODO
+instr_divLU t = instr_unimplemented t // TODO
 
 instr_mulUUL :: !Target -> Target
-instr_mulUUL t = append "(unreachable)" t // TODO
+instr_mulUUL t = instr_unimplemented t // TODO
 
 lit_word :: !Int -> Expr TWord
 lit_word i = Ei64_const i
 
 lit_char :: !Char -> Expr TChar
-lit_char c = Ei64_const (toInt c) // TODO
+lit_char c = Ei64_const (toInt c)
 
 lit_short :: !Int -> Expr TShort
-lit_short i = Ei64_const i // TODO
+lit_short i = Ei64_const i
 
 lit_int :: !Int -> Expr TInt
 lit_int i = Ei64_const i
 
-instance to_word TChar    where to_word e = cast_expr e // TODO
+instance to_word TChar    where to_word e = cast_expr e
 instance to_word TInt     where to_word e = cast_expr e
-instance to_word TShort   where to_word e = cast_expr e // TODO
+instance to_word TShort   where to_word e = cast_expr e
 instance to_word (TPtr t) where to_word e = cast_expr e
 instance to_word TReal    where to_word e = Ei64_reinterpret_f64 e
 
@@ -435,16 +436,16 @@ instance ^ (Expr TReal) where ^ a b = ECall "clean_powR" (a -- b -- ELNil)
 (<>.) a b = Ene a b
 
 (<.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<.) a b = Elt_s a b // TODO: sometimes signed
+(<.) a b = Elt_s a b // TODO: sometimes unsigned?
 
 (>.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>.) a b = Egt_s a b // TODO: sometimes signed?
+(>.) a b = Egt_s a b // TODO: sometimes unsigned?
 
 (<=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<=.) a b = Ele_s a b // TODO: sometimes signed?
+(<=.) a b = Ele_s a b // TODO: sometimes unsigned?
 
 (>=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>=.) a b = Ege_s a b // TODO: sometimes signed?
+(>=.) a b = Ege_s a b // TODO: sometimes unsigned?
 
 (&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (&&.) a b = Eand a b
@@ -518,7 +519,7 @@ RtoI e = Ei64_trunc_f64_s e
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 if_i64_or_i32_expr a _ = a
 
-if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t | typename t
 if_expr c t e = EIf` c t e
 
 begin_instruction :: !String !Target -> Target
@@ -658,10 +659,10 @@ get_type_of_ptr _ = code {
 }
 
 begin_block :: !Target -> Target
-begin_block t = append "(block" t // TODO
+begin_block t = append "(block" t
 
 end_block :: !Target -> Target
-end_block t = append ")" t // TODO
+end_block t = append ")" t
 
 while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
 while_do c f t =
@@ -755,13 +756,13 @@ cycle_ptr :: Expr TWord
 cycle_ptr = Ei64_const (131*8)
 
 indirection_ptr :: Expr TWord
-indirection_ptr = Ei64_const 2 // TODO
+indirection_ptr = Ei64_const ((131+1+5)*8)
 
 dNil_ptr :: Expr TWord
-dNil_ptr = Ei64_const 2 // TODO
+dNil_ptr = Ei64_const ((141+1)*8)
 
 small_integer :: !(Expr TInt) -> Expr TWord
-small_integer i = Emul (Ei64_const 8) (Eadd (Ei64_const 31) (Emul (Ei64_const 2) (cast_expr i))) // TODO optimize
+small_integer i = Eadd (Ei64_const (8*31)) (Emul (Ei64_const 16) (cast_expr i))
 
 caf_list :: Expr (TPtr (TPtr TWord))
 caf_list = Ei64_const (97*8)
