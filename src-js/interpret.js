@@ -148,6 +148,7 @@ intp = new Uint8Array(intp);
 					}
 				},
 				strncmp: util.instance.exports.strncmp,
+
 				putchar: function (v) {
 					putstr(String.fromCharCode(v));
 				},
@@ -161,14 +162,25 @@ intp = new Uint8Array(intp);
 					putstr("'"+String.fromCharCode(v)+"'");
 				},
 				print_real: function (v) {
-					putstr(Number(v).toLocaleString(
+					putstr(Number(0+v).toLocaleString(
 						['en-US'],
 						{
 							useGrouping: false,
-							maximumFractionDigits: 15,
+							maximumSignificantDigits: 15,
 						}
 					));
-				}
+				},
+
+				powR: Math.pow,
+				acosR: Math.acos,
+				asinR: Math.asin,
+				atanR: Math.atan,
+				cosR: Math.cos,
+				sinR: Math.sin,
+				tanR: Math.tan,
+				expR: Math.exp,
+				lnR: Math.log,
+				log10R: Math.log10,
 			}
 		}
 	);

@@ -296,6 +296,16 @@ where
 		, "(func $clean_print_bool (import \"clean\" \"print_bool\") (param i32))"
 		, "(func $clean_print_char (import \"clean\" \"print_char\") (param i32))"
 		, "(func $clean_print_real (import \"clean\" \"print_real\") (param f64))"
+		, "(func $clean_powR (import \"clean\" \"powR\") (param f64 f64) (result f64))"
+		, "(func $clean_acosR (import \"clean\" \"acosR\") (param f64) (result f64))"
+		, "(func $clean_asinR (import \"clean\" \"asinR\") (param f64) (result f64))"
+		, "(func $clean_atanR (import \"clean\" \"atanR\") (param f64) (result f64))"
+		, "(func $clean_cosR (import \"clean\" \"cosR\") (param f64) (result f64))"
+		, "(func $clean_sinR (import \"clean\" \"sinR\") (param f64) (result f64))"
+		, "(func $clean_tanR (import \"clean\" \"tanR\") (param f64) (result f64))"
+		, "(func $clean_expR (import \"clean\" \"expR\") (param f64) (result f64))"
+		, "(func $clean_lnR (import \"clean\" \"lnR\") (param f64) (result f64))"
+		, "(func $clean_log10R (import \"clean\" \"log10R\") (param f64) (result f64))"
 		, "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))"
 		, "(func $clean_illegal_instr (import \"clean\" \"illegal_instr\") (param i32 i32))"
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
@@ -413,7 +423,7 @@ instance + (Expr t) where + a b = Eadd a b
 instance - (Expr t) where - a b = Esub a b
 instance * (Expr t) where * a b = Emul a b
 instance / (Expr t) where / a b = Ediv_s a b
-instance ^ (Expr TReal) where ^ a b = EUnreachable // TODO
+instance ^ (Expr TReal) where ^ a b = ECall "clean_powR" (a -- b -- ELNil)
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = Erem_s a b
@@ -464,40 +474,40 @@ absR :: !(Expr TReal) -> Expr TReal
 absR e = Eabs e
 
 acosR :: !(Expr TReal) -> Expr TReal
-acosR e = EUnreachable // TODO
+acosR e = ECall "clean_acosR" (e -- ELNil)
 
 asinR :: !(Expr TReal) -> Expr TReal
-asinR e = EUnreachable // TODO
+asinR e = ECall "clean_asinR" (e -- ELNil)
 
 atanR :: !(Expr TReal) -> Expr TReal
-atanR e = EUnreachable // TODO
+atanR e = ECall "clean_atanR" (e -- ELNil)
 
 cosR :: !(Expr TReal) -> Expr TReal
-cosR e = EUnreachable // TODO
+cosR e = ECall "clean_cosR" (e -- ELNil)
 
 entierR :: !(Expr TReal) -> Expr TInt
 entierR e = Ei64_trunc_f64_s (Efloor e)
 
 expR :: !(Expr TReal) -> Expr TReal
-expR e = EUnreachable // TODO
+expR e = ECall "clean_expR" (e -- ELNil)
 
 lnR :: !(Expr TReal) -> Expr TReal
-lnR e = EUnreachable // TODO
+lnR e = ECall "clean_lnR" (e -- ELNil)
 
 log10R :: !(Expr TReal) -> Expr TReal
-log10R e = EUnreachable // TODO
+log10R e = ECall "clean_log10R" (e -- ELNil)
 
 negR :: !(Expr TReal) -> Expr TReal
 negR e = Eneg e
 
 sinR :: !(Expr TReal) -> Expr TReal
-sinR e = EUnreachable // TODO
+sinR e = ECall "clean_sinR" (e -- ELNil)
 
 sqrtR :: !(Expr TReal) -> Expr TReal
 sqrtR e = Esqrt e
 
 tanR :: !(Expr TReal) -> Expr TReal
-tanR e = EUnreachable // TODO
+tanR e = ECall "clean_tanR" (e -- ELNil)
 
 ItoR :: !(Expr TInt) -> Expr TReal
 ItoR e = Ef64_convert_i64_s e
