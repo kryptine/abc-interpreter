@@ -8,7 +8,7 @@ var prog = 'buffer' in progbytes
 	? new Uint32Array(progbytes.buffer) // spidermonkey
 	: new Uint32Array(progbytes); // d8
 
-var stack_size=(512<<10)*2*8;
+var stack_size=(512<<10)*2;
 var heap_size=2<<20;
 
 function string_to_size(s) {
@@ -44,16 +44,19 @@ function string_to_size(s) {
 var heapi=scriptArgs.indexOf('-h');
 if (heapi>=0)
 	heap_size=string_to_size(scriptArgs[heapi+1]);
+heap_size=Math.floor(heap_size/8)*8;
+
 var stacki=scriptArgs.indexOf('-s');
 if (stacki>=0)
 	stack_size=string_to_size(scriptArgs[stacki+1]);
+stack_size*=8;
 
 var asp=4*prog.length;
 var bsp=asp+stack_size;
 var csp=asp+stack_size/2;
 var hp=bsp+8;
 
-var blocks_needed = Math.floor((prog.length*4 + stack_size + heap_size*2*8 + 65535) / 65536);
+var blocks_needed = Math.floor((prog.length*4 + stack_size + heap_size*2 + 65535) / 65536);
 
 var memory = new WebAssembly.Memory({initial: blocks_needed});
 var membuffer = new Uint32Array(memory.buffer);
@@ -126,7 +129,7 @@ intp = new Uint8Array(intp);
 				debug_instr: function (addr, instr) {
 					if (!DEBUG)
 						return;
-					console.log((addr/8-133)+'\t'+abc_instructions[instr]);
+					console.log((addr/8-code_offset)+'\t'+abc_instructions[instr]);
 				},
 				illegal_instr: function (addr, instr) {
 					crash('illegal instruction '+instr+' ('+abc_instructions[instr]+') at address '+(addr/8-1));
