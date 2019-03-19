@@ -132,7 +132,9 @@ void load_instruction_table(void) {
 	put_instruction_name("fill_a",                parse_instruction_n_n,           code_fill_a );
 	put_instruction_name("fill_u",                parse_instruction_a_n_n_a_n,     code_fill_u );
 	put_instruction_name("fill_r",                parse_instruction_a_n_n_n_n_n,   code_fill_r );
+	put_instruction_name("get_desc_arity_offset", parse_instruction,               code_get_desc_arity_offset );
 	put_instruction_name("get_node_arity",        parse_instruction_n,             code_get_node_arity );
+	put_instruction_name("get_thunk_desc",        parse_instruction,               code_get_thunk_desc );
 	put_instruction_name("getWL",                 parse_instruction_n,             code_dummy );
 	put_instruction_name("gtI",                   parse_instruction,               code_gtI );
 	put_instruction_name("halt",                  parse_instruction,               code_halt );
@@ -150,6 +152,7 @@ void load_instruction_table(void) {
 	put_instruction_name("jsr_ap",                parse_instruction_n,             code_jsr_ap );
 	put_instruction_name("lnR",                   parse_instruction,               code_lnR );
 	put_instruction_name("load_i",                parse_instruction_i,             code_load_i );
+	put_instruction_name("load_module_name",      parse_instruction,               code_load_module_name );
 	put_instruction_name("load_si16",             parse_instruction_i,             code_load_si16 );
 	put_instruction_name("load_si32",             parse_instruction_i,             code_load_si32 );
 	put_instruction_name("load_ui8",              parse_instruction_i,             code_load_ui8 );

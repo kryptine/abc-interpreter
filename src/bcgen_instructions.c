@@ -2199,8 +2199,18 @@ void code_fill_r(char descriptor_name[],int a_size,int b_size,int root_offset,in
 	exit(1);
 }
 
+void code_get_desc_arity_offset(void) {
+	unsupported_instruction_warning(Cget_desc_arity_offset);
+	add_instruction(Cget_desc_arity_offset);
+}
+
 void code_get_node_arity(int a_offset) {
 	add_instruction_w(Cget_node_arity,-a_offset);
+}
+
+void code_get_thunk_desc(void) {
+	unsupported_instruction_warning(Cget_thunk_desc);
+	add_instruction(Cget_thunk_desc);
 }
 
 void code_gtI(void) {
@@ -2385,6 +2395,11 @@ void code_lnR(void) {
 void code_load_i(CleanInt value) {
 	unsupported_instruction_warning(Cload_i);
 	add_instruction_i(Cload_i,value);
+}
+
+void code_load_module_name(void) {
+	unsupported_instruction_warning(Cload_module_name);
+	add_instruction(Cload_module_name);
 }
 
 void code_load_si16(CleanInt value) {
