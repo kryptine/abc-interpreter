@@ -3574,8 +3574,11 @@ all_instructions t = pre ++ (flatten $ map (\i -> get_output (i t)) $
 	  alias "fill3_r01a" $
 	  alias "fill3_r01b" $
 	  alias "fill_u" $
+	  alias "get_desc_arity_offset" $
+	  alias "get_thunk_desc" $
 	  alias "instruction" $
 	  alias "load_i" $
+	  alias "load_module_name" $
 	  alias "load_si16" $
 	  alias "load_si32" $
 	  alias "load_ui8" $

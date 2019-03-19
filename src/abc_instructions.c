@@ -263,7 +263,9 @@ const char *instruction_type (BC_WORD i) {
 		case Cfill_r31:              return "nnnl";
 		case Cfill_r40:              return "nnl";
 		case Cfill_u:                return "nnln";
+		case Cget_desc_arity_offset: return "";
 		case Cget_node_arity:        return "n";
+		case Cget_thunk_desc:        return "";
 		case CgtI:                   return "";
 		case Chalt:                  return "";
 		case CincI:                  return "";
@@ -282,6 +284,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cjsr_eval3:             return "";
 		case ClnR:                   return "";
 		case Cload_i:                return "i";
+		case Cload_module_name:      return "";
 		case Cload_si16:             return "i";
 		case Cload_si32:             return "i";
 		case Cload_ui8:              return "i";
