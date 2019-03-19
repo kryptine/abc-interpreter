@@ -68,7 +68,7 @@ extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];
 
-extern BC_WORD __cycle__in__spine;
+extern void* __cycle__in__spine[];
 
 extern BC_WORD small_integers[];
 extern BC_WORD static_characters[];

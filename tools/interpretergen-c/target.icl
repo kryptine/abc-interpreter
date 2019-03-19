@@ -475,7 +475,7 @@ jmp_ap_ptr :: !Int -> Expr
 jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+++toString i+++"]"
 
 cycle_ptr :: Expr
-cycle_ptr = "(BC_WORD)&__cycle__in__spine"
+cycle_ptr = "(BC_WORD)&__cycle__in__spine[1]"
 
 indirection_ptr :: Expr
 indirection_ptr = "(BC_WORD)&__interpreter_indirection[5]"

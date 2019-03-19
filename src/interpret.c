@@ -78,9 +78,9 @@ void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N
 #define dFILE (d_FILE[2])
 
 #ifdef LINK_CLEAN_RUNTIME
-extern BC_WORD __cycle__in__spine;
+extern void* __cycle__in__spine[];
 #else
-BC_WORD __cycle__in__spine = Chalt;
+void* __cycle__in__spine[] = {0, (void*) Chalt};
 BC_WORD small_integers[66];
 BC_WORD static_characters[512];
 
@@ -241,7 +241,7 @@ void* __interpreter_indirection[9] = {
 	(void*) Chalt,
 	(void*) -2,
 	(void*) Cpush_node1,
-	(void*) &__cycle__in__spine,
+	(void*) &__cycle__in__spine[1],
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn
 };
@@ -282,6 +282,8 @@ static void handle_segv(int sig, siginfo_t *info, void *context) {
 	EPRINTF("Segmentation fault in interpreter\n");
 # ifdef LINK_CLEAN_RUNTIME
 	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
+# else
+	exit(1);
 # endif
 }
 #elif defined(WINDOWS)
