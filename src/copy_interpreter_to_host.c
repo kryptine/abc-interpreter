@@ -993,7 +993,8 @@ int copy_to_host_or_garbage_collect(struct interpretation_environment *ie,
 		EXIT(NULL,1);
 	}
 
-	restore_and_translate_descriptors(ie->host->clean_ie, ie->program, node, hyperstrict_if_requested && ie->options.hyperstrict);
+	restore_and_translate_descriptors(ie->host->clean_ie, ie->program, node,
+			(hyperstrict_if_requested && ie->options.hyperstrict) ? 2 : 0);
 
 	return words_used;
 }
@@ -1012,8 +1013,8 @@ BC_WORD copy_interpreter_to_host(void *__dummy_0, void *__dummy_1,
 		struct InterpretationEnvironment *clean_ie, struct finalizers *node_finalizer) {
 #endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	int with_error_reporting=node_finalizer->cur->arg&1;
-	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-2);
+	int with_error_reporting=(node_finalizer->cur->arg&2)>>1;
+	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-3);
 
 	BC_WORD *old_asp=ie->asp;
 
@@ -1073,8 +1074,8 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 		struct InterpretationEnvironment *clean_ie, int n_args) {
 #endif
 	struct interpretation_environment *ie = (struct interpretation_environment*) clean_ie->__ie_finalizer->cur->arg;
-	int with_error_reporting=node_finalizer->cur->arg&1;
-	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-2);
+	int with_error_reporting=(node_finalizer->cur->arg&2)>>1;
+	BC_WORD *node = (BC_WORD*)(node_finalizer->cur->arg&-3);
 
 	BC_WORD *old_asp=ie->asp;
 
@@ -1099,7 +1100,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	}
 
 	/* Update address since garbage collection may have run during copying */
-	node=(BC_WORD*)(node_finalizer->cur->arg&-2);
+	node=(BC_WORD*)(node_finalizer->cur->arg&-3);
 	*++ie->asp=(BC_WORD)node;
 
 	BC_WORD bootstrap;

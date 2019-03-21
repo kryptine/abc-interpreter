@@ -7,8 +7,18 @@
 # include "util.h"
 #endif
 
+#ifdef LINK_CLEAN_RUNTIME
+# define UPDATE_REF update_ref
+#else
+# define UPDATE_REF(old,heap_size,ref,hp,snoh) update_ref(old,heap_size,ref,hp)
+#endif
+
 static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
-		BC_WORD **ref, BC_WORD *hp) {
+		BC_WORD **ref, BC_WORD *hp
+#ifdef LINK_CLEAN_RUNTIME
+		, BC_WORD **shared_nodes_of_host
+#endif
+		) {
 	BC_WORD *n,d;
 	int16_t ab_arity;
 
@@ -62,6 +72,14 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 			return &hp[3+size];
 		}
 
+#ifdef LINK_CLEAN_RUNTIME
+		if ((BC_WORD)HOST_NODE_DESCRIPTORS <= d &&
+				d <= (BC_WORD)HOST_NODE_DESCRIPTORS+sizeof(HOST_NODE_DESCRIPTORS)) {
+			int host_nodeid=((BC_WORD*)n[1])[1];
+			shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]|1);
+		}
+#endif
+
 		/* Not a built-in type */
 		ab_arity=((int16_t*)d)[-1];
 		if (ab_arity>256) /* records */
@@ -91,6 +109,13 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 			ab_arity=1;
 		ab_arity&=0xff;
 
+#ifdef LINK_CLEAN_RUNTIME
+		if (d == (BC_WORD)&HOST_NODE_INSTRUCTIONS[1]) {
+			int host_nodeid=n[1];
+			shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]|1);
+		}
+#endif
+
 		for (int i=1; i<=ab_arity; i++)
 			hp[i]=n[i];
 
@@ -117,18 +142,50 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 	BC_WORD *new=options->in_first_semispace ? heap+heap_size : heap;
 
 	BC_WORD *n,d;
-	int16_t ab_arity,a_arity,b_arity;
+	int16_t ab_arity,a_arity;
 
-	for (; asp!=stack; asp--)
-		new=update_ref (old,heap_size,(BC_WORD**)asp,new);
+#if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF ("Copying A stack roots...\n");
+#endif
+	for (;
+#ifdef LINK_CLEAN_RUNTIME
+			asp>=stack;
+#else
+			asp!=stack;
+#endif
+			asp--)
+		new=UPDATE_REF (old,heap_size,(BC_WORD**)asp,new,shared_nodes_of_host);
 
+#if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF ("Copying CAF roots...\n");
+#endif
 	BC_WORD **cafptr=(BC_WORD**)&cafs[1];
 	while (cafptr[-1]!=0) {
 		cafptr=(BC_WORD**)cafptr[-1];
 		for (a_arity=(int16_t)(BC_WORD)cafptr[0]; a_arity>0; a_arity--)
-			new=update_ref (old,heap_size,(BC_WORD**)&cafptr[a_arity],new);
+			new=UPDATE_REF (old,heap_size,(BC_WORD**)&cafptr[a_arity],new,shared_nodes_of_host);
 	}
 
+#ifdef LINK_CLEAN_RUNTIME
+#if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF ("Copying shared node roots (%p)...\n",interpreter_finalizer);
+#endif
+	struct finalizers *finalizers=NULL;
+	while ((finalizers=next_interpreter_finalizer(finalizers)) != NULL) {
+		BC_WORD ref=finalizers->cur->arg;
+		if (ref & 2) { /* hyperstrict reference */
+			ref-=2;
+			new=UPDATE_REF (old,heap_size,(BC_WORD**)&ref,new,shared_nodes_of_host);
+			finalizers->cur->arg=ref+2;
+		} else {
+			new=UPDATE_REF (old,heap_size,(BC_WORD**)&finalizers->cur->arg,new,shared_nodes_of_host);
+		}
+	}
+#endif
+
+#if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF ("Breadth-first search of child nodes...\n");
+#endif
 	n=options->in_first_semispace ? heap+heap_size : heap;
 	while (n<new) {
 		d=n[0];
@@ -176,7 +233,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				n=&n[3];
 				for (; size>0; size--) {
 					for (d=0; d<a_arity; d++)
-						new=update_ref (old,heap_size,(BC_WORD**)&n[d],new);
+						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[d],new,shared_nodes_of_host);
 					n=&n[ab_arity];
 				}
 
@@ -188,21 +245,20 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 			if (ab_arity>256) { /* records */
 				ab_arity-=256;
 				a_arity=((int16_t*)d)[0];
-				b_arity=ab_arity-a_arity;
 			}
 			if (ab_arity>2) { /* hnf spread over two blocks */
 				if (a_arity>0) {
-					new=update_ref (old,heap_size,(BC_WORD**)&n[1],new);
+					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
 					while (--a_arity)
-						new=update_ref (old,heap_size,(BC_WORD**)&n[2+a_arity],new);
+						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2+a_arity],new,shared_nodes_of_host);
 				}
 				n+=2+ab_arity;
 				continue;
 			} else {
 				if (a_arity>0) {
-					new=update_ref (old,heap_size,(BC_WORD**)&n[1],new);
+					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
 					if (a_arity==2)
-						new=update_ref (old,heap_size,(BC_WORD**)&n[2],new);
+						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2],new,shared_nodes_of_host);
 				}
 				n+=1+ab_arity;
 				continue;
@@ -213,18 +269,30 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				ab_arity=1;
 				a_arity=1;
 			} else {
-				b_arity=(ab_arity>>8) & 0xff;
-				a_arity=(ab_arity & 0xff)-b_arity;
+				a_arity=(ab_arity & 0xff)-((ab_arity>>8)&0xff);
 				ab_arity&=0xff;
 			}
 
 			for (int i=1; i<=a_arity; i++)
-				new=update_ref (old,heap_size,(BC_WORD**)&n[i],new);
+				new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[i],new,shared_nodes_of_host);
 
 			n=&n[ab_arity>2 ? (ab_arity+1) : 3];
 			continue;
 		}
 	}
+
+#ifdef LINK_CLEAN_RUNTIME
+# if DEBUG_GARBAGE_COLLECTOR > 1
+	EPRINTF ("Clean up shared nodes array...\n");
+# endif
+	extern BC_WORD __Nil;
+	for (int host_nodeid=(BC_WORD)shared_nodes_of_host[-2]-1; host_nodeid>=0; host_nodeid--) {
+		if ((BC_WORD)shared_nodes_of_host[host_nodeid]&1)
+			shared_nodes_of_host[host_nodeid]=(BC_WORD*)((BC_WORD)shared_nodes_of_host[host_nodeid]-1);
+		else
+			shared_nodes_of_host[host_nodeid]=&__Nil-1;
+	}
+#endif
 
 	*heap_free=heap+(options->in_first_semispace ? 2 : 1)*heap_size-new;
 	options->in_first_semispace=1-options->in_first_semispace;
