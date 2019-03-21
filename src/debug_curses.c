@@ -5,8 +5,7 @@
 #include <string.h>
 
 #include "abc_instructions.h"
-#include "gc/mark.h"
-#include "gc/util.h"
+#include "debug_find_nodes.h"
 #include "interpret.h"
 #include "util.h"
 
@@ -561,7 +560,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " %s", _tmp);
 	}
 
-	if (on_heap((BC_WORD) node, hp, heap_size))
+	if (hp<=node && node<hp+heap_size)
 		wprintw(win, "  {%d}", node - hp);
 	waddch(win, '\n');
 

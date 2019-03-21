@@ -31,14 +31,6 @@ build-windows:
   script:
     - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src ByteCodeGenerator.exe ByteCodeLinker.exe interpret.exe
 
-test-gc:
-  extends: .base
-  stage: test-interpreter
-  script:
-    - cd test
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -o weird_types
-    - CFLAGS=-DDEBUG_GARBAGE_COLLECTOR_MARKING ./run_tests.sh -3 -o weird_types
-
 benchmark-x64:
   extends: .base
   stage: test-interpreter

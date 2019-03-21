@@ -12,7 +12,6 @@
 #include "copy_interpreter_to_host.h"
 #include "finalizers.h"
 #include "gc.h"
-#include "gc/util.h"
 #include "interpret.h"
 #include "util.h"
 

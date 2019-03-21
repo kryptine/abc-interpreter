@@ -44,12 +44,6 @@ preprocessor options on Windows.
   As with `DEBUG_CLEAN_LINKS`, a higher value increases verbosity, with 0
   turning off debugging output.
 
-- `DEBUG_GARBAGE_COLLECTOR_MARKING`:
-  Try the garbage collector marking phase after each instruction cycle, to test
-  that it can deal (does not crash) with many different kinds of types. This is
-  very slow, and is only meant to be used in CI (see
-  [.gitlab-ci.yml](/.gitlab-ci.yml)).
-
 - `STDERR_TO_FILE`:
   Write output to `stderr` to a file called `stderr`. This is useful on
   platforms with a slow console (e.g. Windows) to read back debugging
