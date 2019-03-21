@@ -73,10 +73,7 @@ void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N
 
 #define dFILE (d_FILE[2])
 
-#ifdef LINK_CLEAN_RUNTIME
-extern void* __cycle__in__spine[];
-#else
-void* __cycle__in__spine[] = {0, (void*) Chalt};
+#ifndef LINK_CLEAN_RUNTIME
 BC_WORD small_integers[66];
 BC_WORD static_characters[512];
 
@@ -230,6 +227,10 @@ BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
 int trap_needs_gc = 0;
 
+void* __interpreter_cycle_in_spine[2] = {
+	(void*) 0,
+	(void*) Chalt
+};
 void* __interpreter_indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
@@ -237,7 +238,7 @@ void* __interpreter_indirection[9] = {
 	(void*) Chalt,
 	(void*) -2,
 	(void*) Cpush_node1,
-	(void*) &__cycle__in__spine[1],
+	(void*) &__interpreter_cycle_in_spine[1],
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn
 };

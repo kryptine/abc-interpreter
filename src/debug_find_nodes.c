@@ -164,9 +164,6 @@ void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set)
 				}
 			}
 		} else { /* thunk */
-			if (node[0]==(BC_WORD)&__cycle__in__spine)
-				continue;
-
 			int16_t arity = ((int16_t*)(node[0]))[-1];
 			if (arity < 0) {
 				a_arity = 1;
