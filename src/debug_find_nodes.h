@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../bytecode.h"
+#include "bytecode.h"
 
 struct nodes_set {
 	struct {
@@ -22,18 +22,7 @@ struct nodes_set {
 void init_nodes_set(struct nodes_set *set, size_t heap_size);
 void free_nodes_set(struct nodes_set *set);
 
-void reset_black_nodes_set(struct nodes_set *set);
-
-/* Returns 1 if the node is new; 0 if it was already black */
-int add_black_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap);
 BC_WORD next_black_node(struct nodes_set *set);
 
-void add_grey_node(struct nodes_set *set, BC_WORD *node, BC_WORD *heap, size_t heap_size);
-BC_WORD *get_grey_node(struct nodes_set *set);
-
 void mark_a_stack(BC_WORD *stack, BC_WORD *asp, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
-void mark_cafs(void **cafs, BC_WORD *heap, size_t heap_size, struct nodes_set *set);
-#ifdef LINK_CLEAN_RUNTIME
-void mark_host_references(BC_WORD *heap, size_t heap_size, struct nodes_set *set);
-#endif
 void evaluate_grey_nodes(BC_WORD *heap, size_t heap_size, struct nodes_set *set);

@@ -68,8 +68,6 @@ extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];
 
-extern BC_WORD __cycle__in__spine;
-
 extern BC_WORD small_integers[];
 extern BC_WORD static_characters[];
 
@@ -87,6 +85,7 @@ extern int trap_needs_gc;
 
 extern BC_WORD Fjmp_ap[32];
 
+extern void* __interpreter_cycle_in_spine[2];
 extern void* __interpreter_indirection[9];
 
 #define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */

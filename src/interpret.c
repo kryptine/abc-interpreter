@@ -25,10 +25,6 @@
 # include "debug_curses.h"
 #endif
 
-#ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
-# include "gc/mark.h"
-#endif
-
 /* Used to store the return address when evaluating a node on the heap */
 #define EVAL_TO_HNF_LABEL CMAX
 
@@ -77,10 +73,7 @@ void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N
 
 #define dFILE (d_FILE[2])
 
-#ifdef LINK_CLEAN_RUNTIME
-extern BC_WORD __cycle__in__spine;
-#else
-BC_WORD __cycle__in__spine = Chalt;
+#ifndef LINK_CLEAN_RUNTIME
 BC_WORD small_integers[66];
 BC_WORD static_characters[512];
 
@@ -234,6 +227,10 @@ BC_WORD *g_asp, *g_bsp, *g_hp;
 BC_WORD_S g_heap_free;
 int trap_needs_gc = 0;
 
+void* __interpreter_cycle_in_spine[2] = {
+	(void*) 0,
+	(void*) Chalt
+};
 void* __interpreter_indirection[9] = {
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn,
@@ -241,7 +238,7 @@ void* __interpreter_indirection[9] = {
 	(void*) Chalt,
 	(void*) -2,
 	(void*) Cpush_node1,
-	(void*) &__cycle__in__spine,
+	(void*) &__interpreter_cycle_in_spine[1],
 	(void*) Cjsr_eval0,
 	(void*) Cfill_a01_pop_rtn
 };
@@ -282,6 +279,8 @@ static void handle_segv(int sig, siginfo_t *info, void *context) {
 	EPRINTF("Segmentation fault in interpreter\n");
 # ifdef LINK_CLEAN_RUNTIME
 	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
+# else
+	exit(1);
 # endif
 }
 #elif defined(WINDOWS)
@@ -447,13 +446,6 @@ eval_to_hnf_return_failure:
 # include "interpret_instructions.h"
 #else
 	for (;;) {
-# ifdef DEBUG_GARBAGE_COLLECTOR_MARKING
-		struct nodes_set nodes_set;
-		init_nodes_set(&nodes_set, heap_size);
-		mark_a_stack(stack, asp, heap, heap_size, &nodes_set);
-		evaluate_grey_nodes(heap, heap_size, &nodes_set);
-		free_nodes_set(&nodes_set);
-# endif
 # if defined(DEBUG_ALL_INSTRUCTIONS) && !defined(DEBUG_CURSES)
 		if (program->data <= pc && pc < program->data + program->data_size)
 			EPRINTF("D:%d\t%s\n", (int) (pc-program->data), instruction_name(*pc));

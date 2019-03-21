@@ -91,14 +91,12 @@ DEP_BCSTRIP:=$(subst .c,.h,$(SRC_BCSTRIP)) settings.h
 SRC_INTERPRET:=\
 	abc_instructions.c\
 	bytecode.c\
+	debug_find_nodes.c\
 	gc.c\
-	gc/copy.c\
-	gc/mark.c\
 	interpret.c\
 	parse.c\
 	util.c
 DEP_INTERPRET:=$(subst .c,.h,$(SRC_INTERPRET))\
-	gc/util.h\
 	interpret_instructions.h\
 	interpret_instructions_interworking.h\
 	settings.h
@@ -112,7 +110,6 @@ SRC_INTERPRET_LIB:=$(SRC_INTERPRET)\
 ASM_INTERPRET_LIB:=$(subst .c,.s,$(SRC_INTERPRET_LIB))
 OBJ_INTERPRET_LIB:=$(subst .c,.o,$(SRC_INTERPRET_LIB))
 DEP_INTERPRET_LIB:=$(subst .c,.h,$(SRC_INTERPRET_LIB))\
-	gc/util.h\
 	interpret_instructions.h\
 	interpret_instructions_interworking.h\
 	settings.h

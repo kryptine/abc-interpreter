@@ -5,8 +5,7 @@
 #include <string.h>
 
 #include "abc_instructions.h"
-#include "gc/mark.h"
-#include "gc/util.h"
+#include "debug_find_nodes.h"
 #include "interpret.h"
 #include "util.h"
 
@@ -323,7 +322,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		wprintw(win, "CHAR '%c'", node[1]);
 	else if ((node[0]&-4)==(BC_WORD)&REAL)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
-	else if ((node[0]&-4)==(BC_WORD)&__cycle__in__spine)
+	else if ((node[0]&-4)==(BC_WORD)&__interpreter_cycle_in_spine)
 		wprintw(win, "_cycle_in_spine");
 	else {
 		char _tmp[256];
@@ -511,7 +510,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		return;
 	}
 
-	if (node[0] == (BC_WORD) &__cycle__in__spine) {
+	if (node[0] == (BC_WORD) &__interpreter_cycle_in_spine) {
 		wprintw(win, " _cycle_in_spine");
 		return;
 	}
@@ -561,7 +560,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " %s", _tmp);
 	}
 
-	if (on_heap((BC_WORD) node, hp, heap_size))
+	if (hp<=node && node<hp+heap_size)
 		wprintw(win, "  {%d}", node - hp);
 	waddch(win, '\n');
 

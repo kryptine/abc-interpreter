@@ -48,8 +48,6 @@ library: .FORCE
 		copy_interpreter_to_host.c \
 		finalizers.c \
 		gc.c \
-		gc\copy.c \
-		gc\mark.c \
 		interpret.c \
 		parse.c \
 		strip.c \
@@ -63,8 +61,6 @@ library: .FORCE
 	move copy_interpreter_to_host.obj "..\lib\Clean System Files" >nul
 	move finalizers.obj "..\lib\Clean System Files" >nul
 	move gc.obj "..\lib\Clean System Files" >nul
-	move copy.obj "..\lib\Clean System Files" >nul
-	move mark.obj "..\lib\Clean System Files" >nul
 	move interface.obj "..\lib\Clean System Files" >nul
 	move interpret.obj "..\lib\Clean System Files" >nul
 	move parse.obj "..\lib\Clean System Files" >nul
