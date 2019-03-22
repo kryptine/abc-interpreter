@@ -102,62 +102,63 @@ deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
 	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
 	strict
-# graph_node = string_to_interpreter int_syms graph ie_settings
+# graph = replace_desc_numbers_by_descs 0 graph int_syms 0 0
+# graph_node = string_to_interpreter graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
 = (Just (interpret ie (Finalizer 0 0 (graph_node + if strict 2 0))), w)
 where
-	getInterpreterSymbols :: !Pointer -> [Symbol]
-	getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
-		[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
-	where
-		symbol_table = get_symbol_table pgm
-
-		getSymbol :: !Int -> Symbol
-		getSymbol i
-		#! offset = symbol_table + i * IF_INT_64_OR_32 16 8 /* size of struct host_symbol */
-		#! loc = derefInt offset
-		#! name = derefString (derefInt (offset + IF_INT_64_OR_32 8 4))
-		= {symbol_name=name, symbol_value=loc}
-
-		get_symbol_table_size :: !Pointer -> Int
-		get_symbol_table_size pgm = code {
-			ccall get_symbol_table_size "p:I"
-		}
-
-		get_symbol_table :: !Pointer -> Pointer
-		get_symbol_table pgm = code {
-			ccall get_symbol_table "p:p"
-		}
-
-	string_to_interpreter :: !{#Int} !String !Pointer -> Pointer
-	string_to_interpreter symbol_values graph ie = code {
-		ccall string_to_interpreter "ASp:p"
+	string_to_interpreter :: !String !Pointer -> Pointer
+	string_to_interpreter graph ie = code {
+		ccall string_to_interpreter "Sp:p"
 	}
 
-	lookup_symbol_value :: !DescInfo !{#String} !{#Symbol} -> Int
-	lookup_symbol_value {di_prefix_arity_and_mod,di_name} mod_a symbols
-		# prefix_n = di_prefix_arity_and_mod bitand 0xff
-		# module_n = (di_prefix_arity_and_mod >> 8)-1
-		# module_name = mod_a.[module_n]
-		| prefix_n<PREFIX_D
-			# symbol_name = make_symbol_name module_name di_name prefix_n
-			# symbol_value = get_symbol_value symbol_name symbols
-			| prefix_n<=1
-				| symbol_value== -1
-					= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
-					= symbol_value
-				| symbol_value== -1
-					= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
-					= symbol_value+2
-			# symbol_name = make_symbol_name module_name di_name PREFIX_D
-			# symbol_value = get_symbol_value symbol_name symbols
+getInterpreterSymbols :: !Pointer -> [Symbol]
+getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
+	[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
+where
+	symbol_table = get_symbol_table pgm
+
+	getSymbol :: !Int -> Symbol
+	getSymbol i
+	#! offset = symbol_table + i * IF_INT_64_OR_32 16 8 /* size of struct host_symbol */
+	#! loc = derefInt offset
+	#! name = derefString (derefInt (offset + IF_INT_64_OR_32 8 4))
+	= {symbol_name=name, symbol_value=loc}
+
+	get_symbol_table_size :: !Pointer -> Int
+	get_symbol_table_size pgm = code {
+		ccall get_symbol_table_size "p:I"
+	}
+
+	get_symbol_table :: !Pointer -> Pointer
+	get_symbol_table pgm = code {
+		ccall get_symbol_table "p:p"
+	}
+
+lookup_symbol_value :: !DescInfo !{#String} !{#Symbol} -> Int
+lookup_symbol_value {di_prefix_arity_and_mod,di_name} mod_a symbols
+	# prefix_n = di_prefix_arity_and_mod bitand 0xff
+	# module_n = (di_prefix_arity_and_mod >> 8)-1
+	# module_name = mod_a.[module_n]
+	| prefix_n<PREFIX_D
+		# symbol_name = make_symbol_name module_name di_name prefix_n
+		# symbol_value = get_symbol_value symbol_name symbols
+		| prefix_n<=1
 			| symbol_value== -1
 				= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
-				# arity = prefix_n - PREFIX_D
-				= symbol_value+(arity*8*2)+2
-	where
-		PREFIX_D = 4
+				= symbol_value
+			| symbol_value== -1
+				= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
+				= symbol_value+2
+		# symbol_name = make_symbol_name module_name di_name PREFIX_D
+		# symbol_value = get_symbol_value symbol_name symbols
+		| symbol_value== -1
+			= abort ("lookup_desc_info not found "+++symbol_name+++"\n")
+			# arity = prefix_n - PREFIX_D
+			= symbol_value+(arity*8*2)+2
+where
+	PREFIX_D = 4
 
 get_start_rule_as_expression :: !DeserializationSettings !String !String !*World -> *(Maybe a, !*World)
 get_start_rule_as_expression dsets filename prog w
