@@ -98,29 +98,10 @@ intp = new Uint8Array(intp);
 		{
 			clean: {
 				memory: memory,
-
-				debug: function(where,n1,n2,n3) {
-					//if (where==0) {
-					//	console.log('garbage collection');
-					//	return;
-					//}
-					if (!DEBUG)
-						return;
-					where=[
-						'garbage collection!',
-						'copy-a',
-						'unimplemented',
-						'copy-thunk',
-						'copy-hnf',
-						'update-thunk',
-						'update-hnf',
-					][where];
-					console.log(where,n1,n2,n3);
-				},
 			}
 		}
 	);
-	util.instance.exports.setup_gc(hp, heap_size);
+	util.instance.exports.setup_gc(hp, heap_size, asp);
 
 	intp = await WebAssembly.instantiate(intp,
 		{

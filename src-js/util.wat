@@ -1,11 +1,10 @@
 (module
 	(import "clean" "memory" (memory 1))
 
-	(func $debug (import "clean" "debug") (param i32 i32 i32 i32))
-
 	(global $start-heap (mut i32) (i32.const 0))
 	(global $half-heap (mut i32) (i32.const 0))
 	(global $end-heap (mut i32) (i32.const 0))
+	(global $stack (mut i32) (i32.const 0))
 	(global $in-first-semispace (mut i32) (i32.const 1))
 
 	(func (export "strncmp") (param $s1 i32) (param $s2 i32) (param $n i32) (result i32)
@@ -79,25 +78,23 @@
 		(i32.sub (local.get $c1) (local.get $c2))
 	)
 
-	(func (export "setup_gc") (param i32 i32)
+	(func (export "setup_gc") (param i32 i32 i32)
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))
 		(global.set $end-heap (i32.add (local.get 0) (i32.add (local.get 1) (local.get 1))))
+		(global.set $stack (local.get 2))
 	)
 
 	;; upper half of result is new hp pointer;
 	;; lower half is hp-free
 	(func (export "gc") (param $asp i32) (result i64)
-		(local $org-asp i32)
 		(local $old i32)
 		(local $new i32)
 		(local $n i32)
 		(local $d i32)
 		(local $a-arity i32)
-		(local $b-arity i32)
 		(local $ab-arity i32)
-
-		(local.set $org-asp (local.get $asp))
+		(local $size i32)
 
 		(if
 			(global.get $in-first-semispace)
@@ -109,37 +106,12 @@
 				(local.set $new (global.get $start-heap)))
 		)
 
-		;; "garbage collection!"
-		;;(call $debug (i32.const 0) (local.get $old) (local.get $new) (global.get $end-heap))
-
 		;; copy A stack pointers
 		(block $end-copy-asp
 			(loop $copy-asp
-				(local.set $n (i32.load (local.get $asp)))
-				(br_if $end-copy-asp (i32.eqz (local.get $n)))
-
-				(local.set $d (i32.load (local.get $n)))
-				;; "copy-a"
-				;;(call $debug (i32.const 1) (local.get $asp) (local.get $n) (local.get $new))
-
+				(br_if $end-copy-asp (i32.eq (local.get $asp) (global.get $stack)))
+				(local.set $new (call $update-ref (local.get $asp) (local.get $new)))
 				(local.set $asp (i32.sub (local.get $asp) (i32.const 8)))
-				(if
-					(i32.and (local.get $d) (i32.const 1))
-					(then
-						(i32.store offset=8 (local.get $asp) (i32.sub (local.get $d) (i32.const 1)))
-						(br $copy-asp)
-					)
-				)
-
-				(br_if $copy-asp
-					(i32.or
-						(i32.gt_s (global.get $start-heap) (local.get $n))
-						(i32.lt_s (global.get $end-heap) (local.get $n))
-					)
-				)
-
-				(i32.store offset=8 (local.get $asp) (local.get $new))
-				(local.set $new (call $copy (local.get $n) (local.get $new)))
 				(br $copy-asp)
 			)
 		)
@@ -154,7 +126,7 @@
 
 				(if
 					(i32.and (local.get $d) (i32.const 2))
-					;; HNF
+					;; hnf
 					(then
 						(if
 							(i32.or
@@ -176,9 +148,9 @@
 							;; _STRING_+2
 							(i32.eq (local.get $d) (i32.const 50))
 							(then
-								(local.set $a-arity (i32.load offset=8 (local.get $n))) ;; length
-								(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
-								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $a-arity) (i32.const 3)) (i32.const 16))))
+								(local.set $size (i32.load offset=8 (local.get $n))) ;; size
+								(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
+								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $size) (i32.const 3)) (i32.const 16))))
 								(br $update-refs)
 							)
 						)
@@ -186,7 +158,7 @@
 							;; _ARRAY_+2
 							(i32.eq (local.get $d) (i32.const 10))
 							(then
-								(local.set $a-arity (i32.load offset=8 (local.get $n))) ;; length
+								(local.set $size (i32.load offset=8 (local.get $n))) ;; size
 								(local.set $d (i32.load offset=16 (local.get $n))) ;; child descriptor
 								(if
 									(i32.or ;; unboxed INT/REAL
@@ -194,14 +166,16 @@
 										(i32.eq (local.get $d) (i32.const 210))
 									)
 									(then
-										(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $a-arity) (i32.const 3)) (i32.const 24))))
+										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
+											(i32.shl (local.get $size) (i32.const 3)))))
 										(br $update-refs)
 									)
 								)
 								(if ;; unboxed BOOL
 									(i32.eq (local.get $d) (i32.const 90))
 									(then
-										(local.set $n (i32.add (local.get $n) (i32.add (local.get $a-arity) (i32.const 24))))
+										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
+											(i32.shl (local.get $size) (i32.const 6))))) ;; 3+3
 										(br $update-refs)
 									)
 								)
@@ -209,65 +183,88 @@
 								(if
 									(i32.eqz (local.get $d))
 									(then
-										(local.set $d (local.get $a-arity)) ;; length
+										(local.set $ab-arity (i32.const 1))
 										(local.set $a-arity (i32.const 1))
-										(local.set $b-arity (i32.const 0))
 									)
 									(else ;; unboxed record
-										(local.set $ab-arity (local.get $d)) ;; temp
-										(local.set $d (local.get $a-arity)) ;; length
-										(local.set $a-arity (i32.load16_s (local.get $ab-arity)))
-										(local.set $ab-arity (i32.sub (i32.load16_s (i32.sub (local.get $ab-arity) (i32.const 2))) (i32.const 256)))
-										(local.set $b-arity (i32.mul (i32.sub (local.get $ab-arity) (local.get $a-arity)) (i32.const 8)))
+										(local.set $ab-arity (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256)))
+										(local.set $a-arity (i32.load16_s (local.get $d)))
 									)
 								)
-								(local.set $n (i32.add (local.get $n) (i32.const 24)))
-								(loop $update-array
-									(br_if $update-refs (i32.eqz (local.get $d)))
 
-									(local.set $ab-arity (local.get $a-arity))
+								(if
+									(i32.eqz (local.get $a-arity))
+									(then
+										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
+											(i32.shl (i32.mul (local.get $size) (local.get $ab-arity)) (i32.const 3)))))
+										(br $update-refs)
+									)
+								)
+
+								(local.set $n (i32.add (local.get $n) (i32.const 24)))
+								(local.set $ab-arity (i32.shl (local.get $ab-arity) (i32.const 3)))
+								(local.set $a-arity (i32.shl (local.get $a-arity) (i32.const 3)))
+								(loop $update-array
+									(br_if $update-refs (i32.eqz (local.get $size)))
+
+									(local.set $d (i32.const 0))
 									(block $end-update-array-pointers
 										(loop $update-array-pointers
-											(br_if $end-update-array-pointers (i32.eqz (local.get $ab-arity)))
-											(local.set $new (call $update-ref (local.get $n) (local.get $new)))
-											(local.set $n (i32.add (local.get $n) (i32.const 8)))
-											(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 1)))
+											(br_if $end-update-array-pointers (i32.eq (local.get $d) (local.get $a-arity)))
+											(local.set $new (call $update-ref (i32.add (local.get $n) (local.get $d)) (local.get $new)))
+											(local.set $d (i32.add (local.get $d) (i32.const 8)))
 											(br $update-array-pointers)
 										)
 									)
 
-									(local.set $d (i32.sub (local.get $d) (i32.const 1)))
-									(local.set $n (i32.add (local.get $n) (local.get $b-arity)))
+									(local.set $size (i32.sub (local.get $size) (i32.const 1)))
+									(local.set $n (i32.add (local.get $n) (local.get $ab-arity)))
 									(br $update-array)
 								)
 							)
 						)
+						;; not a basic type
+						(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+						(local.set $a-arity (local.get $ab-arity))
 						(if
-							(i32.lt_u (local.get $d) (i32.mul (i32.const 131) (i32.const 8))) ;; built-in
-							(then
-								;; TODO: add more basic types
-								(call $debug (i32.const 2) (i32.const 0) (local.get $d) (i32.const 2))
-								(unreachable)
-							)
-						)
-						;; No basic type
-						(local.set $a-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
-						(local.set $b-arity (i32.const 0))
-						(if
-							(i32.gt_s (local.get $a-arity) (i32.const 256))
+							(i32.gt_s (local.get $ab-arity) (i32.const 256))
 							(then
 								(local.set $a-arity (i32.load16_s (local.get $d)))
-								(local.set $b-arity (i32.sub (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (local.get $a-arity)) (i32.const 256)))
+								(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 256)))
 							)
 						)
-						(local.set $ab-arity (i32.add (local.get $a-arity) (local.get $b-arity)))
-						;; "update-hnf"
-						;;(call $debug (i32.const 6) (local.get $d) (local.get $a-arity) (local.get $b-arity))
 
 						(if
-							(i32.le_s (local.get $ab-arity) (i32.const 2))
-							;; small node
+							(i32.gt_s (local.get $ab-arity) (i32.const 2))
 							(then
+								;; large node
+								(if
+									(i32.gt_s (local.get $a-arity) (i32.const 0))
+									(then
+										(local.set $new (call $update-ref (i32.add (local.get $n) (i32.const 8)) (local.get $new)))
+
+										(local.set $n (i32.add (local.get $n) (i32.const 16)))
+										(local.set $a-arity (i32.shl (local.get $a-arity) (i32.const 3)))
+										(block $end-update-large-hnf
+											(loop $update-large-hnf
+												(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 8)))
+												(br_if $end-update-large-hnf (i32.eqz (local.get $a-arity)))
+												(local.set $new (call $update-ref (i32.add (local.get $n) (local.get $a-arity)) (local.get $new)))
+												(br $update-large-hnf)
+											)
+										)
+
+										(local.set $n (i32.add (local.get $n) (i32.shl (local.get $ab-arity) (i32.const 3))))
+										(br $update-refs)
+									)
+									(else
+										(local.set $n (i32.add (local.get $n) (i32.shl (i32.add (i32.const 2) (local.get $ab-arity)) (i32.const 3))))
+										(br $update-refs)
+									)
+								)
+							)
+							(else
+								;; small node
 								(block $skip-b-elems
 									(br_if $skip-b-elems (i32.eqz (local.get $a-arity)))
 									(local.set $new (call $update-ref (i32.add (local.get $n) (i32.const 8)) (local.get $new)))
@@ -278,53 +275,30 @@
 								(br $update-refs)
 							)
 						)
-						;; large node
-						(if
-							(i32.eqz (local.get $a-arity))
-							(then
-								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $ab-arity) (i32.const 3)) (i32.const 16))))
-								(br $update-refs)
-							)
-						)
-						(local.set $new (call $update-ref (i32.add (local.get $n) (i32.const 8)) (local.get $new)))
-						(local.set $n (i32.load offset=16 (local.get $n)))
-						(block $end-update-large-hnf
-							(loop $update-large-hnf
-								(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
-								(br_if $end-update-large-hnf (i32.eqz (local.get $a-arity)))
-								(local.set $new (call $update-ref (local.get $n) (local.get $new)))
-								(local.set $n (i32.add (local.get $n) (i32.const 8)))
-								(br $update-large-hnf)
-							)
-						)
-						(local.set $n (i32.add (local.get $n) (i32.shl (local.get $b-arity) (i32.const 3))))
-						(br $update-refs)
 					)
 				)
 
 				;; thunk
-				(local.set $a-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2)))) ;; TODO optimize (see in $copy)
+				(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
 				(if
-					(i32.lt_s (local.get $a-arity) (i32.const 0))
+					(i32.lt_s (local.get $ab-arity) (i32.const 0))
 					(then
 						(local.set $a-arity (i32.const 1))
-						(local.set $b-arity (i32.const 0))
+						(local.set $ab-arity (i32.const 1))
 					)
 					(else
-						(local.set $b-arity (i32.shr_u (local.get $a-arity) (i32.const 8)))
-						(local.set $a-arity (i32.sub (i32.and (local.get $a-arity) (i32.const 0xff)) (local.get $b-arity)))
+						(local.set $a-arity (i32.sub (i32.and (local.get $ab-arity) (i32.const 0xff))
+							(i32.and (i32.shr_u (local.get $ab-arity) (i32.const 8)) (i32.const 0xff))))
+						(local.set $ab-arity (i32.and (local.get $ab-arity) (i32.const 0xff)))
 					)
 				)
-				;; "update-thunk"
-				;;(call $debug (i32.const 5) (local.get $n) (local.get $a-arity) (local.get $b-arity))
 
-				(local.set $d (local.get $a-arity))
+				(local.set $d (i32.const 1)) ;; iterator
 				(block $end-update-thunk-refs
 					(loop $update-thunk-refs
-						(local.set $n (i32.add (local.get $n) (i32.const 8)))
-						(br_if $end-update-thunk-refs (i32.eqz (local.get $d)))
-						(local.set $new (call $update-ref (local.get $n) (local.get $new)))
-						(local.set $d (i32.sub (local.get $d) (i32.const 1)))
+						(br_if $end-update-thunk-refs (i32.gt_s (local.get $d) (local.get $a-arity)))
+						(local.set $new (call $update-ref (i32.add (local.get $n) (i32.shl (local.get $d) (i32.const 3))) (local.get $new)))
+						(local.set $d (i32.add (local.get $d) (i32.const 1)))
 						(br $update-thunk-refs)
 					)
 				)
@@ -333,9 +307,9 @@
 						(local.get $n)
 						(i32.shl
 							(select
-								(i32.sub (i32.const 2) (local.get $a-arity))
-								(local.get $b-arity)
-								(i32.lt_s (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 2))
+								(i32.add (local.get $ab-arity) (i32.const 1))
+								(i32.const 3)
+								(i32.gt_s (local.get $ab-arity) (i32.const 2))
 							)
 							(i32.const 3)
 						)
@@ -350,29 +324,49 @@
 		(i64.or
 			(i64.shl (i64.extend_i32_u (local.get $new)) (i64.const 32))
 			(i64.extend_i32_u
-				(i32.div_u
+				(i32.shr_u
 					(i32.sub
 						(select (global.get $half-heap) (global.get $end-heap) (global.get $in-first-semispace))
 						(local.get $new)
 					)
-					(i32.const 8)
+					(i32.const 3)
 				)
 			)
 		)
 	)
 
-	(func $copy (param $from i32) (param $to i32) (result i32)
+	(func $update-ref (param $ref i32) (param $hp i32) (result i32)
+		(local $n i32)
 		(local $d i32)
-		(local $a-arity i32)
-		(local $b-arity i32)
 		(local $ab-arity i32)
-		(local.set $d (i32.load (local.get $from)))
+		(local $size i32)
 
-		(i32.store (local.get $to) (local.get $d))
-		(i32.store (local.get $from) (i32.add (local.get $to) (i32.const 1)))
+		(local.set $n (i32.load (local.get $ref)))
+
+		(if
+			(i32.or
+				(i32.gt_s (global.get $start-heap) (local.get $n))
+				(i32.lt_s (global.get $end-heap) (local.get $n))
+			)
+			(then (return (local.get $hp)))
+		)
+
+		(local.set $d (i32.load (local.get $n)))
+		(if
+			(i32.and (local.get $d) (i32.const 1))
+			(then
+				(i32.store (local.get $ref) (i32.sub (local.get $d) (i32.const 1)))
+				(return (local.get $hp))
+			)
+		)
+
+		(i32.store (local.get $ref) (local.get $hp))
+
+		(i32.store (local.get $hp) (local.get $d))
+		(i32.store (local.get $n) (i32.add (local.get $hp) (i32.const 1)))
 
 		(if (i32.and (local.get $d) (i32.const 2))
-			;; HNF
+			;; hnf
 			(then
 				(if
 					(i32.or
@@ -386,43 +380,43 @@
 						)
 					)
 					(then
-						(i64.store offset=8 (local.get $to) (i64.load offset=8 (local.get $from)))
-						(return (i32.add (local.get $to) (i32.const 16)))
+						(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
+						(return (i32.add (local.get $hp) (i32.const 16)))
 					)
 				)
 				(if
 					;; _STRING_+2
 					(i32.eq (local.get $d) (i32.const 50))
 					(then
-						(local.set $a-arity (i32.load offset=8 (local.get $from))) ;; length
-						(i32.store offset=8 (local.get $to) (local.get $a-arity))
-						(local.set $to (i32.add (local.get $to) (i32.const 16)))
-						(local.set $from (i32.add (local.get $from) (i32.const 16)))
-						(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
+						(local.set $size (i32.load offset=8 (local.get $n))) ;; size
+						(i32.store offset=8 (local.get $hp) (local.get $size))
+						(local.set $hp (i32.add (local.get $hp) (i32.const 16)))
+						(local.set $n (i32.add (local.get $n) (i32.const 16)))
+						(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
 						(block $end-copy-string
 							(loop $copy-string
-								(br_if $end-copy-string (i32.eqz (local.get $a-arity)))
-								(i64.store (local.get $to) (i64.load (local.get $from)))
-								(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
-								(local.set $to (i32.add (local.get $to) (i32.const 8)))
-								(local.set $from (i32.add (local.get $from) (i32.const 8)))
+								(br_if $end-copy-string (i32.eqz (local.get $size)))
+								(i64.store (local.get $hp) (i64.load (local.get $n)))
+								(local.set $size (i32.sub (local.get $size) (i32.const 1)))
+								(local.set $hp (i32.add (local.get $hp) (i32.const 8)))
+								(local.set $n (i32.add (local.get $n) (i32.const 8)))
 								(br $copy-string)
 							)
 						)
-						(return (local.get $to))
+						(return (local.get $hp))
 					)
 				)
 				(if
 					;; _ARRAY_+2
 					(i32.eq (local.get $d) (i32.const 10))
 					(then
-						(local.set $a-arity (i32.load offset=8 (local.get $from))) ;; length
-						(local.set $d (i32.load offset=16 (local.get $from))) ;; child descriptor
+						(local.set $size (i32.load offset=8 (local.get $n))) ;; size
+						(local.set $d (i32.load offset=16 (local.get $n))) ;; element descriptor
 
-						(i32.store offset=8 (local.get $to) (local.get $a-arity))
-						(i32.store offset=16 (local.get $to) (local.get $d))
-						(local.set $to (i32.add (local.get $to) (i32.const 24)))
-						(local.set $from (i32.add (local.get $from) (i32.const 24)))
+						(i32.store offset=8 (local.get $hp) (local.get $size))
+						(i32.store offset=16 (local.get $hp) (local.get $d))
+						(local.set $hp (i32.add (local.get $hp) (i32.const 24)))
+						(local.set $n (i32.add (local.get $n) (i32.const 24)))
 
 						(if
 							(i32.eqz ;; not
@@ -438,10 +432,10 @@
 								(if
 									(i32.eq (local.get $d) (i32.const 90))
 									(then ;; BOOL
-										(local.set $a-arity (i32.shr_u (i32.add (local.get $a-arity) (i32.const 7)) (i32.const 3)))
+										(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
 									)
 									(else ;; unboxed record
-										(local.set $a-arity (i32.mul (local.get $a-arity)
+										(local.set $size (i32.mul (local.get $size)
 											(i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256))))
 									)
 								)
@@ -450,114 +444,84 @@
 
 						(block $end-copy-array
 							(loop $copy-array
-								(br_if $end-copy-array (i32.eqz (local.get $a-arity)))
-								(i32.store (local.get $to) (i32.load (local.get $from)))
-								(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
-								(local.set $to (i32.add (local.get $to) (i32.const 8)))
-								(local.set $from (i32.add (local.get $from) (i32.const 8)))
+								(br_if $end-copy-array (i32.eqz (local.get $size)))
+								(i64.store (local.get $hp) (i64.load (local.get $n)))
+								(local.set $size (i32.sub (local.get $size) (i32.const 1)))
+								(local.set $hp (i32.add (local.get $hp) (i32.const 8)))
+								(local.set $n (i32.add (local.get $n) (i32.const 8)))
 								(br $copy-array)
 							)
 						)
-						(return (local.get $to))
+						(return (local.get $hp))
 					)
 				)
+				;; not a basic type
+				(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
 				(if
-					(i32.lt_u (local.get $d) (i32.mul (i32.const 131) (i32.const 8))) ;; built-in
+					(i32.gt_s (local.get $ab-arity) (i32.const 256))
 					(then
-						;; TODO: add more basic types
-						(call $debug (i32.const 2) (i32.const 0) (i32.const 0) (i32.const 4))
-						(unreachable)
+						(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 256)))
 					)
 				)
-				;; No basic type
-				(local.set $a-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
-				(local.set $b-arity (i32.const 0))
-				(if
-					(i32.gt_s (local.get $a-arity) (i32.const 256))
-					(then
-						(local.set $a-arity (i32.load16_s (local.get $d)))
-						(local.set $b-arity (i32.sub (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (local.get $a-arity)) (i32.const 256)))
-					)
-				)
-				;; "copy-hnf"
-				;;(call $debug (i32.const 4) (local.get $d) (local.get $a-arity) (local.get $b-arity))
-				;; large node
-				(if
-					(i32.gt_s (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 2))
-					(then
-						(i32.store offset=8 (local.get $to) (i32.load offset=8 (local.get $from)))
-						(i32.store offset=16 (local.get $to) (i32.add (local.get $to) (i32.const 24)))
 
-						(local.set $ab-arity (i32.add (local.get $a-arity) (local.get $b-arity)))
-						(local.set $to (i32.add (local.get $to) (i32.const 24)))
-						(local.set $from (i32.load offset=16 (local.get $from)))
+				(i32.store offset=8 (local.get $hp) (i32.load offset=8 (local.get $n)))
+				(if
+					(i32.gt_s (local.get $ab-arity) (i32.const 2))
+					(then
+						;; hnf spread over two blocks
+						(i32.store offset=16 (local.get $hp) (i32.add (local.get $hp) (i32.const 24)))
+						(local.set $hp (i32.add (local.get $hp) (i32.const 24)))
+						(local.set $n (i32.load offset=16 (local.get $n)))
+
 						(block $end-copy-large-hnf
 							(loop $copy-large-hnf
 								(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 1)))
 								(br_if $end-copy-large-hnf (i32.eqz (local.get $ab-arity)))
-								(i32.store (local.get $to) (i32.load (local.get $from)))
-								(local.set $to (i32.add (local.get $to) (i32.const 8)))
-								(local.set $from (i32.add (local.get $from) (i32.const 8)))
+								(i64.store (local.get $hp) (i64.load (local.get $n)))
+								(local.set $hp (i32.add (local.get $hp) (i32.const 8)))
+								(local.set $n (i32.add (local.get $n) (i32.const 8)))
 								(br $copy-large-hnf)
 							)
 						)
-						(return (local.get $to))
+						(return (local.get $hp))
+					)
+					(else
+						;; small hnf
+						(i64.store offset=16 (local.get $hp) (i64.load offset=16 (local.get $n)))
+						(return (i32.add (local.get $hp) (i32.add (i32.shl (local.get $ab-arity) (i32.const 3)) (i32.const 8))))
 					)
 				)
-				;; small node
-				(i64.store offset=8  (local.get $to) (i64.load offset=8  (local.get $from)))
-				(i64.store offset=16 (local.get $to) (i64.load offset=16 (local.get $from)))
-				(return (i32.add (local.get $to) (i32.add (i32.shl (i32.add (local.get $a-arity) (local.get $b-arity)) (i32.const 3)) (i32.const 8))))
 			)
 		)
 
-		;; thunk, "copy-thunk"
-		(local.set $ab-arity (i32.and (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 0xff)))
-		;;(call $debug (i32.const 3) (local.get $from) (local.get $d) (local.get $ab-arity))
-		(if (i32.eq (local.get $ab-arity) (i32.const 0xff)) (local.set $ab-arity (i32.const 1))) ;; -1 for selectors etc.
+		;; thunk
+		(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+		(if
+			(i32.lt_s (local.get $ab-arity) (i32.const 0))
+			(then
+				(local.set $ab-arity (i32.const 1)) ;; negative for selectors etc.
+			)
+			(else
+				(local.set $ab-arity (i32.and (local.get $ab-arity) (i32.const 0xff)))
+			)
+		)
 
-		(local.set $d (local.get $ab-arity))
+		(local.set $size (local.get $ab-arity)) ;; $size is just an iterator
 		(block $end-copy-thunk
 			(loop $copy-thunk
-				(br_if $end-copy-thunk (i32.eqz (local.get $d)))
-				(local.set $d (i32.sub (local.get $d) (i32.const 1)))
-				(i32.store
-					(local.tee $to (i32.add (local.get $to) (i32.const 8)))
-					(i32.load (local.tee $from (i32.add (local.get $from) (i32.const 8)))))
+				(br_if $end-copy-thunk (i32.eqz (local.get $size)))
+				(local.set $size (i32.sub (local.get $size) (i32.const 1)))
+				(i64.store
+					(local.tee $hp (i32.add (local.get $hp) (i32.const 8)))
+					(i64.load (local.tee $n (i32.add (local.get $n) (i32.const 8)))))
 				(br $copy-thunk)
 			)
 		)
 
 		(select
-			(i32.add (local.get $to) (i32.shl (i32.sub (i32.const 3) (local.get $ab-arity)) (i32.const 3)))
-			(i32.add (local.get $to) (i32.const 8))
+			(i32.add (local.get $hp) (i32.shl (i32.sub (i32.const 3) (local.get $ab-arity)) (i32.const 3)))
+			(i32.add (local.get $hp) (i32.const 8))
 			(i32.lt_s (local.get $ab-arity) (i32.const 2))
 		)
-	)
-
-	(func $update-ref (param $ref i32) (param $hp i32) (result i32)
-		(local $n i32)
-		(local $d i32)
-		(local.set $n (i32.load (local.get $ref)))
-		(local.set $d (i32.load (local.get $n)))
-
-		(if
-			(i32.or
-				(i32.gt_s (global.get $start-heap) (local.get $n))
-				(i32.lt_s (global.get $end-heap) (local.get $n))
-			)
-			(then (return (local.get $hp)))
-		)
-
-		(if
-			(i32.and (local.get $d) (i32.const 1))
-			(then
-				(i32.store (local.get $ref) (i32.sub (local.get $d) (i32.const 1)))
-				(return (local.get $hp))
-			)
-		)
-
-		(i32.store (local.get $ref) (local.get $hp))
-		(call $copy (local.get $n) (local.get $hp))
 	)
 )
