@@ -445,16 +445,16 @@ instance ^ (Expr TReal) where ^ a b = ECall "clean_powR" (a -- b -- ELNil)
 (<>.) a b = Ene a b
 
 (<.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<.) a b = Elt_s a b // TODO: sometimes unsigned?
+(<.) a b = Elt_s a b
 
 (>.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>.) a b = Egt_s a b // TODO: sometimes unsigned?
+(>.) a b = Egt_s a b
 
 (<=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<=.) a b = Ele_s a b // TODO: sometimes unsigned?
+(<=.) a b = Ele_s a b
 
 (>=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>=.) a b = Ege_s a b // TODO: sometimes unsigned?
+(>=.) a b = Ege_s a b
 
 (&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (&&.) a b = Eand a b
@@ -472,7 +472,7 @@ notB a = Eeqz a
 (<<.) a b = Eshl a b
 
 (>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
-(>>.) a b = Eshr_s a b // TODO signedness?
+(>>.) a b = Eshr_s a b
 
 xorI :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 xorI a b = Exor a b

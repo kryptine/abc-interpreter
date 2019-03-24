@@ -175,6 +175,8 @@ do
 
 	if [[ "$MODULE" == "CodeSharing" ]] || [[ "$MODULE" == "GraphTest" ]]; then
 		continue
+	elif [[ "$MODULE" == "long_integers" ]] && [ $WASM -gt 0 ]; then
+		continue
 	elif [[ "${#RUN_ONLY[@]}" -gt 0 ]] && ! contains "$MODULE" "${RUN_ONLY[@]}"; then
 		continue
 	fi
