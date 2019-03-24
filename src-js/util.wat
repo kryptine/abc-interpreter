@@ -355,15 +355,15 @@
 		(if
 			(i32.and (local.get $d) (i32.const 1))
 			(then
-				(i32.store (local.get $ref) (i32.sub (local.get $d) (i32.const 1)))
+				(i64.store (local.get $ref) (i64.extend_i32_u (i32.sub (local.get $d) (i32.const 1))))
 				(return (local.get $hp))
 			)
 		)
 
-		(i32.store (local.get $ref) (local.get $hp))
+		(i64.store (local.get $ref) (i64.extend_i32_u (local.get $hp)))
 
-		(i32.store (local.get $hp) (local.get $d))
-		(i32.store (local.get $n) (i32.add (local.get $hp) (i32.const 1)))
+		(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
+		(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
 
 		(if (i32.and (local.get $d) (i32.const 2))
 			;; hnf
@@ -389,7 +389,7 @@
 					(i32.eq (local.get $d) (i32.const 50))
 					(then
 						(local.set $size (i32.load offset=8 (local.get $n))) ;; size
-						(i32.store offset=8 (local.get $hp) (local.get $size))
+						(i64.store offset=8 (local.get $hp) (i64.extend_i32_u (local.get $size)))
 						(local.set $hp (i32.add (local.get $hp) (i32.const 16)))
 						(local.set $n (i32.add (local.get $n) (i32.const 16)))
 						(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
@@ -413,8 +413,8 @@
 						(local.set $size (i32.load offset=8 (local.get $n))) ;; size
 						(local.set $d (i32.load offset=16 (local.get $n))) ;; element descriptor
 
-						(i32.store offset=8 (local.get $hp) (local.get $size))
-						(i32.store offset=16 (local.get $hp) (local.get $d))
+						(i64.store offset=8 (local.get $hp) (i64.extend_i32_u (local.get $size)))
+						(i64.store offset=16 (local.get $hp) (i64.extend_i32_u (local.get $d)))
 						(local.set $hp (i32.add (local.get $hp) (i32.const 24)))
 						(local.set $n (i32.add (local.get $n) (i32.const 24)))
 
@@ -464,12 +464,12 @@
 					)
 				)
 
-				(i32.store offset=8 (local.get $hp) (i32.load offset=8 (local.get $n)))
+				(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
 				(if
 					(i32.gt_s (local.get $ab-arity) (i32.const 2))
 					(then
 						;; hnf spread over two blocks
-						(i32.store offset=16 (local.get $hp) (i32.add (local.get $hp) (i32.const 24)))
+						(i64.store offset=16 (local.get $hp) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 24))))
 						(local.set $hp (i32.add (local.get $hp) (i32.const 24)))
 						(local.set $n (i32.load offset=16 (local.get $n)))
 
