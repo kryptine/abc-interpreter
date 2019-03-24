@@ -75,6 +75,8 @@ import interpretergen
 	| Eshr_s !(Expr t) !(Expr t)
 	| Eshr_u !(Expr t) !(Expr t)
 
+	| Elit !String !String
+
 :: Label :== String
 
 instance toString (Expr t)
@@ -166,6 +168,8 @@ where
 		Eshl a b   -> "("+++type a+++".shl"+++toString a+++toString b+++")"
 		Eshr_s a b -> "("+++type a+++".shr_s"+++concat [a,b]+++")"
 		Eshr_u a b -> "("+++type a+++".shr_u"+++concat [a,b]+++")"
+
+		Elit _ l -> l
 	where
 		signed_op t op = if (t.[0]=='f') (t+++"."+++op) (t+++"."+++op+++"_s")
 
@@ -253,6 +257,8 @@ where
 		ECall c _
 			| c=="clean_strncmp" -> Just "i32"
 			| otherwise -> Nothing
+
+		Elit t _ -> Just t
 
 		_ -> Nothing
 	where
@@ -472,7 +478,7 @@ xorI :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 xorI a b = Exor a b
 
 ~. :: !(Expr TWord) -> Expr TWord
-~. a = Esub (Ei64_const 0) a
+~. a = Exor (Elit "i64" "(i64.const 0xffffffffffffffff)") a // must be literal to avoid Clean integer overflow
 
 absR :: !(Expr TReal) -> Expr TReal
 absR e = Eabs e
