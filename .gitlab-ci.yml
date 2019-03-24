@@ -45,6 +45,13 @@ benchmark-x86:
     - cd test
     - ./run_tests.sh -3bf
 
+test-wasm:
+  extends: .base
+  stage: test-interpreter
+  script:
+    - cd test
+    - ./run_tests.sh -w
+
 interworking-Start:
   extends: .base
   stage: test-interworking
