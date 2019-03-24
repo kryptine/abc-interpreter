@@ -137,8 +137,18 @@ intp = new Uint8Array(intp);
 				putchar: function (v) {
 					putstr(String.fromCharCode(v));
 				},
-				print_int: function (v) {
-					putstr(String(v));
+				print_int: function (high,low) {
+					if (high==0 && low>=0) {
+						putstr(String(low));
+					} else {
+						var n=BigInt(high)*2n**32n;
+						if (low<0) {
+							n+=2n**31n;
+							low+=2**31;
+						}
+						n+=BigInt(low);
+						putstr(String(n));
+					}
 				},
 				print_bool: function (v) {
 					putstr(v==0 ? 'False' : 'True');

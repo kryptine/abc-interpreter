@@ -73,6 +73,7 @@ import interpretergen
 	| Exor !(Expr t) !(Expr t)
 	| Eshl !(Expr t) !(Expr TWord)
 	| Eshr_s !(Expr t) !(Expr t)
+	| Eshr_u !(Expr t) !(Expr t)
 
 :: Label :== String
 
@@ -164,6 +165,7 @@ where
 		Exor a b   -> "("+++type a+++".xor"+++concat [a,b]+++")"
 		Eshl a b   -> "("+++type a+++".shl"+++toString a+++toString b+++")"
 		Eshr_s a b -> "("+++type a+++".shr_s"+++concat [a,b]+++")"
+		Eshr_u a b -> "("+++type a+++".shr_u"+++concat [a,b]+++")"
 	where
 		signed_op t op = if (t.[0]=='f') (t+++"."+++op) (t+++"."+++op+++"_s")
 
@@ -240,6 +242,7 @@ where
 		Exor a b -> either a b
 		Eshl a b -> either a b
 		Eshr_s a b -> either a b
+		Eshr_u a b -> either a b
 
 		ELocal t _  -> Just t
 		EGlobal t _ -> Just t
@@ -293,7 +296,7 @@ where
 		, "(func $clean_memcpy (import \"clean\" \"memcpy\") (param i32 i32 i32))"
 		, "(func $clean_strncmp (import \"clean\" \"strncmp\") (param i32 i32 i32) (result i32))"
 		, "(func $clean_putchar (import \"clean\" \"putchar\") (param i32))"
-		, "(func $clean_print_int (import \"clean\" \"print_int\") (param i32))"
+		, "(func $clean_print_int (import \"clean\" \"print_int\") (param i32 i32))"
 		, "(func $clean_print_bool (import \"clean\" \"print_bool\") (param i32))"
 		, "(func $clean_print_char (import \"clean\" \"print_char\") (param i32))"
 		, "(func $clean_print_real (import \"clean\" \"print_real\") (param f64))"
@@ -793,7 +796,10 @@ print_char :: !Bool !(Expr TChar) !Target -> Target
 print_char quotes c t = append (ECall (if quotes "clean_print_char" "clean_putchar") (c -- ELNil)) t
 
 print_int :: !(Expr TInt) !Target -> Target
-print_int c t = append (ECall "clean_print_int" (c -- ELNil)) t
+print_int c t = append (ECall "clean_print_int" (high -- low -- ELNil)) t
+where
+	high = Eshr_u c (Ei64_const 32)
+	low = Eand c (Ei64_const 0xffffffff)
 
 print_real :: !(Expr TReal) !Target -> Target
 print_real c t = append (ECall "clean_print_real" (c -- ELNil)) t
