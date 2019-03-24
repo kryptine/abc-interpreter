@@ -5,6 +5,7 @@
 	(global $half-heap (mut i32) (i32.const 0))
 	(global $end-heap (mut i32) (i32.const 0))
 	(global $stack (mut i32) (i32.const 0))
+	(global $caf-list (mut i32) (i32.const 0))
 	(global $in-first-semispace (mut i32) (i32.const 1))
 
 	(func (export "strncmp") (param $s1 i32) (param $s2 i32) (param $n i32) (result i32)
@@ -78,11 +79,12 @@
 		(i32.sub (local.get $c1) (local.get $c2))
 	)
 
-	(func (export "setup_gc") (param i32 i32 i32)
+	(func (export "setup_gc") (param i32 i32 i32 i32)
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))
 		(global.set $end-heap (i32.add (local.get 0) (i32.add (local.get 1) (local.get 1))))
 		(global.set $stack (local.get 2))
+		(global.set $caf-list (local.get 3))
 	)
 
 	;; upper half of result is new hp pointer;
@@ -113,6 +115,25 @@
 				(local.set $new (call $update-ref (local.get $asp) (local.get $new)))
 				(local.set $asp (i32.sub (local.get $asp) (i32.const 8)))
 				(br $copy-asp)
+			)
+		)
+
+		;; copy CAF pointers
+		(local.set $n (i32.add (global.get $caf-list) (i32.const 8)))
+		(block $end-copy-cafs
+			(loop $copy-cafs
+				(br_if $end-copy-cafs (i32.eqz (i32.load (i32.sub (local.get $n) (i32.const 8)))))
+				(local.set $n (i32.load (i32.sub (local.get $n) (i32.const 8))))
+				(local.set $a-arity (i32.load16_s (local.get $n)))
+				(block $end-copy-caf-pointers
+					(loop $copy-caf-pointers
+						(br_if $end-copy-caf-pointers (i32.eqz (local.get $a-arity)))
+						(local.set $new (call $update-ref (i32.add (local.get $n) (i32.shl (local.get $a-arity) (i32.const 3))) (local.get $new)))
+						(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+						(br $copy-caf-pointers)
+					)
+				)
+				(br $copy-cafs)
 			)
 		)
 
