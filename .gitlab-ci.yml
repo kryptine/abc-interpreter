@@ -68,6 +68,9 @@ interworking-GraphCopy:
     - cd test
     - make -B test-GraphTest
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
+  # For some reason, this test can get stuck during running. I cannot reproduce this locally.
+  retry:
+    max: 2
 
 interworking-GraphCopy-clang:
   extends: .base
@@ -80,8 +83,6 @@ interworking-GraphCopy-clang:
   # For some reason, this test can get stuck during running. I cannot reproduce this locally.
   retry:
     max: 2
-    when:
-      - stuck_or_timeout_failure
 
 examples:
   extends: .base
