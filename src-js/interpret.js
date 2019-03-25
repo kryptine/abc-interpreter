@@ -1,8 +1,6 @@
 if (typeof scriptArgs == 'undefined')
 	scriptArgs = arguments;
 
-var DEBUG=false;
-
 var progbytes = read(scriptArgs[scriptArgs.length-1], 'binary');
 var prog = 'buffer' in progbytes
 	? new Uint32Array(progbytes.buffer) // spidermonkey
@@ -77,8 +75,7 @@ function find_offsets(prog) {
 }
 find_offsets(prog);
 if (start == undefined) {
-	console.log('program has no start address');
-	quit();
+	crash('program has no start address');
 }
 
 for (var i in prog) {
@@ -109,9 +106,7 @@ intp = new Uint8Array(intp);
 				memory: memory,
 
 				debug_instr: function (addr, instr) {
-					if (!DEBUG)
-						return;
-					console.log((addr/8-code_offset)+'\t'+abc_instructions[instr]);
+					printErr((addr/8-code_offset)+'\t'+abc_instructions[instr]);
 				},
 				illegal_instr: function (addr, instr) {
 					crash('illegal instruction '+instr+' ('+abc_instructions[instr]+') at address '+(addr/8-1));
@@ -121,8 +116,8 @@ intp = new Uint8Array(intp);
 				},
 				gc: util.instance.exports.gc,
 				halt: function (pc, hp_free, hp_size) {
-					console.log('halt at', (pc/8)-code_offset);
-					console.log(hp_size-hp_free, hp_free, hp_size);
+					print('halt at', (pc/8)-code_offset);
+					print(hp_size-hp_free, hp_free, hp_size);
 				},
 
 				memcpy: function (dest,src,n) {
@@ -192,12 +187,12 @@ intp = new Uint8Array(intp);
 			var filename = 'disas-'+name+'.bin';
 			var code = obj.code.subarray(seg.funcBodyBegin, seg.funcBodyEnd);
 
-			console.log('extracting '+filename+'...');
+			printErr('extracting '+filename+'...');
 			os.file.writeTypedArrayToFile(filename, code);
 		});
 	}
 
 	var r=intp.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
 	if (r!=0)
-		console.log('failed with return code', r);
+		printErr('failed with return code', r);
 })(util, intp);

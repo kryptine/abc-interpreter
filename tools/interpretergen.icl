@@ -7,18 +7,36 @@ import target
 
 Start w
 # args = getCommandLine
-| size args <> 2 = abort "Usage: GEN path/to/abc_instructions.h"
-
-# (ok,f,w) = fopen args.[1] FReadText w
-| not ok = abort "Failed to read abc_instructions.h\n"
-# (instrs,f) = fetch_instructions [] f
-# (_,w) = fclose f w
+# opts = parse_opts args 1 default_opts
+# (opts,w) = case opts.instructions_order of
+	Nothing
+		-> (opts,w)
+	Just [fp]
+		# (ok,f,w) = fopen fp FReadText w
+		| not ok -> abort ("Failed to read '"+++fp+++"'\n")
+		# (instrs,f) = fetch_instructions [] f
+		# (_,w) = fclose f w
+		-> ({opts & instructions_order=Just instrs},w)
 
 # (io,w) = stdio w
-# io = foldl (\io e -> io <<< e <<< "\n") io (all_instructions instrs start)
+# io = foldl (\io e -> io <<< e <<< "\n") io (all_instructions opts start)
 # (_,w) = fclose io w
 = w
 where
+	parse_opts :: !{String} !Int !Options -> Options
+	parse_opts args i opts
+	| i>=size args
+		= opts
+		= case args.[i] of
+			"-i" -> parse_opts args (i+2) {opts & instructions_order=Just [args.[i+1]]}
+			"-d" -> parse_opts args (i+1) {opts & debug_instructions=True}
+			a -> abort ("unknown argument '"+++a+++"'\n")
+
+	default_opts =
+		{ instructions_order = Nothing
+		, debug_instructions = False
+		}
+
 	fetch_instructions :: ![String] !*File -> *(![String], !*File)
 	fetch_instructions is f
 	# (e,f) = fend f
@@ -33,7 +51,7 @@ where
 ($) infixr 0
 ($) f :== f
 
-all_instructions instrs t = bootstrap $ collect_instructions instrs $ map (\i -> i t) $
+all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t) $
 	[ instr "absR" (Just 0) $
 		new_local TReal (absR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r

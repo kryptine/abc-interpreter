@@ -174,7 +174,7 @@ endif
 
 interpret_instructions.h: .FORCE
 	$(MAKE) -C ../tools interpretergenc
-	../tools/interpretergenc abc_instructions.h > $@
+	../tools/interpretergenc > $@
 
 debug: $(SRC_INTERPRET) $(DEP_INTERPRET) debug_curses.c debug_curses.h
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DINTERPRETER -DDEBUG_CURSES -lcurses $(SRC_INTERPRET) debug_curses.c -o $@

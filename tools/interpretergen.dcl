@@ -1,6 +1,12 @@
 definition module interpretergen
 
+from StdMaybe import :: Maybe
 from target import :: Expr
+
+:: Options =
+	{ instructions_order :: !Maybe [String]
+	, debug_instructions :: !Bool
+	}
 
 :: TWord  = TWord
 :: TChar  = TChar

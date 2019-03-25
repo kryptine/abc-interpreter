@@ -9,7 +9,7 @@ all: $(WASM) abc_instructions.js
 
 abc_interpreter.wat: .FORCE
 	$(MAKE) -C ../tools interpretergenwasm
-	../tools/interpretergenwasm ../src/abc_instructions.h > $@
+	../tools/interpretergenwasm $(INTERPRETERGENWASMFLAGS) -i ../src/abc_instructions.h > $@
 
 abc_instructions.js: ../src/abc_instructions.h
 	echo 'var abc_instructions = [' > $@

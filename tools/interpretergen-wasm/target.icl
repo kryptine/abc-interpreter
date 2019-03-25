@@ -288,8 +288,9 @@ start = {instrs=[], output=[], var_counter=0}
 bootstrap :: ![String] -> [String]
 bootstrap instrs = instrs
 
-collect_instructions :: ![String] ![Target] -> [String]
-collect_instructions instrs_order is =
+collect_instructions :: !Options ![Target] -> [String]
+collect_instructions {instructions_order=Nothing} _ = abort "no abc instructions order specified\n"
+collect_instructions {debug_instructions,instructions_order=Just instrs_order} is =
 	start ++
 	reverse [block_start i \\ i <- is] ++
 	switch ++
@@ -369,7 +370,9 @@ where
 
 	switch =
 		[ "(block $instr_illegal"
-		, "\t(call $clean_debug_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))"
+		, if debug_instructions
+			"\t(call $clean_debug_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))"
+			""
 		, "\t(br_table " +++
 			foldr (+++) "" [find_label i is \\ i <- instrs_order] +++
 			"$instr_illegal (i32.load (i32.wrap_i64 (global.get $pc))))"

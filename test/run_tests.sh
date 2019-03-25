@@ -15,6 +15,8 @@ RUNFLAGS=""
 NATIVE_RUNFLAGS=""
 
 WASM=0
+INTERPRETERGENWASMFLAGS=""
+
 SRCMAKETARGETS="all"
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
@@ -130,6 +132,7 @@ while true; do
 
 		-d)
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS"
+			INTERPRETERGENWASMFLAGS+=" -d"
 			shift;;
 		-l)
 			RUNFLAGS+=" -l"
@@ -152,7 +155,7 @@ while true; do
 	esac
 done
 
-if [ $BENCHMARK -gt 0 ] && [[ $SRCMAKETARGETS != *"optimized"* ]]; then
+if [ $BENCHMARK -gt 0 ] && [ $WASM -eq 0 ] && [[ $SRCMAKETARGETS != *"optimized"* ]]; then
 	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
 	sleep 1
 fi
@@ -162,7 +165,7 @@ if [ "$OS" != "Windows_NT" ]; then
 fi
 
 if [ $WASM -gt 0 ]; then
-	make -BC ../src-js all || exit 1
+	INTERPRETERGENWASMFLAGS="$INTERPRETERGENWASMFLAGS" make -BC ../src-js all || exit 1
 fi
 
 if [ $RECOMPILE -gt 0 ]; then

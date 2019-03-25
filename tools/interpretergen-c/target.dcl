@@ -9,7 +9,7 @@ import interpretergen
 
 start :: Target
 bootstrap :: ![String] -> [String]
-collect_instructions :: ![String] ![Target] -> [String]
+collect_instructions :: !Options ![Target] -> [String]
 
 instr_unimplemented :: !Target -> Target
 instr_halt :: !Target -> Target
