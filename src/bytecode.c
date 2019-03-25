@@ -8,8 +8,6 @@
 void free_program(struct program *pgm) {
 	if (pgm->code != NULL)
 		free(pgm->code);
-	if (pgm->data != NULL)
-		free(pgm->data);
 	if (pgm->symbol_table != NULL)
 		free(pgm->symbol_table);
 	if (pgm->symbols != NULL)
@@ -45,6 +43,10 @@ int get_symbol_table_size(struct program *pgm) {
 
 struct symbol *get_symbol_table(struct program *pgm) {
 	return pgm->symbol_table;
+}
+
+BC_WORD *get_code(struct program *pgm) {
+	return pgm->code;
 }
 
 struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name) {
