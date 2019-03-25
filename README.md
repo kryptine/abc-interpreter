@@ -42,7 +42,7 @@ program:
 
 In the Clean IDE, you can set these in Project Options &gt; Bytecode.
 
-See the documentation in [ABC.Interpreter](/src/ABC/Interpreter.dcl) for more
+See the documentation in [ABC.Interpreter](/lib/ABC/Interpreter.dcl) for more
 details about the serialization library itself.
 
 ### Independent interpretation
