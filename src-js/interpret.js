@@ -192,7 +192,15 @@ intp = new Uint8Array(intp);
 		});
 	}
 
+	var time_start=new Date().getTime();
+
 	var r=intp.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
 	if (r!=0)
 		printErr('failed with return code', r);
+
+	if (scriptArgs.indexOf('--time') >= 0) {
+		var time_end=new Date().getTime();
+		var time=(time_end-time_start)/1000;
+		printErr('user '+time.toLocaleString(['en-US'], {maximumFractionDigits: 2}));
+	}
 })(util, intp);

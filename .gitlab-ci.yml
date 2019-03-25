@@ -45,12 +45,12 @@ benchmark-x86:
     - cd test
     - ./run_tests.sh -3bf
 
-test-wasm:
+benchmark-wasm:
   extends: .base
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh -w
+    - ./run_tests.sh -wb
 
 interworking-Start:
   extends: .base

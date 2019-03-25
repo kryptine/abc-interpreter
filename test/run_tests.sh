@@ -166,6 +166,10 @@ fi
 
 if [ $WASM -gt 0 ]; then
 	INTERPRETERGENWASMFLAGS="$INTERPRETERGENWASMFLAGS" make -BC ../src-js all || exit 1
+
+	if [ $BENCHMARK -gt 0 ]; then
+		RUNFLAGS+=" --time"
+	fi
 fi
 
 if [ $RECOMPILE -gt 0 ]; then
@@ -223,7 +227,7 @@ do
 
 	if [ $BENCHMARK -gt 0 ]; then
 		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION 2>bm-tmp >$MODULE.result
-		WALL_TIME="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
+		WALL_TIME="$(grep user bm-tmp | sed 's/user[[:space:]]*//' | head -n 1)"
 		/usr/bin/time -p ./"$MODULE" $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>bm-tmp
 		WALL_TIME_NATIVE="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
 		rm bm-tmp
