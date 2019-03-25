@@ -14,9 +14,13 @@ FAILED=()
 RUNFLAGS=""
 NATIVE_RUNFLAGS=""
 
-MAKETARGETS="all"
+WASM=0
+INTERPRETERGENWASMFLAGS=""
+
+SRCMAKETARGETS="all"
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
+BC_EXTENSION="bc"
 RUN_ONLY=()
 PROFILE=0
 RECOMPILE=1
@@ -33,16 +37,16 @@ cpprj () {
 }
 
 cpmq() {
-    res="$(cpm $@)"
+	res="$(cpm $@)"
 	ecode=$?
-    echo "$res" | grep -i 'Error' >/dev/null
-    if [ $ecode -ne 0 ]; then
-        echo "$res" | grep -v Analyzing | grep -i '^\|Error\|Warning'
-        return -1
-    else
-        echo "$res" | grep --color=never -i 'Finished making.'
-        return 0
-    fi
+	echo "$res" | grep -i 'Error' >/dev/null
+	if [ $ecode -ne 0 ]; then
+		echo "$res" | grep -v Analyzing | grep -i '^\|Error\|Warning'
+		return -1
+	else
+		echo "$res" | grep --color=never -i 'Finished making.'
+		return 0
+	fi
 }
 
 print_help () {
@@ -52,6 +56,8 @@ print_help () {
 	echo "  -H       Print this help"
 	echo
 	echo "  -o TEST  Only run test TEST"
+	echo
+	echo "  -w       Use the WebAssembly interpreter (does not support all options below)"
 	echo
 	echo "  -b       Run benchmarks"
 	echo "  -f       Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
@@ -80,7 +86,7 @@ contains () {
 	return 1
 }
 
-OPTS=`getopt "Ho:bfh:Os:3Rdlpq" "$@"` || print_usage
+OPTS=`getopt "Ho:wbfh:Os:3Rdlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -92,11 +98,18 @@ while true; do
 			RUN_ONLY+=("$2")
 			shift 2;;
 
+		-w)
+			WASM=1
+			IP="js ../src-js/interpret.js"
+			SRCMAKETARGETS="abcopt bcgen bclink bcstrip bcunreloc"
+			BC_EXTENSION="ubc"
+			shift;;
+
 		-b)
 			BENCHMARK=1
 			shift;;
 		-f)
-			MAKETARGETS+=" optimized"
+			SRCMAKETARGETS+=" optimized"
 			shift;;
 		-h)
 			RUNFLAGS+=" -h $2"
@@ -119,6 +132,7 @@ while true; do
 
 		-d)
 			CFLAGS+=" -DDEBUG_ALL_INSTRUCTIONS"
+			INTERPRETERGENWASMFLAGS+=" -d"
 			shift;;
 		-l)
 			RUNFLAGS+=" -l"
@@ -141,13 +155,21 @@ while true; do
 	esac
 done
 
-if [ $BENCHMARK -gt 0 ] && [[ $MAKETARGETS != *"optimized"* ]]; then
+if [ $BENCHMARK -gt 0 ] && [ $WASM -eq 0 ] && [[ $SRCMAKETARGETS != *"optimized"* ]]; then
 	echo -e "${RED}Warning: benchmarking without compiler optimisations (did you forget -f?)$RESET"
 	sleep 1
 fi
 
 if [ "$OS" != "Windows_NT" ]; then
-	CFLAGS="$CFLAGS" make -BC ../src $MAKETARGETS || exit 1
+	CFLAGS="$CFLAGS" make -BC ../src $SRCMAKETARGETS || exit 1
+fi
+
+if [ $WASM -gt 0 ]; then
+	INTERPRETERGENWASMFLAGS="$INTERPRETERGENWASMFLAGS" make -BC ../src-js all || exit 1
+
+	if [ $BENCHMARK -gt 0 ]; then
+		RUNFLAGS+=" --time"
+	fi
 fi
 
 if [ $RECOMPILE -gt 0 ]; then
@@ -159,6 +181,8 @@ do
 	MODULE="${MODULE/.icl/}"
 
 	if [[ "$MODULE" == "CodeSharing" ]] || [[ "$MODULE" == "GraphTest" ]]; then
+		continue
+	elif [[ "$MODULE" == "long_integers" ]] && [ $WASM -gt 0 ]; then
 		continue
 	elif [[ "${#RUN_ONLY[@]}" -gt 0 ]] && ! contains "$MODULE" "${RUN_ONLY[@]}"; then
 		continue
@@ -199,9 +223,11 @@ do
 
 	[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 
+	[ $WASM -gt 0 ] && ../src/bcunreloc "$MODULE.bc" -o "$MODULE.ubc"
+
 	if [ $BENCHMARK -gt 0 ]; then
-		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc 2>bm-tmp >$MODULE.result
-		WALL_TIME="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
+		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION 2>bm-tmp >$MODULE.result
+		WALL_TIME="$(grep user bm-tmp | sed 's/user[[:space:]]*//' | head -n 1)"
 		/usr/bin/time -p ./"$MODULE" $MODULE_RUNFLAGS $NATIVE_RUNFLAGS -nt -nr 2>bm-tmp
 		WALL_TIME_NATIVE="$(grep user bm-tmp | sed 's/user[[:space:]]*//')"
 		rm bm-tmp
@@ -212,9 +238,9 @@ do
 		fi
 		echo -e "${PURPLE}Time used: $WALL_TIME / $WALL_TIME_NATIVE (${WALL_TIME_RATIO})$RESET"
 	elif [ $QUIET -gt 0 ]; then
-		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc > $MODULE.result
+		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION > $MODULE.result
 	else
-		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.bc | tee $MODULE.result
+		/usr/bin/time $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION | tee $MODULE.result
 	fi
 
 	if [ $PROFILE -ne 0 ]; then

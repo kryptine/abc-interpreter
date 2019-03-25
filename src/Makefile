@@ -37,6 +37,8 @@ override CFLAGS+=-DPOSIX -D_POSIX_C_SOURCE=199309L -D_XOPEN_SOURCE=500 -D_C99_SO
 endif
 ifeq ($(USING_CLANG),0)
 override CFLAGS+=-Wno-misleading-indentation
+else
+override CFLAGS+=-Wno-parentheses-equality
 endif
 
 ifeq ($(filter optimized,$(MAKECMDGOALS)),optimized)
@@ -48,16 +50,18 @@ ABCOPT:=ABCOptimiser.exe
 BCGEN:=ByteCodeGenerator.exe
 BCLINK:=ByteCodeLinker.exe
 BCSTRIP:=ByteCodeStripper.exe
+BCUNRELOC:=ByteCodeUnrelocator.exe
 INTERP:=interpret.exe
 else
 ABCOPT:=abcopt
 BCGEN:=bcgen
 BCLINK:=bclink
 BCSTRIP:=bcstrip
+BCUNRELOC:=bcunreloc
 INTERP:=interpret
 endif
 
-BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCSTRIP) $(INTERP)
+BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCSTRIP) $(BCUNRELOC) $(INTERP)
 
 SRC_BCGEN:=\
 	abc_instructions.c\
@@ -87,6 +91,14 @@ SRC_BCSTRIP:=\
 	strip.c\
 	util.c
 DEP_BCSTRIP:=$(subst .c,.h,$(SRC_BCSTRIP)) settings.h
+
+SRC_BCUNRELOC:=\
+	abc_instructions.c\
+	bcunreloc.c\
+	bytecode.c\
+	parse.c\
+	util.c
+DEP_BCUNRELOC:=$(subst .c,.h,$(SRC_BCUNRELOC)) settings.h
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -138,6 +150,9 @@ $(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
 
 $(BCSTRIP): $(SRC_BCSTRIP) $(DEP_BCSTRIP)
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCSTRIP) -o $@
+
+$(BCUNRELOC): $(SRC_BCUNRELOC) $(DEP_BCUNRELOC)
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DUNRELOCATOR -UWORD_WIDTH -DWORD_WIDTH=64 $(SRC_BCUNRELOC) -o $@
 
 $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@

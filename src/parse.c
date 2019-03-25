@@ -13,6 +13,10 @@
 # include "bcgen_instructions.h"
 #endif
 
+#ifdef UNRELOCATOR
+# include "bcunreloc.h"
+#endif
+
 #ifdef LINK_CLEAN_RUNTIME
 void preseed_symbol_matcher(struct parser *state, const char *label, void *location) {
        struct host_symbol *sym=find_host_symbol_by_name(state->program,(char*)label);
@@ -506,25 +510,31 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
-#ifdef INTERPRETER
+#if defined(INTERPRETER) || defined(UNRELOCATOR)
+# ifdef INTERPRETER
+#  define INTERPRETER_OR_UNRELOCATOR(i,u) i
+# else
+#  define INTERPRETER_OR_UNRELOCATOR(i,u) (u*8)
+# endif
 				if (!strcmp(state->program->symbol_table[state->ptr].name, "__ARRAY__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__ARRAY__;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&__ARRAY__,1);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &__STRING__;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&__STRING__,6);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") ||
 						!strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &INT;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&INT,26);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &BOOL;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&BOOL,11);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "CHAR")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &CHAR;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&CHAR,16);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) &REAL;
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&REAL,21);
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 # ifdef DEBUG_CLEAN_LINKS
 					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
 # endif
-				} else if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
+				} else
+				if (state->program->symbol_table[state->ptr].offset & 1) /* data symbol */ {
 					state->program->symbol_table[state->ptr].offset &= -2;
 # if (WORD_WIDTH == 64)
 					state->program->symbol_table[state->ptr].offset *= 2;
@@ -540,7 +550,11 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						temp_relocation_offset += (state->program->data[state->strings[i] + temp_relocation_offset] + 3) / 8;
 					state->program->symbol_table[state->ptr].offset += temp_relocation_offset * 4;
 # endif
+# ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
+# elif defined(UNRELOCATOR)
+					state->program->symbol_table[state->ptr].offset += ((BC_WORD)state->program->code_size+3)*8+sizeof(unrelocator_preamble);
+# endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {
 						int v = ((BC_WORD*)state->program->symbol_table[state->ptr].offset)[-2];
@@ -573,8 +587,11 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # if (WORD_WIDTH == 64)
 					state->program->symbol_table[state->ptr].offset *= 2;
 # endif
+# ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
-
+# elif defined(UNRELOCATOR)
+					state->program->symbol_table[state->ptr].offset += 2*8+sizeof(unrelocator_preamble);
+# endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {
 						/* Descriptor has a _hnf code address */
@@ -585,8 +602,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					}
 # endif
 				}
-#endif
-#ifdef LINKER
+#elif defined(LINKER)
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
 					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
 					if (state->program->symbol_table[state->ptr].offset != -1)

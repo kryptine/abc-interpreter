@@ -79,7 +79,7 @@ RtoI    :: !(Expr TReal) -> Expr TInt
 
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 
-if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t | typename t
 
 begin_instruction :: !String !Target -> Target
 end_instruction :: !Target -> Target
@@ -89,8 +89,9 @@ nop :: !Target -> Target
 
 (:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 
-class typename t :: t -> String
+class typename a :: !a -> String
 instance typename TWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
+
 new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
@@ -104,16 +105,16 @@ class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance += TWord TWord
 
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance -= TWord  TWord, TShort TShort, TInt TInt
+instance -= TWord  TWord, TShort TShort
 
-class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | typename v
 instance advance_ptr Int, (Expr w)
 
-class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
+class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | typename v
 instance rewind_ptr Int, (Expr w)
 
-class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t
-class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t)
+class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t | typename t
+class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t) | typename t
 
 instance @  Int, (Expr t)
 instance @? Int, (Expr t)

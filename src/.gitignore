@@ -2,6 +2,7 @@ abcopt
 bcgen
 bclink
 bcstrip
+bcunreloc
 debug
 interpret
 

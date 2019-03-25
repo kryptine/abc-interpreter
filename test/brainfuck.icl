@@ -1,6 +1,6 @@
 module brainfuck
 
-// After https://github.com/camilstaps/CleanBrainfuck
+// After https://git.camilstaps.nl/archived/clean-brainfuck.git/
 
 import StdEnv
 
