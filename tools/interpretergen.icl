@@ -208,19 +208,11 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		grow_a 1 :.
 		advance_ptr Hp 2
 	, instr "buildC" (Just 1) $
-		ensure_hp 2 :.
-		Hp @ 0 .= CHAR_ptr + lit_word 2 :.
-		Hp @ 1 .= Pc @ 1 :.
-		A @ 1 .= to_word Hp :.
-		grow_a 1 :.
-		advance_ptr Hp 2
+		A @ 1 .= static_character (to_char (Pc @ 1)) :.
+		grow_a 1
 	, instr "buildC_b" (Just 1) $
-		ensure_hp 2 :.
-		Hp @ 0 .= CHAR_ptr + lit_word 2 :.
-		Hp @ 1 .= B @ (Pc @ 1) :.
-		A @ 1 .= to_word Hp :.
-		grow_a 1 :.
-		advance_ptr Hp 2
+		A @ 1 .= static_character (to_char (B @ (Pc @ 1))) :.
+		grow_a 1
 	, instr "buildI" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \i ->
 		if_then_else (lit_int 0 <=. i &&. i <=. lit_int 32)

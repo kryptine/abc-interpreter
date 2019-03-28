@@ -151,6 +151,7 @@ cycle_ptr :: Expr TWord
 indirection_ptr :: Expr TWord
 dNil_ptr :: Expr TWord
 small_integer :: !(Expr TInt) -> Expr TWord
+static_character :: !(Expr TChar) -> Expr TWord
 caf_list :: Expr (TPtr (TPtr TWord))
 
 push_c :: !(Expr TWord) !Target -> Target

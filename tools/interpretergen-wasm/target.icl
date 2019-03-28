@@ -774,7 +774,10 @@ dNil_ptr :: Expr TWord
 dNil_ptr = Ei64_const ((141+1)*8)
 
 small_integer :: !(Expr TInt) -> Expr TWord
-small_integer i = Eadd (Ei64_const (8*31)) (Emul (Ei64_const 16) (cast_expr i))
+small_integer i = Eadd (Ei64_const (8*31)) (Eshl (cast_expr i) (Ei64_const 4))
+
+static_character :: !(Expr TChar) -> Expr TWord
+static_character c = Eadd (Ei64_const (8*147)) (Eshl (cast_expr c) (Ei64_const 4))
 
 caf_list :: Expr (TPtr (TPtr TWord))
 caf_list = Ei64_const (97*8)

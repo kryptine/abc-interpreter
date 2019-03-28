@@ -1,3 +1,3 @@
 #pragma once
 
-extern uint64_t unrelocator_preamble[146];
+extern uint64_t unrelocator_preamble[658];
