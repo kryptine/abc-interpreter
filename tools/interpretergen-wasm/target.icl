@@ -27,7 +27,7 @@ import interpretergen
 	| EEnd
 	| ECall !Label !ExprList
 
-	| E.u: EIf` !(Expr TWord) !(Expr u) !(Expr u) & typename u
+	| E.u: ESelect !(Expr u) !(Expr u) !(Expr TWord) & typename u
 
 	| Ei64_const !Int
 
@@ -94,8 +94,7 @@ where
 		EEnd       -> ")"
 		ECall l as -> "(call $"+++l+++print_args (starts_with 0 "clean_" l) as+++")"
 
-		EIf` c t e -> "(if (result "+++type t+++")"+++i64_to_cond c
-			+++"(then"+++toString t+++")(else"+++toString e+++"))"
+		ESelect t e c -> "(select"+++toString t+++toString e+++toString c+++")"
 
 		Ei64_const i -> "(i64.const "+++toString i+++")"
 
@@ -212,7 +211,7 @@ type e = case type` e of
 where
 	type` :: !(Expr t) -> Maybe String
 	type` e = case e of
-		EIf` _ t e -> either t e
+		ESelect t e _ -> either t e
 
 		Ei64_const _ -> Just "i64"
 
@@ -532,7 +531,7 @@ if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 if_i64_or_i32_expr a _ = a
 
 if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t | typename t
-if_expr c t e = EIf` c t e
+if_expr c t e = ESelect t e c
 
 begin_instruction :: !String !Target -> Target
 begin_instruction name t = {t & instrs=[name:t.instrs], output=[]}
