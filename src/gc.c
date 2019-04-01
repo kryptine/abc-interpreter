@@ -20,7 +20,7 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #endif
 		) {
 	BC_WORD *n,d;
-	int16_t ab_arity;
+	int32_t ab_arity;
 
 	n=*ref;
 
@@ -101,7 +101,7 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 			return &hp[ab_arity+1];
 		}
 	} else {
-		ab_arity=((int16_t*)d)[-1];
+		ab_arity=((int32_t*)d)[-1];
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF ("\tthunk %d\n",ab_arity);
 #endif
@@ -142,7 +142,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 	BC_WORD *new=options->in_first_semispace ? heap+heap_size : heap;
 
 	BC_WORD *n,d;
-	int16_t ab_arity,a_arity;
+	int32_t ab_arity,a_arity;
 
 #if DEBUG_GARBAGE_COLLECTOR > 1
 	EPRINTF ("Copying A stack roots...\n");
@@ -264,7 +264,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				continue;
 			}
 		} else {
-			ab_arity=((int16_t*)d)[-1];
+			ab_arity=((int32_t*)d)[-1];
 			if (ab_arity<0) { /* negative for selectors etc. */
 				ab_arity=1;
 				a_arity=1;
