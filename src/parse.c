@@ -375,7 +375,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 							store_code_elem(2, elem16);
 #else
 							/* Shift so that offset -1 contains the arity; this is used in the garbage collector */
-							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(48, 16);
+							state->program->code[state->ptr++] = (BC_WORD) elem16 << IF_INT_64_OR_32(32, 0);
 #endif
 							break;
 						case 'l': /* Label */
