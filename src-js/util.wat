@@ -300,7 +300,7 @@
 				)
 
 				;; thunk
-				(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+				(local.set $ab-arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
 				(if
 					(i32.lt_s (local.get $ab-arity) (i32.const 0))
 					(then
@@ -516,7 +516,7 @@
 		)
 
 		;; thunk
-		(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+		(local.set $ab-arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
 		(if
 			(i32.lt_s (local.get $ab-arity) (i32.const 0))
 			(then
