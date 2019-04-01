@@ -84,15 +84,14 @@ BC_WORD *build_start_node(struct interpretation_environment *ie) {
 }
 
 BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_environment *ie) {
-	int len = *(int*)clean_string;
-	uint64_t *s = &clean_string[1];
-	BC_WORD *node = ie->hp;
+	int len=*(int*)clean_string;
+	uint64_t *s=&clean_string[1];
+	BC_WORD *node=ie->hp;
 
-	BC_WORD **ptr_stack = (BC_WORD**) ie->asp;
-	int16_t *a_size_stack = (int16_t*) ie->bsp;
-	BC_WORD dummy;
-	*++ptr_stack = &dummy;
-	*--a_size_stack = 1;
+	BC_WORD **ptr_stack=(BC_WORD**)ie->asp;
+	int16_t *a_size_stack=(int16_t*)ie->bsp;
+	*++ptr_stack=(BC_WORD*)&node;
+	*--a_size_stack=1;
 #if DEBUG_CLEAN_LINKS > 1
 	EPRINTF("Copying from string:\n");
 #endif
@@ -102,188 +101,206 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 		EPRINTF("%3d "BC_WORD_FMT_HEX"\n",i,(BC_WORD)s[i]);
 #endif
 	for (int i=0; i<len/IF_INT_64_OR_32(8,4); i++) {
-		if (a_size_stack[0] == 0) {
+		if (a_size_stack[0]==0) {
 			i--;
 			a_size_stack++;
-		} else {
-			a_size_stack[0]--;
+			continue;
+		}
 
-			BC_WORD_S desc=(BC_WORD)s[i];
-			s[i]=(BC_WORD)ie->hp;
+		a_size_stack[0]--;
 
-			if (desc < 0) { /* redirection */
-				**ptr_stack-- = (BC_WORD) s[i+(desc-1)/8];
+		BC_WORD_S desc=(BC_WORD)s[i];
+		s[i]=(BC_WORD)ie->hp;
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("\t");
+		for (int16_t *a=(int16_t*)ie->bsp-1; a>a_size_stack; a--)
+			EPRINTF("  ");
+#endif
+
+		if (desc < 0) { /* redirection */
+#if DEBUG_CLEAN_LINKS > 1
+			EPRINTF("<- %p\n",(void*)s[i+((desc-1)>>3)]);
+#endif
+			**ptr_stack--=(BC_WORD) s[i+((desc-1)>>3)];
+			continue;
+		}
+
+#if DEBUG_CLEAN_LINKS > 1
+		EPRINTF("%p := %p\n",ie->hp,(void*)desc);
+#endif
+		if (desc & 2) { /* hnf */
+			int16_t arity=((int16_t*)desc)[-1];
+			int16_t a_arity=arity;
+
+			if (desc==(BC_WORD)&INT+2 && s[i+1]<33) {
+				**ptr_stack--=(BC_WORD)(small_integers+2*s[++i]);
+				continue;
+			} else if (desc==(BC_WORD)&CHAR+2) {
+				**ptr_stack--=(BC_WORD)(static_characters+2*s[++i]);
+				continue;
+			} else if (desc==(BC_WORD)&INT+2 ||
+					desc==(BC_WORD)&BOOL+2 ||
+					desc==(BC_WORD)&REAL+2) {
+				**ptr_stack--=(BC_WORD)ie->hp;
+				ie->hp[0]=desc;
+				ie->hp[1]=(BC_WORD)s[++i];
+				ie->hp+=2;
+				continue;
+			} else if (desc==(BC_WORD)&__STRING__+2) {
+				**ptr_stack--=(BC_WORD)ie->hp;
+				ie->hp[0]=desc;
+				BC_WORD len=(BC_WORD)s[i+1];
+				ie->hp[1]=len;
+				len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+				for (int j=2; j<len+2; j++)
+					ie->hp[j]=(BC_WORD)s[i+j];
+				i+=len+2;
+				ie->hp+=1+len;
+				continue;
+			} else if (desc==(BC_WORD)&__ARRAY__+2) {
+				BC_WORD size=(BC_WORD)s[i+1];
+				BC_WORD elem_desc=(BC_WORD)s[i+2];
+				**ptr_stack--=(BC_WORD)ie->hp;
+				ie->hp[0]=desc;
+				ie->hp[1]=size;
+				ie->hp[2]=elem_desc;
+
+				if (elem_desc==(BC_WORD)&INT+2 || elem_desc==(BC_WORD)&REAL+2) {
+					for (int v=3; v<size+3; v++)
+						ie->hp[v]=(BC_WORD)s[i+v];
+					i+=size+2;
+					ie->hp+=size+3;
+					continue;
+				} else if (elem_desc==(BC_WORD)&BOOL+2) {
+#if WORD_WIDTH==64
+					for (int v=3; v<(size+7)/8+3; v++)
+						ie->hp[v]=(BC_WORD)s[i+v];
+					ie->hp+=(size+7)/8+3;
+					i+=(size+7)/8+2;
+#else
+					for (int v=3; v<(size+3)/4+3; v++)
+						ie->hp[v]=(BC_WORD)((BC_WORD*)s)[i*2+v];
+					ie->hp+=(size+3)/4+3;
+					i+=(size+3)/4+2;
+#endif
+					continue;
+				} else if (elem_desc==0) {
+					for (int v=size+2; v>2; v--)
+						*++ptr_stack=&ie->hp[v];
+					i+=2;
+					ie->hp+=size+3;
+					*--a_size_stack=size;
+					continue;
+				}
+
+				int16_t elem_a_arity=*(int16_t*)elem_desc;
+				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1]-256;
+				ie->hp+=3;
+				i+=2;
+				ptr_stack+=size*elem_a_arity;
+				for (int v=0; v<size; v++) {
+					for (int a=0; a<elem_a_arity; a++)
+						ptr_stack[-v*elem_a_arity-a]=&ie->hp[a];
+					for (int b=elem_a_arity; b<elem_ab_arity; b++)
+						ie->hp[b]=s[++i];
+					ie->hp+=elem_ab_arity;
+				}
+				*--a_size_stack=size*elem_a_arity;
 				continue;
 			}
 
-#if DEBUG_CLEAN_LINKS > 1
-			EPRINTF("\t");
-			for (int16_t *a=(int16_t*)ie->bsp-1; a>a_size_stack; a--)
-				EPRINTF("   ");
-			EPRINTF("%p := %p",ie->hp,(void*)desc);
-#endif
-			int16_t a_arity = ((int16_t*)desc)[-1];
-			int16_t b_arity = 0;
-
-			if (a_arity==0) {
-				if (desc==(BC_WORD)&INT+2 && s[i+1]<33) {
-					**ptr_stack--=(BC_WORD)(small_integers+2*s[i+1]);
-					i++;
-				} else if (desc==(BC_WORD)&CHAR+2) {
-					**ptr_stack--=(BC_WORD)(static_characters+2*s[i+1]);
-					i++;
-				} else if (desc==(BC_WORD)&INT+2 ||
-						desc==(BC_WORD)&BOOL+2 ||
-						desc==(BC_WORD)&REAL+2) {
-#if DEBUG_CLEAN_LINKS > 1
-					EPRINTF("; basic type");
-#endif
-					**ptr_stack--=(BC_WORD)ie->hp;
-					*ie->hp++=desc;
-					*ie->hp++=(BC_WORD)s[++i];
-				} else if (desc == (BC_WORD)&__STRING__+2) {
-					**ptr_stack--=(BC_WORD)ie->hp;
-					ie->hp[0]=desc;
-					BC_WORD len=(BC_WORD)s[i+1];
-#if DEBUG_CLEAN_LINKS > 1
-					EPRINTF("; __STRING__ " BC_WORD_FMT,len);
-#endif
-					ie->hp[1]=len;
-					len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-					for (int j=2; j<len+2; j++)
-						ie->hp[j]=(BC_WORD)s[i+j];
-					i+=len+2;
-					ie->hp+=1+len;
-				} else if (desc == (BC_WORD)&__ARRAY__+2) {
-					BC_WORD size=(BC_WORD)s[i+1];
-#if DEBUG_CLEAN_LINKS > 1
-					EPRINTF("; __ARRAY__ " BC_WORD_FMT,size);
-#endif
-					BC_WORD elem_desc=(BC_WORD)s[i+2];
-					**ptr_stack--=(BC_WORD)ie->hp;
-					ie->hp[0]=desc;
-					ie->hp[1]=size;
-					ie->hp[2]=elem_desc;
-
-					if (elem_desc==(BC_WORD)&INT+2 || elem_desc==(BC_WORD)&REAL+2) {
-						for (int v=3; v<size+3; v++)
-							ie->hp[v]=(BC_WORD)s[i+v];
-						i+=size+2;
-						ie->hp+=size+3;
-					} else if (elem_desc==(BC_WORD)&BOOL+2) {
-#if WORD_WIDTH==64
-						for (int v=3; v<(size+7)/8+3; v++)
-							ie->hp[v]=(BC_WORD)s[i+v];
-						ie->hp+=(size+7)/8+3;
-						i+=(size+7)/8+2;
-#else
-						for (int v=3; v<(size+3)/4+3; v++)
-							ie->hp[v]=(BC_WORD)((BC_WORD*)s)[i*2+v];
-						ie->hp+=(size+3)/4+3;
-						i+=(size+3)/4+2;
-#endif
-					} else if (elem_desc==0) {
-						for (int v=size+2; v>2; v--)
-							*++ptr_stack=&ie->hp[v];
-						i+=2;
-						ie->hp+=size+3;
-						*--a_size_stack=size;
-					} else {
-						int16_t elem_a_arity=*(int16_t*)elem_desc;
-						int16_t elem_ab_arity=((int16_t*)elem_desc)[-1]-256;
-						ie->hp+=3;
-						i+=2;
-						ptr_stack+=size*elem_a_arity;
-						for (int v=0; v<size; v++) {
-							for (int a=0; a<elem_a_arity; a++)
-								ptr_stack[-v*elem_a_arity-a]=&ie->hp[a];
-							for (int b=elem_a_arity; b<elem_ab_arity; b++)
-								ie->hp[b]=s[++i];
-							ie->hp+=elem_ab_arity;
-						}
-						*--a_size_stack=size*elem_a_arity;
-					}
-				} else if (desc & 2) {
-					desc-=10;
-					**ptr_stack--=desc;
-					s[i]=desc;
-					if (i==0)
-						node=(BC_WORD*)desc;
-				} else {
-					**ptr_stack--=(BC_WORD)ie->hp;
-					ie->hp[0]=desc;
-					ie->hp+=3;
-				}
-			} else {
-				**ptr_stack-- = (BC_WORD) ie->hp;
-				ie->hp[0] = desc;
-
-				if (a_arity == 1) {
-					*++ptr_stack=ie->hp+1;
-					ie->hp+=2;
-				} else if (a_arity == 2) {
-					*++ptr_stack=ie->hp+2;
-					*++ptr_stack=ie->hp+1;
-					ie->hp+=3;
-				} else if (a_arity < 256) {
-					ie->hp[2]=(BC_WORD)&ie->hp[3];
-					for (int a=a_arity; a>1; a--)
-						*++ptr_stack=&ie->hp[a+1];
-					*++ptr_stack=&ie->hp[1];
-					ie->hp+=a_arity+2;
-				} else { /* record */
-					a_arity = ((int16_t*)desc)[0];
-					b_arity = ((int16_t*)desc)[-1] - 256 - a_arity;
-					int ab_arity=a_arity+b_arity;
-
-					if (ab_arity<3) {
-						if (a_arity==2) {
-							*++ptr_stack=ie->hp+2;
-							*++ptr_stack=ie->hp+1;
-						} else if (a_arity==1) {
-							*++ptr_stack=ie->hp+1;
-							if (b_arity==1)
-								ie->hp[2]=s[++i];
-						} else if (b_arity==2) {
-							ie->hp[1]=s[++i];
-							ie->hp[2]=s[++i];
-						} else if (b_arity==1) {
-							ie->hp[1]=s[++i];
-						}
-
-						ie->hp+=ab_arity+1;
-					} else if (a_arity==0) {
-						ie->hp[1]=s[i+1];
-						ie->hp[2]=(BC_WORD)&ie->hp[3];
-						for (int b=0; b<b_arity; b++)
-							ie->hp[b+3]=s[i+2+b];
-						i+=b_arity-1;
-						ie->hp+=b_arity+2;
-					} else {
-						ie->hp[2]=(BC_WORD)&ie->hp[3];
-
-						for (int a=0; a<a_arity-1; a++)
-							*++ptr_stack=ie->hp+3+a;
-						*++ptr_stack=ie->hp+1;
-
-						for (int b=0; b<b_arity; b++)
-							ie->hp[3+a_arity-1+b]=s[i+b+1];
-
-						ie->hp+=ab_arity+2;
-						i+=b_arity;
-					}
-				}
+			/* not a basic type */
+			a_arity=arity;
+			if (arity>256) {
+				a_arity=((int16_t*)desc)[0];
+				arity-=256;
 			}
 
-			*--a_size_stack = a_arity;
+			ie->hp[0]=desc;
 
-#if DEBUG_CLEAN_LINKS > 1
-			EPRINTF("\n");
-#endif
+			if (arity==0) {
+				desc-=10;
+				**ptr_stack--=desc;
+				s[i]=desc;
+				*--a_size_stack=0;
+				continue;
+			} else if (arity==1) {
+				**ptr_stack--=(BC_WORD)ie->hp;
+				if (a_arity==1)
+					*++ptr_stack=&ie->hp[1];
+				else
+					ie->hp[1]=s[++i];
+				ie->hp+=2;
+				*--a_size_stack=1;
+				continue;
+			} else if (arity==2) {
+				**ptr_stack--=(BC_WORD)ie->hp;
+				if (a_arity==2) {
+					ptr_stack[2]=&ie->hp[1];
+					ptr_stack[1]=&ie->hp[2];
+					ptr_stack+=2;
+				} else if (a_arity==1) {
+					*++ptr_stack=&ie->hp[1];
+					ie->hp[2]=s[++i];
+				} else {
+					ie->hp[1]=s[i+1];
+					ie->hp[2]=s[i+2];
+					i+=2;
+				}
+				ie->hp+=3;
+				*--a_size_stack=2;
+				continue;
+			}
+
+			/* large hnf */
+			**ptr_stack--=(BC_WORD)ie->hp;
+			ie->hp[2]=(BC_WORD)&ie->hp[3];
+
+			if (a_arity==0) {
+				ie->hp[1]=s[++i];
+				arity--;
+				memcpy(&ie->hp[3],&s[i],arity*sizeof(uint64_t));
+				i+=arity;
+			} else {
+				ptr_stack[a_arity]=&ie->hp[1];
+				for (int a=1; a<a_arity; a++)
+					ptr_stack[a]=&ie->hp[2+a_arity-a];
+				ptr_stack+=a_arity;
+				memcpy(&ie->hp[2+a_arity],&s[i+1],(arity-a_arity)*sizeof(uint64_t));
+				i+=arity-a_arity;
+			}
+
+			ie->hp+=arity+2;
+			*--a_size_stack = a_arity;
+		} else { /* thunk */
+			**ptr_stack--=(BC_WORD)ie->hp;
+			ie->hp[0]=desc;
+
+			int32_t arity=((int32_t*)desc)[-1];
+			int16_t a_arity=arity;
+
+			if (arity<0) {
+				arity=1;
+			} else if (arity>256) {
+				a_arity=arity>>8;
+				arity&=0xff;
+			}
+
+			ie->hp++;
+
+			for (int a=0; a<a_arity; a++)
+				ptr_stack[a_arity-a]=&ie->hp[a];
+			ptr_stack+=a_arity;
+
+			for (int b=a_arity; b<arity; b++)
+				ie->hp[b]=s[++i];
+
+			ie->hp+=arity<3 ? 2 : arity;
+
+			*--a_size_stack = a_arity;
 		}
 	}
 
-	ie->hp += len;
 	return node;
 }
 
