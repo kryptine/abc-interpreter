@@ -3541,10 +3541,10 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		 * Copy elements to the stacks and push type string to B-stack. */
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		new_local (TPtr TWord) (to_word_ptr (array @ 2)) \d ->
-		new_local TShort (to_short_ptr d @ -1 - lit_short 256) \ab_arity ->
+		new_local TShort (to_short_ptr d @ -1 - lit_short 256) \arity ->
 		new_local TShort (to_short_ptr d @ 0) \a_arity ->
-		new_local TShort (ab_arity - a_arity) \b_arity ->
-		advance_ptr array (lit_word 3 + B @ 0 * to_word ab_arity) :.
+		new_local TShort (arity - a_arity) \b_arity ->
+		advance_ptr array (lit_word 3 + B @ 0 * to_word arity) :.
 		new_local (TPtr TWord) array \b ->
 		advance_ptr b a_arity :.
 		advance_ptr Pc 1 :.

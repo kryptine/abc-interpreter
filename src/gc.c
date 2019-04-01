@@ -20,7 +20,7 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #endif
 		) {
 	BC_WORD *n,d;
-	int32_t ab_arity;
+	int32_t arity;
 
 	n=*ref;
 
@@ -81,33 +81,33 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #endif
 
 		/* Not a built-in type */
-		ab_arity=((int16_t*)d)[-1];
-		if (ab_arity>256) /* records */
-			ab_arity-=256;
+		arity=((int16_t*)d)[-1];
+		if (arity>256) /* records */
+			arity-=256;
 #if DEBUG_GARBAGE_COLLECTOR > 2
-		EPRINTF ("\thnf %d\n",ab_arity);
+		EPRINTF ("\thnf %d\n",arity);
 #endif
 		hp[1]=n[1];
-		if (ab_arity>2) { /* hnf spread over two blocks */
+		if (arity>2) { /* hnf spread over two blocks */
 			hp[2]=(BC_WORD)&hp[3];
 			hp+=3;
 			n=(BC_WORD*)n[2];
-			ab_arity--;
-			for (int i=0; i<ab_arity; i++)
+			arity--;
+			for (int i=0; i<arity; i++)
 				hp[i]=n[i];
-			return &hp[ab_arity];
+			return &hp[arity];
 		} else {
 			hp[2]=n[2];
-			return &hp[ab_arity+1];
+			return &hp[arity+1];
 		}
 	} else {
-		ab_arity=((int32_t*)d)[-1];
+		arity=((int32_t*)d)[-1];
 #if DEBUG_GARBAGE_COLLECTOR > 2
-		EPRINTF ("\tthunk %d\n",ab_arity);
+		EPRINTF ("\tthunk %d\n",arity);
 #endif
-		if (ab_arity<0) /* negative for selectors etc. */
-			ab_arity=1;
-		ab_arity&=0xff;
+		if (arity<0) /* negative for selectors etc. */
+			arity=1;
+		arity&=0xff;
 
 #ifdef LINK_CLEAN_RUNTIME
 		if (d == (BC_WORD)&HOST_NODE_INSTRUCTIONS[1]) {
@@ -116,10 +116,10 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 		}
 #endif
 
-		for (int i=1; i<=ab_arity; i++)
+		for (int i=1; i<=arity; i++)
 			hp[i]=n[i];
 
-		return &hp[ab_arity>2 ? (ab_arity+1) : 3];
+		return &hp[arity>2 ? (arity+1) : 3];
 	}
 }
 
@@ -142,7 +142,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 	BC_WORD *new=options->in_first_semispace ? heap+heap_size : heap;
 
 	BC_WORD *n,d;
-	int32_t ab_arity,a_arity;
+	int32_t arity,a_arity;
 
 #if DEBUG_GARBAGE_COLLECTOR > 1
 	EPRINTF ("Copying A stack roots...\n");
@@ -211,7 +211,7 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				d=n[2];
 
 				if (d == 0) {
-					ab_arity=a_arity=1;
+					arity=a_arity=1;
 				} else if (d == (BC_WORD)&INT+2
 					|| d == (BC_WORD)&REAL+2) {
 					n=&n[3+size];
@@ -221,12 +221,12 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 					n=&n[3+size];
 					continue;
 				} else {
-					ab_arity=((int16_t*)d)[-1]-256;
+					arity=((int16_t*)d)[-1]-256;
 					a_arity=((int16_t*)d)[0];
 				}
 
 				if (a_arity==0) {
-					n=&n[3+size*ab_arity];
+					n=&n[3+size*arity];
 					continue;
 				}
 
@@ -234,25 +234,25 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				for (; size>0; size--) {
 					for (d=0; d<a_arity; d++)
 						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[d],new,shared_nodes_of_host);
-					n=&n[ab_arity];
+					n=&n[arity];
 				}
 
 				continue;
 			}
 
 			/* Not a built-in type */
-			a_arity=ab_arity=((int16_t*)d)[-1];
-			if (ab_arity>256) { /* records */
-				ab_arity-=256;
+			a_arity=arity=((int16_t*)d)[-1];
+			if (arity>256) { /* records */
+				arity-=256;
 				a_arity=((int16_t*)d)[0];
 			}
-			if (ab_arity>2) { /* hnf spread over two blocks */
+			if (arity>2) { /* hnf spread over two blocks */
 				if (a_arity>0) {
 					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
 					while (--a_arity)
 						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2+a_arity],new,shared_nodes_of_host);
 				}
-				n+=2+ab_arity;
+				n+=2+arity;
 				continue;
 			} else {
 				if (a_arity>0) {
@@ -260,23 +260,23 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 					if (a_arity==2)
 						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2],new,shared_nodes_of_host);
 				}
-				n+=1+ab_arity;
+				n+=1+arity;
 				continue;
 			}
 		} else {
-			ab_arity=((int32_t*)d)[-1];
-			if (ab_arity<0) { /* negative for selectors etc. */
-				ab_arity=1;
+			arity=((int32_t*)d)[-1];
+			if (arity<0) { /* negative for selectors etc. */
+				arity=1;
 				a_arity=1;
 			} else {
-				a_arity=(ab_arity & 0xff)-((ab_arity>>8)&0xff);
-				ab_arity&=0xff;
+				a_arity=(arity & 0xff)-((arity>>8)&0xff);
+				arity&=0xff;
 			}
 
 			for (int i=1; i<=a_arity; i++)
 				new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[i],new,shared_nodes_of_host);
 
-			n=&n[ab_arity>2 ? (ab_arity+1) : 3];
+			n=&n[arity>2 ? (arity+1) : 3];
 			continue;
 		}
 	}

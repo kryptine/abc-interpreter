@@ -194,16 +194,16 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				}
 
 				int16_t elem_a_arity=*(int16_t*)elem_desc;
-				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1]-256;
+				int16_t elem_arity=((int16_t*)elem_desc)[-1]-256;
 				ie->hp+=3;
 				i+=2;
 				ptr_stack+=size*elem_a_arity;
 				for (int v=0; v<size; v++) {
 					for (int a=0; a<elem_a_arity; a++)
 						ptr_stack[-v*elem_a_arity-a]=&ie->hp[a];
-					for (int b=elem_a_arity; b<elem_ab_arity; b++)
+					for (int b=elem_a_arity; b<elem_arity; b++)
 						ie->hp[b]=s[++i];
-					ie->hp+=elem_ab_arity;
+					ie->hp+=elem_arity;
 				}
 				*--a_size_stack=size*elem_a_arity;
 				continue;
@@ -393,37 +393,37 @@ static inline int copied_node_size(BC_WORD *node
 			len=words_needed;
 		} else { /* unboxed array */
 			int16_t elem_a_arity=*(int16_t*)desc;
-			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
-			int words_needed=len*elem_ab_arity;
+			int16_t elem_arity=((int16_t*)desc)[-1]-256;
+			int words_needed=len*elem_arity;
 			node+=3;
 			for (int i=0; i<len; i++) {
 				for (int a=0; a<elem_a_arity; a++)
 					words_needed+=COPIED_NODE_SIZE((BC_WORD*)node[a], 0);
-				node+=elem_ab_arity;
+				node+=elem_arity;
 			}
 			len=words_needed;
 		}
 		return len+3;
 	}
 
-	int16_t a_arity = ((int16_t*)descriptor)[-1];
-	int16_t b_arity = 0;
+	int16_t arity=((int16_t*)descriptor)[-1];
+	int16_t a_arity=arity;
 #ifdef INDIRECTIONS_FOR_HNFS
 	indirections_for_hnfs=1;
 #endif
-	if (a_arity > 256) { /* record */
-		a_arity = ((int16_t*)descriptor)[0];
-		b_arity = ((int16_t*)descriptor)[-1] - 256 - a_arity;
+	if (arity>256) { /* record */
+		a_arity=((int16_t*)descriptor)[0];
+		arity-=256;
 #ifdef INDIRECTIONS_FOR_HNFS
 		indirections_for_hnfs=0;
 #endif
 	} else { /* may be curried */
 		int args_needed = ((int16_t*)descriptor)[0] >> 3;
-		if (args_needed != 0 && ((void**)(descriptor-2))[-2-2*a_arity] != &__Tuple)
+		if (args_needed != 0 && ((void**)(descriptor-2))[-2-2*arity] != &__Tuple)
 			return 3+FINALIZER_SIZE_ON_HEAP;
 
 #ifdef INDIRECTIONS_FOR_HNFS
-		BC_WORD host_descriptor=((BC_WORD*)(descriptor-2))[-2*a_arity-2];
+		BC_WORD host_descriptor=((BC_WORD*)(descriptor-2))[-2*arity-2];
 		if (host_descriptor==(BC_WORD)&ARRAY ||
 				host_descriptor==(BC_WORD)&__Conss ||
 				host_descriptor==(BC_WORD)&__Consts ||
@@ -431,20 +431,19 @@ static inline int copied_node_size(BC_WORD *node
 			indirections_for_hnfs=0;
 #endif
 	}
-	int ab_arity=a_arity+b_arity;
 
-	int words_needed=1+ab_arity;
-	if (ab_arity >= 3)
+	int words_needed=1+arity;
+	if (arity>=3)
 		words_needed++;
 
 	if (a_arity>0) {
 		words_needed+=COPIED_NODE_SIZE((BC_WORD*)node[1], indirections_for_hnfs);
 
-		if (ab_arity >= 3) {
-			BC_WORD **rest = (BC_WORD**) node[2];
-			for (int i=0; i < a_arity-1; i++)
+		if (arity>=3) {
+			BC_WORD **rest=(BC_WORD**)node[2];
+			for (int i=0; i<a_arity-1; i++)
 				words_needed+=COPIED_NODE_SIZE(rest[i], indirections_for_hnfs);
-		} else if (a_arity == 2)
+		} else if (a_arity==2)
 			words_needed+=COPIED_NODE_SIZE((BC_WORD*)node[2], indirections_for_hnfs);
 	}
 
@@ -542,17 +541,17 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 			return host_heap;
 		} else { /* unboxed array */
 			int16_t elem_a_arity=*(int16_t*)desc;
-			int16_t elem_ab_arity=((int16_t*)desc)[-1]-256;
+			int16_t elem_arity=((int16_t*)desc)[-1]-256;
 			node+=3;
 			BC_WORD *new_array=&host_heap[3];
-			host_heap+=3+len*elem_ab_arity;
+			host_heap+=3+len*elem_arity;
 			for (int i=0; i<len; i++) {
 				for (int a=0; a<elem_a_arity; a++)
 					host_heap=COPY_TO_HOST(clean_ie, host_heap, (BC_WORD**)&new_array[a], (BC_WORD*)node[a], 0);
-				for (int b=elem_a_arity; b<elem_ab_arity; b++)
+				for (int b=elem_a_arity; b<elem_arity; b++)
 					new_array[b]=node[b];
-				node+=elem_ab_arity;
-				new_array+=elem_ab_arity;
+				node+=elem_arity;
+				new_array+=elem_arity;
 			}
 			return host_heap;
 		}
@@ -678,9 +677,9 @@ static inline BC_WORD *copy_to_host(struct InterpretationEnvironment *clean_ie,
 static BC_WORD *translate_descriptor(struct program *program, BC_WORD *descriptor);
 
 static inline BC_WORD *copy_descriptor_to_host(struct program *program, BC_WORD *descriptor) {
-	int16_t ab_arity=((int16_t*)descriptor)[0];
+	int16_t arity=((int16_t*)descriptor)[0];
 	int16_t a_arity=((int16_t*)descriptor)[1];
-	if (ab_arity>=256) { /* record */
+	if (arity>=256) { /* record */
 		uint32_t type_string_size=(uint32_t)descriptor[1];
 		uint32_t type_string_words_interpreter=(type_string_size+7)/8;
 		/* On MACH_O64, the string starts in the same word as the arity */
@@ -697,7 +696,7 @@ static inline BC_WORD *copy_descriptor_to_host(struct program *program, BC_WORD 
 #ifdef MACH_O64
 		BC_WORD *new_descriptor=safe_malloc((3+type_string_words+n_child_descs+name_string_words)*sizeof(BC_WORD));
 		new_descriptor[0]=0 /* pointer to module */ + (((2+type_string_words+n_child_descs)*sizeof(BC_WORD)-4)<<32);
-		new_descriptor[1]=ab_arity+(a_arity<<16);
+		new_descriptor[1]=arity+(a_arity<<16);
 		strncpy((char*)&new_descriptor[1]+4, type_string, type_string_size+1);
 		for (int i=0; i<n_child_descs; i++)
 			new_descriptor[2+type_string_words]=(BC_WORD)
@@ -711,7 +710,7 @@ static inline BC_WORD *copy_descriptor_to_host(struct program *program, BC_WORD 
 			EPRINTF("Warning: copying record descriptor to address outside 32-bit range; this will lead to crashes when the record is printed.\n");
 		new_descriptor[0]=0; /* pointer to module */
 		new_descriptor[1]=(uint32_t)(BC_WORD)&new_descriptor[3+type_string_words+n_child_descs];
-		new_descriptor[2]=ab_arity+(a_arity<<16);
+		new_descriptor[2]=arity+(a_arity<<16);
 		strncpy((char*)&new_descriptor[3], type_string, type_string_size+1);
 		for (int i=0; i<n_child_descs; i++) {
 			BC_WORD child_desc=(BC_WORD)translate_descriptor(program, (BC_WORD*)descriptor[2+type_string_words_interpreter+i]);
@@ -842,17 +841,17 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 
 	descriptor=node[0]=host_node[0];
 
-	int16_t ab_arity=((int16_t*)descriptor)[-1];
+	int16_t arity=((int16_t*)descriptor)[-1];
 	int16_t a_arity;
 	int host_descriptor_offset;
 	int add_to_host_descriptor;
-	if (ab_arity > 256) {
-		ab_arity-=256;
+	if (arity>256) {
+		arity-=256;
 		a_arity=((int16_t*)descriptor)[0];
 		host_descriptor_offset=0;
 		add_to_host_descriptor=0;
 	} else {
-		a_arity=ab_arity;
+		a_arity=arity;
 		host_descriptor_offset=2*a_arity;
 		add_to_host_descriptor=a_arity*IF_MACH_O_ELSE(2,1);
 	}
@@ -871,19 +870,19 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 				for (int len=node[1]-1; len>=0; len--)
 					restore_and_translate_descriptors(clean_ie, program, array[len], add_to_interpreter_indirections);
 			} else {
-				int16_t elem_ab_arity=((int16_t*)elem_desc)[-1];
-				if (elem_ab_arity>0) { /* unboxed records */
+				int16_t elem_arity=((int16_t*)elem_desc)[-1];
+				if (elem_arity>0) { /* unboxed records */
 					host_node[2]=(BC_WORD)translate_descriptor(program, (BC_WORD*)(elem_desc-2))+2;
 
 					int16_t elem_a_arity=((int16_t*)elem_desc)[0];
-					elem_ab_arity-=256;
+					elem_arity-=256;
 
 					uint32_t size=node[1];
 					node+=3;
 					for (int i=0; i<size; i++) {
 						for (int a=0; a<elem_a_arity; a++)
 							restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[a], add_to_interpreter_indirections);
-						node+=elem_ab_arity;
+						node+=elem_arity;
 					}
 				}
 			}
@@ -897,7 +896,7 @@ static inline void restore_and_translate_descriptors(struct InterpretationEnviro
 	if (a_arity==1)
 		return;
 
-	if (ab_arity==2)
+	if (arity==2)
 		restore_and_translate_descriptors(clean_ie, program, (BC_WORD*)node[2], add_to_interpreter_indirections);
 	else {
 		BC_WORD **rest=(BC_WORD**)node[2];
@@ -924,11 +923,11 @@ static int evaluate_all_children(struct interpretation_environment *ie) {
 
 		node=(BC_WORD*)*ie->asp--;
 
-		int16_t a_arity=((int16_t*)node[0])[-1];
-		int16_t ab_arity=a_arity;
-		if (a_arity > 256) { /* record */
+		int16_t arity=((int16_t*)node[0])[-1];
+		int16_t a_arity=arity;
+		if (arity>256) { /* record */
 			a_arity=((int16_t*)node[0])[0];
-			ab_arity=((int16_t*)node[0])[-1]-256;
+			arity-=256;
 		}
 
 		if (a_arity > 0) {
@@ -936,7 +935,7 @@ static int evaluate_all_children(struct interpretation_environment *ie) {
 				*++ie->asp=node[1];
 
 			if (a_arity > 1) {
-				if (ab_arity==2) {
+				if (arity==2) {
 					if (!(((BC_WORD*)node[2])[0] & 2))
 						*++ie->asp=node[2];
 				} else {
