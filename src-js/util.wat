@@ -95,7 +95,7 @@
 		(local $n i32)
 		(local $d i32)
 		(local $a-arity i32)
-		(local $ab-arity i32)
+		(local $arity i32)
 		(local $size i32)
 
 		(if
@@ -204,11 +204,11 @@
 								(if
 									(i32.eqz (local.get $d))
 									(then
-										(local.set $ab-arity (i32.const 1))
+										(local.set $arity (i32.const 1))
 										(local.set $a-arity (i32.const 1))
 									)
 									(else ;; unboxed record
-										(local.set $ab-arity (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256)))
+										(local.set $arity (i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256)))
 										(local.set $a-arity (i32.load16_s (local.get $d)))
 									)
 								)
@@ -217,13 +217,13 @@
 									(i32.eqz (local.get $a-arity))
 									(then
 										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
-											(i32.shl (i32.mul (local.get $size) (local.get $ab-arity)) (i32.const 3)))))
+											(i32.shl (i32.mul (local.get $size) (local.get $arity)) (i32.const 3)))))
 										(br $update-refs)
 									)
 								)
 
 								(local.set $n (i32.add (local.get $n) (i32.const 24)))
-								(local.set $ab-arity (i32.shl (local.get $ab-arity) (i32.const 3)))
+								(local.set $arity (i32.shl (local.get $arity) (i32.const 3)))
 								(local.set $a-arity (i32.shl (local.get $a-arity) (i32.const 3)))
 								(loop $update-array
 									(br_if $update-refs (i32.eqz (local.get $size)))
@@ -239,24 +239,24 @@
 									)
 
 									(local.set $size (i32.sub (local.get $size) (i32.const 1)))
-									(local.set $n (i32.add (local.get $n) (local.get $ab-arity)))
+									(local.set $n (i32.add (local.get $n) (local.get $arity)))
 									(br $update-array)
 								)
 							)
 						)
 						;; not a basic type
-						(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
-						(local.set $a-arity (local.get $ab-arity))
+						(local.set $arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+						(local.set $a-arity (local.get $arity))
 						(if
-							(i32.gt_s (local.get $ab-arity) (i32.const 256))
+							(i32.gt_s (local.get $arity) (i32.const 256))
 							(then
 								(local.set $a-arity (i32.load16_s (local.get $d)))
-								(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 256)))
+								(local.set $arity (i32.sub (local.get $arity) (i32.const 256)))
 							)
 						)
 
 						(if
-							(i32.gt_s (local.get $ab-arity) (i32.const 2))
+							(i32.gt_s (local.get $arity) (i32.const 2))
 							(then
 								;; large node
 								(if
@@ -275,11 +275,11 @@
 											)
 										)
 
-										(local.set $n (i32.add (local.get $n) (i32.shl (local.get $ab-arity) (i32.const 3))))
+										(local.set $n (i32.add (local.get $n) (i32.shl (local.get $arity) (i32.const 3))))
 										(br $update-refs)
 									)
 									(else
-										(local.set $n (i32.add (local.get $n) (i32.shl (i32.add (i32.const 2) (local.get $ab-arity)) (i32.const 3))))
+										(local.set $n (i32.add (local.get $n) (i32.shl (i32.add (i32.const 2) (local.get $arity)) (i32.const 3))))
 										(br $update-refs)
 									)
 								)
@@ -292,7 +292,7 @@
 									(br_if $skip-b-elems (i32.eq (local.get $a-arity) (i32.const 1)))
 									(local.set $new (call $update-ref (i32.add (local.get $n) (i32.const 16)) (local.get $new)))
 								)
-								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $ab-arity) (i32.const 3)) (i32.const 8))))
+								(local.set $n (i32.add (local.get $n) (i32.add (i32.shl (local.get $arity) (i32.const 3)) (i32.const 8))))
 								(br $update-refs)
 							)
 						)
@@ -300,17 +300,17 @@
 				)
 
 				;; thunk
-				(local.set $ab-arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
+				(local.set $arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
 				(if
-					(i32.lt_s (local.get $ab-arity) (i32.const 0))
+					(i32.lt_s (local.get $arity) (i32.const 0))
 					(then
 						(local.set $a-arity (i32.const 1))
-						(local.set $ab-arity (i32.const 1))
+						(local.set $arity (i32.const 1))
 					)
 					(else
-						(local.set $a-arity (i32.sub (i32.and (local.get $ab-arity) (i32.const 0xff))
-							(i32.and (i32.shr_u (local.get $ab-arity) (i32.const 8)) (i32.const 0xff))))
-						(local.set $ab-arity (i32.and (local.get $ab-arity) (i32.const 0xff)))
+						(local.set $a-arity (i32.sub (i32.and (local.get $arity) (i32.const 0xff))
+							(i32.and (i32.shr_u (local.get $arity) (i32.const 8)) (i32.const 0xff))))
+						(local.set $arity (i32.and (local.get $arity) (i32.const 0xff)))
 					)
 				)
 
@@ -328,9 +328,9 @@
 						(local.get $n)
 						(i32.shl
 							(select
-								(i32.add (local.get $ab-arity) (i32.const 1))
+								(i32.add (local.get $arity) (i32.const 1))
 								(i32.const 3)
-								(i32.gt_s (local.get $ab-arity) (i32.const 2))
+								(i32.gt_s (local.get $arity) (i32.const 2))
 							)
 							(i32.const 3)
 						)
@@ -359,7 +359,7 @@
 	(func $update-ref (param $ref i32) (param $hp i32) (result i32)
 		(local $n i32)
 		(local $d i32)
-		(local $ab-arity i32)
+		(local $arity i32)
 		(local $size i32)
 
 		(local.set $n (i32.load (local.get $ref)))
@@ -477,17 +477,17 @@
 					)
 				)
 				;; not a basic type
-				(local.set $ab-arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
+				(local.set $arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
 				(if
-					(i32.gt_s (local.get $ab-arity) (i32.const 256))
+					(i32.gt_s (local.get $arity) (i32.const 256))
 					(then
-						(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 256)))
+						(local.set $arity (i32.sub (local.get $arity) (i32.const 256)))
 					)
 				)
 
 				(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
 				(if
-					(i32.gt_s (local.get $ab-arity) (i32.const 2))
+					(i32.gt_s (local.get $arity) (i32.const 2))
 					(then
 						;; hnf spread over two blocks
 						(i64.store offset=16 (local.get $hp) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 24))))
@@ -496,8 +496,8 @@
 
 						(block $end-copy-large-hnf
 							(loop $copy-large-hnf
-								(local.set $ab-arity (i32.sub (local.get $ab-arity) (i32.const 1)))
-								(br_if $end-copy-large-hnf (i32.eqz (local.get $ab-arity)))
+								(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+								(br_if $end-copy-large-hnf (i32.eqz (local.get $arity)))
 								(i64.store (local.get $hp) (i64.load (local.get $n)))
 								(local.set $hp (i32.add (local.get $hp) (i32.const 8)))
 								(local.set $n (i32.add (local.get $n) (i32.const 8)))
@@ -509,25 +509,25 @@
 					(else
 						;; small hnf
 						(i64.store offset=16 (local.get $hp) (i64.load offset=16 (local.get $n)))
-						(return (i32.add (local.get $hp) (i32.add (i32.shl (local.get $ab-arity) (i32.const 3)) (i32.const 8))))
+						(return (i32.add (local.get $hp) (i32.add (i32.shl (local.get $arity) (i32.const 3)) (i32.const 8))))
 					)
 				)
 			)
 		)
 
 		;; thunk
-		(local.set $ab-arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
+		(local.set $arity (i32.load (i32.sub (local.get $d) (i32.const 4))))
 		(if
-			(i32.lt_s (local.get $ab-arity) (i32.const 0))
+			(i32.lt_s (local.get $arity) (i32.const 0))
 			(then
-				(local.set $ab-arity (i32.const 1)) ;; negative for selectors etc.
+				(local.set $arity (i32.const 1)) ;; negative for selectors etc.
 			)
 			(else
-				(local.set $ab-arity (i32.and (local.get $ab-arity) (i32.const 0xff)))
+				(local.set $arity (i32.and (local.get $arity) (i32.const 0xff)))
 			)
 		)
 
-		(local.set $size (local.get $ab-arity)) ;; $size is just an iterator
+		(local.set $size (local.get $arity)) ;; $size is just an iterator
 		(block $end-copy-thunk
 			(loop $copy-thunk
 				(br_if $end-copy-thunk (i32.eqz (local.get $size)))
@@ -540,9 +540,9 @@
 		)
 
 		(select
-			(i32.add (local.get $hp) (i32.shl (i32.sub (i32.const 3) (local.get $ab-arity)) (i32.const 3)))
+			(i32.add (local.get $hp) (i32.shl (i32.sub (i32.const 3) (local.get $arity)) (i32.const 3)))
 			(i32.add (local.get $hp) (i32.const 8))
-			(i32.lt_s (local.get $ab-arity) (i32.const 2))
+			(i32.lt_s (local.get $arity) (i32.const 2))
 		)
 	)
 )
