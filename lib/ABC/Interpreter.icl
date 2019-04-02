@@ -144,10 +144,10 @@ where
 		# d = d+symbol_offset
 		# s=store_int_in_string s (i+IF_INT_64_OR_32 16 8) (d-array_desc)
 		#! l = get_word_from_string s (i+IF_INT_64_OR_32 8 4)
-		| d==array_desc-6*8+2 // INT
+		| d==array_desc-5*8+2 // REAL
 			# l = l << IF_INT_64_OR_32 3 2
 			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)+l) s symbol_a symbol_offset array_desc
-		| d==array_desc-5*8+2 // REAL
+		| d==array_desc-6*8+2 // INT
 			# l = l << 3
 			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)+l) s symbol_a symbol_offset array_desc
 		| d==array_desc-3*8+2 // BOOL
@@ -194,7 +194,7 @@ where
 			| d==array_desc-2*8+2 = (0,False) // _STRING_
 			| d==array_desc-3*8+2 = (1,True)  // BOOL
 			| d==array_desc-4*8+2 = (1,True)  // CHAR
-			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 2 1,True) // REAL
+			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 1 2,True) // REAL
 			| d==array_desc-6*8+2 = (1,True)  // INT/dINT
 			| otherwise = abort "internal error in serialize_for_unrelocated_interpretation\n"
 		# arity = get_D_node_arity d
