@@ -8,12 +8,12 @@ tasks between a server and a browser client.
 
 ## Tools
 
-Because there is no WebAssembly parser one needs to use `bcunreloc` to produce
+Because there is no WebAssembly parser one needs to use `bcprelink` to produce
 a version of the bytecode which can readily be copied into WebAssembly's linear
 memory. This is done with:
 
 ```bash
-bcunreloc MODULE.bc -o MODULE.ubc
+bcprelink MODULE.bc -o MODULE.ubc
 ```
 
 **TODO**: add support to `cpm`/the IDE for this.

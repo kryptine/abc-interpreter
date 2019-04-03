@@ -75,8 +75,8 @@ where
 		ccall strip_bytecode "sA:VIp"
 	}
 
-serialize_for_unrelocated_interpretation :: a !String !String !*World -> *(!Maybe String, !*World)
-serialize_for_unrelocated_interpretation graph bcfile thisexe w
+serialize_for_prelinked_interpretation :: a !String !String !*World -> *(!Maybe String, !*World)
+serialize_for_prelinked_interpretation graph bcfile thisexe w
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # (graph,descinfo,modules) = copy_to_string_with_names graph
@@ -196,7 +196,7 @@ where
 			| d==array_desc-4*8+2 = (1,True)  // CHAR
 			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 1 2,True) // REAL
 			| d==array_desc-6*8+2 = (1,True)  // INT/dINT
-			| otherwise = abort "internal error in serialize_for_unrelocated_interpretation\n"
+			| otherwise = abort "internal error in serialize_for_prelinked_interpretation\n"
 		# arity = get_D_node_arity d
 		| arity<256 = (0,True)
 		# record_a_arity = get_D_record_a_arity d

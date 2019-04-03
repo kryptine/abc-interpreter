@@ -49,19 +49,19 @@ ifeq ($(OS),Windows_NT)
 ABCOPT:=ABCOptimiser.exe
 BCGEN:=ByteCodeGenerator.exe
 BCLINK:=ByteCodeLinker.exe
+BCPRELINK:=ByteCodePrelinker.exe
 BCSTRIP:=ByteCodeStripper.exe
-BCUNRELOC:=ByteCodeUnrelocator.exe
 INTERP:=interpret.exe
 else
 ABCOPT:=abcopt
 BCGEN:=bcgen
 BCLINK:=bclink
+BCPRELINK:=bcprelink
 BCSTRIP:=bcstrip
-BCUNRELOC:=bcunreloc
 INTERP:=interpret
 endif
 
-BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCSTRIP) $(BCUNRELOC) $(INTERP)
+BINARIES:=$(ABCOPT) $(BCGEN) $(BCLINK) $(BCPRELINK) $(BCSTRIP) $(INTERP)
 
 SRC_BCGEN:=\
 	abc_instructions.c\
@@ -82,6 +82,14 @@ SRC_BCLINK:=\
 	util.c
 DEP_BCLINK:=$(subst .c,.h,$(SRC_BCLINK)) settings.h
 
+SRC_BCPRELINK:=\
+	abc_instructions.c\
+	bcprelink.c\
+	bytecode.c\
+	parse.c\
+	util.c
+DEP_BCPRELINK:=$(subst .c,.h,$(SRC_BCPRELINK)) settings.h
+
 SRC_BCSTRIP:=\
 	abc_instructions.c\
 	bcgen_instructions.c\
@@ -91,14 +99,6 @@ SRC_BCSTRIP:=\
 	strip.c\
 	util.c
 DEP_BCSTRIP:=$(subst .c,.h,$(SRC_BCSTRIP)) settings.h
-
-SRC_BCUNRELOC:=\
-	abc_instructions.c\
-	bcunreloc.c\
-	bytecode.c\
-	parse.c\
-	util.c
-DEP_BCUNRELOC:=$(subst .c,.h,$(SRC_BCUNRELOC)) settings.h
 
 SRC_INTERPRET:=\
 	abc_instructions.c\
@@ -148,11 +148,11 @@ $(BCGEN): $(SRC_BCGEN) $(DEP_BCGEN)
 $(BCLINK): $(SRC_BCLINK) $(DEP_BCLINK)
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCLINK) -DLINKER -o $@
 
+$(BCPRELINK): $(SRC_BCPRELINK) $(DEP_BCPRELINK)
+	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DPRELINKER -UWORD_WIDTH -DWORD_WIDTH=64 $(SRC_BCPRELINK) -o $@
+
 $(BCSTRIP): $(SRC_BCSTRIP) $(DEP_BCSTRIP)
 	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS $(SRC_BCSTRIP) -o $@
-
-$(BCUNRELOC): $(SRC_BCUNRELOC) $(DEP_BCUNRELOC)
-	$(CC) $(CFLAGS) $(CLIBS) -UCOMPUTED_GOTOS -DUNRELOCATOR -UWORD_WIDTH -DWORD_WIDTH=64 $(SRC_BCUNRELOC) -o $@
 
 $(INTERP): $(SRC_INTERPRET) $(DEP_INTERPRET)
 	$(CC) $(CFLAGS) $(CLIBS) -DINTERPRETER $(SRC_INTERPRET) -o $@

@@ -1,8 +1,8 @@
 abcopt
 bcgen
 bclink
+bcprelink
 bcstrip
-bcunreloc
 debug
 interpret
 

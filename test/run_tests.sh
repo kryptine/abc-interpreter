@@ -101,7 +101,7 @@ while true; do
 		-w)
 			WASM=1
 			IP="js ../src-js/interpret.js"
-			SRCMAKETARGETS="abcopt bcgen bclink bcstrip bcunreloc"
+			SRCMAKETARGETS="abcopt bcgen bclink bcprelink bcstrip"
 			BC_EXTENSION="ubc"
 			shift;;
 
@@ -223,7 +223,7 @@ do
 
 	[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 
-	[ $WASM -gt 0 ] && ../src/bcunreloc "$MODULE.bc" -o "$MODULE.ubc"
+	[ $WASM -gt 0 ] && ../src/bcprelink "$MODULE.bc" -o "$MODULE.ubc"
 
 	if [ $BENCHMARK -gt 0 ]; then
 		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION 2>bm-tmp >$MODULE.result

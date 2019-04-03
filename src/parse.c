@@ -13,8 +13,8 @@
 # include "bcgen_instructions.h"
 #endif
 
-#ifdef UNRELOCATOR
-# include "bcunreloc.h"
+#ifdef PRELINKER
+# include "bcprelink.h"
 #endif
 
 #ifdef LINK_CLEAN_RUNTIME
@@ -272,8 +272,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # else
 				state->program->data_size = elem32;
 # endif
-				/* The unrelocator writes data size between code and data segment, so reserve this space.
-				 * TODO: better would be to use a different file format in the unrelocator. */
+				/* The prelinker writes data size between code and data segment, so reserve this space.
+				 * TODO: better would be to use a different file format in the prelinker. */
 				state->program->code = safe_malloc(sizeof(BC_WORD) * (code_size+state->program->data_size+1));
 				state->program->data = state->program->code + code_size + 1;
 #endif
@@ -512,25 +512,25 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						return 1;
 					state->program->symbols[state->symbols_ptr++] = elem8;
 				} while (elem8);
-#if defined(INTERPRETER) || defined(UNRELOCATOR)
+#if defined(INTERPRETER) || defined(PRELINKER)
 # ifdef INTERPRETER
-#  define INTERPRETER_OR_UNRELOCATOR(i,u) i
+#  define INTERPRETER_OR_PRELINKER(i,u) i
 # else
-#  define INTERPRETER_OR_UNRELOCATOR(i,u) (u*8)
+#  define INTERPRETER_OR_PRELINKER(i,u) (u*8)
 # endif
 				if (!strcmp(state->program->symbol_table[state->ptr].name, "__ARRAY__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&__ARRAY__,1);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__ARRAY__,1);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&__STRING__,6);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__STRING__,6);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") ||
 						!strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&INT,26);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&INT,26);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&BOOL,11);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&BOOL,11);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "CHAR")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&CHAR,16);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&CHAR,16);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_UNRELOCATOR(&REAL,21);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&REAL,21);
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 # ifdef DEBUG_CLEAN_LINKS
 					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
@@ -554,8 +554,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 # ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
-# elif defined(UNRELOCATOR)
-					state->program->symbol_table[state->ptr].offset += ((BC_WORD)state->program->code_size+3)*8+sizeof(unrelocator_preamble);
+# elif defined(PRELINKER)
+					state->program->symbol_table[state->ptr].offset += ((BC_WORD)state->program->code_size+3)*8+sizeof(prelinker_preamble);
 # endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {
@@ -591,8 +591,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 # ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
-# elif defined(UNRELOCATOR)
-					state->program->symbol_table[state->ptr].offset += 2*8+sizeof(unrelocator_preamble);
+# elif defined(PRELINKER)
+					state->program->symbol_table[state->ptr].offset += 2*8+sizeof(prelinker_preamble);
 # endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {
