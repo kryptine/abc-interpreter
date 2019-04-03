@@ -210,13 +210,10 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			}
 
 			/* not a basic type */
-			a_arity=arity;
 			if (arity>256) {
 				a_arity=((int16_t*)desc)[0];
 				arity-=256;
 			}
-
-			ie->hp[0]=desc;
 
 			if (arity==0) {
 				desc-=10;
@@ -224,8 +221,12 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				s[i]=desc;
 				*--a_size_stack=0;
 				continue;
-			} else if (arity==1) {
-				**ptr_stack--=(BC_WORD)ie->hp;
+			}
+
+			**ptr_stack--=(BC_WORD)ie->hp;
+			ie->hp[0]=desc;
+
+			if (arity==1) {
 				if (a_arity==1)
 					*++ptr_stack=&ie->hp[1];
 				else
@@ -234,7 +235,6 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				*--a_size_stack=1;
 				continue;
 			} else if (arity==2) {
-				**ptr_stack--=(BC_WORD)ie->hp;
 				if (a_arity==2) {
 					ptr_stack[2]=&ie->hp[1];
 					ptr_stack[1]=&ie->hp[2];
@@ -253,7 +253,6 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			}
 
 			/* large hnf */
-			**ptr_stack--=(BC_WORD)ie->hp;
 			ie->hp[2]=(BC_WORD)&ie->hp[3];
 
 			if (a_arity==0) {
@@ -273,9 +272,6 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			ie->hp+=arity+2;
 			*--a_size_stack = a_arity;
 		} else { /* thunk */
-			**ptr_stack--=(BC_WORD)ie->hp;
-			ie->hp[0]=desc;
-
 			int32_t arity=((int32_t*)desc)[-1];
 			int16_t a_arity=arity;
 
@@ -286,7 +282,11 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				arity&=0xff;
 			}
 
+			**ptr_stack--=(BC_WORD)ie->hp;
+			ie->hp[0]=desc;
 			ie->hp++;
+
+			*--a_size_stack = a_arity;
 
 			for (int a=0; a<a_arity; a++)
 				ptr_stack[a_arity-a]=&ie->hp[a];
@@ -296,8 +296,6 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				ie->hp[b]=s[++i];
 
 			ie->hp+=arity<3 ? 2 : arity;
-
-			*--a_size_stack = a_arity;
 		}
 	}
 

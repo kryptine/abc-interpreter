@@ -64,6 +64,17 @@ defaultDeserializationSettings :: DeserializationSettings
 serialize :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
 
 /**
+ * Serialize an expression for unrelocated interpretation. This is a mode of
+ * interpretation where the code and data addresses are fixed. It is useful for
+ * the WebAssembly interpreter where memory always starts at index 0.
+ *
+ * @param The value to serialize.
+ * @param The path to the executable's bytecode (set by the `ByteCode` option in the project file).
+ * @result The result may be `Nothing` if the bytecode could not be parsed.
+ */
+serialize_for_unrelocated_interpretation :: a !String !String !*World -> *(!Maybe String, !*World)
+
+/**
  * Deserialize an expression using the ABC interpreter.
  * This version copies nodes as soon as they are in head normal form.
  * Therefore, the result is only `Nothing` when pre-interpretation validation

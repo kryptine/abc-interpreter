@@ -95,6 +95,29 @@ intp = new Uint8Array(intp);
 		{
 			clean: {
 				memory: memory,
+
+				debug: function(what,a,b,c) {
+					switch (what) {
+						case 0:
+							console.log('loop',a,'/',b,'; hp at',c);
+							break;
+						case 1:
+							console.log('desc',a);
+							break;
+						case 2:
+							console.log('arity',a);
+							break;
+						case 3:
+							console.log('unimplemented:',['large hnf','thunk'][a]);
+							break;
+						case 4:
+							console.log('redirect',a,c,'(from',b,')');
+							break;
+						case 5:
+							console.log('a arity',a);
+							break;
+					}
+				}
 			}
 		}
 	);
@@ -190,6 +213,20 @@ intp = new Uint8Array(intp);
 			printErr('extracting '+filename+'...');
 			os.file.writeTypedArrayToFile(filename, code);
 		});
+	}
+
+	var i=scriptArgs.indexOf('--graph');
+	if (i >= 0) {
+		var graph = os.file.readFile(scriptArgs[i+1], 'binary');
+		graph = new Uint32Array(graph.buffer);
+		var unused_semispace = util.instance.exports.get_unused_semispace();
+		for (var i=0; i<graph.length; i++)
+			membuffer[unused_semispace/4+i] = graph[i];
+		var node = hp;
+		hp = util.instance.exports.copy_from_string(unused_semispace,graph.length/2,asp,bsp,hp,code_offset*8);
+		asp+=8;
+		membuffer[asp/4] = node;
+		start+=32; /* skip bootstrap to build start node; jump to _print_graph */
 	}
 
 	var time_start=new Date().getTime();

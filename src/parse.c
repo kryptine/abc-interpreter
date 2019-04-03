@@ -215,7 +215,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 		switch (state->state) {
 			case PS_init:
 			{
-				uint32_t header_length;
+				uint32_t header_length,code_size;
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
@@ -235,11 +235,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					return 1;
 				header_length-=4;
 #ifdef LINKER
-				state->code_size = elem32;
+				state->code_size = code_size = elem32;
 #else
-				state->program->code_size = elem32;
+				state->program->code_size = code_size = elem32;
 #endif
-				state->program->code = safe_malloc(sizeof(BC_WORD) * elem32);
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 					return 1;
@@ -273,7 +272,10 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # else
 				state->program->data_size = elem32;
 # endif
-				state->program->data = safe_malloc(sizeof(BC_WORD) * state->program->data_size);
+				/* The unrelocator writes data size between code and data segment, so reserve this space.
+				 * TODO: better would be to use a different file format in the unrelocator. */
+				state->program->code = safe_malloc(sizeof(BC_WORD) * (code_size+state->program->data_size+1));
+				state->program->data = state->program->code + code_size + 1;
 #endif
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)

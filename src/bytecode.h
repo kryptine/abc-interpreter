@@ -90,11 +90,15 @@ void free_program(struct program *pgm);
 # ifdef LINK_CLEAN_RUNTIME
 int get_symbol_table_size(struct program *pgm);
 struct symbol *get_symbol_table(struct program *pgm);
+BC_WORD *get_code(struct program *pgm);
+
 /* Assumes the symbols are sorted by name */
 struct host_symbol *find_host_symbol_by_name(struct program *pgm, char *name);
 /* Assumes the symbols are sorted by (host) address */
 struct host_symbol *find_host_symbol_by_address(struct program *pgm, void *addr);
+
 void sort_host_symbols_by_location(struct program *pgm);
+
 struct host_symbol *add_extra_host_symbol(struct program *pgm);
 # endif
 
