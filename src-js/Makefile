@@ -1,11 +1,11 @@
-WAT2WASM?=wat2wasm
+JS?=js
 
 WASM:=abc_interpreter.wasm util.wasm
 
 all: $(WASM) abc_instructions.js
 
 %.wasm: %.wat
-	$(WAT2WASM) $< -o $@
+	$(JS) ../tools/wat2wasm.js $< -o $@
 
 abc_interpreter.wat: .FORCE
 	$(MAKE) -C ../tools interpretergenwasm
