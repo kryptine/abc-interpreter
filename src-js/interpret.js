@@ -105,16 +105,10 @@ intp = new Uint8Array(intp);
 							console.log('desc',a);
 							break;
 						case 2:
-							console.log('arity',a);
+							console.log('hnf, arity',a);
 							break;
 						case 3:
-							console.log('unimplemented:',['large hnf','thunk'][a]);
-							break;
-						case 4:
-							console.log('redirect',a,c,'(from',b,')');
-							break;
-						case 5:
-							console.log('a arity',a);
+							console.log('thunk, arity',a);
 							break;
 					}
 				}

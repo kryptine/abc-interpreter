@@ -866,14 +866,13 @@
 									)
 								)
 								(local.set $hp (i32.add (local.get $hp) (i32.const 16)))
-								(i32.store16 (local.tee $a-size-stack (i32.sub (local.get $a-size-stack) (i32.const 2))) (i32.const 1))
+								(i32.store16 (local.tee $a-size-stack (i32.sub (local.get $a-size-stack) (i32.const 2))) (local.get $a-arity))
 								(br $loop)
 							)
 						)
 						(if
 							(i32.eq (local.get $arity) (i32.const 2))
 							(then
-								;;(call $debug (i32.const 5) (local.get $a-arity) (i32.const 0) (i32.const 0))
 								(if
 									(i32.eq (local.get $a-arity) (i32.const 2))
 									(then
@@ -902,13 +901,12 @@
 									)
 								)
 								(local.set $hp (i32.add (local.get $hp) (i32.const 24)))
-								(i32.store16 (local.tee $a-size-stack (i32.sub (local.get $a-size-stack) (i32.const 2))) (i32.const 2))
+								(i32.store16 (local.tee $a-size-stack (i32.sub (local.get $a-size-stack) (i32.const 2))) (local.get $a-arity))
 								(br $loop)
 							)
 						)
 
 						;; large hnf
-						;;(call $debug (i32.const 3) (i32.const 0) (i32.const 0) (i32.const 0))
 						(i64.store offset=16 (local.get $hp) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 24))))
 
 						(if
@@ -957,7 +955,7 @@
 						(local.set $a-arity (local.get $arity))
 
 						;; "arity"
-						;;(call $debug (i32.const 2) (local.get $arity) (i32.const 0) (i32.const 0))
+						;;(call $debug (i32.const 3) (local.get $arity) (i32.const 0) (i32.const 0))
 
 						(if
 							(i32.lt_s (local.get $arity) (i32.const 0))

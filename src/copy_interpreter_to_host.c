@@ -232,7 +232,7 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				else
 					ie->hp[1]=s[++i];
 				ie->hp+=2;
-				*--a_size_stack=1;
+				*--a_size_stack=a_arity;
 				continue;
 			} else if (arity==2) {
 				if (a_arity==2) {
@@ -248,7 +248,7 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 					i+=2;
 				}
 				ie->hp+=3;
-				*--a_size_stack=2;
+				*--a_size_stack=a_arity;
 				continue;
 			}
 
@@ -270,7 +270,7 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			}
 
 			ie->hp+=arity+2;
-			*--a_size_stack = a_arity;
+			*--a_size_stack=a_arity;
 		} else { /* thunk */
 			int32_t arity=((int32_t*)desc)[-1];
 			int16_t a_arity=arity;
