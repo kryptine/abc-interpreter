@@ -80,6 +80,40 @@
 		(i32.sub (local.get $c1) (local.get $c2))
 	)
 
+	(func (export "memcpy") (param $dest i32) (param $src i32) (param $nbytes i32)
+		(local $i i32)
+		(local.set $i (i32.shr_u (local.get $nbytes) (i32.const 3)))
+		(local.set $nbytes (i32.and (local.get $nbytes) (i32.const 0x7)))
+
+		(block $end-copy-words
+			(loop $copy-words
+				(br_if $end-copy-words (i32.eqz (local.get $i)))
+				(i64.store (local.get $dest) (i64.load (local.get $src)))
+				(local.set $dest (i32.add (local.get $dest) (i32.const 8)))
+				(local.set $src (i32.add (local.get $src) (i32.const 8)))
+				(local.set $i (i32.sub (local.get $i) (i32.const 1)))
+				(br $copy-words)
+			)
+		)
+
+		(block $end
+			(br_if $end (i32.eqz (local.get $nbytes)))
+			(i64.store8 (local.get $dest) (i64.load8_u (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 1)))
+			(i64.store8 offset=1 (local.get $dest) (i64.load8_u offset=1 (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 2)))
+			(i64.store8 offset=2 (local.get $dest) (i64.load8_u offset=2 (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 3)))
+			(i64.store8 offset=3 (local.get $dest) (i64.load8_u offset=3 (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 4)))
+			(i64.store8 offset=4 (local.get $dest) (i64.load8_u offset=4 (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 5)))
+			(i64.store8 offset=5 (local.get $dest) (i64.load8_u offset=5 (local.get $src)))
+			(br_if $end (i32.eq (local.get $nbytes) (i32.const 6)))
+			(i64.store8 offset=6 (local.get $dest) (i64.load8_u offset=6 (local.get $src)))
+		)
+	)
+
 	(func (export "setup_gc") (param i32 i32 i32 i32)
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))

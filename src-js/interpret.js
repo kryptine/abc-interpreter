@@ -140,13 +140,7 @@ intp = new Uint8Array(intp);
 					print(hp_size-hp_free, hp_free, hp_size);
 				},
 
-				memcpy: function (dest,src,n) {
-					// TODO: optimise; move to wasm
-					var mem=new Uint8Array(membuffer.buffer, membuffer.byteOffset);
-					for (var i=0; i<n; i++) {
-						mem[dest+i]=mem[src+i];
-					}
-				},
+				memcpy: util.instance.exports.memcpy,
 				strncmp: util.instance.exports.strncmp,
 
 				putchar: function (v) {
