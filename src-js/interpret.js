@@ -125,6 +125,9 @@ intp = new Uint8Array(intp);
 				debug_instr: function (addr, instr) {
 					printErr((addr/8-code_offset)+'\t'+abc_instructions[instr]);
 				},
+				handle_illegal_instr: function (pc, instr, asp, bsp, csp, hp) {
+					return 0;
+				},
 				illegal_instr: function (addr, instr) {
 					crash('illegal instruction '+instr+' ('+abc_instructions[instr]+') at address '+(addr/8-1));
 				},
