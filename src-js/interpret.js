@@ -82,12 +82,12 @@ for (var i in prog) {
 	membuffer[i] = prog[i];
 }
 
-loadRelativeToScript('abc_instructions.js');
+loadRelativeToScript('abc-instructions.js');
 
-var util = os.file.readRelativeToScript('util.wasm', 'binary');
+var util = os.file.readRelativeToScript('abc-interpreter-util.wasm', 'binary');
 util = new Uint8Array(util);
 
-var intp = os.file.readRelativeToScript('abc_interpreter.wasm', 'binary');
+var intp = os.file.readRelativeToScript('abc-interpreter.wasm', 'binary');
 intp = new Uint8Array(intp);
 
 (async function(util, intp){
