@@ -325,18 +325,10 @@ where
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
 		, "(func $clean_gc (import \"clean\" \"gc\") (param i32) (result i64))"
 		, "(func $clean_halt (import \"clean\" \"halt\") (param i32 i32 i32))"
-		, "(global $pc      (mut i64) (i64.const 0))"
-		, "(global $asp     (mut i64) (i64.const 0))"
-		, "(global $bsp     (mut i64) (i64.const 0))"
-		, "(global $csp     (mut i64) (i64.const 0))"
-		, "(global $hp      (mut i64) (i64.const 0))"
-		, "(global $hp_size (mut i64) (i64.const 0))"
-		, "(global $hp_free (mut i64) (i64.const 0))"
-		, "(func (export \"get_asp\") (result i32) (i32.wrap_i64 (global.get $asp)))"
-		, "(func (export \"get_bsp\") (result i32) (i32.wrap_i64 (global.get $bsp)))"
-		, "(func (export \"get_csp\") (result i32) (i32.wrap_i64 (global.get $csp)))"
-		, "(func (export \"get_hp\")  (result i32) (i32.wrap_i64 (global.get $hp)))"
-		, "(global $vf0 (mut f64) (f64.const 0.0))" // only used in instructions like absR; so only one variable is enough
+		] ++
+		[ "(global $"+++g+++" (mut i64) (i64.const 0))" \\ g <- global_vars ] ++
+		[ "(func (export \"get_"+++g+++"\") (result i32) (i32.wrap_i64 (global.get $"+++g+++")))" \\ g <- global_vars ] ++
+		[ "(global $vf0 (mut f64) (f64.const 0.0))" // only used in instructions like absR; so only one variable is enough
 		] ++
 		[ "(global $vi"+++toString n+++" (mut i64) (i64.const 0))"
 		\\ n <- [0..maxList [i.var_counter \\ i <- is]-1]
@@ -352,6 +344,8 @@ where
 		, "(loop $abc-loop"
 		, "(block $abc-gc"
 		]
+	where
+		global_vars = ["pc","asp","bsp","csp","hp","hp_size","hp_free"]
 	end =
 		[ ")" // block abc-gc
 		, "(global.set $vi0 (call $clean_gc (i32.wrap_i64 (global.get $asp))))"
