@@ -328,19 +328,13 @@ where
 		] ++
 		[ "(global $"+++g+++" (mut i64) (i64.const 0))" \\ g <- global_vars ] ++
 		[ "(func (export \"get_"+++g+++"\") (result i32) (i32.wrap_i64 (global.get $"+++g+++")))" \\ g <- global_vars ] ++
+		[ "(func (export \"set_"+++g+++"\") (param i32) (global.set $"+++g+++" (i64.extend_i32_u (local.get 0))))" \\ g <- global_vars ] ++
 		[ "(global $vf0 (mut f64) (f64.const 0.0))" // only used in instructions like absR; so only one variable is enough
 		] ++
 		[ "(global $vi"+++toString n+++" (mut i64) (i64.const 0))"
 		\\ n <- [0..maxList [i.var_counter \\ i <- is]-1]
 		] ++
-		[ "(func (export \"interpret\") (param i32 i32 i32 i32 i32 i32) (result i32)"
-		, "(global.set $pc      (i64.extend_i32_u (local.get 0)))"
-		, "(global.set $asp     (i64.extend_i32_u (local.get 1)))"
-		, "(global.set $bsp     (i64.extend_i32_u (local.get 2)))"
-		, "(global.set $csp     (i64.extend_i32_u (local.get 3)))"
-		, "(global.set $hp      (i64.extend_i32_u (local.get 4)))"
-		, "(global.set $hp_size (i64.extend_i32_u (local.get 5)))"
-		, "(global.set $hp_free (i64.extend_i32_u (local.get 5)))"
+		[ "(func (export \"interpret\") (result i32)"
 		, "(loop $abc-loop"
 		, "(block $abc-gc"
 		]

@@ -96,6 +96,12 @@ intp = new Uint8Array(intp);
 			clean: {
 				memory: memory,
 
+				has_host_reference: function(index) {
+					return 0;
+				},
+				update_host_reference: function(index,new_location) {
+				},
+
 				debug: function(what,a,b,c) {
 					switch (what) {
 						case 0:
@@ -222,7 +228,15 @@ intp = new Uint8Array(intp);
 
 	var time_start=new Date().getTime();
 
-	var r=intp.instance.exports.interpret(start, asp, bsp, csp, hp, heap_size/8);
+	intp.instance.exports.set_pc(start);
+	intp.instance.exports.set_asp(asp);
+	intp.instance.exports.set_bsp(bsp);
+	intp.instance.exports.set_csp(csp);
+	intp.instance.exports.set_hp(hp);
+	intp.instance.exports.set_hp_free(heap_size/8);
+	intp.instance.exports.set_hp_size(heap_size/8);
+
+	var r=intp.instance.exports.interpret();
 	if (r!=0)
 		printErr('failed with return code', r);
 
