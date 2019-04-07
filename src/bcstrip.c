@@ -4,16 +4,19 @@
 #include "strip.h"
 #include "util.h"
 
-const char usage[] = "Usage: %s FILE [-o FILE]\n";
+const char usage[] = "Usage: %s [-s] FILE [-o FILE]\n";
 
 int main(int argc, char **argv) {
 	char *output_file_name=NULL;
 	FILE *input_file=NULL;
+	int include_symbol_table=0;
 
 	for (int i=1; i<argc; i++) {
 		if(!strcmp("-o", argv[i]) && i <= argc-1) {
 			output_file_name=argv[i+1];
 			i++;
+		} else if (!strcmp("-s", argv[i])) {
+			include_symbol_table=1;
 		} else if (input_file!=NULL) {
 			fprintf(stderr, usage, argv[0]);
 			return -1;
@@ -43,7 +46,7 @@ int main(int argc, char **argv) {
 
 	prepare_strip_bytecode(bytecode, 1);
 	uint32_t length;
-	char *stripped_bytecode=finish_strip_bytecode(&length);
+	char *stripped_bytecode=finish_strip_bytecode(include_symbol_table, &length);
 
 	FILE *output_file=stdout;
 	if(output_file_name!=NULL && (output_file=fopen(output_file_name, "wb"))==NULL) {

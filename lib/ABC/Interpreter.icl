@@ -49,7 +49,7 @@ serialize graph bcfile w
 | isNothing bytecode = (Nothing, w)
 # bytecode = fromJust bytecode
 
-#! (len,bytecodep) = strip_bytecode bytecode {#symbol_name di modules \\ di <-: descinfo}
+#! (len,bytecodep) = strip_bytecode False bytecode {#symbol_name di modules \\ di <-: descinfo}
 #! bytecode = derefCharArray bytecodep len
 | free_to_false bytecodep = (Nothing, w)
 
@@ -70,9 +70,9 @@ where
 	where
 		PREFIX_D = 4
 
-	strip_bytecode :: !String !{#String} -> (!Int, !Pointer)
-	strip_bytecode bytecode descriptors = code {
-		ccall strip_bytecode "sA:VIp"
+	strip_bytecode :: !Bool !String !{#String} -> (!Int, !Pointer)
+	strip_bytecode include_symbol_table bytecode descriptors = code {
+		ccall strip_bytecode "IsA:VIp"
 	}
 
 serialize_for_prelinked_interpretation :: a !String !String !*World -> *(!Maybe String, !*World)

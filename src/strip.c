@@ -590,15 +590,19 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 	}
 }
 
-char *finish_strip_bytecode(uint32_t *result_size) {
+char *finish_strip_bytecode(int include_symbol_table, uint32_t *result_size) {
 	struct s_label *label;
-	while ((label=next_label_from_queue())!=NULL)
+	while ((label=next_label_from_queue())!=NULL) {
 		activate_label(label);
+		if (include_symbol_table && label->name[0])
+			make_label_global(label->bcgen_label);
+	}
 
 	return write_program_to_string(result_size);
 }
 
-void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
+void strip_bytecode(int include_symbol_table,
+		uint32_t *bytecode, struct clean_string **descriptors,
 		uint32_t *result_size, char **result) {
 	prepare_strip_bytecode(bytecode, 0);
 	export_exported_labels=1;
@@ -606,5 +610,5 @@ void strip_bytecode(uint32_t *bytecode, struct clean_string **descriptors,
 	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++)
 		add_label_to_queue(find_label_by_name(descriptors[i]->cs_characters));
 
-	*result=finish_strip_bytecode(result_size);
+	*result=finish_strip_bytecode(include_symbol_table, result_size);
 }
