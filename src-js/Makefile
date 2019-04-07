@@ -1,8 +1,13 @@
 JS?=js
 
 WASM:=abc-interpreter.wasm abc-interpreter-util.wasm
+TARGETS:=$(WASM) abc-instructions.js
 
-all: $(WASM) abc-instructions.js
+all: $(TARGETS) WebPublic
+
+WebPublic: $(TARGETS)
+	mkdir -p WebPublic/js
+	cp $^ WebPublic/js
 
 %.wasm: %.wat
 	$(JS) ../tools/wat2wasm.js $< -o $@

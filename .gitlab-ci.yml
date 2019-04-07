@@ -31,6 +31,18 @@ build-windows:
   script:
     - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodePrelinker.exe ByteCodeStripper.exe interpret.exe
 
+build-wasm:
+  extends: .base
+  stage: build
+  script:
+    - cd src-js
+    - make WebPublic
+    - tar czvf WebPublic.tar.gz WebPublic
+  artifacts:
+    paths:
+      - src-js/WebPublic.tar.gz
+    expire_in: 1 week
+
 benchmark-x64:
   extends: .base
   stage: test-interpreter
