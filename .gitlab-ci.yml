@@ -29,7 +29,7 @@ build-windows:
   extends: .base
   stage: build
   script:
-    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src ByteCodeGenerator.exe ByteCodeLinker.exe interpret.exe
+    - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodePrelinker.exe ByteCodeStripper.exe interpret.exe
 
 benchmark-x64:
   extends: .base

@@ -23,6 +23,16 @@ ByteCodeLinker.exe: .FORCE
 		util.c \
 		/link /out:ByteCodeLinker.exe
 
+ByteCodePrelinker.exe: .FORCE
+	cl /nologo /O2 \
+		/DWINDOWS /DMICROSOFT_C /DPRELINKER /DWORD_WIDTH=64 \
+		abc_instructions.c \
+		bcprelink.c \
+		bytecode.c \
+		parse.c \
+		util.c \
+		/link /out:ByteCodePrelinker.exe
+
 ByteCodeStripper.exe: .FORCE
 	cl /nologo /O2 \
 		/DWINDOWS /DMICROSOFT_C /DLINKER \
