@@ -1,4 +1,4 @@
-all: ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodeStripper.exe library
+all: ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodePrelinker.exe ByteCodeStripper.exe library
 
 ByteCodeGenerator.exe: .FORCE
 	cl /nologo /O2 \
