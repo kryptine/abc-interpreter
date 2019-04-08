@@ -317,10 +317,10 @@ where
 		, "(func $clean_lnR (import \"clean\" \"lnR\") (param f64) (result f64))"
 		, "(func $clean_log10R (import \"clean\" \"log10R\") (param f64) (result f64))"
 		, if debug_instructions "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))" ""
-		// For illegal instructions, first the handler is called with arguments (pc,instr,asp,bsp,csp,hp).
+		// For illegal instructions, first the handler is called with arguments (pc,instr,asp,bsp,csp,hp,hp_free).
 		// If the result is zero, clean_illegal_instr is called with (pc,instr) and interpretation stops.
 		// Otherwise, the result is taken as the new program counter.
-		, "(func $clean_handle_illegal_instr (import \"clean\" \"handle_illegal_instr\") (param i32 i32 i32 i32 i32 i32) (result i32))"
+		, "(func $clean_handle_illegal_instr (import \"clean\" \"handle_illegal_instr\") (param i32 i32 i32 i32 i32 i32 i32) (result i32))"
 		, "(func $clean_illegal_instr (import \"clean\" \"illegal_instr\") (param i32 i32))"
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
 		, "(func $clean_gc (import \"clean\" \"gc\") (param i32) (result i64))"
@@ -383,7 +383,7 @@ instr_unimplemented :: !Target -> Target
 instr_unimplemented t = foldl (flip append) t unimplemented_block
 
 unimplemented_block :==
-	[ "(global.set $vi0 (i64.extend_i32_u (call $clean_handle_illegal_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))) (i32.wrap_i64 (global.get $asp)) (i32.wrap_i64 (global.get $bsp)) (i32.wrap_i64 (global.get $csp)) (i32.wrap_i64 (global.get $hp)))))"
+	[ "(global.set $vi0 (i64.extend_i32_u (call $clean_handle_illegal_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))) (i32.wrap_i64 (global.get $asp)) (i32.wrap_i64 (global.get $bsp)) (i32.wrap_i64 (global.get $csp)) (i32.wrap_i64 (global.get $hp)) (i32.wrap_i64 (global.get $hp_free)))))"
 	, "(if (i64.eqz (global.get $vi0)) (then"
 	, "(call $clean_illegal_instr (i32.wrap_i64 (global.get $pc)) (i32.load (i32.wrap_i64 (global.get $pc))))"
 	, "(return (i32.const 1))"
