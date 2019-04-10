@@ -3034,7 +3034,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		grow_a 1 :.
 		Hp @ 0 .= STRING__ptr + lit_word 2 :.
 		Hp @ 1 .= l :.
-		new_local (TPtr TChar) (to_char_ptr (to_word (Hp @? 2) + l)) \p ->
+		new_local (TPtr TChar) (to_char_ptr (Hp @? 2)) \p ->
+		p @ 0 .= lit_char '-' :.
+		advance_ptr p l :.
 		advance_ptr Hp lw :.
 		advance_ptr Pc 1 :.
 		while_do (ui >=. lit_word 10) (
