@@ -1,8 +1,9 @@
 module reals
 
-import StdReal
+import StdReal, StdString
 
 Start =
+	(
 	[ 5.5 + 36.5
 	, 64.5 - 22.5
 	, zero
@@ -31,5 +32,7 @@ Start =
 	, atan 1.0
 	, toReal (entier 5.5)
 	]
+	, toString 37.42
+	)
 
 pi :== 3.14159265359

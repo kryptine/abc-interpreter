@@ -2969,6 +2969,34 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "xorI" (Just 0) $
 		B @ 1 .= xorI (B @ 0) (B @ 1) :.
 		shrink_b 1
+	, instr "BtoAC" (Just 0) $
+		if_then_else (B @ 0 ==. lit_word 0) (
+			if_i64_or_i32 (
+				ensure_hp 3 :.
+				Hp @ 0 .= STRING__ptr + lit_word 2 :.
+				Hp @ 1 .= lit_word 5 :.
+				Hp @ 2 .= lit_word 0x65736c6146 :. // False
+				A @ 1 .= to_word Hp :.
+				advance_ptr Hp 3
+			) (
+				ensure_hp 4 :.
+				Hp @ 0 .= STRING__ptr + lit_word 2 :.
+				Hp @ 1 .= lit_word 5 :.
+				Hp @ 2 .= lit_word 0x736c6146 :. // Fals
+				Hp @ 3 .= lit_word 0x65 :.       // e
+				A @ 1 .= to_word Hp :.
+				advance_ptr Hp 4
+			)
+		) [] (else (
+			ensure_hp 3 :.
+			Hp @ 0 .= STRING__ptr + lit_word 2 :.
+			Hp @ 1 .= lit_word 4 :.
+			Hp @ 2 .= lit_word 0x65757254 :. // True
+			A @ 1 .= to_word Hp :.
+			advance_ptr Hp 3
+		)) :.
+		grow_a 1 :.
+		shrink_b 1
 	, instr "CtoAC" (Just 0) $
 		ensure_hp 3 :.
 		Hp @ 0 .= STRING__ptr + lit_word 2 :.
@@ -3022,6 +3050,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "ItoR" (Just 0) $
 		new_local TReal (ItoR (to_int (B @ 0))) \r ->
 		B @ 0 .= to_word r
+	, instr "RtoAC" Nothing instr_RtoAC
 	, instr "RtoI" (Just 0) $
 		new_local TReal (to_real (B @ 0)) \r ->
 		B @ 0 .= to_word (RtoI r)

@@ -316,6 +316,7 @@ where
 		, "(func $clean_expR (import \"clean\" \"expR\") (param f64) (result f64))"
 		, "(func $clean_lnR (import \"clean\" \"lnR\") (param f64) (result f64))"
 		, "(func $clean_log10R (import \"clean\" \"log10R\") (param f64) (result f64))"
+		, "(func $clean_RtoAC (import \"clean\" \"RtoAC\") (param i32 f64) (result i32))"
 		, if debug_instructions "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))" ""
 		// For illegal instructions, first the handler is called with arguments (pc,instr,asp,bsp,csp,hp,hp_free).
 		// If the result is zero, clean_illegal_instr is called with (pc,instr) and interpretation stops.
@@ -400,6 +401,15 @@ instr_divLU t = instr_unimplemented t // TODO
 
 instr_mulUUL :: !Target -> Target
 instr_mulUUL t = instr_unimplemented t // TODO
+
+instr_RtoAC :: !Target -> Target
+instr_RtoAC t = foldl (flip append) (ensure_hp 3 t) // TODO how many blocks are needed depends on the value
+	[ "(i64.store offset=8 (i32.wrap_i64 (global.get $asp)) (global.get $hp))"
+	, "(global.set $hp (i64.extend_i32_u (call $clean_RtoAC (i32.wrap_i64 (global.get $hp)) (f64.reinterpret_i64 (i64.load (i32.wrap_i64 (global.get $bsp)))))))"
+	, "(global.set $pc (i64.add (global.get $pc) (i64.const 8)))"
+	, "(global.set $asp (i64.add (global.get $asp) (i64.const 8)))"
+	, "(global.set $bsp (i64.add (global.get $bsp) (i64.const 8)))"
+	]
 
 lit_word :: !Int -> Expr TWord
 lit_word i = Ei64_const i
@@ -527,6 +537,9 @@ ItoR e = Ef64_convert_i64_s e
 
 RtoI :: !(Expr TReal) -> Expr TInt
 RtoI e = Ei64_trunc_f64_s e
+
+if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
+if_i64_or_i32 i64 _ t = i64 t
 
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 if_i64_or_i32_expr a _ = a

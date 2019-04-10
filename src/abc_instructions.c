@@ -533,10 +533,12 @@ const char *instruction_type (BC_WORD i) {
 		case Cupdate_r3b:            return "n";
 		case Cupdate_b:              return "nn";
 		case CxorI:                  return "";
+		case CBtoAC:                 return "";
 		case CCtoAC:                 return "";
 		case CItoAC:                 return "";
 		case CItoC:                  return "";
 		case CItoR:                  return "";
+		case CRtoAC:                 return "";
 		case CRtoI:                  return "";
 		case Cswap_a1:               return "";
 		case Cswap_a2:               return "";

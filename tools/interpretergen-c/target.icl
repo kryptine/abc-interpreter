@@ -165,6 +165,23 @@ instr_mulUUL t = foldl (flip append) t
 	, "}"
 	]
 
+instr_RtoAC :: !Target -> Target
+instr_RtoAC t = foldl (flip append) t
+	[ "{"
+	, "char r[20];"
+	, "int n=sprintf(r,\"%.15g\",*((BC_REAL*)bsp)+0.0);"
+	, "NEED_HEAP(2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2)));"
+	, "hp[0]=(BC_WORD)&__STRING__+2;"
+	, "hp[1]=n;"
+	, "memcpy(&hp[2],r,n);"
+	, "pc+=1;"
+	, "bsp+=1;"
+	, "asp[1]=(BC_WORD)hp;"
+	, "asp+=1;"
+	, "hp+=2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2));"
+	, "}"
+	]
+
 lit_word :: !Int -> Expr TWord
 lit_word i = toString i
 
@@ -291,6 +308,9 @@ ItoR e = "(BC_REAL)("+-+e+-+")"
 
 RtoI :: !(Expr TReal) -> Expr TInt
 RtoI e = "(BC_WORD_S)("+-+e+-+")"
+
+if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
+if_i64_or_i32 i64 i32 t = append "#endif" (i32 (append "#else" (i64 (append "#if WORD_WIDTH==64" t))))
 
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 if_i64_or_i32_expr a b = "IF_INT_64_OR_32("+-+a+-+","+-+b+-+")"

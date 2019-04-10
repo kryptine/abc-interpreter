@@ -15,6 +15,7 @@ instr_unimplemented :: !Target -> Target
 instr_halt :: !Target -> Target
 instr_divLU :: !Target -> Target
 instr_mulUUL :: !Target -> Target
+instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
 lit_char  :: !Char -> Expr TChar
@@ -77,6 +78,7 @@ tanR    :: !(Expr TReal) -> Expr TReal
 ItoR    :: !(Expr TInt)  -> Expr TReal
 RtoI    :: !(Expr TReal) -> Expr TInt
 
+if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 
 if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t

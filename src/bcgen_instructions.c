@@ -827,16 +827,17 @@ static char *specialized_jsr_labels[] = {
 	/* 3*/ "sliceAC",
 	/* 4*/ "ItoAC",
 	/* 5*/ "BtoAC",
-	/* 6*/ "print__string__",
-	/* 7*/ "openF",
-	/* 8*/ "stdioF",
-	/* 9*/ "closeF",
-	/*10*/ "readLineF",
-	/*11*/ "endF",
-	/*12*/ "writeFI",
-	/*13*/ "writeFS",
-	/*14*/ "writeFC",
-	/*15*/ "openSF"
+	/* 6*/ "RtoAC",
+	/* 7*/ "print__string__",
+	/* 8*/ "openF",
+	/* 9*/ "stdioF",
+	/*10*/ "closeF",
+	/*11*/ "readLineF",
+	/*12*/ "endF",
+	/*13*/ "writeFI",
+	/*14*/ "writeFS",
+	/*15*/ "writeFC",
+	/*16*/ "openSF"
 };
 
 static int get_specialized_jsr_label_n(char label_name[]) {
@@ -857,7 +858,9 @@ void add_specialized_jsr_instruction(unsigned int n) {
 		case  2: add_instruction(CcatAC); return;
 		case  3: add_instruction(CsliceAC); return;
 		case  4: add_instruction(CItoAC); return;
-		case  6: add_instruction(Cprint_string); return;
+		case  5: add_instruction(CBtoAC); return;
+		case  6: add_instruction(CRtoAC); return;
+		case  7: add_instruction(Cprint_string); return;
 		default:
 			if (n < sizeof(specialized_jsr_labels)/sizeof(char*)) {
 				fprintf(stderr,"Warning: jsr %s is not supported by the interpreter\n",specialized_jsr_labels[n]);

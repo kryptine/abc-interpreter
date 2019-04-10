@@ -27,4 +27,4 @@ typedef int64_t CleanInt;
 #define BCGEN_INSTRUCTION_TABLE_SIZE 512
 
 #define ABC_MAGIC_NUMBER 0x2a434241
-#define ABC_VERSION 4
+#define ABC_VERSION 5

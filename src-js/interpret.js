@@ -191,6 +191,23 @@ intp = new Uint8Array(intp);
 				expR: Math.exp,
 				lnR: Math.log,
 				log10R: Math.log10,
+				RtoAC: function (dest, v) {
+					v=Number(0+v).toLocaleString(
+						['en-US'],
+						{
+							useGrouping: false,
+							maximumSignificantDigits: 15,
+						}
+					);
+					membuffer[dest/4]=6*8+2; // __STRING__
+					membuffer[dest/4+1]=0;
+					membuffer[dest/4+2]=v.length;
+					membuffer[dest/4+3]=0;
+					var arr=new Uint8Array(membuffer.buffer, dest+16);
+					for (var i=0; i<v.length; i++)
+						arr[i]=v.charCodeAt(i);
+					return dest+16+(((v.length+7)>>3)<<3);
+				},
 			}
 		}
 	);
