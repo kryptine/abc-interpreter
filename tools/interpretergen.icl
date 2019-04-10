@@ -1699,9 +1699,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		n @ 0 .= CHAR_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
 	, instr "fillI" (Just 2) $
-		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
+		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
-		n @ 1 .= Pc @ 2
+		n @ 1 .= Pc @ 1
 	, instr "fillI_b" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
@@ -3467,9 +3467,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 						A @ 0 .= args @ (arity - lit_short 2) :.
 						arity -= lit_short 2 :.
 						while_do (arity <>. lit_short 0) (
+							arity -= lit_short 1 :.
 							A @ 1 .= args @ arity :.
-							grow_a 1 :.
-							arity -= lit_short 1
+							grow_a 1
 						)
 					)) :.
 					A @ 1 .= a1 :.

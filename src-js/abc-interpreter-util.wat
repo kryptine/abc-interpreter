@@ -887,7 +887,7 @@
 						)
 
 						(if
-							(i32.eq (local.get $arity) (i32.const 0))
+							(i32.eqz (local.get $arity))
 							(then
 								(local.set $desc (i32.sub (local.get $desc) (i32.const 10)))
 								(i64.store (i32.load (local.get $ptr-stack)) (i64.extend_i32_u (local.get $desc)))
@@ -964,7 +964,7 @@
 						(i64.store offset=16 (local.get $hp) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 24))))
 
 						(if
-							(i32.eq (local.get $a-arity) (i32.const 0))
+							(i32.eqz (local.get $a-arity))
 							(then
 								(i64.store offset=8 (local.get $hp)
 									(i64.load (i32.add (local.get $s)
