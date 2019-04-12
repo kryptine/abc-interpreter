@@ -362,9 +362,8 @@ static void activate_label(struct s_label *label) {
 			ci=0;
 
 		uint8_t *code_block=&code[code_indices[ci].byte_index];
-		int in_block=1;
 
-		while (in_block) {
+		while (1) {
 			for (struct incoming_labels *ilabs=code_indices[ci].incoming_labels; ilabs!=NULL; ilabs=ilabs->next) {
 				struct s_label *lab=&labels[ilabs->label_id];
 				if (lab->bcgen_label==NULL) {
@@ -436,7 +435,9 @@ static void activate_label(struct s_label *label) {
 				}
 				ci++;
 			}
-			in_block=!instruction_ends_block(instr);
+
+			if (instruction_ends_block(instr))
+				break;
 		}
 	}
 }

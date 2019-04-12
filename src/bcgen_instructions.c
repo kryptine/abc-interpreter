@@ -4491,13 +4491,13 @@ static void count_and_renumber_labels(struct label_node *node, int *start, int *
 	if (label->label_offset < 0 || label->label_module_n < 0) {
 		label->label_id=*start;
 		*start=*start+1;
+		if (label->label_offset < 0) {
+			global_label_count++;
+			global_label_string_count+=strlen(label->label_name);
+		}
 	} else {
 		label->label_id=*end;
 		*end=*end-1;
-	}
-	if (label->label_offset < 0) {
-		global_label_count++;
-		global_label_string_count+=strlen(label->label_name);
 	}
 
 	if (node->label_node_right != NULL)
@@ -4551,7 +4551,7 @@ static void print_global_labels(struct label_node *node, FILE *program_file) {
 		print_global_labels(node->label_node_left, program_file);
 
 	struct label *label = node->label_node_label_p;
-	if (label->label_module_n == - 1 || label->label_offset < 0) {
+	if (label->label_module_n == -1 || label->label_offset < 0) {
 		fwrite(&label->label_offset, sizeof(label->label_offset), 1, program_file);
 		fprintf(program_file, "%s", label->label_name);
 		fputc('\0', program_file);
