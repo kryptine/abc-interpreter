@@ -3177,11 +3177,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		)
 	, instr "jmp_eqACio" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \s1 ->
-		shrink_a 1 :.
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 2)) \s2 ->
 		advance_ptr Pc 4 :.
-		B @ -1 .= lit_word 0 :.
-		grow_b 1 :.
 		new_local TWord (s1 @ 1) \l ->
 		if_then (s2 @ 0 <>. l) end_instruction :.
 		advance_ptr s1 2 :.
