@@ -9,7 +9,7 @@ Global
 		GenerateByteCode:	False
 	Application
 		HeapSize:	20971520
-		StackSize:	512000
+		StackSize:	2048000
 		ExtraMemory:	8192
 		IntialHeapSize:	20971520
 		HeapSizeMultiplier:	4096
