@@ -154,8 +154,8 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 				len=(len+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 				for (int j=2; j<len+2; j++)
 					ie->hp[j]=(BC_WORD)s[i+j];
-				i+=len+2;
-				ie->hp+=1+len;
+				i+=len+1;
+				ie->hp+=2+len;
 				continue;
 			} else if (desc==(BC_WORD)&__ARRAY__+2) {
 				BC_WORD size=(BC_WORD)s[i+1];

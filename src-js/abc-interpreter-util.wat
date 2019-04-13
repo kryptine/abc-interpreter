@@ -734,8 +734,8 @@
 									(i32.add (local.get $s) (i32.add (local.get $i) (i32.const 16)))
 									(local.get $a))
 
-								(local.set $hp (i32.add (local.get $hp) (i32.add (i32.const 8) (i32.shl (local.get $a) (i32.const 3)))))
-								(local.set $i (i32.add (local.get $i) (i32.add (i32.const 16) (i32.shl (local.get $a) (i32.const 3)))))
+								(local.set $hp (i32.add (local.get $hp) (i32.add (i32.const 16) (i32.shl (local.get $a) (i32.const 3)))))
+								(local.set $i (i32.add (local.get $i) (i32.add (i32.const 8) (i32.shl (local.get $a) (i32.const 3)))))
 								(br $loop)
 							)
 						)
