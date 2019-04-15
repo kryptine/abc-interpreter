@@ -124,32 +124,39 @@ uint64_t *find_start_of_br_table(uint64_t *code, unsigned int size) {
 	unsigned int optimum=0;
 	unsigned int opt_size=1;
 
+	uint8_t *code8=(uint8_t*)code;
+	size<<=3;
+
 	for (unsigned int i=0; i<size; i++) {
-		uint64_t this_high=code[i]>>24;
-		unsigned int j=i;
-		for (; j<size; j++)
+		code=(uint64_t*)&code8[i];
+		uint64_t this_high=code[0]>>24;
+		unsigned int j=0;
+		for (; j<(size-i)>>3; j++)
 			if ((code[j]>>24)!=this_high)
 				break;
-		if (j-i > opt_size) {
-			opt_size=j-i;
+		if (j > opt_size) {
+			opt_size=j;
 			optimum=i;
 			fprintf(stderr,"new optimum %d at %d: 0x%010lx......\n",opt_size,optimum,this_high);
 		}
 	}
 
-	return &code[optimum];
+	return (uint64_t*)&code8[optimum];
 }
 
 char *find_movabs_of_br_table(char *code, unsigned int size, uint64_t high_bytes) {
 	for (unsigned int i=0; i<size; i++) {
-		if (code[i]==0x48
-				&& (code[i+1]&0xf8)==0xb8
+		if ((code[i+1]&0xf8)==0xb8
 				&& code[i+5]==(char)((high_bytes>> 0)&0xff)
 				&& code[i+6]==(char)((high_bytes>> 8)&0xff)
 				&& code[i+7]==(char)((high_bytes>>16)&0xff)
 				&& code[i+8]==(char)((high_bytes>>24)&0xff)
-				&& code[i+9]==(char)((high_bytes>>32)&0xff))
-			return &code[i];
+				&& code[i+9]==(char)((high_bytes>>32)&0xff)) {
+			if (code[i]==0x48)
+				return &code[i];
+			if (code[i]==0x49)
+				return &code[i+1];
+		}
 	}
 
 	errx(EXIT_FAILURE,"find_movabs_of_br_table() could not find movabs");
