@@ -46,6 +46,7 @@ Global
 		StripByteCode:	False
 	Paths
 		Path:	{Project}
+		Path:	{Application}*Libraries*ArgEnv
 		Path:	{Project}*interpretergen-c
 	Precompile:	
 	Postlink:	
