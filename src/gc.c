@@ -107,6 +107,14 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF ("\thnf %d\n",arity);
 #endif
+
+		if (arity==0) {
+			BC_WORD *shared_node=(BC_WORD*)(d-2)-1;
+			*ref=shared_node;
+			*n=(BC_WORD)shared_node+1;
+			return hp;
+		}
+
 		*n=(BC_WORD)hp+1;
 		hp[0]=d;
 		hp[1]=n[1];
