@@ -35,24 +35,43 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 
 	*ref=hp;
 
-	hp[0]=d;
-	*n=(BC_WORD)hp+1;
-
 #if DEBUG_GARBAGE_COLLECTOR > 1
 	EPRINTF ("%p <- %p (d %p)\n",hp,n,(void*)d);
 #endif
 
 	if (d & 2) {
-		if (d == (BC_WORD)&INT+2
-				|| d == (BC_WORD)&BOOL+2
-				|| d == (BC_WORD)&CHAR+2
-				|| d == (BC_WORD)&REAL+2) {
+		if (d == (BC_WORD)&INT+2) {
+			if (n[1]<33) {
+				BC_WORD *shared_node=&small_integers[n[1]*2];
+				*ref=shared_node;
+				*n=(BC_WORD)shared_node+1;
+				return hp;
+			} else {
+				hp[0]=d;
+				hp[1]=n[1];
+				*n=(BC_WORD)hp+1;
+				return &hp[2];
+			}
+		} else if (d == (BC_WORD)&BOOL+2) {
+			BC_WORD *shared_node=&static_booleans[n[1] ? 2 : 0];
+			*ref=shared_node;
+			*n=(BC_WORD)shared_node+1;
+			return hp;
+		} else if (d == (BC_WORD)&CHAR+2) {
+			BC_WORD *shared_node=&static_characters[(n[1]&0xff)<<1];
+			*ref=shared_node;
+			*n=(BC_WORD)shared_node+1;
+			return hp;
+		} else if (d == (BC_WORD)&REAL+2) {
+			hp[0]=d;
 			hp[1]=n[1];
+			*n=(BC_WORD)hp+1;
 			return &hp[2];
 		} else if (d == (BC_WORD)&__STRING__+2) {
 			unsigned int size=n[1];
 			size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-			memcpy (&hp[1],&n[1],(size+1)*sizeof(BC_WORD));
+			memcpy (hp,n,(size+2)*sizeof(BC_WORD));
+			*n=(BC_WORD)hp+1;
 			return &hp[2+size];
 		} else if (d == (BC_WORD)&__ARRAY__+2) {
 			unsigned int size=n[1];
@@ -68,7 +87,8 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 				size*=(((int16_t*)d)[-1]-256);
 			}
 
-			memcpy (&hp[1],&n[1],(size+2)*sizeof(BC_WORD));
+			memcpy (hp,n,(size+3)*sizeof(BC_WORD));
+			*n=(BC_WORD)hp+1;
 			return &hp[3+size];
 		}
 
@@ -87,6 +107,8 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF ("\thnf %d\n",arity);
 #endif
+		*n=(BC_WORD)hp+1;
+		hp[0]=d;
 		hp[1]=n[1];
 		if (arity>2) { /* hnf spread over two blocks */
 			hp[2]=(BC_WORD)&hp[3];
@@ -116,8 +138,9 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 		}
 #endif
 
-		for (int i=1; i<=arity; i++)
+		for (int i=0; i<=arity; i++)
 			hp[i]=n[i];
+		*n=(BC_WORD)hp+1;
 
 		return &hp[arity>2 ? (arity+1) : 3];
 	}
