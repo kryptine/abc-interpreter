@@ -100,7 +100,7 @@ while true; do
 
 		-w)
 			WASM=1
-			IP="js ../src-js/interpret.js"
+			IP="js --test-wasm-await-tier2 ../src-js/interpret.js"
 			SRCMAKETARGETS="abcopt bcgen bclink bcprelink bcstrip"
 			BC_EXTENSION="ubc"
 			shift;;
