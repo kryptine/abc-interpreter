@@ -132,15 +132,23 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			int16_t arity=((int16_t*)desc)[-1];
 			int16_t a_arity=arity;
 
-			if (desc==(BC_WORD)&INT+2 && s[i+1]<33) {
-				**ptr_stack--=(BC_WORD)(small_integers+2*s[++i]);
+			if (desc==(BC_WORD)&INT+2) {
+				if (s[i+1]<33) {
+					**ptr_stack--=(BC_WORD)(small_integers+2*s[++i]);
+				} else {
+					**ptr_stack--=(BC_WORD)ie->hp;
+					ie->hp[0]=desc;
+					ie->hp[1]=(BC_WORD)s[++i];
+					ie->hp+=2;
+				}
 				continue;
 			} else if (desc==(BC_WORD)&CHAR+2) {
 				**ptr_stack--=(BC_WORD)(static_characters+2*s[++i]);
 				continue;
-			} else if (desc==(BC_WORD)&INT+2 ||
-					desc==(BC_WORD)&BOOL+2 ||
-					desc==(BC_WORD)&REAL+2) {
+			} else if (desc==(BC_WORD)&BOOL+2) {
+				**ptr_stack--=(BC_WORD)(static_booleans+(s[++i] ? 2 : 0));
+				continue;
+			} else if (desc==(BC_WORD)&REAL+2) {
 				**ptr_stack--=(BC_WORD)ie->hp;
 				ie->hp[0]=desc;
 				ie->hp[1]=(BC_WORD)s[++i];

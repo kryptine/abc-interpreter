@@ -727,6 +727,7 @@
 							(block $predefined-constructor
 								;; predefined constructors: see ABC.Interpreter for the $desc values;
 								;; the constructors written to the heap are from the interpreter generator.
+								;; TODO: use small_integers, static_characters, and static_booleans here
 								(if ;; BOOL
 									(i32.eq (local.get $desc) (i32.const -22))
 									(then
