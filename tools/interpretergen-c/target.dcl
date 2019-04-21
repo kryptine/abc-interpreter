@@ -154,6 +154,7 @@ indirection_ptr :: Expr TWord
 dNil_ptr :: Expr TWord
 small_integer :: !(Expr TInt) -> Expr TWord
 static_character :: !(Expr TChar) -> Expr TWord
+static_boolean :: !(Expr TWord) -> Expr TWord
 caf_list :: Expr (TPtr (TPtr TWord))
 
 push_c :: !(Expr TWord) !Target -> Target

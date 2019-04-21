@@ -70,6 +70,8 @@ extern void* REAL[];
 
 extern BC_WORD small_integers[];
 extern BC_WORD static_characters[];
+extern BC_WORD static_booleans[];
+void prepare_static_nodes(void);
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"

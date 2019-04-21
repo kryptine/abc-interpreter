@@ -792,6 +792,15 @@ small_integer i = Eadd (Ei64_const (8*31)) (Eshl (cast_expr i) (Ei64_const 4))
 static_character :: !(Expr TChar) -> Expr TWord
 static_character c = Eadd (Ei64_const (8*147)) (Eshl (cast_expr c) (Ei64_const 4))
 
+static_boolean :: !(Expr TWord) -> Expr TWord
+static_boolean b = case b of
+	Ei64_const 0 -> FALSE
+	Ei64_const _ -> TRUE
+	b            -> if_expr (Elit "i32" ("(i32.wrap_i64 "+++toString b+++")")) TRUE FALSE
+where
+	TRUE  = Ei64_const (8*668)
+	FALSE = Ei64_const (8*666)
+
 caf_list :: Expr (TPtr (TPtr TWord))
 caf_list = Ei64_const (97*8)
 

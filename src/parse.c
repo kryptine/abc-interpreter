@@ -182,6 +182,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	int32_t elem32;
 	int64_t elem64;
 
+#ifdef INTERPRETER
+	prepare_static_nodes();
+#endif
 #ifdef LINK_CLEAN_RUNTIME
 	build_host_nodes();
 #endif

@@ -467,10 +467,13 @@ dNil_ptr :: Expr TWord
 dNil_ptr = "(BC_WORD)&d___Nil[1]"
 
 small_integer :: !(Expr TInt) -> Expr TWord
-small_integer i = "(BC_WORD)(small_integers+2*"+-+i+-+")"
+small_integer i = "(BC_WORD)&small_integers[("+-+i+-+")<<1]"
 
 static_character :: !(Expr TChar) -> Expr TWord
-static_character c = "(BC_WORD)(static_characters+2*"+-+c+-+")"
+static_character c = "(BC_WORD)&static_characters[("+-+c+-+")<<1]"
+
+static_boolean :: !(Expr TWord) -> Expr TWord
+static_boolean b = "(BC_WORD)&static_booleans[("+-+b+-+") ? 2 : 0]"
 
 caf_list :: Expr (TPtr (TPtr TWord))
 caf_list = "caf_list"

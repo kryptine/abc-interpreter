@@ -76,8 +76,14 @@ void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N
 #ifndef LINK_CLEAN_RUNTIME
 BC_WORD small_integers[66];
 BC_WORD static_characters[512];
+#endif
+BC_WORD static_booleans[4];
 
 void prepare_static_nodes(void) {
+	static_booleans[2]=static_booleans[0]=(BC_WORD)&BOOL+2;
+	static_booleans[1]=0;
+	static_booleans[3]=1;
+#ifndef LINK_CLEAN_RUNTIME
 	for (int i=0; i<33; i++) {
 		small_integers[2*i]=(BC_WORD)&INT+2;
 		small_integers[2*i+1]=i;
@@ -86,8 +92,8 @@ void prepare_static_nodes(void) {
 		static_characters[2*i]=(BC_WORD)&CHAR+2;
 		static_characters[2*i+1]=i;
 	}
-}
 #endif
+}
 
 #ifdef LINK_CLEAN_RUNTIME
 # include "copy_interpreter_to_host.h"
@@ -592,7 +598,6 @@ int main(int argc, char **argv) {
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
 #endif
 
-	prepare_static_nodes();
 	interpret(state.program,
 			stack, stack_size,
 			heap, heap_size,

@@ -187,26 +187,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		A @ 0 .= to_word Hp :.
 		advance_ptr Hp s_p_2
 	, instr "buildBFALSE" (Just 0) $
-		ensure_hp 2 :.
-		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
-		Hp @ 1 .= lit_word 0 :.
-		A @ 1 .= to_word Hp :.
-		grow_a 1 :.
-		advance_ptr Hp 2
+		A @ 1 .= static_boolean (lit_word 0) :.
+		grow_a 1
 	, instr "buildBTRUE" (Just 0) $
-		ensure_hp 2 :.
-		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
-		Hp @ 1 .= lit_word 1 :.
-		A @ 1 .= to_word Hp :.
-		grow_a 1 :.
-		advance_ptr Hp 2
+		A @ 1 .= static_boolean (lit_word 1) :.
+		grow_a 1
 	, instr "buildB_b" (Just 1) $
-		ensure_hp 2 :.
-		Hp @ 0 .= BOOL_ptr + lit_word 2 :.
-		Hp @ 1 .= B @ (Pc @ 1) :.
-		A @ 1 .= to_word Hp :.
-		grow_a 1 :.
-		advance_ptr Hp 2
+		A @ 1 .= static_boolean (B @ (Pc @ 1)) :.
+		grow_a 1
 	, instr "buildC" (Just 1) $
 		A @ 1 .= static_character (to_char (Pc @ 1)) :.
 		grow_a 1
