@@ -1,4 +1,4 @@
-implementation module ABC.Optimise
+module ABC.Optimise
 
 import StdArray
 import StdBool
