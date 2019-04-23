@@ -44,9 +44,9 @@ int main(int argc, char **argv) {
 	}
 	fclose(input_file);
 
-	prepare_strip_bytecode(bytecode, 1);
+	prepare_strip_bytecode(bytecode, include_symbol_table, 1);
 	uint32_t length;
-	char *stripped_bytecode=finish_strip_bytecode(include_symbol_table, &length);
+	char *stripped_bytecode=finish_strip_bytecode(&length);
 
 	FILE *output_file=stdout;
 	if(output_file_name!=NULL && (output_file=fopen(output_file_name, "wb"))==NULL) {

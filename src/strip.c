@@ -59,12 +59,12 @@ static struct s_relocation *code_relocations;
 static uint32_t data_reloc_size;
 static struct s_relocation *data_relocations;
 
-static int export_exported_labels;
-
 struct label_queue *queue;
 
+static int export_all_labels;
+static int include_symbol_table=0;
 static int export_label(const char *label) {
-	if (export_exported_labels)
+	if (export_all_labels)
 		return 1;
 	else if (!strcmp(label, "__ARRAY__"))
 		return 1;
@@ -78,8 +78,14 @@ static int export_label(const char *label) {
 		return 1;
 	else if (!strcmp(label, "REAL"))
 		return 1;
-	else
+	else if (!include_symbol_table)
 		return 0;
+	else if (!label[0])
+		return 0;
+	else if (!strncmp(label, "_internal", 9))
+		return 0;
+	else
+		return 1;
 }
 
 static void init_label_queue(void) {
@@ -353,6 +359,7 @@ static void activate_label(struct s_label *label) {
 	} else { /* code */
 		int ci=label->offset>>2;
 
+		/* since the label may point to the middle of a block, first find the beginning */
 		do {
 			do { ci--; } while (ci>=0 && code_indices[ci].byte_index==-1);
 		} while (ci>0 && !instruction_ends_block(*(int16_t*)&code[code_indices[ci].byte_index]));
@@ -370,7 +377,7 @@ static void activate_label(struct s_label *label) {
 					if (lab->name[0] != '\0') {
 						lab->bcgen_label=enter_label(lab->name);
 						if (export_label(lab->name))
-							make_label_global(label->bcgen_label);
+							make_label_global(lab->bcgen_label);
 					} else
 						lab->bcgen_label=new_label(pgrm->code_size<<2);
 				} else if (lab->bcgen_label->label_offset!=-1 && lab->bcgen_label->label_offset!=(pgrm->code_size<<2)) {
@@ -400,7 +407,11 @@ static void activate_label(struct s_label *label) {
 						break;
 					case 'l': /* Label */
 						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
-						if (instr<CA_data_IIIla || reloc!=NULL) { /* labels in .n/.nu directives may be NULL */
+						/* labels in .n/.nu directives (i.e., CA_data_*) may be
+						 * NULL, so only consider labels of real instructions
+						 * (label should not be NULL) for these, and labels of
+						 * data annotations with label!=NULL. */
+						if (instr<CA_data_IIIla || reloc!=NULL) {
 							add_label_to_queue(&labels[reloc->relocation_label]);
 							add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
 						}
@@ -461,8 +472,10 @@ static struct s_label *find_label_by_name(const char *name) {
 	return NULL;
 }
 
-void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
-	export_exported_labels=0;
+void prepare_strip_bytecode(uint32_t *bytecode,
+		int _include_symbol_table, int activate_start_label) {
+	include_symbol_table=_include_symbol_table;
+	export_all_labels=0;
 
 	if (bytecode[0]!=ABC_MAGIC_NUMBER) {
 		EPRINTF("file to strip does not start with right magic number\n");
@@ -591,25 +604,22 @@ void prepare_strip_bytecode(uint32_t *bytecode, int activate_start_label) {
 	}
 }
 
-char *finish_strip_bytecode(int include_symbol_table, uint32_t *result_size) {
+char *finish_strip_bytecode(uint32_t *result_size) {
 	struct s_label *label;
-	while ((label=next_label_from_queue())!=NULL) {
+	while ((label=next_label_from_queue())!=NULL)
 		activate_label(label);
-		if (include_symbol_table && label->name[0])
-			make_label_global(label->bcgen_label);
-	}
 
 	return write_program_to_string(result_size);
 }
 
-void strip_bytecode(int include_symbol_table,
+void strip_bytecode(int _include_symbol_table,
 		uint32_t *bytecode, struct clean_string **descriptors,
 		uint32_t *result_size, char **result) {
-	prepare_strip_bytecode(bytecode, 0);
-	export_exported_labels=1;
+	prepare_strip_bytecode(bytecode, _include_symbol_table, 0);
+	export_all_labels=1;
 
 	for (int i=0; i<((BC_WORD*)descriptors)[-2]; i++)
 		add_label_to_queue(find_label_by_name(descriptors[i]->cs_characters));
 
-	*result=finish_strip_bytecode(include_symbol_table, result_size);
+	*result=finish_strip_bytecode(result_size);
 }
