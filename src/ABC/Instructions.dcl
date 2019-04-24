@@ -2,12 +2,56 @@ definition module ABC.Instructions
 
 from StdFile import class <<<
 
+// The order of the constructors is such that parsing is fast in ABC.Parse: the
+// most frequently used instructions are defined first. This particular order
+// is based on iTasks using:
+//
+// grep -hP '^\t' **/*.abc | sed 's/ .*//' | sort | uniq -c | sort -n
+//
 :: ABCInstruction
-	= IandIi !Int
-	| IandIio !Int !Int
-	| Ibuild !String !Int !String
-	| IbuildAC !StringLiteral
+	= Iupdate_a !Int !Int
+	| Ipush_a !Int
 	| Ibuildh !String !Int
+	| Ipop_a !Int
+	| Ijmp !String
+	| Iupdatepop_a !Int !Int
+	| Ijsr_eval !Int
+	| Irtn
+	| Ibuild !String !Int !String
+	| Ijsr !String
+	| Ijmp_true !String
+	| Irepl_args !Int !Int
+	| Ieq_desc !String !Int !Int
+	| Icreate
+	| IbuildAC !StringLiteral
+	| Ipop_b !Int
+	| Ipush_b !Int
+	| Ifillh !String !Int !Int
+	| Ipush_args !Int !Int !Int
+	| Iupdatepop_b !Int !Int
+	| Iupdate_b !Int !Int
+	| IpushB !Bool
+	| Ijmp_false !String
+	| Irepl_r_args !Int !Int
+	| Ipush_r_args !Int !Int !Int
+	| IeqD_b !String !Int
+	| IpushI !Int
+	| IpushB_a !Int
+	| IpushI_a !Int
+	| IpushD_a !Int
+	| Ifill_a !Int !Int
+	| IpushD !String
+	| IeqAC_a !StringLiteral
+	| Ipush_arraysize !String !Int !Int
+	| IeqI_b !Int !Int
+	| Iselect !String !Int !Int
+	| IeqC_b !Char !Int
+	| Ifill !String !Int !String !Int
+	| IpushC !Char
+	| IpushC_a !Int
+
+	| IandIi !Int
+	| IandIio !Int !Int
 	| Ibuildh0_dup2_a !String !Int
 	| Ibuildh0_dup3_a !String !Int
 	| Ibuildh0_dup_a !String !Int
@@ -15,21 +59,11 @@ from StdFile import class <<<
 	| Ibuildh0_put_a_jsr !String !Int !String
 	| Ibuildho2 !String !Int !Int
 	| Ibuildo1 !String !Int
-	| Icreate
 	| Idup2_a !Int
 	| Idup3_a !Int
 	| Idup_a !Int
-	| IeqAC_a !StringLiteral
-	| IeqC_b !Char !Int
-	| IeqD_b !String !Int
-	| IeqI_b !Int !Int
-	| Ieq_desc !String !Int !Int
 	| Iexchange_a !Int !Int
-	| Ifill !String !Int !String !Int
-	| Ifill_a !Int !Int
 	| Ifill_a01_pop_rtn
-	| Ifillh !String !Int !Int
-	| Ijmp !String
 	| Ijmp_b_false !Int !String
 	| Ijmp_eqACio !StringLiteral !Int !String
 	| Ijmp_eqC_b !Char !Int !String
@@ -40,7 +74,6 @@ from StdFile import class <<<
 	| Ijmp_eqI_b !Int !Int !String
 	| Ijmp_eqI_b2 !Int !Int !Int !String !String
 	| Ijmp_eq_desc !String !Int !Int !String
-	| Ijmp_false !String
 	| Ijmp_geI !String
 	| Ijmp_ltI !String
 	| Ijmp_neC_b !Char !Int !String
@@ -49,15 +82,10 @@ from StdFile import class <<<
 	| Ijmp_ne_desc !String !Int !Int !String
 	| Ijmp_o_geI !Int !String
 	| Ijmp_o_geI_arraysize_a !String !Int !Int !String
-	| Ijmp_true !String
-	| Ijsr !String
-	| Ijsr_eval !Int
-	| Ipop_a !Int
 	| Ipop_a_jmp !Int !String
 	| Ipop_a_jsr !Int !String
 	| Ipop_a_rtn !Int
 	| Ipop_ab_rtn !Int !Int
-	| Ipop_b !Int
 	| Ipop_b_jmp !Int !String
 	| Ipop_b_jsr !Int !String
 	| Ipop_b_rtn !Int
@@ -66,39 +94,22 @@ from StdFile import class <<<
 	| Ipush2_b !Int
 	| Ipush3_a !Int
 	| Ipush3_b !Int
-	| IpushB !Bool
-	| IpushB_a !Int
 	| IpushB0_pop_a1
-	| IpushC !Char
-	| IpushC_a !Int
 	| IpushC0_pop_a1
-	| IpushD !String
-	| IpushD_a !Int
 	| IpushD_a_jmp_eqD_b2 !Int !String !Int !String !String !Int !String
-	| IpushI !Int
-	| IpushI_a !Int
 	| IpushI0_pop_a1
-	| Ipush_a !Int
 	| Ipush_a2 !Int !Int
 	| Ipush_a_jsr !Int !String
 	| Ipush_ab !Int !Int
-	| Ipush_args !Int !Int !Int
-	| Ipush_arraysize !String !Int !Int
 	| Ipush_arraysize_a !String !Int !Int !Int
-	| Ipush_b !Int
 	| Ipush_b2 !Int !Int
 	| Ipush_b_incI !Int
 	| Ipush_b_jsr !Int !String
 	| Ipush_jsr_eval !Int
 	| Ipush_update_a !Int !Int
-	| Ipush_r_args !Int !Int !Int
 	| Iput_a !Int
 	| Iput_b !Int
 	| Irepl_arg !Int !Int
-	| Irepl_args !Int !Int
-	| Irepl_r_args !Int !Int
-	| Irtn
-	| Iselect !String !Int !Int
 	| Iselectoo !String !Int !Int !Int !Int
 	| Iswap_a !Int
 	| Iswap_a1
@@ -112,10 +123,6 @@ from StdFile import class <<<
 	| Iupdate3pop_a !Int !Int
 	| Iupdate3pop_b !Int !Int
 	| Iupdate4_a !Int !Int
-	| Iupdate_a !Int !Int
-	| Iupdate_b !Int !Int
-	| Iupdatepop_a !Int !Int
-	| Iupdatepop_b !Int !Int
 	| Iupdates2_a !Int !Int !Int
 	| Iupdates2_b !Int !Int !Int
 	| Iupdates2_a_pop_a !Int !Int !Int !Int
