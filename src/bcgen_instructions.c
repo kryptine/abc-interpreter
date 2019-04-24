@@ -188,7 +188,7 @@ struct label *new_label_at_offset(uint32_t offset) {
 int internal_label_id = 0;
 struct label *new_internal_label(void) {
 	char label_name[14];
-	sprintf(label_name,"_i_%d%c",internal_label_id++,'\0');
+	sprintf(label_name,"%%%x",internal_label_id++);
 	struct label *label = enter_label(label_name);
 	return label;
 }
