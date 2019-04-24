@@ -379,7 +379,7 @@ static void activate_label(struct s_label *label) {
 						if (export_label(lab->name))
 							make_label_global(lab->bcgen_label);
 					} else
-						lab->bcgen_label=new_label(pgrm->code_size<<2);
+						lab->bcgen_label=new_internal_label();
 				} else if (lab->bcgen_label->label_offset!=-1 && lab->bcgen_label->label_offset!=(pgrm->code_size<<2)) {
 					EPRINTF("Error: overwriting label '%s'\n",lab->bcgen_label->label_name);
 					EXIT(NULL,1);
