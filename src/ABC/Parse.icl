@@ -14,36 +14,28 @@ import ABC.Instructions
 parse :: ([String] -> [ABCInstruction])
 parse = map parseLine
 
-:: Parser t :== Int String -> Maybe (t, Int)
-
 :: CharParseState
 	= CPS_Start
 	| CPS_Plain !Int
 	| CPS_Oct !Int
 	| CPS_Hex !Int
 
-generic parseLine` a :: Parser a
-parseLine`{|Int|} = \i s -> plus_min_int` i s
-where
-	plus_min_int` :: !Int !String -> Maybe (Int, Int)
-	plus_min_int` start line
+generic parseLine` a :: !Int !String -> Maybe (a, Int)
+parseLine`{|Int|} start line
 	| start >= size line   = Nothing
-	| line.[start] == '-'  = case plus_min_int` (start+1) line of
+	| line.[start] == '-'  = case parseLine`{|*|} (start+1) line of
 		Nothing         -> Nothing
 		Just (n, start) -> Just (~n, start)
-	| line.[start] == '+'  = plus_min_int` (start+1) line
-	| isDigit line.[start] = Just (int` 0 start line)
+	| line.[start] == '+'  = parseLine`{|*|} (start+1) line
+	| isDigit line.[start] = Just (int` 0 start)
 	| otherwise            = Nothing
-
-	int` :: !Int !Int !String -> (Int, Int)
-	int` n start line
-	| start >= size line   = (n, start)
-	| isDigit line.[start] = int` (n * 10 + digitToInt line.[start]) (start + 1) line
-	| otherwise            = (n, start)
-parseLine`{|Bool|} = bool`
 where
-	bool` :: !Int !String -> Maybe (Bool, Int)
-	bool` start line
+	int` :: !Int !Int -> (Int, Int)
+	int` n start
+	| start >= size line   = (n, start)
+	| isDigit line.[start] = int` (n * 10 + digitToInt line.[start]) (start + 1)
+	| otherwise            = (n, start)
+parseLine`{|Bool|} start line
 	| line.[start] == 'T'
 		&& line.[start+1] == 'R'
 		&& line.[start+2] == 'U'
@@ -56,59 +48,59 @@ where
 		&& line.[start+4] == 'E'
 		= Just (False, start+5)
 	| otherwise = Nothing
-parseLine`{|Char|} = \i s -> Just (char` CPS_Start i s) // TODO this can fail
+parseLine`{|Char|} start line = Just (char` CPS_Start start) // TODO this can fail
 where
-	char` :: !CharParseState !Int !String -> (Char, Int)
-	char` CPS_Start start line
+	char` :: !CharParseState !Int -> (Char, Int)
+	char` CPS_Start start
 	| line.[start] == '\''
 		| line.[start+1] == '\\' = case line.[start+2] of
-			'a'  -> char` (CPS_Plain  7) (start+3) line
-			'b'  -> char` (CPS_Plain  8) (start+3) line
-			'f'  -> char` (CPS_Plain 12) (start+3) line
-			'n'  -> char` (CPS_Plain 10) (start+3) line
-			'r'  -> char` (CPS_Plain 13) (start+3) line
-			'x'  -> char` (CPS_Hex    0) (start+3) line
-			't'  -> char` (CPS_Plain  9) (start+3) line
-			'v'  -> char` (CPS_Plain 11) (start+3) line
-			'\'' -> char` (CPS_Plain 39) (start+3) line
-			'"'  -> char` (CPS_Plain 34) (start+3) line
-			'?'  -> char` (CPS_Plain 63) (start+3) line
-			'\\' -> char` (CPS_Plain 92) (start+3) line
-			d    -> char` (CPS_Oct (digitToInt d)) (start+3) line
-		| otherwise = char` (CPS_Plain 0) (start+1) line
-	char` (CPS_Plain n) start line
+			'a'  -> char` (CPS_Plain  7) (start+3)
+			'b'  -> char` (CPS_Plain  8) (start+3)
+			'f'  -> char` (CPS_Plain 12) (start+3)
+			'n'  -> char` (CPS_Plain 10) (start+3)
+			'r'  -> char` (CPS_Plain 13) (start+3)
+			'x'  -> char` (CPS_Hex    0) (start+3)
+			't'  -> char` (CPS_Plain  9) (start+3)
+			'v'  -> char` (CPS_Plain 11) (start+3)
+			'\'' -> char` (CPS_Plain 39) (start+3)
+			'"'  -> char` (CPS_Plain 34) (start+3)
+			'?'  -> char` (CPS_Plain 63) (start+3)
+			'\\' -> char` (CPS_Plain 92) (start+3)
+			d    -> char` (CPS_Oct (digitToInt d)) (start+3)
+		| otherwise = char` (CPS_Plain 0) (start+1)
+	char` (CPS_Plain n) start
 	| line.[start] == '\'' = (toChar n, start)
-	| otherwise            = char` (CPS_Plain (n*256 + toInt line.[start])) (start+1) line
-	char` (CPS_Oct n) start line
+	| otherwise            = char` (CPS_Plain (n*256 + toInt line.[start])) (start+1)
+	char` (CPS_Oct n) start
 	| line.[start] == '\'' = (toChar n, start)
-	| otherwise            = char` (CPS_Oct (n*8 + digitToInt line.[start])) (start+1) line
-	char` (CPS_Hex n) start line
+	| otherwise            = char` (CPS_Oct (n*8 + digitToInt line.[start])) (start+1)
+	char` (CPS_Hex n) start
 	| line.[start] == '\'' = (toChar n, start)
-	| isDigit line.[start] = char` (CPS_Hex (n*16 + digitToInt line.[start])) (start+1) line
-	| line.[start] < 'a'   = char` (CPS_Hex (n*16 + toInt (line.[start] - 'A') + 10)) (start+1) line
-	| otherwise            = char` (CPS_Hex (n*16 + toInt (line.[start] - 'a') + 10)) (start+1) line
-parseLine`{|String|} = \i s -> Just (id [] i s) // TODO can this fail?
+	| isDigit line.[start] = char` (CPS_Hex (n*16 + digitToInt line.[start])) (start+1)
+	| line.[start] < 'a'   = char` (CPS_Hex (n*16 + toInt (line.[start] - 'A') + 10)) (start+1)
+	| otherwise            = char` (CPS_Hex (n*16 + toInt (line.[start] - 'a') + 10)) (start+1)
+parseLine`{|String|} start line = Just (id [] start) // TODO can this fail?
 where
-	id :: [Char] !Int !String -> (String, Int)
-	id cs start line
+	id :: [Char] !Int -> (!String, !Int)
+	id cs start
 	| start >= size line   = (toString (reverse cs), start)
 	| isSpace line.[start] = (toString (reverse cs), start)
-	| otherwise            = id [line.[start]:cs] (start + 1) line
-parseLine`{|StringLiteral|} = \i s -> case s.[i] of
-	'"' -> let (sl,j) = stringlit [] (i+1) s in case s.[j] of
-		'"' -> Just (sl,i+1)
+	| otherwise            = id [line.[start]:cs] (start + 1)
+parseLine`{|StringLiteral|} start line = case line.[start] of
+	'"' -> let (sl,j) = stringlit [] (start+1) in case line.[j] of
+		'"' -> Just (sl,start+1)
 		_   -> Nothing
 	_   -> Nothing
 where
-	stringlit :: [Char] !Int !String -> (StringLiteral, Int)
-	stringlit cs start line
+	stringlit :: [Char] !Int -> (!StringLiteral, !Int)
+	stringlit cs start
 	| start >= size line   = (StringLit (toString (reverse cs)), start)
-	| line.[start] == '\\' = stringlit [line.[start+1],line.[start]:cs] (start+2) line
+	| line.[start] == '\\' = stringlit [line.[start+1],line.[start]:cs] (start+2)
 	| line.[start] == '"'  = (StringLit (toString (reverse cs)), start)
-	| otherwise            = stringlit [line.[start]:cs] (start + 1) line
-parseLine`{|StringWithSpaces|} = \i s -> Just (StringWithSpaces (s % (i,size s-1)), size s-1)
+	| otherwise            = stringlit [line.[start]:cs] (start + 1)
+parseLine`{|StringWithSpaces|} start line = Just (StringWithSpaces (line % (start,size line-1)), size line-1)
 
-parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
+parseLine`{|CONS of d|} fx 0 line = case d.gcd_name of
 	"IIns"            -> Nothing
 	"Line"            -> Nothing
 	"Annotation"      -> Nothing
@@ -124,26 +116,26 @@ parseLine`{|CONS of d|} fx = \0 line -> case d.gcd_name of
 		first_char = case instr.[0] of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
-parseLine`{|OBJECT|} fx = \i s -> case fx i s of
+parseLine`{|OBJECT|} fx start line = case fx start line of
 	Nothing     -> Nothing
 	Just (x, i) -> Just (OBJECT x, i)
-parseLine`{|EITHER|} fl fr = \i s -> case fl i s of
+parseLine`{|EITHER|} fl fr start line = case fl start line of
 	Just (l,i) -> Just (LEFT l,i)
-	Nothing    -> case fr i s of
+	Nothing    -> case fr start line of
 		Just (r,i) -> Just (RIGHT r,i)
 		Nothing    -> Nothing
-parseLine`{|UNIT|} = \i _ -> Just (UNIT, i)
-parseLine`{|PAIR|} fx fy = \i s -> case fx i s of
+parseLine`{|UNIT|} start _ = Just (UNIT, start)
+parseLine`{|PAIR|} fx fy start line = case fx start line of
 	Nothing    -> Nothing
-	Just (x,i) -> case fy (skipSpace i s) s of
+	Just (x,i) -> case fy (skipSpace i) line of
 		Nothing    -> Nothing
-		Just (y,i) -> Just (PAIR x y, skipSpace i s)
+		Just (y,i) -> Just (PAIR x y, skipSpace i)
 where
-	skipSpace :: !Int !String -> Int
-	skipSpace n s
-	| n >= size s   = n
-	| isSpace s.[n] = skipSpace (n+1) s
-	| otherwise     = n
+	skipSpace :: !Int -> Int
+	skipSpace n
+	| n >= size line   = n
+	| isSpace line.[n] = skipSpace (n+1)
+	| otherwise        = n
 
 derive bimap (,), Maybe
 derive parseLine` ABCInstruction, Annotation
