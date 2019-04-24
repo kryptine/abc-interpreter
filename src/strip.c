@@ -407,11 +407,13 @@ static void activate_label(struct s_label *label) {
 						break;
 					case 'l': /* Label */
 						reloc=find_relocation_by_offset(code_relocations, code_reloc_size, ci);
-						/* labels in .n/.nu directives (i.e., CA_data_*) may be
-						 * NULL, so only consider labels of real instructions
-						 * (label should not be NULL) for these, and labels of
-						 * data annotations with label!=NULL. */
-						if (instr<CA_data_IIIla || reloc!=NULL) {
+						/* Only labels in .n/.nu directives (i.e., CA_data_*)
+						 * may be NULL; otherwise, throw an error. */
+						if (instr<CA_data_IIIla && reloc==NULL) {
+							EPRINTF("Error: label for %s was NULL\n",instruction_name(instr));
+							EXIT(NULL,1);
+						}
+						if (reloc!=NULL) {
 							add_label_to_queue(&labels[reloc->relocation_label]);
 							add_code_relocation(labels[reloc->relocation_label].bcgen_label, pgrm->code_size);
 						}
