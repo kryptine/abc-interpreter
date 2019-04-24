@@ -58,8 +58,9 @@ int main(int argc, char **argv) {
 		parser.data_offset = g_data_offset;
 		code_next_module();
 
-		if (parse_program(&parser, &cp)) {
-			fprintf(stderr, "Could not parse '%s'.\n", input_file_names[i]);
+		int res;
+		if ((res=parse_program(&parser, &cp))!=0) {
+			fprintf(stderr, "Could not parse '%s' (%d).\n", input_file_names[i], res);
 			exit(1);
 		}
 

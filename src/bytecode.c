@@ -325,6 +325,7 @@ unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i) {
 		i++;
 		switch (*fmt) {
 			case 'l': /* Code label */
+			case 'C': /* CAF label */
 				print_label(_tmp, 256, 1, (BC_WORD*)pgm->code[i], pgm, NULL, 0);
 				WPRINTF(w, " %s", _tmp);
 				break;
@@ -381,10 +382,14 @@ void print_code(WINDOW *w, struct program *pgm) {
 #  define WPRINTF(w,...) PRINTF(__VA_ARGS__);
 void print_code(struct program *pgm) {
 # endif
+	char label_name[128];
+	label_name[127]='\0';
 	uint32_t i;
 	for (i = 0; i < pgm->code_size; i++) {
-		if (pgm->code_symbols_matching[i]!=-1)
-			WPRINTF(w,"%s\n",pgm->symbol_table[pgm->code_symbols_matching[i]].name);
+		if (pgm->code_symbols_matching[i]!=-1) {
+			print_label_name(label_name,127,pgm->symbol_table[pgm->code_symbols_matching[i]].name);
+			WPRINTF(w,"%s\n",label_name);
+		}
 		i+=print_instruction(
 # ifdef DEBUG_CURSES
 				w,
