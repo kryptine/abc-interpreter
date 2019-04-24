@@ -633,10 +633,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 #ifdef LINKER
 					struct label *label;
-					if (sym->name[0] == '\0') {
-						label = new_internal_label();
-						label->label_offset = sym->offset;
-					} else
+					if (sym->name[0] == '\0')
+						label = new_label_at_offset(sym->offset);
+					else
 						label = enter_label(sym->name);
 					add_code_relocation(label, code_i + state->code_offset);
 #else
@@ -662,10 +661,9 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 
 #ifdef LINKER
 					struct label *label;
-					if (sym->name[0] == '\0') {
-						label = new_internal_label();
-						label->label_offset = sym->offset;
-					} else
+					if (sym->name[0] == '\0')
+						label = new_label_at_offset(sym->offset);
+					else
 						label = enter_label(sym->name);
 					add_data_relocation(label, data_i + state->data_offset);
 #else

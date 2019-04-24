@@ -176,10 +176,19 @@ struct label *enter_label(char *label_name) {
 	return new_label_p;
 }
 
+struct label *new_label_at_offset(uint32_t offset) {
+	char name[16];
+	snprintf(name, 16, "i%x", offset);
+	name[15] = '\0';
+	struct label *label = enter_label(name);
+	label->label_offset = offset;
+	return label;
+}
+
 int internal_label_id = 0;
 struct label *new_internal_label(void) {
 	char label_name[14];
-	sprintf(label_name,"_internal%d",internal_label_id++);
+	sprintf(label_name,"_i_%d%c",internal_label_id++,'\0');
 	struct label *label = enter_label(label_name);
 	return label;
 }

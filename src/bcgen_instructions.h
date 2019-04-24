@@ -29,7 +29,7 @@ void add_code_and_data_offsets(void);
 
 struct label *enter_label(char *label_name);
 struct label *new_internal_label(void);
-struct label *new_label(uint32_t offset);
+struct label *new_label_at_offset(uint32_t offset);
 void make_label_global(struct label *label);
 struct relocation *add_code_relocation(struct label *label, uint32_t offset);
 struct relocation *add_data_relocation(struct label *label, uint32_t offset);
