@@ -64,18 +64,6 @@ defaultDeserializationSettings :: DeserializationSettings
 serialize :: a !String !*World -> *(!Maybe SerializedGraph, !*World)
 
 /**
- * Serialize an expression for prelinked interpretation. This is a mode of
- * interpretation where the code and data addresses are fixed. It is useful for
- * the WebAssembly interpreter where memory always starts at index 0.
- *
- * @param The value to serialize.
- * @param The path to the executable's bytecode (set by the `ByteCode` option in the project file).
- * @param The path to the executable itself.
- * @result The result may be `Nothing` if the bytecode could not be parsed.
- */
-serialize_for_prelinked_interpretation :: a !String !String !*World -> *(!Maybe String, !*World)
-
-/**
  * Deserialize an expression using the ABC interpreter.
  * This version copies nodes as soon as they are in head normal form.
  * Therefore, the result is only `Nothing` when pre-interpretation validation
@@ -143,3 +131,28 @@ graph_from_string :: !String -> Maybe *SerializedGraph
 
 graph_to_file :: !*SerializedGraph !*File -> *(!*SerializedGraph, !*File)
 graph_from_file :: !*File -> *(!Maybe *SerializedGraph, !*File)
+
+/**
+ * This type holds a state that can be used to serialize expressions for
+ * deserialization in a prelinked interpreter (one where code and data
+ * addresses are fixed). This is the case for the WebAssembly interpreter.
+ * The environment can be initialized with {{`prepare_prelinked_interpretation`}}
+ * and used with {{`serialize_for_prelinked_interpretation`}}.
+ */
+:: PrelinkedInterpretationEnvironment
+
+/**
+ * See {{`PrelinkedInterpretationEnvironment`}} for documentation.
+ *
+ * @param The path to the executable's bytecode (set by the `ByteCode` option in the project file).
+ * @result The result may be `Nothing` if the bytecode could not be parsed.
+ */
+prepare_prelinked_interpretation :: !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
+
+/**
+ * See {{`PrelinkedInterpretationEnvironment`}} for documentation.
+ *
+ * @param The value to serialize.
+ * @param The environment.
+ */
+serialize_for_prelinked_interpretation :: a !PrelinkedInterpretationEnvironment -> String
