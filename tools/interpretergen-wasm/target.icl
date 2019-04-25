@@ -324,7 +324,7 @@ where
 		, "(func $clean_handle_illegal_instr (import \"clean\" \"handle_illegal_instr\") (param i32 i32 i32 i32 i32 i32 i32) (result i32))"
 		, "(func $clean_illegal_instr (import \"clean\" \"illegal_instr\") (param i32 i32))"
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
-		, "(func $clean_gc (import \"clean\" \"gc\") (param i32) (result i64))"
+		, "(func $clean_gc (import \"clean\" \"gc\"))"
 		, "(func $clean_halt (import \"clean\" \"halt\") (param i32 i32 i32))"
 		] ++
 		[ "(global $"+++g+++" (mut i64) (i64.const 0))" \\ g <- global_vars ] ++
@@ -343,11 +343,10 @@ where
 		global_vars = ["pc","asp","bsp","csp","hp","hp_size","hp_free"]
 	end =
 		[ ")" // block abc-gc
-		, "(global.set $vi0 (call $clean_gc (i32.wrap_i64 (global.get $asp))))"
-		, "(global.set $hp (i64.shr_u (global.get $vi0) (i64.const 32)))"
-		, "(if (i64.le_s (i64.and (global.get $vi0) (i64.const 0xffffffff)) (global.get $hp_free))"
+		, "(global.set $vi0 (global.get $hp_free))"
+		, "(call $clean_gc)"
+		, "(if (i64.le_s (global.get $hp_free) (global.get $vi0))"
 		, "\t(then (call $clean_out_of_memory) (unreachable)))"
-		, "(global.set $hp_free (i64.and (global.get $vi0) (i64.const 0xffffffff)))"
 		, "(br $abc-loop)"
 		, ")" // loop abc-loop
 		, "(unreachable)"

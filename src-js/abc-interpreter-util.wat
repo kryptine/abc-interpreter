@@ -9,6 +9,10 @@
 	(func $has-host-reference (import "clean" "has_host_reference") (param i32) (result i32))
 	(func $update-host-reference (import "clean" "update_host_reference") (param i32 i32))
 
+	(func $get-asp (import "clean" "get_asp") (result i32))
+	(func $set-hp (import "clean" "set_hp") (param i32))
+	(func $set-hp-free (import "clean" "set_hp_free") (param i32))
+
 	(global $start-heap (mut i32) (i32.const 0))
 	(global $half-heap (mut i32) (i32.const 0))
 	(global $end-heap (mut i32) (i32.const 0))
@@ -137,9 +141,8 @@
 		)
 	)
 
-	;; upper half of result is new hp pointer;
-	;; lower half is hp-free
-	(func (export "gc") (param $asp i32) (result i64)
+	(func (export "gc")
+		(local $asp i32)
 		(local $old i32)
 		(local $new i32)
 		(local $n i32)
@@ -147,6 +150,8 @@
 		(local $a-arity i32)
 		(local $arity i32)
 		(local $size i32)
+
+		(local.set $asp (call $get-asp))
 
 		(if
 			(global.get $in-first-semispace)
@@ -416,18 +421,15 @@
 
 		;; return
 		(global.set $in-first-semispace (i32.sub (i32.const 1) (global.get $in-first-semispace)))
-		(i64.or
-			(i64.shl (i64.extend_i32_u (local.get $new)) (i64.const 32))
-			(i64.extend_i32_u
-				(i32.shr_u
-					(i32.sub
-						(select (global.get $half-heap) (global.get $end-heap) (global.get $in-first-semispace))
-						(local.get $new)
-					)
-					(i32.const 3)
+		(call $set-hp (local.get $new))
+		(call $set-hp-free
+			(i32.shr_u
+				(i32.sub
+					(select (global.get $half-heap) (global.get $end-heap) (global.get $in-first-semispace))
+					(local.get $new)
 				)
-			)
-		)
+				(i32.const 3)
+			))
 	)
 
 	(func $update-ref (param $ref i32) (param $hp i32) (result i32)
