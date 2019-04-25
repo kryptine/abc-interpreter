@@ -3,6 +3,9 @@
 	;;(func $debug (import "clean" "debug") (param i32 i32 i32 i32))
 
 	;; to get host references during garbage collection
+	;; has-host-reference should return a heap pointer when the requested index
+	;;   is found, 0 if it is not found and no higher index is known, or -1 if
+	;;   it is not found but higher indexes may be known
 	(func $has-host-reference (import "clean" "has_host_reference") (param i32) (result i32))
 	(func $update-host-reference (import "clean" "update_host_reference") (param i32 i32))
 
@@ -190,10 +193,18 @@
 		(block $end-copy-host-references
 			(loop $copy-host-references
 				(local.set $n (call $has-host-reference (local.get $d)))
+
 				(br_if $end-copy-host-references (i32.eqz (local.get $n)))
-				(i32.store (local.get $asp) (local.get $n))
-				(local.set $new (call $update-ref (local.get $asp) (local.get $new)))
-				(call $update-host-reference (local.get $d) (i32.load (local.get $asp)))
+
+				(if
+					(i32.gt_s (local.get $n) (i32.const 0))
+					(then
+						(i32.store (local.get $asp) (local.get $n))
+						(local.set $new (call $update-ref (local.get $asp) (local.get $new)))
+						(call $update-host-reference (local.get $d) (i32.load (local.get $asp)))
+					)
+				)
+
 				(local.set $d (i32.add (local.get $d) (i32.const 1)))
 				(br $copy-host-references)
 			)
