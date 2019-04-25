@@ -9,6 +9,14 @@
 	(func $has-host-reference (import "clean" "has_host_reference") (param i32) (result i32))
 	(func $update-host-reference (import "clean" "update_host_reference") (param i32 i32))
 
+	(func $gc-start (import "clean" "gc_start"))
+	(func $gc-end (import "clean" "gc_end"))
+	;; When a node with the js-ref-constructor is found, the callback is called
+	;; with its argument. This is used in iTasks to clean up the references from
+	;; wasm to JS.
+	(global $js-ref-constructor (mut i32) (i32.const 0))
+	(func $js-ref-found (import "clean" "js_ref_found") (param i32))
+
 	(func $get-asp (import "clean" "get_asp") (result i32))
 	(func $set-hp (import "clean" "set_hp") (param i32))
 	(func $set-hp-free (import "clean" "set_hp_free") (param i32))
@@ -132,6 +140,9 @@
 		(global.set $stack (local.get 2))
 		(global.set $caf-list (local.get 3))
 	)
+	(func (export "set_js_ref_constructor") (param i32)
+		(global.set $js-ref-constructor (local.get 0))
+	)
 
 	(func (export "get_unused_semispace") (result i32)
 		(select
@@ -150,6 +161,8 @@
 		(local $a-arity i32)
 		(local $arity i32)
 		(local $size i32)
+
+		(call $gc-start)
 
 		(local.set $asp (call $get-asp))
 
@@ -430,6 +443,8 @@
 				)
 				(i32.const 3)
 			))
+
+		(call $gc-end)
 	)
 
 	(func $update-ref (param $ref i32) (param $hp i32) (result i32)
@@ -588,6 +603,19 @@
 					)
 				)
 				;; not a basic type
+
+				(if
+					(i32.eq (local.get $d) (global.get $js-ref-constructor))
+					(then
+						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
+						(local.set $d (i32.load offset=8 (local.get $n)))
+						(call $js-ref-found (local.get $d))
+						(i64.store offset=8 (local.get $hp) (i64.extend_i32_u (local.get $d)))
+						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
+						(return (i32.add (local.get $hp) (i32.const 16)))
+					)
+				)
+
 				(local.set $arity (i32.load16_s (i32.sub (local.get $d) (i32.const 2))))
 				(if
 					(i32.gt_s (local.get $arity) (i32.const 256))

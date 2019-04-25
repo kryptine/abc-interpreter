@@ -106,6 +106,13 @@ intp = new Uint8Array(intp);
 				set_hp: hp => intp.instance.exports.set_hp(hp),
 				set_hp_free: free => intp.instance.exports.set_hp_free(free),
 
+				gc_start: function() {
+				},
+				js_ref_found: function(val) {
+				},
+				gc_end: function() {
+				},
+
 				debug: function(what,a,b,c) {
 					switch (what) {
 						case 0:
