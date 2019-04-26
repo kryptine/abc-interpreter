@@ -1098,27 +1098,30 @@
 						(br $loop)
 					)
 					(else
+						;; thunk
 						(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 4))))
 						(local.set $a-arity (local.get $arity))
-
-						;; "arity"
-						;;(call $debug (i32.const 3) (local.get $arity) (i32.const 0) (i32.const 0))
 
 						(if
 							(i32.lt_s (local.get $arity) (i32.const 0))
 							(then
 								(local.set $arity (i32.const 1))
+								(local.set $a-arity (i32.const 1))
 							)
 							(else
 								(if
 									(i32.gt_u (local.get $arity) (i32.const 256))
 									(then
-										(local.set $a-arity (i32.shr_u (local.get $arity) (i32.const 8)))
+										(local.set $b-arity (i32.shr_u (local.get $arity) (i32.const 8)))
 										(local.set $arity (i32.and (local.get $arity) (i32.const 0xff)))
+										(local.set $a-arity (i32.sub (local.get $arity) (local.get $b-arity)))
 									)
 								)
 							)
 						)
+
+						;; "arity"
+						;;(call $debug (i32.const 3) (local.get $arity) (local.get $a-arity) (local.get $b-arity))
 
 						(i64.store (i32.load (local.get $ptr-stack)) (i64.extend_i32_u (local.get $hp)))
 						(local.set $ptr-stack (i32.sub (local.get $ptr-stack) (i32.const 4)))

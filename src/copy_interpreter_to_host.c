@@ -286,8 +286,9 @@ BC_WORD *string_to_interpreter(uint64_t *clean_string, struct interpretation_env
 			if (arity<0) {
 				arity=1;
 			} else if (arity>256) {
-				a_arity=arity>>8;
+				int16_t b_arity=arity>>8;
 				arity&=0xff;
+				a_arity=arity-b_arity;
 			}
 
 			**ptr_stack--=(BC_WORD)ie->hp;
