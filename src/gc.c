@@ -225,10 +225,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 #endif
 
 		if (d & 2) {
-			if (d == (BC_WORD)&INT+2
-					|| d == (BC_WORD)&BOOL+2
-					|| d == (BC_WORD)&CHAR+2
-					|| d == (BC_WORD)&REAL+2) {
+			if (d == (BC_WORD)&INT+2 || d == (BC_WORD)&REAL+2) {
+				/* CHAR and BOOL are always unboxed */
 				n+=2;
 				continue;
 			} else if (d == (BC_WORD)&__STRING__+2) {

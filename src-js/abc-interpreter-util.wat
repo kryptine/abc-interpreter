@@ -244,13 +244,8 @@
 						(if
 							(i32.or
 								(i32.eq (local.get $d) (i32.const 210)) ;; INT+2
-								(i32.or
-									(i32.eq (local.get $d) (i32.const 130)) ;; CHAR+2
-									(i32.or
-										(i32.eq (local.get $d) (i32.const 90)) ;; BOOL+2
-										(i32.eq (local.get $d) (i32.const 170)) ;; REAL+2
-									)
-								)
+								(i32.eq (local.get $d) (i32.const 170)) ;; REAL+2
+								;; BOOL and CHAR are always static so cannot occur here
 							)
 							(then
 								(local.set $n (i32.add (local.get $n) (i32.const 16)))
@@ -625,7 +620,7 @@
 				)
 
 				(if
-					(i32.eq (local.get $arity) (i32.const 0))
+					(i32.eqz (local.get $arity))
 					(then
 						(local.set $d (i32.sub (local.get $d) (i32.const 10)))
 						(i64.store (local.get $ref) (i64.extend_i32_u (local.get $d)))
@@ -753,13 +748,13 @@
 					)
 				)
 
-				;; "loop"
-				;;(call $debug (i32.const 0) (local.get $i) (local.get $len) (local.get $hp))
-
 				(i32.store16 (local.get $a-size-stack) (i32.sub (i32.load16_s (local.get $a-size-stack)) (i32.const 1)))
 
 				(local.set $desc (i32.load (i32.add (local.get $s) (local.get $i))))
 				(i64.store (i32.add (local.get $s) (local.get $i)) (i64.extend_i32_u (local.get $hp)))
+
+				;; "loop"
+				;;(call $debug (local.get $desc) (local.get $i) (local.get $len) (local.get $hp))
 
 				(if ;; redirection or predefined constructor
 					(i32.lt_s (local.get $desc) (i32.const 0))
