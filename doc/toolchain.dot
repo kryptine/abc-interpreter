@@ -1,0 +1,13 @@
+digraph {
+	rankdir=LR;
+	othermodule1 [ label="...", shape=none ];
+	othermodule1 -> "main.bc";
+	"mod.abc" -> "mod.opt.abc" [ label=<<font face="courier">abcopt</font><br/>if OptimiseABC> ];
+	"mod.opt.abc" -> "mod.bc" [ label=<<font face="courier">bcgen</font><br/>if GenerateByteCode<br/>and OptimiseABC> ];
+	"mod.abc" -> "mod.bc" [ style=dashed, label=<<font face="courier">bcgen</font><br/>if GenerateByteCode<br/> and not OptimiseABC> ];
+	"mod.bc" -> "main.bc" [ label=<<font face="courier">bclink</font>> ];
+	othermodule2 [ label="...", shape=none ];
+	othermodule2 -> "main.bc";
+	"main.bc" -> "main.bc" [ label=<<font face="courier">bcstrip</font><br/> if StripByteCode> ];
+	"main.bc" -> "main.pbc" [ label=<<font face="courier">bcprelink</font><br/> if PrelinkByteCode> ];
+}

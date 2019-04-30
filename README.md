@@ -9,8 +9,7 @@ This repository contains the following:
   optimised ABC language.
 - A bytecode linker (`bclink`) which links several bytecode files together into
   one.
-- A bytecode stripper (`bcstrip`) which removes any dead code and all symbol
-  names from a bytecode file.
+- A bytecode stripper (`bcstrip`) which removes dead code from a bytecode file.
 - An interpreter (`interpret`) which can run bytecode files.
 - A graphical debugger (`debug`) to debug bytecode files.
 - A Clean library (`ABC.Interpreter`) around GraphCopy and the interpreter
@@ -38,9 +37,19 @@ program:
 - `ByteCode`: path for the main bytecode file (e.g. `{Project}*app.bc`)
 - `CodeGen/GenerateByteCode`: `True`
 - `CodeGen/OptimiseABC`: `True` (unless you suspect a bug in the ABC optimiser)
-- `Link/StripByteCode`: `False` in most use cases
+- `Link/StripByteCode`: `True` in most use cases (otherwise, the full bytecode
+  for all modules is included)
+- `Link/KeepByteCodeSymbols`: `True` in most use cases (otherwise, no symbols
+  are present in the stripped bytecode, making GraphCopy impossible)
+- `Link/PrelinkByteCode`: `True` if the bytecode is to be used by the
+  [WebAssembly interpreter](/doc/wasm.md), to create a separate `.pbc` file as
+  well.
 
-In the Clean IDE, you can set these in Project Options &gt; Bytecode.
+In the Clean IDE, you can set these in Project Options &gt; Bytecode. To better
+understand the build workflow, see [tools.md](/doc/tools.md) and the diagram
+below:
+
+![build workflow](/doc/toolchain.svg)
 
 See the documentation in [ABC.Interpreter](/lib/ABC/Interpreter.dcl) for more
 details about the serialization library itself.

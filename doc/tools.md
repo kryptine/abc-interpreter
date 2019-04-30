@@ -31,13 +31,25 @@ bcgen "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.opt.abc" -o "$CLEAN_HOM
 bclink "Clean System Files/fsieve.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/StdReal.obc" "$CLEAN_HOME/lib/StdEnv/Clean System Files/_system.obc" -o fsieve.bc
 ```
 
-Optionally, this bytecode is stripped to remove symbol names and dead code:
+Optionally, this bytecode is stripped to remove dead code and, optionally,
+symbol names:
 
 ```bash
-bcstrip fsive.bc -o fsieve.bc
+bcstrip [-s] fsieve.bc -o fsieve.bc
 ```
 
 The resulting bytecode file can be run in the interpreter or the debugger.
+One can also prelink the bytecode file for use in the [WebAssembly
+interpreter](/doc/wasm.md):
+
+```bash
+bcprelink fsieve.bc -o fsieve.pbc
+```
+
+The process is described in the image below with reference to the settings in
+the project file:
+
+![build workflow](/doc/toolchain.svg)
 
 ## Detailed descriptions
 
@@ -70,7 +82,9 @@ Usage: `bclink OBC [OBC ...] -o BC`
 Strips bytecode, leaving only the `Start` rule and all code reachable from
 there.
 
-Usage: `bcstrip BC -o BC`
+Usage: `bcstrip [-s] BC -o BC`
+
+When `-s` is given, symbol names are removed from the bytecode as well.
 
 ### interpret
 

@@ -1,19 +1,20 @@
 # WebAssembly support
 
 There is a WebAssembly version of the interpreter which can run in modern
-browsers and standalone JavaScript shells.
-
-**TODO**: in the future, this will be used in [iTasks][] to achieve sharing of
-tasks between a server and a browser client.
+browsers and standalone JavaScript shells. This is used in [iTasks][] to
+interact with the browser DOM directly from Clean.
 
 ## Tools
 
-Because there is no WebAssembly parser one needs to use `bcprelink` to produce
-a version of the bytecode which can readily be copied into WebAssembly's linear
-memory. This is done with:
+The WebAssembly interpreter assumes a prelinked bytecode file with the program
+memory starting at address `0x8` and the data memory starting eight bytes after
+the program memory. This file is produced by `bcprelink`:
 
 ```bash
-bcprelink MODULE.bc -o MODULE.ubc
+bcprelink MODULE.bc -o MODULE.pbc
 ```
 
-**TODO**: add support to `cpm`/the IDE for this.
+In `cpm` and the Clean IDE, bytecode prelinking can be triggered using the
+`Link.PrelinkByteCode` option.
+
+[iTasks]: https://gitlab.science.ru.nl/clean-and-itasks/iTasks-SDK
