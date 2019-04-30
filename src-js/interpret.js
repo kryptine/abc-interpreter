@@ -202,6 +202,16 @@ intp = new Uint8Array(intp);
 				expR: Math.exp,
 				lnR: Math.log,
 				log10R: Math.log10,
+				RtoAC_words_needed: function (v) {
+					v=Number(0+v).toLocaleString(
+						['en-US'],
+						{
+							useGrouping: false,
+							maximumSignificantDigits: 15,
+						}
+					);
+					return 2+((v.length+7)>>3);
+				},
 				RtoAC: function (dest, v) {
 					v=Number(0+v).toLocaleString(
 						['en-US'],
