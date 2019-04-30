@@ -137,7 +137,7 @@
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))
 		(global.set $end-heap (i32.add (local.get 0) (i32.add (local.get 1) (local.get 1))))
-		(global.set $stack (local.get 2))
+		(global.set $stack (i32.sub (local.get 2) (i32.const 8)))
 		(global.set $caf-list (local.get 3))
 	)
 	(func (export "set_js_ref_constructor") (param i32)

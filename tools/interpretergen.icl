@@ -2831,7 +2831,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TWord (s @ 1) \l ->
 		if_then (end_i >. to_int l) (end_i .= to_int l) :.
 		l .= to_word (end_i - first_i) :.
-		new_local TWord (if_i64_or_i32_expr ((l + lit_word 7) / lit_word 8) ((l + lit_word 3) / lit_word 4) + lit_word 2) \lw ->
+		new_local TWord (if_i64_or_i32_expr ((l + lit_word 7) >>. lit_word 3) ((l + lit_word 3) >>. lit_word 2) + lit_word 2) \lw ->
 		ensure_hp lw :.
 		shrink_b 2 :.
 		Hp @ 0 .= STRING__ptr + lit_word 2 :.
