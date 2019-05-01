@@ -3324,9 +3324,18 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
 		A @ 1 .= array @ (lit_word 3 + B @ to_int (Pc @ 2)) :.
 		grow_a 1
+	, instr "selectBOOLoo" (Just 2) $
+		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
+		B @ -1 .= to_char_ptr (array @? 3) @ (B @ to_int (Pc @ 2)) :.
+		grow_b 1
 	, instr "selectCHARoo" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
 		B @ -1 .= to_char_ptr (array @? 2) @ (B @ to_int (Pc @ 2)) :.
+		grow_b 1
+	, alias "selectINToo" $
+	  instr "selectREALoo" (Just 2) $
+		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->
+		B @ -1 .= to_word_ptr (array @? 3) @ (B @ to_int (Pc @ 2)) :.
 		grow_b 1
 	] ++
 	[ instr ("update"+++toString n+++"_a") (Just 2) $

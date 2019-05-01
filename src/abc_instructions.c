@@ -736,7 +736,10 @@ const char *instruction_type (BC_WORD i) {
 		case Cpush_update_a:         return "nn";
 		case Cput_a:                 return "n";
 		case Cput_b:                 return "n";
+		case CselectBOOLoo:          return "nn";
 		case CselectCHARoo:          return "nn";
+		case CselectINToo:           return "nn";
+		case CselectREALoo:          return "nn";
 		case Cselectoo:              return "nn";
 		case Cupdate2_a:             return "nn";
 		case Cupdate2_b:             return "nn";

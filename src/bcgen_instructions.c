@@ -3862,11 +3862,30 @@ void code_put_b(int b_offset) {
 
 void code_selectoo(char element_descriptor[],int a_size,int b_size,int a_offset,int b_offset) {
 	switch(element_descriptor[0]) {
+		case 'B':
+			if (element_descriptor[1]=='O' && element_descriptor[2]=='O' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0') {
+				add_instruction_w_w(CselectBOOLoo,-a_offset,b_offset);
+				return;
+			}
+			break;
 		case 'C':
 			if (element_descriptor[1]=='H' && element_descriptor[2]=='A' && element_descriptor[3]=='R' &&
-				element_descriptor[4]=='\0')
-			{
+				element_descriptor[4]=='\0') {
 				add_instruction_w_w(CselectCHARoo,-a_offset,b_offset);
+				return;
+			}
+			break;
+		case 'I':
+			if (element_descriptor[1]=='N' && element_descriptor[2]=='T' && element_descriptor[3]=='\0') {
+				add_instruction_w_w(CselectINToo,-a_offset,b_offset);
+				return;
+			}
+			break;
+		case 'R':
+			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
+				element_descriptor[4]=='\0') {
+				add_instruction_w_w(CselectREALoo,-a_offset,b_offset);
 				return;
 			}
 			break;
