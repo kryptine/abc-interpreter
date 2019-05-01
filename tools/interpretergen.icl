@@ -1245,6 +1245,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  instr "eqI_b" (Just 2) $
 		B @ -1 .= (B @ to_int (Pc @ 1) ==. Pc @ 2) :.
 		grow_b 1
+	, alias "eqCc" $
+	  instr "eqIi" (Just 1) $
+		B @ 0 .= (B @ 0 ==. Pc @ 1)
 	, instr "eqR_b" (Just 2) $
 		B @ -1 .= (to_real (B @ to_int (Pc @ 1)) ==. to_real (Pc @ 2)) :.
 		grow_b 1
@@ -3120,6 +3123,15 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		shrink_b 2
 	\\ (name,op) <- [("eq",(==.)),("ne",(<>.)),("ge",(>=.)),("lt",(<.))]
 	] ++
+	[ instr ("jmp_"+++name+++type) (Just 2) $
+		if_then (op (to_int (B @ 0)) (to_int (Pc @ 1))) (
+			shrink_b 1 :.
+			Pc .= to_word_ptr (Pc @ 2) :.
+			end_instruction
+		) :.
+		shrink_b 1
+	\\ (name,op) <- [("eq",(==.)),("ne",(<>.))], type <- ["Cc","Ii"]
+	] ++
 	[ instr ("jmp_"+++name+++"_desc") (Just 3) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		if_then (op (n @ 0) (Pc @ 2)) (
@@ -3264,6 +3276,10 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		v .= B @ to_int (Pc @ 2) :.
 		B @ -1 .= v :.
 		grow_b 1
+	, instr "push_b_decI" (Just 1) $
+		new_local TWord (B @ to_int (Pc @ 1)) \v ->
+		B @ -1 .= v - lit_word 1 :.
+		grow_b 1
 	, instr "push_b_incI" (Just 1) $
 		new_local TWord (B @ to_int (Pc @ 1)) \v ->
 		B @ -1 .= v + lit_word 1 :.
@@ -3317,8 +3333,16 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "put_a" (Just 1) $
 		A @ to_int (Pc @ 1) .= A @ 0 :.
 		shrink_a 1
+	, instr "put_a_jmp" Nothing $
+		A @ to_int (Pc @ 1) .= A @ 0 :.
+		Pc .= to_word_ptr (Pc @ 2) :.
+		shrink_a 1
 	, instr "put_b" (Just 1) $
 		B @ to_int (Pc @ 1) .= B @ 0 :.
+		shrink_b 1
+	, instr "put_b_jmp" Nothing $
+		B @ to_int (Pc @ 1) .= B @ 0 :.
+		Pc .= to_word_ptr (Pc @ 2) :.
 		shrink_b 1
 	, instr "selectoo" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \array ->

@@ -1078,6 +1078,18 @@ int parse_instruction_c (instruction *instruction)
 	return 1;
 }
 
+int parse_instruction_c_a (instruction *instruction)
+{
+	unsigned char c;
+	STRING a;
+
+	if (!parse_character (&c))
+		return 0;
+	parse_label (a);
+	instruction->code_function (c,a);
+	return 1;
+}
+
 int parse_instruction_c_c_n_a_a (instruction *instruction)
 {
 	unsigned char c1,c2;
@@ -1123,6 +1135,18 @@ int parse_instruction_i (instruction *instruction)
 	if (!parse_clean_integer (&i))
 		return 0;
 	instruction->code_function (i);
+	return 1;
+}
+
+int parse_instruction_i_a (instruction *instruction)
+{
+	CleanInt i;
+	STRING a;
+
+	if (!parse_clean_integer (&i))
+		return 0;
+	parse_label (a);
+	instruction->code_function (i,a);
 	return 1;
 }
 

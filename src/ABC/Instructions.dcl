@@ -62,23 +62,29 @@ from StdFile import class <<<
 	| Idup2_a !Int
 	| Idup3_a !Int
 	| Idup_a !Int
+	| IeqCc !Char
+	| IeqIi !Int
 	| Iexchange_a !Int !Int
 	| Ifill_a01_pop_rtn
 	| Ijmp_b_false !Int !String
 	| Ijmp_eqACio !StringLiteral !Int !String
 	| Ijmp_eqC_b !Char !Int !String
 	| Ijmp_eqC_b2 !Char !Char !Int !String !String
+	| Ijmp_eqCc !Char !String
 	| Ijmp_eqD_b !String !Int !String
 	| Ijmp_eqD_b2 !String !Int !String !String !Int !String
 	| Ijmp_eqI !String
 	| Ijmp_eqI_b !Int !Int !String
 	| Ijmp_eqI_b2 !Int !Int !Int !String !String
+	| Ijmp_eqIi !Int !String
 	| Ijmp_eq_desc !String !Int !Int !String
 	| Ijmp_geI !String
 	| Ijmp_ltI !String
 	| Ijmp_neC_b !Char !Int !String
+	| Ijmp_neCc !Char !String
 	| Ijmp_neI !String
 	| Ijmp_neI_b !Int !Int !String
+	| Ijmp_neIi !Int !String
 	| Ijmp_ne_desc !String !Int !Int !String
 	| Ijmp_o_geI !Int !String
 	| Ijmp_o_geI_arraysize_a !String !Int !Int !String
@@ -103,12 +109,15 @@ from StdFile import class <<<
 	| Ipush_ab !Int !Int
 	| Ipush_arraysize_a !String !Int !Int !Int
 	| Ipush_b2 !Int !Int
+	| Ipush_b_decI !Int
 	| Ipush_b_incI !Int
 	| Ipush_b_jsr !Int !String
 	| Ipush_jsr_eval !Int
 	| Ipush_update_a !Int !Int
 	| Iput_a !Int
+	| Iput_a_jmp !Int !String
 	| Iput_b !Int
+	| Iput_b_jmp !Int !String
 	| Irepl_arg !Int !Int
 	| Iselectoo !String !Int !Int !Int !Int
 	| Iswap_a !Int

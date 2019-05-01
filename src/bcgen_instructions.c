@@ -421,6 +421,15 @@ void add_instruction_c(int16_t i,char n) {
 	store_code_elem(1, n);
 }
 
+void add_instruction_c_label(int16_t i,char n,char *label_name) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %s\n",pgrm.code_size,instruction_name (i),(int)n,label_name);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(1, n);
+	store_code_label_value(label_name,0);
+}
+
 void add_instruction_w(int16_t i,int32_t n) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d\n",pgrm.code_size,instruction_name (i),(int)n);
@@ -548,6 +557,15 @@ void add_instruction_i_w(int16_t i,int64_t n1,int32_t n2) {
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(8, n1);
 	store_code_elem(2, n2);
+}
+
+void add_instruction_i_label(int16_t i,int64_t n,char *label_name) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %s\n",pgrm.code_size,instruction_name (i),(int)n,label_name);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_elem(8, n);
+	store_code_label_value(label_name,0);
 }
 
 void add_instruction_w_c_label(int16_t i,int32_t n1,char n2,char *label_name) {
@@ -1500,6 +1518,10 @@ void code_eqC_b(int value,int b_offset) {
 	add_instruction_w_c(CeqC_b,b_offset,value);
 }
 
+void code_eqCc(int value) {
+	add_instruction_c(CeqCc,value);
+}
+
 void code_eqD_b(char descriptor_name[],int arity) {
 	add_instruction_label_offset(CeqD_b,descriptor_name,(arity<<3)+2);
 }
@@ -1514,6 +1536,10 @@ void code_eqI_b(CleanInt value,int b_offset) {
 
 void code_eqI_a(CleanInt value,int a_offset) {
 	add_instruction_w_i(CeqI_a,-a_offset,value);
+}
+
+void code_eqIi(CleanInt value) {
+	add_instruction_i(CeqIi,value);
 }
 
 void code_eqR(void) {
@@ -3575,6 +3601,10 @@ void code_jmp_eqC_b2(int value1,int value2,int b_offset,char label_name1[],char 
 	add_instruction_w_c_label_c_label(Cjmp_eqC_b2,b_offset,value1,label_name1,value2,label_name2);
 }
 
+void code_jmp_eqCc(int value,char label_name[]) {
+	add_instruction_c_label(Cjmp_eqCc,value,label_name);
+}
+
 void code_jmp_eqD_b(char descriptor_name[],int arity,char label_name[]) {
 	add_instruction_label_offset_label(Cjmp_eqD_b,descriptor_name,(arity<<3)+2,label_name);
 }
@@ -3596,6 +3626,10 @@ void code_jmp_eqI_b2(CleanInt value1,CleanInt value2,int b_offset,char label_nam
 	add_instruction_w_i_label_i_label(Cjmp_eqI_b2,b_offset,value1,label_name1,value2,label_name2);
 }
 
+void code_jmp_eqIi(CleanInt value,char label_name[]) {
+	add_instruction_i_label(Cjmp_eqIi,value,label_name);
+}
+
 void code_jmp_eq_desc(char descriptor_name[],int arity,int a_offset,char label_name[]) {
 	add_instruction_w_label_offset_label(Cjmp_eq_desc,-a_offset,descriptor_name,(arity<<3)+2,label_name);
 }
@@ -3612,12 +3646,20 @@ void code_jmp_neC_b(int value,int b_offset,char label_name[]) {
 	add_instruction_w_c_label(Cjmp_neC_b,b_offset,value,label_name);
 }
 
+void code_jmp_neCc(int value,char label_name[]) {
+	add_instruction_c_label(Cjmp_neCc,value,label_name);
+}
+
 void code_jmp_neI(char label_name[]) {
 	add_instruction_label(Cjmp_neI,label_name);
 }
 
 void code_jmp_neI_b(CleanInt value,int b_offset,char label_name[]) {
 	add_instruction_w_i_label(Cjmp_neI_b,b_offset,value,label_name);
+}
+
+void code_jmp_neIi(CleanInt value,char label_name[]) {
+	add_instruction_i_label(Cjmp_neIi,value,label_name);
 }
 
 void code_jmp_ne_desc(char descriptor_name[],int arity,int a_offset,char label_name[]) {
@@ -3789,6 +3831,10 @@ void code_push_ab(int a_offset,int b_offset) {
 	add_instruction_w_w(Cpush_ab,-a_offset,b_offset);
 }
 
+void code_push_b_decI(int b_offset) {
+	add_instruction_w(Cpush_b_decI,b_offset);
+}
+
 void code_push_b_incI(int b_offset) {
 	add_instruction_w(Cpush_b_incI,b_offset);
 }
@@ -3856,8 +3902,20 @@ void code_put_a(int a_offset) {
 	add_instruction_w(Cput_a,-a_offset);
 }
 
+void code_put_a_jmp(int a_offset, char label_name[]) {
+	last_d=0;
+
+	add_instruction_w_label(Cput_a_jmp,-a_offset,label_name);
+}
+
 void code_put_b(int b_offset) {
 	add_instruction_w(Cput_b,b_offset);
+}
+
+void code_put_b_jmp(int b_offset, char label_name[]) {
+	last_d=0;
+
+	add_instruction_w_label(Cput_b_jmp,b_offset,label_name);
 }
 
 void code_selectoo(char element_descriptor[],int a_size,int b_size,int a_offset,int b_offset) {
