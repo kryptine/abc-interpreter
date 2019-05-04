@@ -2156,14 +2156,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ -1 .= n @ 2 :.
 		grow_b 2
 	, instr "pushcaf" Nothing $
-		new_local TWord (Pc @ 1 + lit_word 1) \na ->
+		new_local TWord (Pc @ 1) \na ->
 		new_local TWord (Pc @ 2) \ntotal ->
 		new_local (TPtr TWord) (to_word_ptr (Pc @ 3)) \n ->
 		advance_ptr Pc 4 :.
 		new_local TWord (lit_word 0) \i ->
 		while_do (i <. na) (
-			A @ (na - i) .= n @ 0 :.
 			advance_ptr n 1 :.
+			A @ (na - i) .= n @ 0 :.
 			i += lit_word 1
 		) :.
 		grow_a na :.
