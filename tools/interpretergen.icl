@@ -3748,10 +3748,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
 		B @ 0 .= to_word_ptr d @ 0
 	, alias "add_arg" $
-	  alias "buildF_b" $
 	  alias "ccall" $
 	  alias "centry" $
-	  alias "fillF_b" $
 	  alias "fill3_r" $
 	  alias "fill3_r01a" $
 	  alias "fill3_r01b" $
@@ -3768,6 +3766,39 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "pushL" $
 	  alias "pushLc" $
 	  alias "set_finalizers" $
+
+	  alias "closeF"
+	  alias "endF"
+	  alias "endSF" $
+	  alias "errorF"
+	  alias "flushF" $
+	  alias "openF"
+	  alias "openSF" $
+	  alias "positionF" $
+	  alias "positionSF" $
+	  alias "readFC"
+	  alias "readFI" $
+	  alias "readFR" $
+	  alias "readFS" $
+	  alias "readFString" $
+	  alias "readLineF"
+	  alias "readLineSF" $
+	  alias "readSFC" $
+	  alias "readSFI" $
+	  alias "readSFR" $
+	  alias "readSFS" $
+	  alias "reopenF" $
+	  alias "seekF" $
+	  alias "seekSF" $
+	  alias "shareF" $
+	  alias "stderrF" $
+	  alias "stdioF"
+	  alias "writeFC"
+	  alias "writeFI" $
+	  alias "writeFR" $
+	  alias "writeFS"
+	  alias "writeFString" $
+
 	  alias "A_data_IIIla" $
 	  alias "A_data_IIl" $
 	  alias "A_data_IlI" $

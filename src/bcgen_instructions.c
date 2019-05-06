@@ -941,57 +941,84 @@ struct word *add_add_arg_labels(void) {
 	return pgrm.code;
 }
 
-static char *specialized_jsr_labels[] = {
-	/* 0*/ "eqAC",
-	/* 1*/ "cmpAC",
-	/* 2*/ "catAC",
-	/* 3*/ "sliceAC",
-	/* 4*/ "updateAC",
-	/* 5*/ "ItoAC",
-	/* 6*/ "BtoAC",
-	/* 7*/ "RtoAC",
-	/* 8*/ "print__string__",
-	/* 9*/ "openF",
-	/*10*/ "stdioF",
-	/*11*/ "closeF",
-	/*12*/ "readLineF",
-	/*13*/ "endF",
-	/*14*/ "writeFI",
-	/*15*/ "writeFS",
-	/*16*/ "writeFC",
-	/*17*/ "openSF"
+struct specialized_jsr {
+	const char *label;
+	int instruction;
+	int flags;
+};
+
+#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags},
+#define S_UNSUPPORTED 1
+#define S_IO 2
+
+static struct specialized_jsr specialized_jsr_labels[]={
+	SPECIALIZED(eqAC,0)
+	SPECIALIZED(cmpAC,0)
+	SPECIALIZED(catAC,0)
+	SPECIALIZED(sliceAC,0)
+	SPECIALIZED(updateAC,0)
+	SPECIALIZED(ItoAC,0)
+	SPECIALIZED(BtoAC,0)
+	SPECIALIZED(RtoAC,0)
+	{"print__string__",Cprint_string,0},
+
+	SPECIALIZED(closeF,       S_IO)
+	SPECIALIZED(endF,         S_IO)
+	SPECIALIZED(endSF,        S_IO | S_UNSUPPORTED)
+	SPECIALIZED(errorF,       S_IO)
+	SPECIALIZED(flushF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(openF,        S_IO)
+	SPECIALIZED(openSF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(positionF,    S_IO | S_UNSUPPORTED)
+	SPECIALIZED(positionSF,   S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readFC,       S_IO)
+	SPECIALIZED(readFI,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readFR,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readFS,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readFString,  S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readLineF,    S_IO)
+	SPECIALIZED(readLineSF,   S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFC,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFI,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFR,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFS,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(reopenF,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(seekF,        S_IO | S_UNSUPPORTED)
+	SPECIALIZED(seekSF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(shareF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(stderrF,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(stdioF,       S_IO)
+	SPECIALIZED(writeFC,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(writeFI,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(writeFR,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(writeFS,      S_IO)
+	SPECIALIZED(writeFString, S_IO | S_UNSUPPORTED)
 };
 
 static int get_specialized_jsr_label_n(char label_name[]) {
 	int i,n;
 
-	n = sizeof(specialized_jsr_labels) / sizeof (char*);
+	n=sizeof(specialized_jsr_labels)/sizeof(struct specialized_jsr);
 	for(i=0; i<n; ++i)
-		if (!strcmp (label_name,specialized_jsr_labels[i]))
+		if (!strcmp(label_name,specialized_jsr_labels[i].label))
 			return i;
 
 	return -1;
 }
 
 void add_specialized_jsr_instruction(unsigned int n) {
-	switch (n) {
-		case  0: add_instruction(CeqAC); return;
-		case  1: add_instruction(CcmpAC); return;
-		case  2: add_instruction(CcatAC); return;
-		case  3: add_instruction(CsliceAC); return;
-		case  4: add_instruction(CupdateAC); return;
-		case  5: add_instruction(CItoAC); return;
-		case  6: add_instruction(CBtoAC); return;
-		case  7: add_instruction(CRtoAC); return;
-		case  8: add_instruction(Cprint_string); return;
-		default:
-			if (n < sizeof(specialized_jsr_labels)/sizeof(char*)) {
-				fprintf(stderr,"Warning: jsr %s is not supported by the interpreter\n",specialized_jsr_labels[n]);
-			} else {
-				fprintf(stderr,"internal error in add_specialized_jsr_instruction: %d\n",n);
-				exit(1);
-			}
+	if (n>=sizeof(specialized_jsr_labels)/sizeof(struct specialized_jsr)) {
+		fprintf(stderr,"internal error in add_specialized_jsr_instruction: %d\n",n);
+		exit(1);
 	}
+
+	struct specialized_jsr *entry=&specialized_jsr_labels[n];
+	if (entry->flags & S_UNSUPPORTED)
+		unsupported_instruction_warning(entry->instruction);
+	else if (entry->flags & S_IO)
+		fprintf(stderr,"Warning: jsr %s requires file IO\n",entry->label);
+
+	add_instruction(entry->instruction);
 }
 
 void add_label(char *label_name) {

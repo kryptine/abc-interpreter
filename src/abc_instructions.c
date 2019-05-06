@@ -690,6 +690,38 @@ const char *instruction_type (BC_WORD i) {
 		case Ceval_upd32:            return "";
 		case Cfill_a01_pop_rtn:      return "";
 
+		case CcloseF:                return "";
+		case CendF:                  return "";
+		case CendSF:                 return "";
+		case CerrorF:                return "";
+		case CflushF:                return "";
+		case CopenF:                 return "";
+		case CopenSF:                return "";
+		case CpositionF:             return "";
+		case CpositionSF:            return "";
+		case CreadFC:                return "";
+		case CreadFI:                return "";
+		case CreadFR:                return "";
+		case CreadFS:                return "";
+		case CreadFString:           return "";
+		case CreadLineF:             return "";
+		case CreadLineSF:            return "";
+		case CreadSFC:               return "";
+		case CreadSFI:               return "";
+		case CreadSFR:               return "";
+		case CreadSFS:               return "";
+		case CreopenF:               return "";
+		case CseekF:                 return "";
+		case CseekSF:                return "";
+		case CshareF:                return "";
+		case CstderrF:               return "";
+		case CstdioF:                return "";
+		case CwriteFC:               return "";
+		case CwriteFI:               return "";
+		case CwriteFR:               return "";
+		case CwriteFS:               return "";
+		case CwriteFString:          return "";
+
 		case CaddIi:                 return "i";
 		case CandIi:                 return "i";
 		case CandIio:                return "ni";
