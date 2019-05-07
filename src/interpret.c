@@ -227,6 +227,12 @@ BC_WORD Fjmp_ap[32] =
 	, Cjmp_ap32
 	};
 
+#include "files.h"
+
+BC_WORD *g_asp, *g_bsp, *g_hp;
+BC_WORD_S g_heap_free;
+int trap_needs_gc = 0;
+
 void* __interpreter_cycle_in_spine[2] = {
 	(void*) 0,
 	(void*) Chalt

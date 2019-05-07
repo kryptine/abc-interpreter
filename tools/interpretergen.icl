@@ -3,7 +3,8 @@ implementation module interpretergen
 import StdEnv
 import StdMaybe
 import ArgEnv
-import target
+
+import target, specialized
 
 Start w
 # args = getCommandLine
@@ -3762,6 +3763,17 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		d .= (d + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) &. if_i64_or_i32_expr (lit_word -8) (lit_word -4) :.
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
 		B @ 0 .= to_word_ptr d @ 0
+
+	, instr "closeF" Nothing instr_closeF
+	, instr "endF" Nothing instr_endF
+	, instr "errorF" Nothing instr_errorF
+	, instr "openF" Nothing instr_openF
+	, instr "readFC" Nothing instr_readFC
+	, instr "readLineF" Nothing instr_readLineF
+	, instr "stdioF" Nothing instr_stdioF
+	, instr "writeFC" Nothing instr_writeFC
+	, instr "writeFS" Nothing instr_writeFS
+
 	, alias "add_arg" $
 	  alias "ccall" $
 	  alias "centry" $
@@ -3782,21 +3794,15 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "pushLc" $
 	  alias "set_finalizers" $
 
-	  alias "closeF"
-	  alias "endF"
 	  alias "endSF" $
-	  alias "errorF"
 	  alias "flushF" $
-	  alias "openF"
 	  alias "openSF" $
 	  alias "positionF" $
 	  alias "positionSF" $
-	  alias "readFC"
 	  alias "readFI" $
 	  alias "readFR" $
 	  alias "readFS" $
 	  alias "readFString" $
-	  alias "readLineF"
 	  alias "readLineSF" $
 	  alias "readSFC" $
 	  alias "readSFI" $
@@ -3807,11 +3813,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "seekSF" $
 	  alias "shareF" $
 	  alias "stderrF" $
-	  alias "stdioF"
-	  alias "writeFC"
 	  alias "writeFI" $
 	  alias "writeFR" $
-	  alias "writeFS"
 	  alias "writeFString" $
 
 	  alias "A_data_IIIla" $
