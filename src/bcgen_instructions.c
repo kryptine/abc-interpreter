@@ -945,9 +945,10 @@ struct specialized_jsr {
 	const char *label;
 	int instruction;
 	int flags;
+	int warned_flags;
 };
 
-#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags},
+#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags, 0},
 #define S_UNSUPPORTED 1
 #define S_IO 2
 
@@ -988,7 +989,7 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(shareF,       S_IO | S_UNSUPPORTED)
 	SPECIALIZED(stderrF,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(stdioF,       S_IO)
-	SPECIALIZED(writeFC,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(writeFC,      S_IO)
 	SPECIALIZED(writeFI,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(writeFR,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(writeFS,      S_IO)
@@ -1015,8 +1016,12 @@ void add_specialized_jsr_instruction(unsigned int n) {
 	struct specialized_jsr *entry=&specialized_jsr_labels[n];
 	if (entry->flags & S_UNSUPPORTED)
 		unsupported_instruction_warning(entry->instruction);
-	else if (entry->flags & S_IO)
-		fprintf(stderr,"Warning: jsr %s requires file IO\n",entry->label);
+	else if (entry->flags & S_IO) {
+		if (!(entry->warned_flags & S_IO)) {
+			fprintf(stderr,"Warning: jsr %s requires file IO\n",entry->label);
+			entry->warned_flags|=S_IO;
+		}
+	}
 
 	add_instruction(entry->instruction);
 }
