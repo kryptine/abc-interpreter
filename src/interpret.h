@@ -67,6 +67,7 @@ extern void* dINT[];
 extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];
+extern void* d_FILE[];
 
 extern BC_WORD small_integers[66];
 extern BC_WORD static_characters[512];

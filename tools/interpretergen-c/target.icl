@@ -473,6 +473,9 @@ STRING__ptr = "(BC_WORD)&__STRING__"
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+-+toString i+-+"]"
 
+FILE_ptr :: Expr TWord
+FILE_ptr = "(BC_WORD)&d_FILE[1]"
+
 cycle_ptr :: Expr TWord
 cycle_ptr = "(BC_WORD)&__interpreter_cycle_in_spine[1]"
 

@@ -204,6 +204,15 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "buildC_b" (Just 1) $
 		A @ 1 .= static_character (to_char (B @ (Pc @ 1))) :.
 		grow_a 1
+	, instr "buildF_b" (Just 1) $
+		ensure_hp 3 :.
+		new_local TInt (to_int (Pc @ 1)) \bo ->
+		Hp @ 0 .= FILE_ptr + lit_word 2 :.
+		Hp @ 1 .= B @ bo :.
+		Hp @ 2 .= B @ (bo + lit_int 1) :.
+		A @ 1 .= to_word Hp :.
+		grow_a 1 :.
+		advance_ptr Hp 3
 	, instr "buildI" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \i ->
 		if_then_else (lit_int 0 <=. i &&. i <=. lit_int 32)
@@ -1692,6 +1701,12 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= CHAR_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
+	, instr "fillF_b" (Just 2) $
+		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
+		new_local TInt (to_int (Pc @ 2)) \bo ->
+		n @ 0 .= FILE_ptr + lit_word 2 :.
+		n @ 1 .= B @ bo :.
+		n @ 2 .= B @ (bo + lit_int 1)
 	, instr "fillI" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.

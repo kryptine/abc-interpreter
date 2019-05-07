@@ -1223,7 +1223,6 @@ void code_buildC_b(int b_offset) {
 }
 
 void code_buildF_b(int b_offset) {
-	unsupported_instruction_warning(CbuildF_b);
 	add_instruction_w(CbuildF_b,b_offset);
 }
 
@@ -2250,7 +2249,6 @@ void code_fillC_b(int b_offset,int a_offset) {
 }
 
 void code_fillF_b(int b_offset,int a_offset) {
-	unsupported_instruction_warning(CfillF_b);
 	add_instruction_w_w(CfillF_b,-a_offset,b_offset);
 }
 
@@ -2763,7 +2761,6 @@ void code_pushD_a(int a_offset) {
 }
 
 void code_pushF_a(int a_offset) {
-	unsupported_instruction_warning(CpushF_a);
 	add_instruction_w(CpushF_a,-a_offset);
 }
 

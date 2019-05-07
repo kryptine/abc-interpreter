@@ -142,6 +142,7 @@ INT_ptr :: Expr TWord
 REAL_ptr :: Expr TWord
 ARRAY__ptr :: Expr TWord
 STRING__ptr :: Expr TWord
+FILE_ptr :: Expr TWord
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 cycle_ptr :: Expr TWord
 indirection_ptr :: Expr TWord

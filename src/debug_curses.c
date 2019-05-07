@@ -322,6 +322,8 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 		wprintw(win, "CHAR '%c'", node[1]);
 	else if ((node[0]&-4)==(BC_WORD)&REAL)
 		wprintw(win, "REAL %f", *(BC_REAL*)&node[1]);
+	else if ((node[0]&-4)==(BC_WORD)&d_FILE)
+		wprintw(win, "FILE "BC_WORD_S_FMT" 0x"BC_WORD_FMT_HEX, node[1], node[2]);
 	else if ((node[0]&-4)==(BC_WORD)&__interpreter_cycle_in_spine[1])
 		wprintw(win, "_cycle_in_spine");
 	else if ((node[0]&-4)==(BC_WORD)&__interpreter_indirection[5]) {
@@ -540,6 +542,8 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 		wprintw(win, " CHAR '%c'", node[1]);
 	else if (node[0] == (BC_WORD) &REAL+2)
 		wprintw(win, " REAL %f", *(BC_REAL*)&node[1]);
+	else if (node[0] == (BC_WORD) &d_FILE+2)
+		wprintw(win, " FILE "BC_WORD_S_FMT" 0x"BC_WORD_FMT_HEX, node[1], node[2]);
 	else if (node[0] == (BC_WORD) &__STRING__+2)
 		wprintw(win, " __STRING__");
 	else if (node[0] == (BC_WORD) &__ARRAY__+2)
