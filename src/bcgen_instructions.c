@@ -891,6 +891,15 @@ void add_instruction_internal_label(int16_t i,struct label *label) {
 	store_code_internal_label_value(label,0);
 }
 
+void add_instruction_internal_label_internal_label(int16_t i,struct label *label1,struct label *label2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),label1->label_offset,label2->label_offset);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_internal_label_value(label1,0);
+	store_code_internal_label_value(label2,0);
+}
+
 void add_instruction_w_internal_label_label(int16_t i,int32_t n1,struct label *label,char *label_name) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),n1,label->label_offset,label_name);
@@ -3699,9 +3708,30 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 		add_instruction_w_w_label(Cbuildo2,-a_offset1,-a_offset2,code_name);
 }
 
-void code_ccall (char *c_function_name,char *s,int length) {
-	unsupported_instruction_warning(Cccall);
-	add_instruction(Cccall);
+void code_ccall (char *c_function_name,char *type,int type_length) {
+	fprintf(stderr,"Warning: ccall %s will not be packaged into the bytecode\n",c_function_name);
+
+	struct label *function_label;
+	function_label=new_internal_label();
+	function_label->label_offset=(pgrm.data_size<<2)+1;
+	store_string(c_function_name,strlen(c_function_name),0);
+
+	struct label *type_label;
+	type_label=new_internal_label();
+	type_label->label_offset=(pgrm.data_size<<2)+1;
+	for (int i=0; i<type_length; i++) {
+		switch (type[i]) {
+			case '-': type[i]=':'; break;
+			case ':': break;
+			case 'p': type[i]='I'; break;
+			case 'I': break;
+			default:
+				fprintf(stderr,"Warning: '%c' type in ccall for %s not supported by interpreter\n",type[i],c_function_name);
+		}
+	}
+	store_string(type,type_length,0);
+
+	add_instruction_internal_label_internal_label(Cccall,function_label,type_label);
 }
 
 void code_centry (char *c_function_name,char *clean_function_label,char *s,int length) {
