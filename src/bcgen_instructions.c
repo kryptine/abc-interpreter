@@ -187,21 +187,41 @@ struct label *find_label(char *label_name) {
 	return NULL;
 }
 
-static struct label_node **merge_label_tree_with_list(struct label_node **dest,
-		struct label_node *tree,
-		struct label_node **list,unsigned int *list_i,unsigned int list_size) {
+static struct label_node **move_label_tree_to_list(
+		struct label_node **dest, struct label_node *tree) {
 	if (tree->label_node_left!=NULL)
-		dest=merge_label_tree_with_list(dest,tree->label_node_left,list,list_i,list_size);
+		dest=move_label_tree_to_list(dest,tree->label_node_left);
+	*dest++=tree;
+	if (tree->label_node_right!=NULL)
+		dest=move_label_tree_to_list(dest,tree->label_node_right);
+	return dest;
+}
 
-	unsigned int i=*list_i;
-	int r=-1;
-	while (i<list_size &&
-			(r=strcmp(list[i]->label_node_label_p->label_name,tree->label_node_label_p->label_name))<0)
-		*dest++=list[i++];
-	*list_i=i;
-	if (r==0) {
-		EPRINTF("internal error: %s redefined\n",tree->label_node_label_p->label_name);
-		exit(-1);
+static struct label_node **merge_label_tree_with_list(
+		struct label_node **dest,struct label_node *tree,
+		struct label_node **list,unsigned int *list_i,unsigned int list_size) {
+	int i=*list_i;
+
+	if (i>=list_size)
+		return move_label_tree_to_list(dest,tree);
+
+	int r=strcmp(list[i]->label_node_label_p->label_name,tree->label_node_label_p->label_name);
+	if (r>0) { /* prune: left side does not need to consider label list */
+		if (tree->label_node_left!=NULL)
+			dest=move_label_tree_to_list(dest,tree->label_node_left);
+	} else {
+		if (tree->label_node_left!=NULL)
+			dest=merge_label_tree_with_list(dest,tree->label_node_left,list,list_i,list_size);
+
+		i=*list_i;
+		while (i<list_size && (r=strcmp(list[i]->label_node_label_p->label_name,tree->label_node_label_p->label_name))<0)
+			*dest++=list[i++];
+		*list_i=i;
+
+		if (r==0) {
+			EPRINTF("internal error: %s redefined\n",tree->label_node_label_p->label_name);
+			exit(-1);
+		}
 	}
 
 	*dest++=tree;
