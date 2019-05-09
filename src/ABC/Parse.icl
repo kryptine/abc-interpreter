@@ -106,13 +106,19 @@ parseLine`{|CONS of d|} fx 0 line = case d.gcd_name of
 	"Annotation"      -> Nothing
 	"OtherAnnotation" -> Nothing
 	instr
-		| not (startsWith (instr:=(0,first_char)) line) -> Nothing
-		| d.gcd_arity > 0 && not (isSpace line.[size instr]) -> Nothing
-		| d.gcd_arity == 0 && size line > size instr && not (isSpace line.[size instr]) -> Nothing
-		| otherwise -> case fx (size instr + 1) line of
+		# instr_size = size d.gcd_name
+		| size line < instr_size -> Nothing
+		| not (check_start (instr_size-1)) -> Nothing
+		| d.gcd_arity > 0 && not (isSpace line.[instr_size]) -> Nothing
+		| d.gcd_arity == 0 && size line > instr_size && not (isSpace line.[instr_size]) -> Nothing
+		| otherwise -> case fx (instr_size + 1) line of
 			Nothing    -> Nothing
 			Just (x,i) -> Just (CONS x,i)
 	where
+		check_start :: !Int -> Bool
+		check_start 0 = line.[0]==first_char
+		check_start i = line.[i]==instr.[i] && check_start (i-1)
+
 		first_char = case instr.[0] of
 			'I' -> '\t' // Instruction
 			'A' -> '.' // Annotation
@@ -152,13 +158,3 @@ where
 	parseAnnot s = case parseLine`{|*|} 0 s of
 		Just (a,_) -> a
 		Nothing    -> OtherAnnotation (s % (1, size s - 1))
-
-startsWith :: !String !String -> Bool
-startsWith start string
-#! sz = size start
-| sz > size string = False
-| otherwise        = check (sz-1)
-where
-	check :: !Int -> Bool
-	check -1 = True
-	check i  = start.[i]==string.[i] && check (i-1)
