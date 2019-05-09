@@ -49,7 +49,10 @@ int main (int argc, char *argv[]) {
 
 	int i;
 	for(i = 1; i < argc; i++) {
-		if(strcmp("-o", argv[i]) == 0 && i <= argc - 1) {
+		if (!strcmp("-V",argv[i])) {
+			fprintf(stderr,"%d\n",ABC_VERSION);
+			return 0;
+		} else if (!strcmp("-o",argv[i]) && i<=argc-1) {
 			if((output_file = fopen(argv[i + 1], "wb")) == NULL) {
 				fprintf(stderr, "Error: Could not open output file: %s\n", argv[i + 1]);
 				return -1;
