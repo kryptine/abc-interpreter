@@ -4,6 +4,10 @@
 #include "settings.h"
 #include "util.h"
 
+#ifdef LINKER
+# include "bcgen_instructions.h"
+#endif
+
 enum parse_state {
 	PS_init,
 	PS_code,
@@ -53,6 +57,9 @@ struct parser {
 	uint32_t code_offset;
 	uint32_t data_offset;
 	int is_main_module:1;
+
+	struct label_node **new_label_nodes;
+	unsigned int n_labels;
 #endif
 };
 

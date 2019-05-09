@@ -12,6 +12,12 @@ struct label {
 	int32_t label_module_n;
 };
 
+struct label_node {
+	struct label_node *label_node_left;
+	struct label_node *label_node_right;
+	struct label *label_node_label_p;
+};
+
 typedef struct relocation {
 	uint32_t relocation_offset;
 	struct label *relocation_label;
@@ -31,8 +37,15 @@ struct label *enter_label(char *label_name);
 struct label *new_internal_label(void);
 struct label *new_label_at_offset(uint32_t offset);
 void make_label_global(struct label *label);
+
+#ifdef LINKER
+void merge_new_labels_and_rebalance(struct label_node **new_labels,unsigned int n_new_labels);
+struct label *find_label(char *label_name);
+#endif
+
 struct relocation *add_code_relocation(struct label *label, uint32_t offset);
 struct relocation *add_data_relocation(struct label *label, uint32_t offset);
+
 void add_words_in_strings(uint32_t val);
 void add_string_information(uint32_t data_offset);
 void store_string(char *string,int string_length,int include_terminator);

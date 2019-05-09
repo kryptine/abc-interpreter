@@ -16,12 +16,6 @@
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
 
-struct label_node {
-	struct label_node *label_node_left;
-	struct label_node *label_node_right;
-	struct label *label_node_label_p;
-};
-
 struct label_node *labels;
 uint32_t label_id;
 uint32_t global_label_count;
@@ -175,6 +169,89 @@ struct label *enter_label(char *label_name) {
 	*label_node_pp = new_label_node_p;
 	return new_label_p;
 }
+
+#ifdef LINKER
+struct label *find_label(char *label_name) {
+	struct label_node *label_node_p=labels;
+
+	while (label_node_p!=NULL) {
+		int r=strcmp(label_name,label_node_p->label_node_label_p->label_name);
+		if (r==0)
+			return label_node_p->label_node_label_p;
+		else if (r<0)
+			label_node_p=label_node_p->label_node_left;
+		else
+			label_node_p=label_node_p->label_node_right;
+	}
+
+	return NULL;
+}
+
+static struct label_node **merge_label_tree_with_list(struct label_node **dest,
+		struct label_node *tree,
+		struct label_node **list,unsigned int *list_i,unsigned int list_size) {
+	if (tree->label_node_left!=NULL)
+		dest=merge_label_tree_with_list(dest,tree->label_node_left,list,list_i,list_size);
+
+	unsigned int i=*list_i;
+	int r=-1;
+	while (i<list_size &&
+			(r=strcmp(list[i]->label_node_label_p->label_name,tree->label_node_label_p->label_name))<0)
+		*dest++=list[i++];
+	*list_i=i;
+	if (r==0) {
+		EPRINTF("internal error: %s redefined\n",tree->label_node_label_p->label_name);
+		exit(-1);
+	}
+
+	*dest++=tree;
+
+	if (tree->label_node_right!=NULL)
+		dest=merge_label_tree_with_list(dest,tree->label_node_right,list,list_i,list_size);
+
+	return dest;
+}
+
+static struct label_node *update_label_node_pointers(
+		struct label_node **sorted_list,int lft,int rgt) {
+	if (rgt<lft)
+		return NULL;
+
+	if (rgt==lft) {
+		sorted_list[lft]->label_node_left=NULL;
+		sorted_list[lft]->label_node_right=NULL;
+		return sorted_list[lft];
+	}
+
+	int middle=lft+(rgt-lft)/2;
+	sorted_list[middle]->label_node_left =update_label_node_pointers(sorted_list,lft,middle-1);
+	sorted_list[middle]->label_node_right=update_label_node_pointers(sorted_list,middle+1,rgt);
+	return sorted_list[middle];
+}
+
+void merge_new_labels_and_rebalance(struct label_node **new_labels,unsigned int n_new_labels) {
+	for (int i=0; i<n_new_labels; i++) {
+		struct label *label=new_labels[i]->label_node_label_p;
+		label->label_id=label_id++;
+		make_label_global(label);
+	}
+
+	if (labels==NULL) {
+		labels=update_label_node_pointers(new_labels,0,label_id-1);
+		return;
+	}
+
+	struct label_node **temp_list=safe_malloc(label_id*sizeof(struct label_node*));
+	unsigned int list_i=0;
+	struct label_node **temp_list_end=merge_label_tree_with_list(temp_list,labels,new_labels,&list_i,n_new_labels);
+	while (list_i<n_new_labels)
+		*temp_list_end++=new_labels[list_i++];
+
+	labels=update_label_node_pointers(temp_list,0,label_id-1);
+
+	free(temp_list);
+}
+#endif
 
 struct label *new_label_at_offset(uint32_t offset) {
 	char name[16];

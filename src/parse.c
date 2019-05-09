@@ -144,9 +144,20 @@ void next_state(struct parser *state) {
 				return;
 		case PS_data:
 			state->state = PS_symbol_table;
+#ifdef LINKER
+			state->new_label_nodes=safe_malloc(state->program->symbol_table_size*sizeof(struct label_node*));
+			state->n_labels=0;
+#endif
 			if (state->program->symbol_table_size > 0)
 				return;
 		case PS_symbol_table:
+#ifdef LINKER
+			merge_new_labels_and_rebalance(state->new_label_nodes,state->n_labels);
+			free(state->new_label_nodes);
+
+			if (state->is_main_module && state->program->start_symbol_id<state->program->symbol_table_size)
+				code_start(state->program->symbol_table[state->program->start_symbol_id].name);
+#endif
 			state->state = PS_code_reloc;
 			if (state->code_reloc_size > 0)
 				return;
@@ -609,14 +620,28 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 				}
 #elif defined(LINKER)
 				if (state->program->symbol_table[state->ptr].name[0] != '\0') {
-					struct label *label = enter_label(state->program->symbol_table[state->ptr].name);
-					if (state->program->symbol_table[state->ptr].offset != -1)
-						label->label_offset = state->program->symbol_table[state->ptr].offset;
-					make_label_global(label);
-				}
+					struct label *label=find_label(state->program->symbol_table[state->ptr].name);
 
-				if (state->is_main_module && state->program->start_symbol_id==state->ptr)
-					code_start(state->program->symbol_table[state->ptr].name);
+					if (label==NULL) {
+						label=safe_malloc(sizeof(struct label));
+						label->label_name=safe_malloc(strlen(state->program->symbol_table[state->ptr].name)+1);
+						strcpy(label->label_name,state->program->symbol_table[state->ptr].name);
+						label->label_id=-1;
+						label->label_offset=state->program->symbol_table[state->ptr].offset;
+						label->label_module_n=-2;
+
+						struct label_node *node=safe_malloc(sizeof(struct label_node));
+						node->label_node_left=NULL;
+						node->label_node_right=NULL;
+						node->label_node_label_p=label;
+
+						state->new_label_nodes[state->n_labels++]=node;
+					} else {
+						if (state->program->symbol_table[state->ptr].offset!=-1)
+							label->label_offset=state->program->symbol_table[state->ptr].offset;
+						make_label_global(label);
+					}
+				}
 #endif
 				if (++state->ptr >= state->program->symbol_table_size)
 					next_state(state);
