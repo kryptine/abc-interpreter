@@ -1,18 +1,9 @@
 implementation module ABC.Parse
 
-import StdArray
-import StdBool
-from StdFunc import o
+import StdEnv
 import StdGeneric
-import StdList
-import StdMaybe
-import StdString
-import StdTuple
 
 import ABC.Instructions
-
-parse :: ([String] -> [ABCInstruction])
-parse = map parseLine
 
 :: CharParseState
 	= CPS_Start
@@ -20,37 +11,41 @@ parse = map parseLine
 	| CPS_Oct !Int
 	| CPS_Hex !Int
 
-generic parseLine` a :: !Int !String -> Maybe (a, Int)
+:: ParseResult a
+	= NoParseResult
+	| ParseResult !a !Int
+
+generic parseLine` a :: !Int !String -> ParseResult a
 parseLine`{|Int|} start line
-	| start >= size line   = Nothing
+	| start >= size line   = NoParseResult
 	| line.[start] == '-'  = case parseLine`{|*|} (start+1) line of
-		Nothing         -> Nothing
-		Just (n, start) -> Just (~n, start)
+		NoParseResult       -> NoParseResult
+		ParseResult n start -> ParseResult (~n) start
 	| line.[start] == '+'  = parseLine`{|*|} (start+1) line
-	| isDigit line.[start] = Just (int` 0 start)
-	| otherwise            = Nothing
+	| isDigit line.[start] = int` 0 start
+	| otherwise            = NoParseResult
 where
-	int` :: !Int !Int -> (Int, Int)
+	int` :: !Int !Int -> ParseResult Int
 	int` n start
-	| start >= size line   = (n, start)
+	| start >= size line   = ParseResult n start
 	| isDigit line.[start] = int` (n * 10 + digitToInt line.[start]) (start + 1)
-	| otherwise            = (n, start)
+	| otherwise            = ParseResult n start
 parseLine`{|Bool|} start line
 	| line.[start] == 'T'
 		&& line.[start+1] == 'R'
 		&& line.[start+2] == 'U'
 		&& line.[start+3] == 'E'
-		= Just (True, start+4)
+		= ParseResult True (start+4)
 	| line.[start] == 'F'
 		&& line.[start+1] == 'A'
 		&& line.[start+2] == 'L'
 		&& line.[start+3] == 'S'
 		&& line.[start+4] == 'E'
-		= Just (False, start+5)
-	| otherwise = Nothing
-parseLine`{|Char|} start line = Just (char` CPS_Start start) // TODO this can fail
+		= ParseResult False (start+5)
+	| otherwise = NoParseResult
+parseLine`{|Char|} start line = char` CPS_Start start // TODO this can fail
 where
-	char` :: !CharParseState !Int -> (Char, Int)
+	char` :: !CharParseState !Int -> ParseResult Char
 	char` CPS_Start start
 	| line.[start] == '\''
 		| line.[start+1] == '\\' = case line.[start+2] of
@@ -69,28 +64,28 @@ where
 			d    -> char` (CPS_Oct (digitToInt d)) (start+3)
 		| otherwise = char` (CPS_Plain 0) (start+1)
 	char` (CPS_Plain n) start
-	| line.[start] == '\'' = (toChar n, start)
+	| line.[start] == '\'' = ParseResult (toChar n) start
 	| otherwise            = char` (CPS_Plain (n*256 + toInt line.[start])) (start+1)
 	char` (CPS_Oct n) start
-	| line.[start] == '\'' = (toChar n, start)
+	| line.[start] == '\'' = ParseResult (toChar n) start
 	| otherwise            = char` (CPS_Oct (n*8 + digitToInt line.[start])) (start+1)
 	char` (CPS_Hex n) start
-	| line.[start] == '\'' = (toChar n, start)
+	| line.[start] == '\'' = ParseResult (toChar n) start
 	| isDigit line.[start] = char` (CPS_Hex (n*16 + digitToInt line.[start])) (start+1)
 	| line.[start] < 'a'   = char` (CPS_Hex (n*16 + toInt (line.[start] - 'A') + 10)) (start+1)
 	| otherwise            = char` (CPS_Hex (n*16 + toInt (line.[start] - 'a') + 10)) (start+1)
-parseLine`{|String|} start line = Just (id [] start) // TODO can this fail?
+parseLine`{|String|} start line = id [] start // TODO can this fail?
 where
-	id :: [Char] !Int -> (!String, !Int)
+	id :: [Char] !Int -> ParseResult String
 	id cs start
-	| start >= size line   = (toString (reverse cs), start)
-	| isSpace line.[start] = (toString (reverse cs), start)
+	| start >= size line   = ParseResult (toString (reverse cs)) start
+	| isSpace line.[start] = ParseResult (toString (reverse cs)) start
 	| otherwise            = id [line.[start]:cs] (start + 1)
 parseLine`{|StringLiteral|} start line = case line.[start] of
 	'"' -> let (sl,j) = stringlit [] (start+1) in case line.[j] of
-		'"' -> Just (sl,start+1)
-		_   -> Nothing
-	_   -> Nothing
+		'"' -> ParseResult sl (start+1)
+		_   -> NoParseResult
+	_   -> NoParseResult
 where
 	stringlit :: [Char] !Int -> (!StringLiteral, !Int)
 	stringlit cs start
@@ -98,44 +93,44 @@ where
 	| line.[start] == '\\' = stringlit [line.[start+1],line.[start]:cs] (start+2)
 	| line.[start] == '"'  = (StringLit (toString (reverse cs)), start)
 	| otherwise            = stringlit [line.[start]:cs] (start + 1)
-parseLine`{|StringWithSpaces|} start line = Just (StringWithSpaces (line % (start,size line-1)), size line-1)
+parseLine`{|StringWithSpaces|} start line = ParseResult (StringWithSpaces (line % (start,size line-1))) (size line-1)
 
-parseLine`{|CONS of d|} fx 0 line = case d.gcd_name of
-	"IIns"            -> Nothing
-	"Line"            -> Nothing
-	"Annotation"      -> Nothing
-	"OtherAnnotation" -> Nothing
-	instr
-		# instr_size = size d.gcd_name
-		| size line < instr_size -> Nothing
-		| not (check_start (instr_size-1)) -> Nothing
-		| d.gcd_arity > 0 && not (isSpace line.[instr_size]) -> Nothing
-		| d.gcd_arity == 0 && size line > instr_size && not (isSpace line.[instr_size]) -> Nothing
-		| otherwise -> case fx (instr_size + 1) line of
-			Nothing    -> Nothing
-			Just (x,i) -> Just (CONS x,i)
+parseLine`{|CONS of {gcd_name,gcd_arity}|} fx 0 line
+	| size line < instr_size = NoParseResult
+	| not (check_start (instr_size-1)) = NoParseResult
+	| gcd_arity > 0 && not (isSpace line.[instr_size]) = NoParseResult
+	| gcd_arity == 0 && size line > instr_size && not (isSpace line.[instr_size]) = NoParseResult
+	= case fx (instr_size + 1) line of
+		NoParseResult   -> NoParseResult
+		ParseResult x i -> ParseResult (CONS x) i
 	where
+		instr_size = size gcd_name
+
 		check_start :: !Int -> Bool
 		check_start 0 = line.[0]==first_char
-		check_start i = line.[i]==instr.[i] && check_start (i-1)
+		check_start i = line.[i]==gcd_name.[i] && check_start (i-1)
 
-		first_char = case instr.[0] of
+		// This is specialized for the ABCInstruction type. It is theoretically
+		// possible that a special constructor (IIns, Line, Annotation) will be
+		// parsed, but this normally doesn't happen.
+		first_char = case gcd_name.[0] of
 			'I' -> '\t' // Instruction
-			'A' -> '.' // Annotation
+			'A' -> '.'  // Annotation
+			_   -> '\0' // should not happen
 parseLine`{|OBJECT|} fx start line = case fx start line of
-	Nothing     -> Nothing
-	Just (x, i) -> Just (OBJECT x, i)
+	NoParseResult   -> NoParseResult
+	ParseResult x i -> ParseResult (OBJECT x) i
 parseLine`{|EITHER|} fl fr start line = case fl start line of
-	Just (l,i) -> Just (LEFT l,i)
-	Nothing    -> case fr start line of
-		Just (r,i) -> Just (RIGHT r,i)
-		Nothing    -> Nothing
-parseLine`{|UNIT|} start _ = Just (UNIT, start)
+	ParseResult l i -> ParseResult (LEFT l) i
+	NoParseResult   -> case fr start line of
+		ParseResult r i -> ParseResult (RIGHT r) i
+		NoParseResult   -> NoParseResult
+parseLine`{|UNIT|} start _ = ParseResult UNIT start
 parseLine`{|PAIR|} fx fy start line = case fx start line of
-	Nothing    -> Nothing
-	Just (x,i) -> case fy (skipSpace i) line of
-		Nothing    -> Nothing
-		Just (y,i) -> Just (PAIR x y, skipSpace i)
+	NoParseResult   -> NoParseResult
+	ParseResult x i -> case fy (skipSpace i) line of
+		NoParseResult   -> NoParseResult
+		ParseResult y i -> ParseResult (PAIR x y) (skipSpace i)
 where
 	skipSpace :: !Int -> Int
 	skipSpace n
@@ -143,18 +138,18 @@ where
 	| isSpace line.[n] = skipSpace (n+1)
 	| otherwise        = n
 
-derive bimap (,), Maybe
+derive bimap ParseResult
 derive parseLine` ABCInstruction, Annotation
 
 parseLine :: !String -> ABCInstruction
 parseLine s = case parseLine`{|*|} 0 s of
-	Just (i,_) -> i
-	Nothing -> case s.[0] of
+	ParseResult i _ -> i
+	NoParseResult   -> case s.[0] of
 		'\t' -> IIns (s % (1,size s-1))
 		'.'  -> Annotation (parseAnnot s)
 		_    -> Line s
 where
 	parseAnnot :: !String -> Annotation
 	parseAnnot s = case parseLine`{|*|} 0 s of
-		Just (a,_) -> a
-		Nothing    -> OtherAnnotation (s % (1, size s - 1))
+		ParseResult a _ -> a
+		NoParseResult   -> OtherAnnotation (s % (1, size s - 1))

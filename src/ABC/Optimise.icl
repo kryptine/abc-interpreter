@@ -423,7 +423,7 @@ Start w
 # (_,w) = fclose output w
 = w
 where
-	loop :: !*File -> ([ABCInstruction], *File)
+	loop :: !*File -> (![ABCInstruction], !*File)
 	loop f
 	# (e,f) = fend f
 	| e = ([], f)
