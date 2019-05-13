@@ -329,7 +329,7 @@ void install_interpreter_segv_handler(void) {
 }
 
 #ifdef COMPUTED_GOTOS
-void *instruction_labels[CMAX];
+void *instruction_labels[CMAX]={NULL};
 #endif
 
 int interpret(
