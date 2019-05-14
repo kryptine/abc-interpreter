@@ -79,7 +79,7 @@ BC_WORD static_characters[512];
 #endif
 BC_WORD static_booleans[4];
 
-void prepare_static_nodes(void) {
+static void prepare_static_nodes(void) {
 	static_booleans[2]=static_booleans[0]=(BC_WORD)&BOOL+2;
 	static_booleans[1]=0;
 	static_booleans[3]=1;
@@ -100,10 +100,10 @@ void prepare_static_nodes(void) {
 # include "copy_host_to_interpreter.h"
 void **HOST_NODES[32] = {NULL};
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
-BC_WORD ADD_ARG[33];
+static BC_WORD ADD_ARG[33];
 BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 
-void build_host_nodes(void) {
+static void build_host_nodes(void) {
 	if (HOST_NODES[0] != NULL)
 		return;
 	int i = 0;
@@ -229,10 +229,6 @@ BC_WORD Fjmp_ap[32] =
 	, Cjmp_ap32
 	};
 
-BC_WORD *g_asp, *g_bsp, *g_hp;
-BC_WORD_S g_heap_free;
-int trap_needs_gc = 0;
-
 void* __interpreter_cycle_in_spine[2] = {
 	(void*) 0,
 	(void*) Chalt
@@ -336,6 +332,8 @@ static int interpreter_initialized=0;
 int ensure_interpreter_init(void) {
 	if (interpreter_initialized)
 		return 1;
+
+	install_interpreter_segv_handler();
 
 	prepare_static_nodes();
 #ifdef LINK_CLEAN_RUNTIME
@@ -644,8 +642,6 @@ int main(int argc, char **argv) {
 	BC_WORD *asp = stack;
 	BC_WORD *bsp = &stack[stack_size];
 	BC_WORD *csp = &stack[stack_size >> 1];
-
-	install_interpreter_segv_handler();
 
 #ifdef DEBUG_CURSES
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);

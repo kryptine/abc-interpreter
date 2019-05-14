@@ -72,7 +72,6 @@ struct interpretation_environment *build_interpretation_environment(
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
-	install_interpreter_segv_handler();
 	return ie;
 }
 

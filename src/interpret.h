@@ -71,19 +71,13 @@ extern void* REAL[];
 extern BC_WORD small_integers[];
 extern BC_WORD static_characters[];
 extern BC_WORD static_booleans[];
-void prepare_static_nodes(void);
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
-void build_host_nodes(void);
 extern void **HOST_NODES[32];
 extern BC_WORD HOST_NODE_DESCRIPTORS[1216];
 extern BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 #endif
-
-extern BC_WORD *g_asp, *g_bsp, *g_hp;
-extern BC_WORD_S g_heap_free;
-extern int trap_needs_gc;
 
 extern BC_WORD Fjmp_ap[32];
 
@@ -91,8 +85,6 @@ extern void* __interpreter_cycle_in_spine[2];
 extern void* __interpreter_indirection[9];
 
 #define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */
-
-void install_interpreter_segv_handler(void);
 
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
