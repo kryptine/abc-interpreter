@@ -11,7 +11,7 @@ Global
 		HeapSize:	209715200
 		StackSize:	2048000
 		ExtraMemory:	8192
-		IntialHeapSize:	20971520
+		IntialHeapSize:	209715200
 		HeapSizeMultiplier:	4096
 		ShowExecutionTime:	False
 		ShowGC:	False
