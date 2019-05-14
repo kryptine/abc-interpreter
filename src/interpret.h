@@ -112,21 +112,6 @@ extern void *instruction_labels[CMAX];
  * node:
  *  - Pointer to a node to evaluate to HNF;
  *  - NULL if we should just start running at code[0].
- *
- * HOWEVER, when compiled with COMPUTED_GOTOS defined and stack=NULL, do not
- * interpret at all but instead copy an array with label addresses to the
- * instruction_labels array defined above.  If anybody other than John (who,
- * we're sure, will immediately understand) ever reads this, here is the
- * rationale: with computed gotos, we want to store pointers to the label
- * addresses in interpret_instructions.h instead of the bytecode values of the
- * instructions themselves. However, compilers won't allow you to get a label
- * address from outside a function (which is kind of silly). So, we call
- * interpret(.., NULL, ..) from the parser to get an array with all the
- * addresses needed. Why not just with an extra NULLable argument?  Well, this
- * function is called from Clean, which doesn't have a preprocessor so that the
- * function signature has to be the same, whether we compile with or without
- * computed gotos. Also, this implementation is faster, which is important for
- * efficient lazy interpretation.
  */
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME

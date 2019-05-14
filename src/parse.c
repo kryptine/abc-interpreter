@@ -193,40 +193,6 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 	int32_t elem32;
 	int64_t elem64;
 
-#ifdef INTERPRETER
-	prepare_static_nodes();
-#endif
-#ifdef LINK_CLEAN_RUNTIME
-	build_host_nodes();
-#endif
-#ifdef COMPUTED_GOTOS
-	/* See rationale in interpret.h */
-	if (instruction_labels[0]==NULL) {
-		interpret(NULL,
-#ifdef LINK_CLEAN_RUNTIME
-				0,
-#endif
-				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
-
-		for (int i=0; i<32; i++)
-			Fjmp_ap[i]=(BC_WORD)instruction_labels[Fjmp_ap[i]];
-
-		__interpreter_cycle_in_spine[1] = (void*) instruction_labels[(BC_WORD)__interpreter_cycle_in_spine[1]];
-		__interpreter_indirection[0] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[0]];
-		__interpreter_indirection[1] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[1]];
-		__interpreter_indirection[2] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[2]];
-		__interpreter_indirection[3] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[3]];
-		__interpreter_indirection[5] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[5]];
-		__interpreter_indirection[7] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[7]];
-		__interpreter_indirection[8] = (void*) instruction_labels[(BC_WORD)__interpreter_indirection[8]];
-
-# ifdef LINK_CLEAN_RUNTIME
-		for (int i = 0; i < 32; i++)
-			HOST_NODES[i][1] = instruction_labels[Cjsr_eval_host_node+i];
-# endif
-	}
-#endif
-
 	while (state->state != PS_end) {
 		switch (state->state) {
 			case PS_init:
