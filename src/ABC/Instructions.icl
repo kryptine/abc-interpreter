@@ -26,7 +26,7 @@ isBStackInstruction instr = case instr of
 	Ipop_b _         -> True
 	_                -> False
 
-generic printInstruction a :: a -> String
+generic printInstruction a :: !a -> String
 printInstruction{|Int|}  i = toString i
 printInstruction{|Char|} c = printChar c
 where

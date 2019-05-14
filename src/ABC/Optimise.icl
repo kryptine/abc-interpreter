@@ -34,14 +34,10 @@ optimise =
 	remove_comments
 
 isCommutativeBStackInstruction :: !ABCInstruction -> Bool
-isCommutativeBStackInstruction (IIns s) = isMember s
-	[ "eqC"
-	, "eqI"
-	, "eqB"
-	, "addI"
-	, "and%"
-	, "or%"
-	]
+isCommutativeBStackInstruction (IIns s) =
+	s=="eqB" || s=="eqC" || s=="eqI" || s=="eqR" ||
+	s=="addI" ||
+	s=="and%" || s=="or%"
 isCommutativeBStackInstruction _ = False
 
 remove_comments :: ([ABCInstruction] -> [ABCInstruction])
