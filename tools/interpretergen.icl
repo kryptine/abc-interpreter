@@ -2725,7 +2725,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 1)) \a ->
 		A @ 0 .= a @ 0
 	, instr "repl_r_args_a" Nothing $
-		new_local (TPtr TWord) (to_word_ptr (A @ lit_word 0)) \n ->
+		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local TWord (Pc @ 1) \size ->
 		new_local TWord (Pc @ 2) \arg_no ->
 		new_local TWord (Pc @ 3) \nr_args ->
