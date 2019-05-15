@@ -113,12 +113,12 @@ where
 			EDeref _ sw m (Ei64_const i) | i>=0
 				-> "(i64.store"+++sw+++" offset="+++toString (i*8)+++" (i32.wrap_i64 "+++toString m+++")"+++i32_to_64 e+++")" // TODO: add bitwidth
 			EDeref _ sw m i
-				-> "(i64.store"+++sw+++" (i32.wrap_i64 (i64.add "+++toString m+++"(i64.mul "+++toString i+++" (i64.const "+++toString width+++"))))"+++i32_to_64 e+++")" // TODO: add bitwidth
+				-> "(i64.store"+++sw+++" (i32.wrap_i64 (i64.add "+++toString m+++"(i64.shl "+++toString i+++" (i64.const "+++toString width+++"))))"+++i32_to_64 e+++")" // TODO: add bitwidth
 				with
 					width = case sw of
-						"8"  -> 1
-						"16" -> 2
-						_    -> 8
+						"8"  -> 0
+						"16" -> 1
+						_    -> 3
 				-> abort "missing case in toString_ESet\n"
 
 		Eload32 i    -> "(i64.load (i32.wrap_i64 "+++toString i+++"))"
