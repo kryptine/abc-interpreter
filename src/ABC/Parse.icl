@@ -95,7 +95,7 @@ where
 	| otherwise            = stringlit [line.[start]:cs] (start + 1)
 parseLine`{|StringWithSpaces|} start line = ParseResult (StringWithSpaces (line % (start,size line-1))) (size line-1)
 
-parseLine`{|CONS of d=:{gcd_name,gcd_arity}|} fx 0 line
+parseLine`{|CONS of {gcd_name,gcd_arity}|} fx 0 line
 	| size line < instr_size = NoParseResult
 	| not (check_start (instr_size-1)) = NoParseResult
 	| gcd_arity > 0 && not (isSpace line.[instr_size]) = NoParseResult
