@@ -132,7 +132,7 @@ intp = new Uint8Array(intp);
 			}
 		}
 	);
-	util.instance.exports.setup_gc(hp, heap_size, asp, 98*8);
+	util.instance.exports.setup_gc(hp, heap_size, asp, 97*8);
 
 	intp = await WebAssembly.instantiate(intp,
 		{

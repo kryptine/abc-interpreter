@@ -190,8 +190,8 @@
 		(local.set $n (i32.add (global.get $caf-list) (i32.const 8)))
 		(block $end-copy-cafs
 			(loop $copy-cafs
-				(br_if $end-copy-cafs (i32.eqz (i32.load (i32.sub (local.get $n) (i32.const 8)))))
 				(local.set $n (i32.load (i32.sub (local.get $n) (i32.const 8))))
+				(br_if $end-copy-cafs (i32.eqz (local.get $n)))
 				(local.set $a-arity (i32.load16_s (local.get $n)))
 				(block $end-copy-caf-pointers
 					(loop $copy-caf-pointers
