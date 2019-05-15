@@ -2725,10 +2725,10 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (n @ 2 + Pc @ 1)) \a ->
 		A @ 0 .= a @ 0
 	, instr "repl_r_args_a" Nothing $
-		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
-		new_local TWord (Pc @ 2) \size ->
-		new_local TWord (Pc @ 3) \arg_no ->
-		new_local TWord (Pc @ 4) \nr_args ->
+		new_local (TPtr TWord) (to_word_ptr (A @ lit_word 0)) \n ->
+		new_local TWord (Pc @ 1) \size ->
+		new_local TWord (Pc @ 2) \arg_no ->
+		new_local TWord (Pc @ 3) \nr_args ->
 		advance_ptr Pc 4 :.
 		if_then_else (size <. lit_word 3) (
 			A @ 0 .= n @ 2 :.
@@ -2745,7 +2745,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			n .= to_word_ptr (n @ 2) :.
 			new_local TWord (lit_word 0) \i ->
 			while_do (i <. arg_no + nr_args) (
-				A @ (nr_args - arg_no + i) .= n @ i :.
+				A @ (nr_args - arg_no - i - lit_word 1) .= n @ i :.
 				i += lit_word 1
 			)
 		)) :.
