@@ -308,7 +308,7 @@ void install_interpreter_segv_handler(void) {
 	struct sigaction segv_handler;
 	segv_handler.sa_sigaction=handle_segv;
 	sigemptyset(&segv_handler.sa_mask);
-	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO;
+	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO | SA_RESTART;
 	if (sigaction(SIGSEGV, &segv_handler,
 # ifdef LINK_CLEAN_RUNTIME
 				&old_segv_handler
