@@ -85,6 +85,8 @@ deserialize_strict dsets graph thisexe w = case deserialize` True dsets graph th
 
 deserialize` :: !Bool !DeserializationSettings !SerializedGraph !String !*World -> *(Maybe a, !*World)
 deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
+| not ensure_interpreter_init = abort "internal error in deserialize`\n"
+
 # (host_syms,w) = accFiles (read_symbols thisexe) w
 
 # pgm = parse host_syms bytecode
@@ -163,6 +165,7 @@ where
 
 get_start_rule_as_expression :: !DeserializationSettings !String !String !*World -> *(Maybe a, !*World)
 get_start_rule_as_expression dsets filename prog w
+| not ensure_interpreter_init = abort "internal error in get_start_rule_as_expression\n"
 # (syms,w) = accFiles (read_symbols prog) w
 # (bc,w) = readFile filename w
 | isNothing bc = (Nothing, w)

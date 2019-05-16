@@ -71,19 +71,13 @@ extern void* REAL[];
 extern BC_WORD small_integers[];
 extern BC_WORD static_characters[];
 extern BC_WORD static_booleans[];
-void prepare_static_nodes(void);
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"
-void build_host_nodes(void);
 extern void **HOST_NODES[32];
 extern BC_WORD HOST_NODE_DESCRIPTORS[1216];
 extern BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 #endif
-
-extern BC_WORD *g_asp, *g_bsp, *g_hp;
-extern BC_WORD_S g_heap_free;
-extern int trap_needs_gc;
 
 extern BC_WORD Fjmp_ap[32];
 
@@ -91,8 +85,6 @@ extern void* __interpreter_cycle_in_spine[2];
 extern void* __interpreter_indirection[9];
 
 #define A_STACK_CANARY 0x87654321 /* random value to check whether the A-stack overflew */
-
-void install_interpreter_segv_handler(void);
 
 #ifdef COMPUTED_GOTOS
 # include "abc_instructions.h"
@@ -112,21 +104,6 @@ extern void *instruction_labels[CMAX];
  * node:
  *  - Pointer to a node to evaluate to HNF;
  *  - NULL if we should just start running at code[0].
- *
- * HOWEVER, when compiled with COMPUTED_GOTOS defined and stack=NULL, do not
- * interpret at all but instead copy an array with label addresses to the
- * instruction_labels array defined above.  If anybody other than John (who,
- * we're sure, will immediately understand) ever reads this, here is the
- * rationale: with computed gotos, we want to store pointers to the label
- * addresses in interpret_instructions.h instead of the bytecode values of the
- * instructions themselves. However, compilers won't allow you to get a label
- * address from outside a function (which is kind of silly). So, we call
- * interpret(.., NULL, ..) from the parser to get an array with all the
- * addresses needed. Why not just with an extra NULLable argument?  Well, this
- * function is called from Clean, which doesn't have a preprocessor so that the
- * function signature has to be the same, whether we compile with or without
- * computed gotos. Also, this implementation is faster, which is important for
- * efficient lazy interpretation.
  */
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME

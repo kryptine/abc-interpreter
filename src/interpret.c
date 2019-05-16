@@ -79,7 +79,7 @@ BC_WORD static_characters[512];
 #endif
 BC_WORD static_booleans[4];
 
-void prepare_static_nodes(void) {
+static void prepare_static_nodes(void) {
 	static_booleans[2]=static_booleans[0]=(BC_WORD)&BOOL+2;
 	static_booleans[1]=0;
 	static_booleans[3]=1;
@@ -100,10 +100,10 @@ void prepare_static_nodes(void) {
 # include "copy_host_to_interpreter.h"
 void **HOST_NODES[32] = {NULL};
 BC_WORD HOST_NODE_DESCRIPTORS[1216];
-BC_WORD ADD_ARG[33];
+static BC_WORD ADD_ARG[33];
 BC_WORD HOST_NODE_INSTRUCTIONS[32*6];
 
-void build_host_nodes(void) {
+static void build_host_nodes(void) {
 	if (HOST_NODES[0] != NULL)
 		return;
 	int i = 0;
@@ -229,10 +229,6 @@ BC_WORD Fjmp_ap[32] =
 	, Cjmp_ap32
 	};
 
-BC_WORD *g_asp, *g_bsp, *g_hp;
-BC_WORD_S g_heap_free;
-int trap_needs_gc = 0;
-
 void* __interpreter_cycle_in_spine[2] = {
 	(void*) 0,
 	(void*) Chalt
@@ -312,7 +308,7 @@ void install_interpreter_segv_handler(void) {
 	struct sigaction segv_handler;
 	segv_handler.sa_sigaction=handle_segv;
 	sigemptyset(&segv_handler.sa_mask);
-	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO;
+	segv_handler.sa_flags=SA_ONSTACK | SA_SIGINFO | SA_RESTART;
 	if (sigaction(SIGSEGV, &segv_handler,
 # ifdef LINK_CLEAN_RUNTIME
 				&old_segv_handler
@@ -332,6 +328,50 @@ void install_interpreter_segv_handler(void) {
 void *instruction_labels[CMAX]={NULL};
 #endif
 
+static int interpreter_initialized=0;
+int ensure_interpreter_init(void) {
+	if (interpreter_initialized)
+		return 1;
+
+	install_interpreter_segv_handler();
+
+	prepare_static_nodes();
+#ifdef LINK_CLEAN_RUNTIME
+	build_host_nodes();
+#endif
+#ifdef COMPUTED_GOTOS
+	/* Fetch label addresses */
+	if (instruction_labels[0]==NULL) {
+		interpret(NULL,
+# ifdef LINK_CLEAN_RUNTIME
+				0,
+# endif
+				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+
+		for (int i=0; i<32; i++)
+			Fjmp_ap[i]=(BC_WORD)instruction_labels[Fjmp_ap[i]];
+
+		__interpreter_cycle_in_spine[1]=(void*)instruction_labels[(BC_WORD)__interpreter_cycle_in_spine[1]];
+		__interpreter_indirection[0]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[0]];
+		__interpreter_indirection[1]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[1]];
+		__interpreter_indirection[2]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[2]];
+		__interpreter_indirection[3]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[3]];
+		__interpreter_indirection[5]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[5]];
+		__interpreter_indirection[7]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[7]];
+		__interpreter_indirection[8]=(void*)instruction_labels[(BC_WORD)__interpreter_indirection[8]];
+
+# ifdef LINK_CLEAN_RUNTIME
+		for (int i = 0; i < 32; i++)
+			HOST_NODES[i][1]=instruction_labels[Cjsr_eval_host_node+i];
+# endif
+	}
+#endif
+
+	interpreter_initialized=1;
+
+	return 1;
+}
+
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
@@ -344,9 +384,18 @@ int interpret(
 		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
-	if (stack == NULL) { /* See rationale in interpret.h */
-		if (instruction_labels[0] != NULL)
-			return 0;
+	/* When compiled with COMPUTED_GOTOS defined and stack=NULL, this function does
+	 * not interpret at all but instead copy an array with label addresses to the
+	 * instruction_labels array defined above.  If anybody other than John (who,
+	 * we're sure, will immediately understand) ever reads this, here is the
+	 * rationale: with computed gotos, we want to store pointers to the label
+	 * addresses in interpret_instructions.h instead of the bytecode values of the
+	 * instructions themselves. However, compilers won't allow you to get a label
+	 * address from outside a function (which is kind of silly). So, we call
+	 * interpret(.., NULL, ..) from the parser to get an array with all the
+	 * addresses needed.
+	 */
+	if (stack == NULL) {
 # define _COMPUTED_GOTO_LABELS
 # include "abc_instructions.h"
 		memcpy(instruction_labels, _instruction_labels, sizeof(BC_WORD) * CMAX);
@@ -393,14 +442,14 @@ int interpret(
 	}
 #endif
 
+	BC_WORD ret;
 	if (_pc != NULL) {
-		BC_WORD *ret=safe_malloc(sizeof(BC_WORD));
 #ifdef COMPUTED_GOTOS
-		*ret=(BC_WORD)&&eval_to_hnf_return;
+		ret=(BC_WORD)&&eval_to_hnf_return;
 #else
-		*ret=EVAL_TO_HNF_LABEL;
+		ret=EVAL_TO_HNF_LABEL;
 #endif
-		*++csp=(BC_WORD)ret;
+		*++csp=(BC_WORD)&ret;
 		pc=_pc;
 
 		if (0) {
@@ -563,6 +612,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	ensure_interpreter_init();
+
 	struct char_provider cp;
 	new_file_char_provider(&cp, input);
 	int res = parse_program(&state, &cp);
@@ -591,8 +642,6 @@ int main(int argc, char **argv) {
 	BC_WORD *asp = stack;
 	BC_WORD *bsp = &stack[stack_size];
 	BC_WORD *csp = &stack[stack_size >> 1];
-
-	install_interpreter_segv_handler();
 
 #ifdef DEBUG_CURSES
 	init_debugger(state.program, stack, asp, bsp, csp, heap, heap_size);
