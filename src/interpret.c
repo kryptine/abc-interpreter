@@ -442,11 +442,12 @@ int interpret(
 	}
 #endif
 
+	BC_WORD ret;
 	if (_pc != NULL) {
 #ifdef COMPUTED_GOTOS
-		BC_WORD ret=(BC_WORD)&&eval_to_hnf_return;
+		ret=(BC_WORD)&&eval_to_hnf_return;
 #else
-		BC_WORD ret=EVAL_TO_HNF_LABEL;
+		ret=EVAL_TO_HNF_LABEL;
 #endif
 		*++csp=(BC_WORD)&ret;
 		pc=_pc;
