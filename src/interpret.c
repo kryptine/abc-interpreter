@@ -443,13 +443,12 @@ int interpret(
 #endif
 
 	if (_pc != NULL) {
-		BC_WORD *ret=safe_malloc(sizeof(BC_WORD));
 #ifdef COMPUTED_GOTOS
-		*ret=(BC_WORD)&&eval_to_hnf_return;
+		BC_WORD ret=(BC_WORD)&&eval_to_hnf_return;
 #else
-		*ret=EVAL_TO_HNF_LABEL;
+		BC_WORD ret=EVAL_TO_HNF_LABEL;
 #endif
-		*++csp=(BC_WORD)ret;
+		*++csp=(BC_WORD)&ret;
 		pc=_pc;
 
 		if (0) {
