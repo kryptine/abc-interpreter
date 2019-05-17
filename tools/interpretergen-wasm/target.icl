@@ -3,37 +3,7 @@ implementation module target
 import StdEnv
 import StdMaybe
 import interpretergen
-
-:: Label :== String
-
-:: Locality :== Bool
-:: Variable = Variable !Locality !Label
-Local v :== Variable True v
-Global v :== Variable False v
-
-:: Type = I8 | I16 | I32 | I64 | F32 | F64
-:: Signedness :== Bool; Signed :== True; Unsigned :== False; DontCare :== False
-
-instance == Type
-where
-	== a b = case a of
-		I8  -> b=:I8
-		I16 -> b=:I16
-		I32 -> b=:I32
-		I64 -> b=:I64
-		F32 -> b=:F32
-		F64 -> b=:F64
-
-instance toString Type
-where
-	toString t = case t of
-		I32 -> "i32"
-		I64 -> "i64"
-		F32 -> "f32"
-		F64 -> "f64"
-
-		I8  -> "i8"
-		I16 -> "i16"
+import wasm
 
 instance wasm_type TWord    where wasm_type _ = I64
 instance wasm_type TPtrOffset   where wasm_type _ = I32
@@ -43,39 +13,6 @@ instance wasm_type TShort   where wasm_type _ = I16
 instance wasm_type TInt     where wasm_type _ = I64
 instance wasm_type TReal    where wasm_type _ = F64
 instance wasm_type (TPtr t) where wasm_type _ = I32
-
-type_width :: !Type -> Int
-type_width t = case t of
-	I64 -> 8
-	I32 -> 4
-	F64 -> 8
-	F32 -> 4
-	I16 -> 2
-	I8  -> 1
-
-type_width_shift :: !Type -> Int
-type_width_shift t = case t of
-	I64 -> 3
-	I32 -> 2
-	F64 -> 3
-	F32 -> 2
-	I16 -> 1
-	I8  -> 0
-
-class wasm_literal a
-where
-	wasm_repr :: !a -> String
-	is_zero :: !a -> Bool
-
-instance wasm_literal Int
-where
-	wasm_repr i = toString i
-	is_zero i = i == 0
-
-instance wasm_literal Char
-where
-	wasm_repr c = toString (toInt c)
-	is_zero c = c == '\0'
 
 instance wasm_literal String
 where
@@ -123,230 +60,10 @@ i32_temp_vars =: {#{#'v','w',i} \\ i <- ['0'..'9']}
 i64_temp_vars =: {#{#'v','q',i} \\ i <- ['0'..'9']}
 f64_temp_vars =: {#{#'v','d',i} \\ i <- ['0'..'0']}
 
-:: ExprList
-	= E.t: (--) infixr !(Expr t) ExprList
-	| ELNil
-
 :: Expr t :== Ex
-:: Ex
-	// Actual wasm instructions:
-	= Eunreachable
-	| Ereturn !Ex
 
-	| Eblock
-	| Eloop
-	| Ebr !Label
-	| Ebr_local !Int
-	| Ebr_if !Int !Ex
-	| Eend
-	| Eif !Ex
-	| Ethen
-	| Eelse
-	| Ecall !Label !ExprList
-	| Eselect !Ex !Ex !Ex
-
-	| Etee !Variable !Ex
-	| Eset !Variable !Ex
-	| Eget !Variable
-
-	| Eload !Type /*target*/ !Type /*source*/ !Signedness !Int /*offset*/ !Ex
-	| Estore !Type /*target*/ !Type /*source*/ !Int /*offset*/ !Ex !Ex
-
-	| E.a: Econst !Type !a & wasm_literal a
-
-	| Eadd !Type !Ex !Ex
-	| Esub !Type !Ex !Ex
-	| Emul !Type !Ex !Ex
-	| Ediv !Type !Signedness !Ex !Ex
-	| Erem !Type !Signedness !Ex !Ex
-
-	| Eeq !Type !Ex !Ex
-	| Ene !Type !Ex !Ex
-	| Elt !Type !Signedness !Ex !Ex
-	| Egt !Type !Signedness !Ex !Ex
-	| Ele !Type !Signedness !Ex !Ex
-	| Ege !Type !Signedness !Ex !Ex
-	| Eeqz !Type !Ex
-
-	| Eand !Type !Ex !Ex
-	| Eor  !Type !Ex !Ex
-	| Exor !Type !Ex !Ex
-	| Eshl !Type !Ex !Ex
-	| Eshr !Type !Signedness !Ex !Ex
-
-	| Eabs !Type !Ex
-	| Efloor !Type !Ex
-	| Eneg !Type !Ex
-	| Esqrt !Type !Ex
-
-	| Ewrap !Type /*target*/ !Type /*source*/ !Ex
-	| Eextend !Type /*target*/ !Type /*source*/ !Ex
-	| Ereinterpret !Type /*target*/ !Type /*source*/ !Ex
-	| Etrunc !Type /*target*/ !Type /*source*/ !Ex
-	| Econvert !Type /*target*/ !Type /*source*/ !Ex
-
-	// Meta-instructions used internally:
-	| Ivar !Variable
-	| Iref !Type !Type !Int !Ex // load or store
-
-class type a :: !a -> Type
-
-instance type Ex
-where
-	type e = case e of
-		Eselect a b _ -> type2 a b
-		Etee _ e -> type e
-		Eget v -> type v
-		Eload t _ _ _ _ -> t
-		Econst t _ -> t
-		Eadd t _ _ -> t
-		Esub t _ _ -> t
-		Emul t _ _ -> t
-		Ediv t _ _ _ -> t
-		Erem t _ _ _ -> t
-		Eeq _ _ _ -> I32
-		Ene _ _ _ -> I32
-		Elt _ _ _ _ -> I32
-		Egt _ _ _ _ -> I32
-		Ele _ _ _ _ -> I32
-		Ege _ _ _ _ -> I32
-		Eeqz _ _ -> I32
-		Eand t _ _ -> t
-		Eor t _ _ -> t
-		Exor t _ _ -> t
-		Eshl t _ _ -> t
-		Eshr t _ _ _ -> t
-		Eabs t _ -> t
-		Efloor t _ -> t
-		Eneg t _ -> t
-		Esqrt t _ -> t
-		Ewrap t _ _ -> t
-		Eextend t _ _ -> t
-		Ereinterpret t _ _ -> t
-		Etrunc t _ _ -> t
-		Econvert t _ _ -> t
-		Ivar v -> type v
-		Iref t _ _ _ -> t
-		_ -> abort e
-	where
-		abort :: !.a -> .b
-		abort _ = code {
-			print "missing case in type:\n"
-			.d 1 0
-			jsr _print_graph
-			.o 0 0
-			halt
-		}
-
-instance type Variable
-where
-	type (Variable _ v)
-	| v.[0]=='v' = case v.[1] of
-		'w' -> I32
-		'q' -> I64
-		'd' -> F64
-	| v=="pc"      = I32
-	| v=="asp"     = I32
-	| v=="bsp"     = I32
-	| v=="csp"     = I32
-	| v=="hp"      = I32
-	| v=="hp-free" = I32
-	| v=="hp-size" = I32
-	| otherwise    = abort ("unknown variable "+++v+++"\n")
-
-type2 :: !a !a -> Type | type a
-type2 a b = let ta = type a in if (ta == type b) ta (abort "type mismatch\n")
-
-instance toString Ex
-where
-	toString e = case e of
-		Eunreachable -> "(unreachable)"
-		Ereturn e -> "(return "+++toString e+++")"
-
-		Eblock -> "(block"
-		Eloop -> "(loop"
-		Ebr l -> "(br $"+++l+++")"
-		Ebr_local i -> "(br "+++toString i+++")"
-		Ebr_if i c -> "(br_if "+++toString i+++" "+++toString c+++")"
-		Eend -> ")"
-		Eif e -> "(if "+++toString e
-		Ethen -> "(then"
-		Eelse -> "(else"
-		Ecall l args -> "(call $"+++l+++toString args+++")"
-		Eselect a b c -> "(select "+++toString a+++toString b+++toString c+++")"
-
-		Etee (Variable True v)  e -> "(local.tee $" +++v+++" "+++toString e+++")"
-		Eset (Variable True v)  e -> "(local.set $" +++v+++" "+++toString e+++")"
-		Eset (Variable False v) e -> "(global.set $"+++v+++" "+++toString e+++")"
-		Eget (Variable True v)    -> "(local.get $" +++v+++")"
-		Eget (Variable False v)   -> "(global.get $" +++v+++")"
-
-		Eload loctype srctype signed offset addr
-			-> "("+++toString loctype+++".load"+++srctype`+++offset`+++toString addr+++")"
-			with
-				srctype` = case srctype of
-					I8  -> "8" +++signed_extension
-					I16 -> "16"+++signed_extension
-					I32 -> if (loctype=:I32) "" ("32"+++signed_extension)
-					_   -> ""
-				signed_extension = if signed "_s" "_u"
-				offset` = if (offset==0) " " (" offset="+++toString offset+++" ")
-		Estore loctype srctype offset addr e
-			-> "("+++toString loctype+++".store"+++srctype`+++offset`+++toString addr+++toString e+++")"
-			with
-				srctype` = case srctype of
-					I8  -> "8"
-					I16 -> "16"
-					I32 -> if (loctype=:I32) "" "32"
-					_   -> ""
-				offset` = if (offset==0) " " (" offset="+++toString offset+++" ")
-
-		Econst t x -> "("+++toString t+++".const "+++wasm_repr x+++")"
-
-		Eadd t a b -> "("+++toString t+++".add "+++toString a+++toString b+++")"
-		Esub t a b -> "("+++toString t+++".sub "+++toString a+++toString b+++")"
-		Emul t a b -> "("+++toString t+++".mul "+++toString a+++toString b+++")"
-		Ediv t signed a b -> "("+++toString t+++signed_op t signed "div"+++toString a+++toString b+++")"
-		Erem t signed a b -> "("+++toString t+++if signed ".rem_s " ".rem_u "+++toString a+++toString b+++")"
-
-		Eeq t a b -> "("+++toString t+++".eq "+++toString a+++toString b+++")"
-		Ene t a b -> "("+++toString t+++".ne "+++toString a+++toString b+++")"
-		Elt t signed a b -> "("+++toString t+++signed_op t signed "lt"+++toString a+++toString b+++")"
-		Egt t signed a b -> "("+++toString t+++signed_op t signed "gt"+++toString a+++toString b+++")"
-		Ele t signed a b -> "("+++toString t+++signed_op t signed "le"+++toString a+++toString b+++")"
-		Ege t signed a b -> "("+++toString t+++signed_op t signed "ge"+++toString a+++toString b+++")"
-		Eeqz t e -> "("+++toString t+++".eqz "+++toString e+++")"
-
-		Eand t a b -> "("+++toString t+++".and "+++toString a+++toString b+++")"
-		Eor  t a b -> "("+++toString t+++".or " +++toString a+++toString b+++")"
-		Exor t a b -> "("+++toString t+++".xor "+++toString a+++toString b+++")"
-		Eshl t a b -> "("+++toString t+++".shl "+++toString a+++toString b+++")"
-		Eshr t signed a b -> "("+++toString t+++if signed ".shr_s " ".shr_u "+++toString a+++toString b+++")"
-
-		Eabs t e   -> "("+++toString t+++".abs "+++toString e+++")"
-		Efloor t e -> "("+++toString t+++".floor "+++toString e+++")"
-		Eneg t e   -> "("+++toString t+++".neg "+++toString e+++")"
-		Esqrt t e  -> "("+++toString t+++".sqrt "+++toString e+++")"
-
-		Ewrap totype frtype e        -> "("+++toString totype+++".wrap_"       +++toString frtype+++" "+++toString e+++")"
-		Eextend totype frtype e      -> "("+++toString totype+++".extend_"   +++toString frtype+++"_s "+++toString e+++")"
-		Ereinterpret totype frtype e -> "("+++toString totype+++".reinterpret_"+++toString frtype+++" "+++toString e+++")"
-		Etrunc totype frtype e       -> "("+++toString totype+++".trunc_"    +++toString frtype+++"_s "+++toString e+++")"
-		Econvert totype frtype e     -> "("+++toString totype+++".convert_"  +++toString frtype+++"_s "+++toString e+++")"
-
-		Ivar v -> toString (Eget v)
-		Iref loctype srctype offset addr -> toString (Eload loctype srctype Signed offset addr)
-	where
-		signed_op t sig op = case t of
-			F64 -> "."+++op+++" "
-			_   -> "."+++op+++if sig "_s" "_u"
-
-instance toString ExprList
-where
-	toString el = case el of
-		a -- rest
-			-> " "+++toString a+++toString rest
-			-> ""
+cast_expr :: !Ex -> Ex
+cast_expr e = e
 
 bootstrap :: ![String] -> [String]
 bootstrap instrs = instrs
@@ -449,20 +166,20 @@ where
 
 instr_unimplemented :: !Target -> Target
 instr_unimplemented t = (
-	new_local (TPtr TWord) (Ecall "clean_handle_illegal_instr" (
-		Eget (Local "pc") --
-		Eload I32 I32 DontCare 0 (Eget (Local "pc")) --
-		Eget (Local "asp") --
-		Eget (Local "bsp") --
-		Eget (Local "csp") --
-		Eget (Local "hp") --
-		Eget (Local "hp-free") --
-		ELNil)) \res -> let new_pc = fix_type (TPtr TWord) res in
+	new_local (TPtr TWord) (Ecall "clean_handle_illegal_instr"
+		[ Eget (Local "pc")
+		, Eload I32 I32 DontCare 0 (Eget (Local "pc"))
+		, Eget (Local "asp")
+		, Eget (Local "bsp")
+		, Eget (Local "csp")
+		, Eget (Local "hp")
+		, Eget (Local "hp-free")
+		]) \res -> let new_pc = fix_type (TPtr TWord) res in
 	if_then_else (to_word new_pc ==. lit_word 0) (
-		append (Ecall "clean_illegal_instr" (
-			Eget (Local "pc") --
-			Eload I32 I32 DontCare 0 (Eget (Local "pc")) --
-			ELNil)) :.
+		append (Ecall "clean_illegal_instr"
+			[ Eget (Local "pc")
+			, Eload I32 I32 DontCare 0 (Eget (Local "pc"))
+			]) :.
 		append (Ereturn (Econst I32 1))
 	) [] Nothing :.
 	Pc .= new_pc
@@ -473,7 +190,7 @@ where
 
 instr_halt :: !Target -> Target
 instr_halt t = (
-	append (Ecall "clean_halt" (Eget (Local "pc") -- Eget (Local "hp-free") -- Eget (Local "hp-size") -- ELNil)) :.
+	append (Ecall "clean_halt" [Eget (Local "pc"), Eget (Local "hp-free"), Eget (Local "hp-size")]) :.
 	append (Ereturn (Econst I32 0))
 	) t
 
@@ -486,10 +203,10 @@ instr_mulUUL t = instr_unimplemented t // TODO
 instr_RtoAC :: !Target -> Target
 instr_RtoAC t = (
 	new_local TReal (to_real (B @ 0)) \r ->
-	new_local TPtrOffset (Ecall "clean_RtoAC_words_needed" (r -- ELNil)) \lw ->
+	new_local TPtrOffset (Ecall "clean_RtoAC_words_needed" [r]) \lw ->
 	//ensure_hp (lw ::: TPtrOffset) :. // TODO
 	A @ 1 .= to_word Hp :.
-	Hp .= (Ecall "clean_RtoAC" (Hp -- r -- ELNil) ::: TPtr TWord) :.
+	Hp .= (Ecall "clean_RtoAC" [Hp,r] ::: TPtr TWord) :.
 	advance_ptr Pc 1 :.
 	advance_ptr A 1 :.
 	advance_ptr B 1
@@ -540,14 +257,11 @@ instance to_ptr_offset TWord      where to_ptr_offset w = Ewrap I32 I64 w
 instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
 instance to_ptr_offset TShort     where to_ptr_offset s = Ewrap I32 I64 s
 
-cast_expr :: !Ex -> Ex
-cast_expr e = e
-
 instance + (Expr t)     where + a b = Eadd (type2 a b) a b
 instance - (Expr t)     where - a b = Esub (type2 a b) a b
 instance * (Expr t)     where * a b = Emul (type2 a b) a b
 instance / (Expr t)     where / a b = Ediv (type2 a b) Signed a b
-instance ^ (Expr TReal) where ^ a b = Ecall "clean_powR" (a -- b -- ELNil)
+instance ^ (Expr TReal) where ^ a b = Ecall "clean_powR" [a,b]
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = Erem (type2 a b) Signed a b
@@ -595,40 +309,40 @@ absR :: !(Expr TReal) -> Expr TReal
 absR r = Eabs (type r) r
 
 acosR :: !(Expr TReal) -> Expr TReal
-acosR r = Ecall "clean_acosR" (r -- ELNil)
+acosR r = Ecall "clean_acosR" [r]
 
 asinR :: !(Expr TReal) -> Expr TReal
-asinR r = Ecall "clean_asinR" (r -- ELNil)
+asinR r = Ecall "clean_asinR" [r]
 
 atanR :: !(Expr TReal) -> Expr TReal
-atanR r = Ecall "clean_atanR" (r -- ELNil)
+atanR r = Ecall "clean_atanR" [r]
 
 cosR :: !(Expr TReal) -> Expr TReal
-cosR r = Ecall "clean_cosR" (r -- ELNil)
+cosR r = Ecall "clean_cosR" [r]
 
 entierR :: !(Expr TReal) -> Expr TInt
 entierR r = Etrunc I64 F64 (Efloor F64 r)
 
 expR :: !(Expr TReal) -> Expr TReal
-expR r = Ecall "clean_expR" (r -- ELNil)
+expR r = Ecall "clean_expR" [r]
 
 lnR :: !(Expr TReal) -> Expr TReal
-lnR r = Ecall "clean_lnR" (r -- ELNil)
+lnR r = Ecall "clean_lnR" [r]
 
 log10R :: !(Expr TReal) -> Expr TReal
-log10R r = Ecall "clean_log10R" (r -- ELNil)
+log10R r = Ecall "clean_log10R" [r]
 
 negR :: !(Expr TReal) -> Expr TReal
 negR r = Eneg (type r) r
 
 sinR :: !(Expr TReal) -> Expr TReal
-sinR r = Ecall "clean_sinR" (r -- ELNil)
+sinR r = Ecall "clean_sinR" [r]
 
 sqrtR :: !(Expr TReal) -> Expr TReal
 sqrtR r = Esqrt (type r) r
 
 tanR :: !(Expr TReal) -> Expr TReal
-tanR r = Ecall "clean_tanR" (r -- ELNil)
+tanR r = Ecall "clean_tanR" [r]
 
 ItoR :: !(Expr TInt)  -> Expr TReal
 ItoR i = Econvert F64 I64 i
@@ -939,25 +653,25 @@ where
 	popped_pc = Eload I32 I32 DontCare 0 (Eget C)
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
-memcpy d s n t = append (Ecall "clean_memcpy" (d -- s -- n -- ELNil)) t
+memcpy d s n t = append (Ecall "clean_memcpy" [d,cast_expr s,cast_expr n]) t
 
 strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
-strncmp s1 s2 n = Eextend I64 I32 (Ecall "clean_strncmp" (s1 -- s2 -- n -- ELNil))
+strncmp s1 s2 n = Eextend I64 I32 (Ecall "clean_strncmp" [s1,s2,cast_expr n])
 
 putchar :: !(Expr TChar) !Target -> Target
-putchar c t = append (Ecall "clean_putchar" (Ewrap I32 I64 c -- ELNil)) t
+putchar c t = append (Ecall "clean_putchar" [Ewrap I32 I64 c]) t
 
 print_bool :: !(Expr TWord) !Target -> Target
-print_bool c t = append (Ecall "clean_print_bool" (Ewrap I32 I64 c -- ELNil)) t
+print_bool c t = append (Ecall "clean_print_bool" [Ewrap I32 I64 c]) t
 
 print_char :: !Bool !(Expr TChar) !Target -> Target
-print_char quotes c t = append (Ecall (if quotes "clean_print_char" "clean_putchar") (Ewrap I32 I64 c -- ELNil)) t
+print_char quotes c t = append (Ecall (if quotes "clean_print_char" "clean_putchar") [Ewrap I32 I64 c]) t
 
 print_int :: !(Expr TInt) !Target -> Target
-print_int c t = append (Ecall "clean_print_int" (high -- low -- ELNil)) t
+print_int c t = append (Ecall "clean_print_int" [high,low]) t
 where
 	high = Ewrap I32 I64 (Eshr I64 Unsigned c (Econst I64 32))
 	low = Ewrap I32 I64 c
 
 print_real :: !(Expr TReal) !Target -> Target
-print_real c t = append (Ecall "clean_print_real" (c -- ELNil)) t
+print_real c t = append (Ecall "clean_print_real" [c]) t

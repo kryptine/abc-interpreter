@@ -3,8 +3,7 @@ definition module target
 import StdEnv
 import StdMaybe
 import interpretergen
-
-:: Type
+from wasm import :: Type
 
 class wasm_type a :: !a -> Type
 
