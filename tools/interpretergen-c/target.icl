@@ -481,8 +481,8 @@ static_character c = "(BC_WORD)&static_characters[("+-+c+-+")<<1]"
 static_boolean :: !(Expr TWord) -> Expr TWord
 static_boolean b = "(BC_WORD)&static_booleans[("+-+b+-+") ? 2 : 0]"
 
-caf_list :: Expr (TPtr (TPtr TWord))
-caf_list = "caf_list"
+caf_list :: Expr (TPtr TWord)
+caf_list = "(BC_WORD*)caf_list"
 
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 push_c v t = append ("\t*++csp=(BC_WORD)"+-+v+-+";") t

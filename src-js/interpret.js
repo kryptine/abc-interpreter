@@ -102,7 +102,6 @@ intp = new Uint8Array(intp);
 				update_host_reference: function(index,new_location) {
 				},
 
-				get_asp: () => intp.instance.exports.get_asp(),
 				set_hp: hp => intp.instance.exports.set_hp(hp),
 				set_hp_free: free => intp.instance.exports.set_hp_free(free),
 

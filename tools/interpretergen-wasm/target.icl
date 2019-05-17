@@ -119,7 +119,6 @@ new_temp_var tp t
 	F64 -> {t & temp_vars.tv_f64=t.temp_vars.tv_f64+1}
 = (Local var,t)
 
-// TODO: see how many of these are actually needed
 i32_temp_vars =: {#{#'v','w',i} \\ i <- ['0'..'9']}
 i64_temp_vars =: {#{#'v','q',i} \\ i <- ['0'..'9']}
 f64_temp_vars =: {#{#'v','d',i} \\ i <- ['0'..'0']}
@@ -256,7 +255,7 @@ where
 	| otherwise    = abort ("unknown variable "+++v+++"\n")
 
 type2 :: !a !a -> Type | type a
-type2 a b = let ta = type a in ta // TODO: if (ta == type b) ta (abort "type mismatch\n")
+type2 a b = let ta = type a in if (ta == type b) ta (abort "type mismatch\n")
 
 instance toString Ex
 where
@@ -352,17 +351,21 @@ where
 bootstrap :: ![String] -> [String]
 bootstrap instrs = instrs
 
+rt_vars :: [String]
+rt_vars =: ["pc","asp","bsp","csp","hp","hp-size","hp-free"]
+
 collect_instructions :: !Options ![Target] -> [String]
 collect_instructions {instructions_order=Nothing} _ = abort "no abc instructions order specified\n"
 collect_instructions {debug_instructions,instructions_order=Just instrs_order} is =
-	start ++
-	reverse [block_start i \\ i <- is] ++
+	header ++
+	reverse [block_start i \\ i <- is_with_illegal_block] ++
 	switch ++
-	flatten [block_body i \\ i <- is] ++
-	end
+	flatten [block_body i \\ i <- is_with_illegal_block] ++
+	footer
 where
-	rt_vars = ["pc","asp","bsp","csp","hp","hp-size","hp-free"]
-	start =
+	is_with_illegal_block = is ++ [end_instruction (instr_unimplemented (begin_instruction "illegal" start))]
+
+	header =
 		[ "(module"
 		, "(import \"clean\" \"memory\" (memory 1))"
 
@@ -392,7 +395,7 @@ where
 		, "(func $clean_handle_illegal_instr (import \"clean\" \"handle_illegal_instr\") (param i32 i32 i32 i32 i32 i32 i32) (result i32))"
 		, "(func $clean_illegal_instr (import \"clean\" \"illegal_instr\") (param i32 i32))"
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
-		, "(func $clean_gc (import \"clean\" \"gc\"))"
+		, "(func $clean_gc (import \"clean\" \"gc\") (param i32))"
 		, "(func $clean_halt (import \"clean\" \"halt\") (param i32 i32 i32))"
 		] ++
 
@@ -410,12 +413,13 @@ where
 		[ "(loop $abc-loop"
 		, "(block $abc-gc"
 		]
-	end =
+	footer =
 		[ ")" // block abc-gc
-		, "(local.set $vw0 (local.get $hp-free))"
-		, "(call $clean_gc)"
-		, "(if (i32.le_s (local.get $hp-free) (local.get $vw0))"
+		, "(call $clean_gc (local.get $asp))"
+		, "(if (i32.le_s (global.get $g-hp-free) (local.get $hp-free))"
 		, "\t(then (call $clean_out_of_memory) (unreachable)))"
+		, "(local.set $hp (global.get $g-hp))"
+		, "(local.set $hp-free (global.get $g-hp-free))"
 		, "(br $abc-loop)"
 		, ")" // loop abc-loop
 		, "(unreachable)"
@@ -429,15 +433,12 @@ where
 		head = reverse [";; "+++i \\ i <- t.instrs]
 
 	switch =
-		[ "(block $instr_illegal"
-		, if debug_instructions
+		[ if debug_instructions
 			"\t(call $clean_debug_instr (local.get $pc) (i32.load (local.get $pc)))"
 			""
 		, "\t(br_table " +++
 			foldr (+++) "" [find_label i is \\ i <- instrs_order] +++
 			"$instr_illegal (i32.load (local.get $pc)))"
-		, ")"
-		: /*unimplemented_block TODO ++*/ ["(br $abc-loop)"]
 		]
 	where
 		find_label i [t:ts]
@@ -483,7 +484,19 @@ instr_mulUUL :: !Target -> Target
 instr_mulUUL t = instr_unimplemented t // TODO
 
 instr_RtoAC :: !Target -> Target
-instr_RtoAC t = instr_unimplemented t // TODO
+instr_RtoAC t = (
+	new_local TReal (to_real (B @ 0)) \r ->
+	new_local THWord (Ecall "clean_RtoAC_words_needed" (r -- ELNil)) \lw ->
+	//ensure_hp (lw ::: THWord) :. // TODO
+	A @ 1 .= to_word Hp :.
+	Hp .= (Ecall "clean_RtoAC" (Hp -- r -- ELNil) ::: TPtr TWord) :.
+	advance_ptr Pc 1 :.
+	advance_ptr A 1 :.
+	advance_ptr B 1
+	) t
+where
+	(:::) :: !(Expr t) t -> Expr t
+	(:::) e _ = e
 
 lit_word :: !Int -> Expr TWord
 lit_word w = Econst I64 w
@@ -558,7 +571,7 @@ instance ^ (Expr TReal) where ^ a b = Ecall "clean_powR" (a -- b -- ELNil)
 (>=.) a b = Ege (type2 a b) Signed a b
 
 (&&.) infixr 3 :: !(Expr TBool) !(Expr TBool) -> Expr TBool
-(&&.) a b = Eor (type2 a b) a b
+(&&.) a b = Eand (type2 a b) a b
 
 (&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (&.) a b = Eand (type2 a b) a b
@@ -911,7 +924,7 @@ where
 	TRUE  = Econst I64 (8*668)
 	FALSE = Econst I64 (8*666)
 
-caf_list :: Expr (TPtr (TPtr TWord))
+caf_list :: Expr (TPtr TWord)
 caf_list = Econst I32 (97*8)
 
 C = Local "csp"

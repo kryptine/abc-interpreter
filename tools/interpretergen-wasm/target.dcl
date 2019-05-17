@@ -157,7 +157,7 @@ dNil_ptr :: Expr TWord
 small_integer :: !(Expr TInt) -> Expr TWord
 static_character :: !(Expr TChar) -> Expr TWord
 static_boolean :: !(Expr TWord) -> Expr TWord
-caf_list :: Expr (TPtr (TPtr TWord))
+caf_list :: Expr (TPtr TWord)
 
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target

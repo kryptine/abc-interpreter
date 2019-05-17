@@ -1656,9 +1656,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			ui += lit_word 1
 		) :.
 		if_then (n_a <>. lit_word 0) (
-			new_local (TPtr TWord) (caf_list @ 1) \a ->
+			new_local (TPtr TWord) (to_word_ptr (caf_list @ 1)) \a ->
 			a @ -1 .= to_word n :.
-			caf_list @ 1 .= n
+			caf_list @ 1 .= to_word n
 		)
 	, instr "fillh3" (Just 2) $
 		ensure_hp 2 :.
@@ -2171,7 +2171,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			A @ (n_a - i) .= n @ 0 :.
 			i += lit_hword 1
 		) :.
-		grow_a (to_hword n_a) :. // compiler cannot resolve overloading without to_hword
+		grow_a (to_hword n_a) :. // NB: compiler cannot resolve overloading without to_hword
 		while_do (i <. n_total) (
 			B @ (n_a - n_total + i) .= n @ 0 :.
 			advance_ptr n 1 :.
@@ -2837,7 +2837,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		if_then (end_i >. to_int l) (end_i .= to_int l) :.
 		l .= to_word (end_i - first_i) :.
 		new_local TWord (if_i64_or_i32_expr ((l + lit_word 7) >>. lit_word 3) ((l + lit_word 3) >>. lit_word 2) + lit_word 2) \lw ->
-		ensure_hp (to_hword lw) :. // compiler cannot resolve overloading without to_hword
+		ensure_hp (to_hword lw) :. // NB: compiler cannot resolve overloading without to_hword
 		shrink_b 2 :.
 		Hp @ 0 .= STRING__ptr + lit_word 2 :.
 		Hp @ 1 .= l :.
@@ -3029,7 +3029,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		Hp @ 1 .= l :.
 		new_local (TPtr TChar) (to_char_ptr (Hp @? 2)) \p ->
 		p @ 0 .= lit_char '-' :.
-		advance_ptr p (to_hword l) :. // compiler cannot resolve overloading without to_hword
+		advance_ptr p (to_hword l) :. // NB: compiler cannot resolve overloading without to_hword
 		advance_ptr Hp lw :.
 		advance_ptr Pc 1 :.
 		while_do (ui >=. lit_word 10) (
