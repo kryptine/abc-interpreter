@@ -4,9 +4,6 @@ import StdEnv
 import StdMaybe
 import interpretergen
 
-:: THWord :== TWord
-THWord :== TWord
-
 :: Target
 :: Expr t
 
@@ -21,13 +18,13 @@ instr_mulUUL :: !Target -> Target
 instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
-lit_hword :== lit_word
+lit_hword :: !Int -> Expr THWord
 lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
 
 instance to_word TWord, TChar, TInt, TShort, (TPtr t), TReal
-to_hword :== to_word
+instance to_hword TWord, THWord, TShort
 instance to_bool TWord
 instance to_char TWord
 instance to_int TWord
@@ -89,21 +86,22 @@ nop :: !Target -> Target
 (:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 
 class typename t :: t -> String
-instance typename TWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
+instance typename TWord, THWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
 new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance .=
-	TWord TWord, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
+	TWord TWord, TWord THWord, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
+	THWord THWord,
 	TChar TChar,
 	TInt TInt, TInt TWord,
 	(TPtr t) (TPtr u) // NB/TODO: no checking on child types!
 
 class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance += TWord TWord
+instance += TWord TWord, THWord THWord
 
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance -= TWord  TWord, TShort TShort, TInt TInt
+instance -= TWord TWord, THWord THWord, TShort TShort
 
 class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
 instance advance_ptr Int, (Expr w)
@@ -131,8 +129,7 @@ if_then_else ::
 if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 
 class ensure_hp s :: !s !Target -> Target
-instance ensure_hp (Expr TWord)
-instance ensure_hp Int
+instance ensure_hp Int, (Expr t)
 
 A :: Expr (TPtr TWord)
 B :: Expr (TPtr TWord)
@@ -157,8 +154,8 @@ caf_list :: Expr (TPtr TWord)
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr THWord) !Target -> Target
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
 
 putchar :: !(Expr TChar) !Target -> Target
 print_bool :: !(Expr TWord) !Target -> Target

@@ -9,6 +9,7 @@ from target import :: Expr
 	}
 
 :: TWord  = TWord
+:: THWord = THWord
 :: TBool  = TBool
 :: TChar  = TChar
 :: TShort = TShort
@@ -18,6 +19,7 @@ from target import :: Expr
 :: TPtr t = TPtr !t
 
 class to_word  t :: !(Expr t) -> Expr TWord
+class to_hword t :: !(Expr t) -> Expr THWord
 class to_bool  t :: !(Expr t) -> Expr TBool
 class to_char  t :: !(Expr t) -> Expr TChar
 class to_short t :: !(Expr t) -> Expr TShort

@@ -4,8 +4,6 @@ import StdEnv
 import StdMaybe
 import interpretergen
 
-:: THWord = THWord
-
 :: Type
 
 class wasm_type a :: !a -> Type
@@ -30,8 +28,6 @@ lit_hword :: !Int -> Expr THWord
 lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
-
-class to_hword t :: !(Expr t) -> Expr THWord
 
 instance to_word THWord, TChar, TInt, TShort, (TPtr t), TReal
 instance to_hword TWord, THWord, TShort
@@ -137,7 +133,7 @@ if_then_else ::
 if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 
 class ensure_hp s :: !s !Target -> Target
-instance ensure_hp Int, (Expr t) | to_hword t /* should be only THWord TODO */
+instance ensure_hp Int, (Expr t) | to_hword t
 
 A :: Expr (TPtr TWord)
 B :: Expr (TPtr TWord)

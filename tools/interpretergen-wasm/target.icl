@@ -788,18 +788,12 @@ where
 instance @? (Expr t)
 where
 	@? p e
-	# e = force_i32 e
+	# e = if (type e==I64) (Ewrap I32 I64 e) e
 	| sft == 0  = Eadd I32 p e
 	| otherwise = Eadd I32 p (Eshl I32 e (Econst I32 sft))
 	where
 		ptr_type = wasm_type (get_type_of_ptr p)
 		sft = type_width_shift ptr_type
-
-// TODO check if some instructions can be optimized
-force_i32 :: !Ex -> Ex
-force_i32 e = case type e of
-	I64 -> Ewrap I32 I64 e
-	_   -> e
 
 begin_block :: !Target -> Target
 begin_block t = append Eblock t
@@ -951,13 +945,13 @@ strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
 strncmp s1 s2 n = Eextend I64 I32 (Ecall "clean_strncmp" (s1 -- s2 -- n -- ELNil))
 
 putchar :: !(Expr TChar) !Target -> Target
-putchar c t = append (Ecall "clean_putchar" (force_i32 c -- ELNil)) t
+putchar c t = append (Ecall "clean_putchar" (Ewrap I32 I64 c -- ELNil)) t
 
 print_bool :: !(Expr TWord) !Target -> Target
-print_bool c t = append (Ecall "clean_print_bool" (force_i32 c -- ELNil)) t
+print_bool c t = append (Ecall "clean_print_bool" (Ewrap I32 I64 c -- ELNil)) t
 
 print_char :: !Bool !(Expr TChar) !Target -> Target
-print_char quotes c t = append (Ecall (if quotes "clean_print_char" "clean_putchar") (force_i32 c -- ELNil)) t
+print_char quotes c t = append (Ecall (if quotes "clean_print_char" "clean_putchar") (Ewrap I32 I64 c -- ELNil)) t
 
 print_int :: !(Expr TInt) !Target -> Target
 print_int c t = append (Ecall "clean_print_int" (high -- low -- ELNil)) t
