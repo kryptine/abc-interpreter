@@ -4,6 +4,9 @@ import StdEnv
 import StdMaybe
 import interpretergen
 
+:: THWord :== TWord
+THWord :== TWord
+
 :: Target
 :: Expr t
 
@@ -18,22 +21,17 @@ instr_mulUUL :: !Target -> Target
 instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
+lit_hword :== lit_word
 lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
 
-instance to_word TChar
-instance to_word TInt
-instance to_word TShort
-instance to_word (TPtr t)
-instance to_word TReal
-
+instance to_word TWord, TChar, TInt, TShort, (TPtr t), TReal
+to_hword :== to_word
+instance to_bool TWord
 instance to_char TWord
-
 instance to_int TWord
-
 instance to_real TWord
-
 instance to_word_ptr  TWord, (TPtr t)
 instance to_char_ptr  TWord, (TPtr t)
 instance to_short_ptr TWord, (TPtr t)
@@ -45,15 +43,14 @@ instance / (Expr t)
 instance ^ (Expr TReal)
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 
-(==.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
-(<=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
-(>=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(==.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
+(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
+(<.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
+(>.)  infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
+(<=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
+(>=.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
 
-(&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
-notB           :: !(Expr TWord) -> Expr TWord
+(&&.) infixr 3 :: !(Expr TBool) !(Expr TBool) -> Expr TBool
 
 (&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
@@ -81,7 +78,7 @@ RtoI    :: !(Expr TReal) -> Expr TInt
 if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 
-if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr :: !(Expr TBool) !(Expr t) !(Expr t) -> Expr t
 
 begin_instruction :: !String !Target -> Target
 end_instruction :: !Target -> Target
@@ -97,7 +94,7 @@ new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typen
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance .=
-	TWord TWord, TWord TChar, TWord TInt, TWord TShort,
+	TWord TWord, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
 	TChar TChar,
 	TInt TInt, TInt TWord,
 	(TPtr t) (TPtr u) // NB/TODO: no checking on child types!
@@ -123,15 +120,15 @@ instance @? Int, (Expr t)
 begin_block :: !Target -> Target
 end_block :: !Target -> Target
 
-while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
+while_do :: !(Expr TBool) !(Target -> Target) !Target -> Target
 break :: !Target -> Target
 
 if_then_else ::
-	!(Expr TWord) !(Target -> Target)
-	![(Expr TWord, Target -> Target)]
+	!(Expr TBool) !(Target -> Target)
+	![(Expr TBool, Target -> Target)]
 	!(Maybe (Target -> Target))
 	!Target -> Target
-if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
+if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 
 class ensure_hp s :: !s !Target -> Target
 instance ensure_hp (Expr TWord)
@@ -148,7 +145,7 @@ INT_ptr :: Expr TWord
 REAL_ptr :: Expr TWord
 ARRAY__ptr :: Expr TWord
 STRING__ptr :: Expr TWord
-jmp_ap_ptr :: !Int -> Expr TWord
+jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 cycle_ptr :: Expr TWord
 indirection_ptr :: Expr TWord
 dNil_ptr :: Expr TWord
@@ -157,7 +154,7 @@ static_character :: !(Expr TChar) -> Expr TWord
 static_boolean :: !(Expr TWord) -> Expr TWord
 caf_list :: Expr (TPtr (TPtr TWord))
 
-push_c :: !(Expr TWord) !Target -> Target
+push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target
 
 memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
