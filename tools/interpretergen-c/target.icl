@@ -185,7 +185,7 @@ instr_RtoAC t = foldl (flip append) t
 lit_word :: !Int -> Expr TWord
 lit_word i = toString i
 
-lit_hword :: !Int -> Expr THWord
+lit_hword :: !Int -> Expr TPtrOffset
 lit_hword i = toString i
 
 lit_char :: !Char -> Expr TChar
@@ -203,10 +203,6 @@ instance to_word TInt     where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word TShort   where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word (TPtr t) where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word TReal    where to_word e = "*(BC_WORD*)&("+-+e+-+")"
-
-instance to_hword TWord   where to_hword w = "(int)("+-+w+-+")"
-instance to_hword THWord  where to_hword w = w
-instance to_hword TShort  where to_hword s = "(int)("+-+s+-+")"
 
 instance to_bool TWord
 where
@@ -227,6 +223,10 @@ instance to_char_ptr  TWord    where to_char_ptr  e = "(char*)("+-+e+-+")"
 instance to_char_ptr  (TPtr t) where to_char_ptr  e = "(char*)("+-+e+-+")"
 instance to_short_ptr TWord    where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 instance to_short_ptr (TPtr t) where to_short_ptr e = "(int16_t*)("+-+e+-+")"
+
+instance to_ptr_offset TWord      where to_ptr_offset w = "(int)("+-+w+-+")"
+instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
+instance to_ptr_offset TShort     where to_ptr_offset s = "(int)("+-+s+-+")"
 
 instance + (Expr t) where + a b = "("+-+a+-+"+"+-+b+-+")"
 instance - (Expr t) where - a b = "("+-+a+-+"-"+-+b+-+")"
@@ -346,7 +346,7 @@ nop t = t
 (:.) first then t = then (first t)
 
 instance typename TWord  where typename _ = "BC_WORD"
-instance typename THWord where typename _ = "int"
+instance typename TPtrOffset where typename _ = "int"
 instance typename TChar  where typename _ = "char"
 instance typename TShort where typename _ = "int16_t"
 instance typename TInt   where typename _ = "BC_WORD_S"
@@ -362,12 +362,12 @@ set :: !(Expr v) !(Expr e) !Target -> Target
 set v e t = append ("\t"+-+v+-+"="+-+e+-+";") t
 
 instance .= TWord  TWord  where .= v e t = set v e t
-instance .= TWord  THWord where .= v e t = set v e t
+instance .= TWord  TPtrOffset where .= v e t = set v e t
 instance .= TWord  TBool  where .= v e t = set v e t
 instance .= TWord  TChar  where .= v e t = set v e t
 instance .= TWord  TInt   where .= v e t = set v e t
 instance .= TWord  TShort where .= v e t = set v e t
-instance .= THWord THWord where .= v e t = set v e t
+instance .= TPtrOffset TPtrOffset where .= v e t = set v e t
 instance .= TChar  TChar  where .= v e t = set v e t
 instance .= TInt   TInt   where .= v e t = set v e t
 instance .= TInt   TWord  where .= v e t = set v e t
@@ -380,7 +380,7 @@ add_local v e t = case e of
 	e   -> append ("\t"+-+v+-+"+="+-+e+-+";") t
 
 instance += TWord  TWord  where += v e t = add_local v e t
-instance += THWord THWord where += v e t = add_local v e t
+instance += TPtrOffset TPtrOffset where += v e t = add_local v e t
 
 sub_local :: !(Expr v) !(Expr e) !Target -> Target
 sub_local v e t = case e of
@@ -389,7 +389,7 @@ sub_local v e t = case e of
 	e   -> append ("\t"+-+v+-+"-="+-+e+-+";") t
 
 instance -= TWord  TWord  where -= v e t = sub_local v e t
-instance -= THWord THWord where -= v e t = sub_local v e t
+instance -= TPtrOffset TPtrOffset where -= v e t = sub_local v e t
 instance -= TShort TShort where -= v e t = sub_local v e t
 
 instance advance_ptr Int      where advance_ptr v e t = add_local v (toString e) t
@@ -501,10 +501,10 @@ push_c v t = append ("\t*++csp=(BC_WORD)"+-+v+-+";") t
 pop_pc_from_c :: !Target -> Target
 pop_pc_from_c t = append "\tpc=(BC_WORD*)*csp--;" t
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr THWord) !Target -> Target
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
 memcpy d s n t = append ("\tmemcpy("+-+d+-+","+-+s+-+","+-+n+-+");") t
 
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
 strncmp s1 s2 n = "strncmp("+-+s1+-+","+-+s2+-+","+-+n+-+")"
 
 putchar :: !(Expr TChar) !Target -> Target

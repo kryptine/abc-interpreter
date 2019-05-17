@@ -18,13 +18,12 @@ instr_mulUUL :: !Target -> Target
 instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
-lit_hword :: !Int -> Expr THWord
+lit_hword :: !Int -> Expr TPtrOffset
 lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
 
 instance to_word TWord, TChar, TInt, TShort, (TPtr t), TReal
-instance to_hword TWord, THWord, TShort
 instance to_bool TWord
 instance to_char TWord
 instance to_int TWord
@@ -32,6 +31,7 @@ instance to_real TWord
 instance to_word_ptr  TWord, (TPtr t)
 instance to_char_ptr  TWord, (TPtr t)
 instance to_short_ptr TWord, (TPtr t)
+instance to_ptr_offset TWord, TPtrOffset, TShort
 
 instance + (Expr t)
 instance - (Expr t)
@@ -86,22 +86,22 @@ nop :: !Target -> Target
 (:.) infixr 1 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 
 class typename t :: t -> String
-instance typename TWord, THWord, TChar, TShort, TInt, TReal, (TPtr t) | typename t
+instance typename TWord, TPtrOffset, TChar, TShort, TInt, TReal, (TPtr t) | typename t
 new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance .=
-	TWord TWord, TWord THWord, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
-	THWord THWord,
+	TWord TWord, TWord TPtrOffset, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
+	TPtrOffset TPtrOffset,
 	TChar TChar,
 	TInt TInt, TInt TWord,
 	(TPtr t) (TPtr u) // NB/TODO: no checking on child types!
 
 class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance += TWord TWord, THWord THWord
+instance += TWord TWord, TPtrOffset TPtrOffset
 
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance -= TWord TWord, THWord THWord, TShort TShort
+instance -= TWord TWord, TPtrOffset TPtrOffset, TShort TShort
 
 class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target
 instance advance_ptr Int, (Expr w)
@@ -154,8 +154,8 @@ caf_list :: Expr (TPtr TWord)
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr THWord) !Target -> Target
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
 
 putchar :: !(Expr TChar) !Target -> Target
 print_bool :: !(Expr TWord) !Target -> Target

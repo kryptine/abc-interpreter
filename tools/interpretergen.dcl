@@ -9,7 +9,6 @@ from target import :: Expr
 	}
 
 :: TWord  = TWord
-:: THWord = THWord
 :: TBool  = TBool
 :: TChar  = TChar
 :: TShort = TShort
@@ -17,9 +16,9 @@ from target import :: Expr
 :: TReal  = TReal
 
 :: TPtr t = TPtr !t
+:: TPtrOffset = TPtrOffset
 
 class to_word  t :: !(Expr t) -> Expr TWord
-class to_hword t :: !(Expr t) -> Expr THWord
 class to_bool  t :: !(Expr t) -> Expr TBool
 class to_char  t :: !(Expr t) -> Expr TChar
 class to_short t :: !(Expr t) -> Expr TShort
@@ -30,3 +29,5 @@ class to_word_ptr t  :: !(Expr t) -> Expr (TPtr TWord)
 class to_char_ptr t  :: !(Expr t) -> Expr (TPtr TChar)
 class to_short_ptr t :: !(Expr t) -> Expr (TPtr TShort)
 class to_int_ptr t   :: !(Expr t) -> Expr (TPtr TInt)
+
+class to_ptr_offset t :: !(Expr t) -> Expr TPtrOffset

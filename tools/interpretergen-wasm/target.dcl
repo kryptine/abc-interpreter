@@ -8,7 +8,7 @@ import interpretergen
 
 class wasm_type a :: !a -> Type
 
-instance wasm_type TWord, THWord, TBool, TChar, TShort, TInt, TReal, (TPtr t)
+instance wasm_type TWord, TPtrOffset, TBool, TChar, TShort, TInt, TReal, (TPtr t)
 
 :: Target
 :: Expr t
@@ -24,13 +24,12 @@ instr_mulUUL :: !Target -> Target
 instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
-lit_hword :: !Int -> Expr THWord
+lit_hword :: !Int -> Expr TPtrOffset
 lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
 
-instance to_word THWord, TChar, TInt, TShort, (TPtr t), TReal
-instance to_hword TWord, THWord, TShort
+instance to_word TPtrOffset, TChar, TInt, TShort, (TPtr t), TReal
 instance to_bool TWord
 instance to_char TWord
 instance to_int TWord
@@ -38,6 +37,7 @@ instance to_real TWord
 instance to_word_ptr  TWord, (TPtr t)
 instance to_char_ptr  TWord, (TPtr t)
 instance to_short_ptr TWord, (TPtr t)
+instance to_ptr_offset TWord, TPtrOffset, TShort
 
 instance + (Expr t)
 instance - (Expr t)
@@ -95,23 +95,23 @@ new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | wasm_
 
 class (.=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
 instance .=
-	TWord TWord, TWord THWord, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
-	THWord THWord,
+	TWord TWord, TWord TPtrOffset, TWord TBool, TWord TChar, TWord TInt, TWord TShort,
+	TPtrOffset TPtrOffset,
 	TChar TChar,
 	TInt TInt, TInt TWord,
 	(TPtr t) (TPtr u)
 
 class (+=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance += TWord TWord, THWord THWord
+instance += TWord TWord, TPtrOffset TPtrOffset
 
 class (-=) infix 2 v e :: !(Expr v) !(Expr e) !Target -> Target
-instance -= TWord TWord, THWord THWord, TShort TShort
+instance -= TWord TWord, TPtrOffset TPtrOffset, TShort TShort
 
 class advance_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | wasm_type v
-instance advance_ptr Int, (Expr THWord)
+instance advance_ptr Int, (Expr TPtrOffset)
 
 class rewind_ptr i :: !(Expr (TPtr v)) !i !Target -> Target | wasm_type v
-instance rewind_ptr Int, (Expr THWord)
+instance rewind_ptr Int, (Expr TPtrOffset)
 
 class (@)  infix 8 a :: !(Expr (TPtr t)) !a -> Expr t | wasm_type t
 class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t) | wasm_type t
@@ -133,7 +133,7 @@ if_then_else ::
 if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 
 class ensure_hp s :: !s !Target -> Target
-instance ensure_hp Int, (Expr t) | to_hword t
+instance ensure_hp Int, (Expr t) | to_ptr_offset t
 
 A :: Expr (TPtr TWord)
 B :: Expr (TPtr TWord)
@@ -158,8 +158,8 @@ caf_list :: Expr (TPtr TWord)
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr THWord) !Target -> Target
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
 
 putchar :: !(Expr TChar) !Target -> Target
 print_bool :: !(Expr TWord) !Target -> Target

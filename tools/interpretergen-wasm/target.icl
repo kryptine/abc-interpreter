@@ -36,7 +36,7 @@ where
 		I16 -> "i16"
 
 instance wasm_type TWord    where wasm_type _ = I64
-instance wasm_type THWord   where wasm_type _ = I32
+instance wasm_type TPtrOffset   where wasm_type _ = I32
 instance wasm_type TBool    where wasm_type _ = I32
 instance wasm_type TChar    where wasm_type _ = I8
 instance wasm_type TShort   where wasm_type _ = I16
@@ -486,8 +486,8 @@ instr_mulUUL t = instr_unimplemented t // TODO
 instr_RtoAC :: !Target -> Target
 instr_RtoAC t = (
 	new_local TReal (to_real (B @ 0)) \r ->
-	new_local THWord (Ecall "clean_RtoAC_words_needed" (r -- ELNil)) \lw ->
-	//ensure_hp (lw ::: THWord) :. // TODO
+	new_local TPtrOffset (Ecall "clean_RtoAC_words_needed" (r -- ELNil)) \lw ->
+	//ensure_hp (lw ::: TPtrOffset) :. // TODO
 	A @ 1 .= to_word Hp :.
 	Hp .= (Ecall "clean_RtoAC" (Hp -- r -- ELNil) ::: TPtr TWord) :.
 	advance_ptr Pc 1 :.
@@ -501,7 +501,7 @@ where
 lit_word :: !Int -> Expr TWord
 lit_word w = Econst I64 w
 
-lit_hword :: !Int -> Expr THWord
+lit_hword :: !Int -> Expr TPtrOffset
 lit_hword w = Econst I32 w
 
 lit_char :: !Char -> Expr TChar
@@ -514,16 +514,12 @@ lit_int :: !Int -> Expr TInt
 lit_int i = Econst I64 i
 
 instance to_word TBool    where to_word  c = Eextend I64 I32 c
-instance to_word THWord   where to_word  c = Eextend I64 I32 c
+instance to_word TPtrOffset   where to_word  c = Eextend I64 I32 c
 instance to_word TChar    where to_word  c = cast_expr c
 instance to_word TInt     where to_word  i = cast_expr i
 instance to_word TShort   where to_word  s = cast_expr s
 instance to_word (TPtr t) where to_word  p = Eextend I64 I32 p
 instance to_word TReal    where to_word  r = Ereinterpret I64 F64 r
-
-instance to_hword TWord   where to_hword w = Ewrap I32 I64 w
-instance to_hword THWord  where to_hword w = w
-instance to_hword TShort  where to_hword s = Ewrap I32 I64 s
 
 instance to_bool  TWord   where to_bool  w = Ewrap I32 I64 w
 
@@ -539,6 +535,10 @@ instance to_char_ptr  TWord    where to_char_ptr  w = Ewrap I32 I64 w
 instance to_char_ptr  (TPtr t) where to_char_ptr  p = cast_expr p
 instance to_short_ptr TWord    where to_short_ptr w = Ewrap I32 I64 w
 instance to_short_ptr (TPtr t) where to_short_ptr p = cast_expr p
+
+instance to_ptr_offset TWord      where to_ptr_offset w = Ewrap I32 I64 w
+instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
+instance to_ptr_offset TShort     where to_ptr_offset s = Ewrap I32 I64 s
 
 cast_expr :: !Ex -> Ex
 cast_expr e = e
@@ -675,13 +675,13 @@ where
 			-> Estore vartype loadtype offset addr e
 
 instance .= TWord  TWord  where .= v e t = set v e t
-instance .= TWord  THWord where .= v e t = set v (to_word e) t
+instance .= TWord  TPtrOffset where .= v e t = set v (to_word e) t
 instance .= TWord  TBool  where .= v e t = set v (to_word e) t
 instance .= TWord  TChar  where .= v e t = set v (to_word e) t
 instance .= TWord  TInt   where .= v e t = set v (to_word e) t
 instance .= TWord  TShort where .= v e t = set v (to_word e) t
 
-instance .= THWord THWord where .= v e t = set v e t
+instance .= TPtrOffset TPtrOffset where .= v e t = set v e t
 
 instance .= TChar  TChar  where .= v e t = set v e t
 
@@ -719,10 +719,10 @@ var_sub v e t = case e of
 					ld = Eload localtype storetype Signed offset addr
 
 instance += TWord  TWord  where += var val t = var_add var val t
-instance += THWord THWord where += var val t = var_add var val t
+instance += TPtrOffset TPtrOffset where += var val t = var_add var val t
 
 instance -= TWord  TWord  where -= var val t = var_sub var val t
-instance -= THWord THWord where -= var val t = var_sub var val t
+instance -= TPtrOffset TPtrOffset where -= var val t = var_sub var val t
 instance -= TShort TShort where -= var val t = var_sub var val t
 
 instance advance_ptr Int
@@ -731,7 +731,7 @@ where
 	where
 		w = type_width (wasm_type (get_type_of_ptr v))
 
-instance advance_ptr (Expr THWord)
+instance advance_ptr (Expr TPtrOffset)
 where
 	advance_ptr v e t = var_add v (Eshl I32 e (Econst I32 s)) t
 	where
@@ -743,7 +743,7 @@ where
 	where
 		w = type_width (wasm_type (get_type_of_ptr v))
 
-instance rewind_ptr (Expr THWord)
+instance rewind_ptr (Expr TPtrOffset)
 where
 	rewind_ptr v e t = var_sub v (Eshl I32 e (Econst I32 s)) t
 	where
@@ -838,14 +838,14 @@ where
 if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 if_break_else c else t = else (append (Ebr_if 0 c) t)
 
-instance ensure_hp (Expr t) | to_hword t
+instance ensure_hp (Expr t) | to_ptr_offset t
 where
 	ensure_hp i t = if_then_else
 		(Elt I32 Signed Hp_free (Econst I32 0))
-		(Hp_free += to_hword i :. append (Ebr "abc-gc"))
+		(Hp_free += to_ptr_offset i :. append (Ebr "abc-gc"))
 		[]
 		Nothing
-		((Hp_free .= Hp_free - to_hword i) t)
+		((Hp_free .= Hp_free - to_ptr_offset i) t)
 
 instance ensure_hp Int
 where
@@ -856,7 +856,7 @@ where
 		Nothing
 		((Hp_free .= Hp_free - ie) t)
 	where
-		ie :: Expr THWord
+		ie :: Expr TPtrOffset
 		ie = Econst I32 i
 
 A :: Expr (TPtr TWord)
@@ -871,7 +871,7 @@ Pc = Ivar (Local "pc")
 Hp :: Expr (TPtr TWord)
 Hp = Ivar (Local "hp")
 
-Hp_free :: Expr THWord
+Hp_free :: Expr TPtrOffset
 Hp_free = Ivar (Local "hp-free")
 
 BOOL_ptr :: Expr TWord
@@ -938,10 +938,10 @@ where
 	popped_pc :: Expr (TPtr TWord)
 	popped_pc = Eload I32 I32 DontCare 0 (Eget C)
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr THWord) !Target -> Target
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
 memcpy d s n t = append (Ecall "clean_memcpy" (d -- s -- n -- ELNil)) t
 
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr THWord) -> Expr TInt
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
 strncmp s1 s2 n = Eextend I64 I32 (Ecall "clean_strncmp" (s1 -- s2 -- n -- ELNil))
 
 putchar :: !(Expr TChar) !Target -> Target
