@@ -145,7 +145,7 @@ where
 		]
 
 	block_start t = "(block $instr_"+++hd t.instrs
-	block_body t = [")":head ++ [toString s \\ s <- reverse t.stmts]]
+	block_body t = [")":head ++ [toString (optimize s) \\ s <- reverse t.stmts]]
 	where
 		head = reverse [";; "+++i \\ i <- t.instrs]
 

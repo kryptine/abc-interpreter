@@ -200,3 +200,67 @@ where
 		signed_op t sig op = case t of
 			F64 -> "."+++op+++" "
 			_   -> "."+++op+++if sig "_s" "_u"
+
+optimize :: !Ex -> Ex
+optimize e = case e of
+	Eunreachable -> e
+	Ereturn e -> Ereturn (optimize e)
+
+	Eblock -> e
+	Eloop -> e
+	Ebr _ -> e
+	Ebr_local _ -> e
+	Ebr_if l e -> Ebr_if l (optimize e)
+	Eend -> e
+	Eif e -> Eif (optimize e)
+	Ethen -> e
+	Eelse -> e
+	Ecall l args -> Ecall l [optimize a \\ a <- args]
+	Eselect e1 e2 c -> Eselect (optimize e1) (optimize e2) (optimize c)
+
+	Etee v e -> Etee v (optimize e)
+	Eset v e -> Eset v (optimize e)
+	Eget _ -> e
+
+	Eload t1 t2 signed o a -> Eload t1 t2 signed o (optimize a)
+	Estore t1 t2 o a e -> Estore t1 t2 o (optimize a) (optimize e)
+
+	Econst _ _ -> e
+
+	Eadd t a b -> Eadd t (optimize a) (optimize b)
+	Esub t a b -> Esub t (optimize a) (optimize b)
+	Emul t a b -> Emul t (optimize a) (optimize b)
+	Ediv t signed a b -> Ediv t signed (optimize a) (optimize b)
+	Erem t signed a b -> Erem t signed (optimize a) (optimize b)
+
+	Eeq t a b -> Eeq t (optimize a) (optimize b)
+	Ene t a b -> Ene t (optimize a) (optimize b)
+	Elt t signed a b -> Elt t signed (optimize a) (optimize b)
+	Egt t signed a b -> Egt t signed (optimize a) (optimize b)
+	Ele t signed a b -> Ele t signed (optimize a) (optimize b)
+	Ege t signed a b -> Ege t signed (optimize a) (optimize b)
+	Eeqz t e -> Eeqz t (optimize e)
+
+	Eand t a b -> Eand t (optimize a) (optimize b)
+	Eor  t a b -> Eor  t (optimize a) (optimize b)
+	Exor t a b -> Exor t (optimize a) (optimize b)
+	Eshl t a b -> Eshl t (optimize a) (optimize b)
+	Eshr t signed a b -> Eshr t signed (optimize a) (optimize b)
+
+	Eabs   t e -> Eabs   t (optimize e)
+	Efloor t e -> Efloor t (optimize e)
+	Eneg   t e -> Eneg   t (optimize e)
+	Esqrt  t e -> Esqrt  t (optimize e)
+
+	Ewrap to fr e -> case optimize e of
+		Eload ltype stype signed o a | fr==ltype
+			-> Eload to stype signed o a
+		e
+			-> Ewrap to fr e
+	Eextend      to fr e -> Eextend      to fr (optimize e)
+	Ereinterpret to fr e -> Ereinterpret to fr (optimize e)
+	Etrunc       to fr e -> Etrunc       to fr (optimize e)
+	Econvert     to fr e -> Econvert     to fr (optimize e)
+
+	Ivar _ -> e
+	Iref t1 t2 o a -> Eload t1 t2 DontCare o (optimize a)

@@ -92,3 +92,5 @@ type2 :: !a !a -> Type | type a
 instance type Ex, Variable
 
 instance toString Ex
+
+optimize :: !Ex -> Ex
