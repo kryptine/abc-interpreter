@@ -86,6 +86,8 @@ instance wasm_literal Int, Char
 	| Ivar !Variable
 	| Iref !Type !Type !Int !Ex // load or store
 
+subexpressions :: !Ex -> [Ex]
+
 class type a :: !a -> Type
 type2 :: !a !a -> Type | type a
 
@@ -93,4 +95,8 @@ instance type Ex, Variable
 
 instance toString Ex
 
-optimize :: !Ex -> Ex
+:: OptimizationSettings =
+	{ rename_labels :: ![(String,String)]
+	}
+
+optimize :: !OptimizationSettings !Ex -> Ex

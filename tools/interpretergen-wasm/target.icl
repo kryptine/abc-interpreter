@@ -75,12 +75,32 @@ collect_instructions :: !Options ![Target] -> [String]
 collect_instructions {instructions_order=Nothing} _ = abort "no abc instructions order specified\n"
 collect_instructions {debug_instructions,instructions_order=Just instrs_order} is =
 	header ++
-	reverse [block_start i \\ i <- is_with_illegal_block] ++
+	[ "(loop $abc-loop-outer"
+	, "(block $abc-gc-outer"
+	] ++
+	[ "(block $instr_"+++hd i.instrs \\ i <- reverse slow_instrs] ++
+	[ "(loop $abc-loop"
+	, "(block $abc-gc"
+	] ++
+	[ "(block $instr_"+++hd i.instrs \\ i <- reverse fast_instrs] ++
 	switch ++
-	flatten [block_body i \\ i <- is_with_illegal_block] ++
+	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- fast_instrs] ++
+	gc_block "abc-loop" ++
+	flatten [block_body {i & stmts=map (optimize slow_opt_options) i.stmts} \\ i <- slow_instrs] ++
+	gc_block "abc-loop-outer" ++
 	footer
 where
-	is_with_illegal_block = is ++ [end_instruction (instr_unimplemented (begin_instruction "illegal" start))]
+	all_instructions = [end_instruction (instr_unimplemented (begin_instruction "illegal" start)):is]
+	(slow_instrs,fast_instrs) = partition (\i->any (any (\e->e=:(Ecall _ _)) o subexpressions) i.stmts) [] [] all_instructions
+	where
+		partition p yes no [x:xs]
+		| p x
+			= partition p [x:yes] no xs
+			= partition p yes [x:no] xs
+		partition _ yes no [] = (yes,no)
+
+	fast_opt_options = {rename_labels=[]}
+	slow_opt_options = {rename_labels=[("abc-loop","abc-loop-outer"),("abc-gc","abc-gc-outer")]}
 
 	header =
 		[ "(module"
@@ -125,27 +145,24 @@ where
 		[ "(local $vw"+++toString i+++" i32)" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]] ] ++
 		[ "(local $vq"+++toString i+++" i64)" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]] ] ++
 		[ "(local $vd"+++toString i+++" f64)" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]] ] ++
-		[ "(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars ] ++
-
-		[ "(loop $abc-loop"
-		, "(block $abc-gc"
-		]
-	footer =
-		[ ")" // block abc-gc
+		[ "(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars ]
+	gc_block loop_label =
+		[ ") ;; gc"
 		, "(call $clean_gc (local.get $asp))"
 		, "(if (i32.le_s (global.get $g-hp-free) (local.get $hp-free))"
 		, "\t(then (call $clean_out_of_memory) (unreachable)))"
 		, "(local.set $hp (global.get $g-hp))"
 		, "(local.set $hp-free (global.get $g-hp-free))"
-		, "(br $abc-loop)"
-		, ")" // loop abc-loop
-		, "(unreachable)"
-		, ")" // func
-		, ")" // module
+		, "(br $"+++loop_label+++")"
+		, ") ;; loop"
+		]
+	footer =
+		[ "(unreachable)"
+		, ") ;; func"
+		, ") ;; module"
 		]
 
-	block_start t = "(block $instr_"+++hd t.instrs
-	block_body t = [")":head ++ [toString (optimize s) \\ s <- reverse t.stmts]]
+	block_body t = [")":head ++ [toString s \\ s <- reverse t.stmts]]
 	where
 		head = reverse [";; "+++i \\ i <- t.instrs]
 

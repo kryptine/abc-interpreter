@@ -51,6 +51,66 @@ where
 	wasm_repr c = toString (toInt c)
 	is_zero c = c == '\0'
 
+subexpressions :: !Ex -> [Ex]
+subexpressions e = case e of
+	Eunreachable -> [e]
+	Ereturn e` -> [e:subexpressions e`]
+
+	Eblock -> [e]
+	Eloop -> [e]
+	Ebr _ -> [e]
+	Ebr_local _ -> [e]
+	Ebr_if l e` -> [e:subexpressions e`]
+	Eend -> [e]
+	Eif c -> [e:subexpressions c]
+	Ethen -> [e]
+	Eelse -> [e]
+	Ecall l args -> [e:[s \\ a <- args, s <- subexpressions a]]
+	Eselect e1 e2 c -> [e:[s \\ e <- [e1,e2,c], s <- subexpressions e]]
+
+	Etee _ v -> [e:subexpressions v]
+	Eset _ v -> [e:subexpressions v]
+	Eget _ -> [e]
+
+	Eload _ _ _ _ a -> [e:subexpressions a]
+	Estore _ _ _ a v -> [e:subexpressions a++subexpressions v]
+
+	Econst _ _ -> [e]
+
+	Eadd _ a b -> [e:subexpressions a++subexpressions b]
+	Esub _ a b -> [e:subexpressions a++subexpressions b]
+	Emul _ a b -> [e:subexpressions a++subexpressions b]
+	Ediv _ _ a b -> [e:subexpressions a++subexpressions b]
+	Erem _ _ a b -> [e:subexpressions a++subexpressions b]
+
+	Eeq _ a b -> [e:subexpressions a++subexpressions b]
+	Ene _ a b -> [e:subexpressions a++subexpressions b]
+	Elt _ _ a b -> [e:subexpressions a++subexpressions b]
+	Egt _ _ a b -> [e:subexpressions a++subexpressions b]
+	Ele _ _ a b -> [e:subexpressions a++subexpressions b]
+	Ege _ _ a b -> [e:subexpressions a++subexpressions b]
+	Eeqz _ e` -> [e:subexpressions e`]
+
+	Eand _ a b -> [e:subexpressions a++subexpressions b]
+	Eor  _ a b -> [e:subexpressions a++subexpressions b]
+	Exor _ a b -> [e:subexpressions a++subexpressions b]
+	Eshl _ a b -> [e:subexpressions a++subexpressions b]
+	Eshr _ _ a b -> [e:subexpressions a++subexpressions b]
+
+	Eabs   _ e` -> [e:subexpressions e`]
+	Efloor _ e` -> [e:subexpressions e`]
+	Eneg   _ e` -> [e:subexpressions e`]
+	Esqrt  _ e` -> [e:subexpressions e`]
+
+	Ewrap        to fr e` -> [e:subexpressions e`]
+	Eextend      to fr e` -> [e:subexpressions e`]
+	Ereinterpret to fr e` -> [e:subexpressions e`]
+	Etrunc       to fr e` -> [e:subexpressions e`]
+	Econvert     to fr e` -> [e:subexpressions e`]
+
+	Ivar _ -> [e]
+	Iref _ _ _ a -> [e:subexpressions a]
+
 instance type Ex
 where
 	type e = case e of
@@ -201,66 +261,68 @@ where
 			F64 -> "."+++op+++" "
 			_   -> "."+++op+++if sig "_s" "_u"
 
-optimize :: !Ex -> Ex
-optimize e = case e of
+optimize :: !OptimizationSettings !Ex -> Ex
+optimize set e = case e of
 	Eunreachable -> e
-	Ereturn e -> Ereturn (optimize e)
+	Ereturn e -> Ereturn (optimize set e)
 
 	Eblock -> e
 	Eloop -> e
-	Ebr _ -> e
+	Ebr l -> case [new \\ (old,new) <- set.rename_labels | old==l] of
+		[new:_] -> Ebr new
+		[]      -> e
 	Ebr_local _ -> e
-	Ebr_if l e -> Ebr_if l (optimize e)
+	Ebr_if l e -> Ebr_if l (optimize set e)
 	Eend -> e
-	Eif e -> Eif (optimize e)
+	Eif e -> Eif (optimize set e)
 	Ethen -> e
 	Eelse -> e
-	Ecall l args -> Ecall l [optimize a \\ a <- args]
-	Eselect e1 e2 c -> Eselect (optimize e1) (optimize e2) (optimize c)
+	Ecall l args -> Ecall l [optimize set a \\ a <- args]
+	Eselect e1 e2 c -> Eselect (optimize set e1) (optimize set e2) (optimize set c)
 
-	Etee v e -> Etee v (optimize e)
-	Eset v e -> Eset v (optimize e)
+	Etee v e -> Etee v (optimize set e)
+	Eset v e -> Eset v (optimize set e)
 	Eget _ -> e
 
-	Eload t1 t2 signed o a -> Eload t1 t2 signed o (optimize a)
-	Estore t1 t2 o a e -> Estore t1 t2 o (optimize a) (optimize e)
+	Eload t1 t2 signed o a -> Eload t1 t2 signed o (optimize set a)
+	Estore t1 t2 o a e -> Estore t1 t2 o (optimize set a) (optimize set e)
 
 	Econst _ _ -> e
 
-	Eadd t a b -> Eadd t (optimize a) (optimize b)
-	Esub t a b -> Esub t (optimize a) (optimize b)
-	Emul t a b -> Emul t (optimize a) (optimize b)
-	Ediv t signed a b -> Ediv t signed (optimize a) (optimize b)
-	Erem t signed a b -> Erem t signed (optimize a) (optimize b)
+	Eadd t a b -> Eadd t (optimize set a) (optimize set b)
+	Esub t a b -> Esub t (optimize set a) (optimize set b)
+	Emul t a b -> Emul t (optimize set a) (optimize set b)
+	Ediv t signed a b -> Ediv t signed (optimize set a) (optimize set b)
+	Erem t signed a b -> Erem t signed (optimize set a) (optimize set b)
 
-	Eeq t a b -> Eeq t (optimize a) (optimize b)
-	Ene t a b -> Ene t (optimize a) (optimize b)
-	Elt t signed a b -> Elt t signed (optimize a) (optimize b)
-	Egt t signed a b -> Egt t signed (optimize a) (optimize b)
-	Ele t signed a b -> Ele t signed (optimize a) (optimize b)
-	Ege t signed a b -> Ege t signed (optimize a) (optimize b)
-	Eeqz t e -> Eeqz t (optimize e)
+	Eeq t a b -> Eeq t (optimize set a) (optimize set b)
+	Ene t a b -> Ene t (optimize set a) (optimize set b)
+	Elt t signed a b -> Elt t signed (optimize set a) (optimize set b)
+	Egt t signed a b -> Egt t signed (optimize set a) (optimize set b)
+	Ele t signed a b -> Ele t signed (optimize set a) (optimize set b)
+	Ege t signed a b -> Ege t signed (optimize set a) (optimize set b)
+	Eeqz t e -> Eeqz t (optimize set e)
 
-	Eand t a b -> Eand t (optimize a) (optimize b)
-	Eor  t a b -> Eor  t (optimize a) (optimize b)
-	Exor t a b -> Exor t (optimize a) (optimize b)
-	Eshl t a b -> Eshl t (optimize a) (optimize b)
-	Eshr t signed a b -> Eshr t signed (optimize a) (optimize b)
+	Eand t a b -> Eand t (optimize set a) (optimize set b)
+	Eor  t a b -> Eor  t (optimize set a) (optimize set b)
+	Exor t a b -> Exor t (optimize set a) (optimize set b)
+	Eshl t a b -> Eshl t (optimize set a) (optimize set b)
+	Eshr t signed a b -> Eshr t signed (optimize set a) (optimize set b)
 
-	Eabs   t e -> Eabs   t (optimize e)
-	Efloor t e -> Efloor t (optimize e)
-	Eneg   t e -> Eneg   t (optimize e)
-	Esqrt  t e -> Esqrt  t (optimize e)
+	Eabs   t e -> Eabs   t (optimize set e)
+	Efloor t e -> Efloor t (optimize set e)
+	Eneg   t e -> Eneg   t (optimize set e)
+	Esqrt  t e -> Esqrt  t (optimize set e)
 
-	Ewrap to fr e -> case optimize e of
+	Ewrap to fr e -> case optimize set e of
 		Eload ltype stype signed o a | fr==ltype
 			-> Eload to stype signed o a
 		e
 			-> Ewrap to fr e
-	Eextend      to fr e -> Eextend      to fr (optimize e)
-	Ereinterpret to fr e -> Ereinterpret to fr (optimize e)
-	Etrunc       to fr e -> Etrunc       to fr (optimize e)
-	Econvert     to fr e -> Econvert     to fr (optimize e)
+	Eextend      to fr e -> Eextend      to fr (optimize set e)
+	Ereinterpret to fr e -> Ereinterpret to fr (optimize set e)
+	Etrunc       to fr e -> Etrunc       to fr (optimize set e)
+	Econvert     to fr e -> Econvert     to fr (optimize set e)
 
 	Ivar _ -> e
-	Iref t1 t2 o a -> Eload t1 t2 DontCare o (optimize a)
+	Iref t1 t2 o a -> Eload t1 t2 DontCare o (optimize set a)
