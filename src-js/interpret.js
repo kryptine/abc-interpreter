@@ -235,11 +235,16 @@ intp = new Uint8Array(intp);
 	if (scriptArgs.indexOf('--extract-code') >= 0) {
 		var obj = wasmExtractCode(intp.module, 'best');
 
+		const extractable = ['interpret'];
+
 		var exports = {};
 		for (var f in intp.instance.exports)
 			exports[intp.instance.exports[f].name] = f;
 
-		obj.segments.filter(seg => seg.kind == 0).map(function (seg) {
+		obj.segments.filter(function (seg) {
+			return seg.kind == 0 &&
+				extractable.indexOf(exports[seg.funcIndex]) >= 0;
+		}).map(function (seg) {
 			var name = seg.funcIndex in exports ? exports[seg.funcIndex] : ('_'+seg.funcIndex);
 			var filename = 'disas-'+name+'.bin';
 			var code = obj.code.subarray(seg.funcBodyBegin, seg.funcBodyEnd);

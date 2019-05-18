@@ -281,7 +281,14 @@ optimize set e = case e of
 	Ediv t signed a b -> Ediv t signed (optimize set a) (optimize set b)
 	Erem t signed a b -> Erem t signed (optimize set a) (optimize set b)
 
-	Eeq t a b -> Eeq t (optimize set a) (optimize set b)
+	Eeq t a b -> case oa of
+		Econst _ v | is_zero v -> Eeqz t ob
+		_ -> case ob of
+			Econst _ v | is_zero v -> Eeqz t oa
+			_ -> Eeq t oa ob
+	with
+		oa = optimize set a
+		ob = optimize set b
 	Ene t a b -> Ene t (optimize set a) (optimize set b)
 	Elt t signed a b -> Elt t signed (optimize set a) (optimize set b)
 	Egt t signed a b -> Egt t signed (optimize set a) (optimize set b)
@@ -306,9 +313,15 @@ optimize set e = case e of
 		e
 			-> Ewrap to fr e
 	Eextend      to fr e -> Eextend      to fr (optimize set e)
-	Ereinterpret to fr e -> Ereinterpret to fr (optimize set e)
-	Etrunc       to fr e -> Etrunc       to fr (optimize set e)
-	Econvert     to fr e -> Econvert     to fr (optimize set e)
+
+	Ereinterpret to fr e -> case optimize set e of
+		Eload ltype stype signed o a | fr==ltype
+			-> Eload to stype signed o a
+		e
+			-> Ereinterpret to fr e
+
+	Etrunc   to fr e -> Etrunc   to fr (optimize set e)
+	Econvert to fr e -> Econvert to fr (optimize set e)
 
 	Ivar _ -> e
 	Iref t1 t2 o a -> Eload t1 t2 DontCare o (optimize set a)
