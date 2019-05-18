@@ -111,12 +111,12 @@ subexpressions e = case e of
 	Ivar _ -> [e]
 	Iref _ _ _ a -> [e:subexpressions a]
 
-instance type Ex
+instance Type Ex
 where
-	type e = case e of
-		Eselect a b _ -> type2 a b
-		Etee _ e -> type e
-		Eget v -> type v
+	Type tis e = case e of
+		Eselect a b _ -> Type2 tis a b
+		Etee _ e -> Type tis e
+		Eget v -> Type tis v
 		Eload t _ _ _ _ -> t
 		Econst t _ -> t
 		Eadd t _ _ -> t
@@ -145,7 +145,7 @@ where
 		Ereinterpret t _ _ -> t
 		Etrunc t _ _ -> t
 		Econvert t _ _ -> t
-		Ivar v -> type v
+		Ivar v -> Type tis v
 		Iref t _ _ _ -> t
 		_ -> abort e
 	where
@@ -158,24 +158,10 @@ where
 			halt
 		}
 
-instance type Variable
-where
-	type (Variable _ v)
-	| v.[0]=='v' = case v.[1] of
-		'w' -> I32
-		'q' -> I64
-		'd' -> F64
-	| v=="pc"      = I32
-	| v=="asp"     = I32
-	| v=="bsp"     = I32
-	| v=="csp"     = I32
-	| v=="hp"      = I32
-	| v=="hp-free" = I32
-	| v=="hp-size" = I32
-	| otherwise    = abort ("unknown variable "+++v+++"\n")
+instance Type Variable where Type tis v = tis.inference_var_type v
 
-type2 :: !a !a -> Type | type a
-type2 a b = let ta = type a in if (ta == type b) ta (abort "type mismatch\n")
+Type2 :: !TypeInferenceSettings !a !a -> Type | Type a
+Type2 tis a b = let ta = Type tis a in if (ta == Type tis b) ta (abort "type mismatch\n")
 
 instance toString Ex
 where

@@ -5,14 +5,40 @@ import StdMaybe
 import interpretergen
 import wasm
 
-instance wasm_type TWord    where wasm_type _ = I64
-instance wasm_type TPtrOffset   where wasm_type _ = I32
-instance wasm_type TBool    where wasm_type _ = I32
-instance wasm_type TChar    where wasm_type _ = I8
-instance wasm_type TShort   where wasm_type _ = I16
-instance wasm_type TInt     where wasm_type _ = I64
-instance wasm_type TReal    where wasm_type _ = F64
-instance wasm_type (TPtr t) where wasm_type _ = I32
+/* Use an inner loop for all instructions that do not need the WebAssembly
+ * `call` instruction. This is intended for the SpiderMonkey register
+ * allocator, which splits live ranges of registers early on around calls. The
+ * goal is that the allocator can then properly allocate for the inner loop,
+ * and bail out to the outer loop for other instructions. While this does
+ * improve the generated code somewhat, it is still (2019-05-18) worse than
+ * using globals instead of locals. */
+IF_SEPARATE_LOOPS   yes no :== no
+
+/* Use global variables instead of locals for pc, asp, bsp, csp, hp, and
+ * hp_free. This is useful because register allocators for WebAssembly tend to
+ * hit a bad case for the interpreter in which no registers are assigned for
+ * these variables. Using globals then avoids unnecessary loads and spills
+ * because globals are 'spilled' directly.
+ * NB: should the current setting ever be changed, that means that interfaces
+ * elsewhere (interpret.js, iTasks) may need to be changed and/or that
+ * instructions that use WebAssembly `call`s may need to write the local status
+ * into global variables which can then be updated by the callee. */
+IF_GLOBAL_RT_VARS   yes no :== yes
+
+/* This is the same optimization as IF_GLOBAL_RT_VARS, but applies to temporary
+ * variables. */
+IF_GLOBAL_TEMP_VARS yes no :== yes
+
+rt_var v :== IF_GLOBAL_RT_VARS (Global ("g-"+++v)) (Local v)
+
+instance wasm_type TWord      where wasm_type _ = I64
+instance wasm_type TPtrOffset where wasm_type _ = I32
+instance wasm_type TBool      where wasm_type _ = I32
+instance wasm_type TChar      where wasm_type _ = I8
+instance wasm_type TShort     where wasm_type _ = I16
+instance wasm_type TInt       where wasm_type _ = I64
+instance wasm_type TReal      where wasm_type _ = F64
+instance wasm_type (TPtr t)   where wasm_type _ = I32
 
 instance wasm_literal String
 where
@@ -54,7 +80,7 @@ new_temp_var tp t
 	I32 -> {t & temp_vars.tv_i32=t.temp_vars.tv_i32+1}
 	I64 -> {t & temp_vars.tv_i64=t.temp_vars.tv_i64+1}
 	F64 -> {t & temp_vars.tv_f64=t.temp_vars.tv_f64+1}
-= (Local var,t)
+= (IF_GLOBAL_TEMP_VARS Global Local var,t)
 
 i32_temp_vars =: {#{#'v','w',i} \\ i <- ['0'..'9']}
 i64_temp_vars =: {#{#'v','q',i} \\ i <- ['0'..'9']}
@@ -75,30 +101,39 @@ collect_instructions :: !Options ![Target] -> [String]
 collect_instructions {instructions_order=Nothing} _ = abort "no abc instructions order specified\n"
 collect_instructions {debug_instructions,instructions_order=Just instrs_order} is =
 	header ++
-	[ "(loop $abc-loop-outer"
-	, "(block $abc-gc-outer"
-	] ++
-	[ "(block $instr_"+++hd i.instrs \\ i <- reverse slow_instrs] ++
+	IF_SEPARATE_LOOPS (
+		[ "(loop $abc-loop-outer"
+		, "(block $abc-gc-outer" ] ++
+		[ "(block $instr_"+++hd i.instrs \\ i <- reverse slow_instrs] ++
+		[ "(block $slow-instr" ])
+		[] ++
 	[ "(loop $abc-loop"
-	, "(block $abc-gc"
-	] ++
-	[ "(block $instr_"+++hd i.instrs \\ i <- reverse fast_instrs] ++
-	switch ++
-	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- fast_instrs] ++
+	, "(block $abc-gc" ] ++
+	[ "(block $instr_"+++hd i.instrs \\ i <- reverse (IF_SEPARATE_LOOPS fast_instrs all_instructions)] ++
+	switch True ++
+	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- IF_SEPARATE_LOOPS fast_instrs all_instructions] ++
 	gc_block "abc-loop" ++
-	flatten [block_body {i & stmts=map (optimize slow_opt_options) i.stmts} \\ i <- slow_instrs] ++
-	gc_block "abc-loop-outer" ++
+	IF_SEPARATE_LOOPS (
+		[ ") ;; block slow-instr" ] ++
+		switch False ++
+		flatten [block_body {i & stmts=map (optimize slow_opt_options) i.stmts} \\ i <- slow_instrs] ++
+		gc_block "abc-loop-outer")
+		[] ++
+	[ "(unreachable)" ] ++
 	footer
 where
-	all_instructions = [end_instruction (instr_unimplemented (begin_instruction "illegal" start)):is]
-	(slow_instrs,fast_instrs) = partition (\i->any (any (\e->e=:(Ecall _ _)) o subexpressions) i.stmts) [] [] all_instructions
-	where
-		partition p yes no [x:xs]
-		| p x
-			= partition p [x:yes] no xs
-			= partition p yes [x:no] xs
-		partition _ yes no [] = (yes,no)
+	all_instructions = sortBy lt_by_may_need_gc
+		[end_instruction (instr_unimplemented (begin_instruction "illegal" start)):is]
 
+	lt_by_may_need_gc i1 i2 = not (may_need_gc i1) && may_need_gc i2
+	where
+		may_need_gc i = any (any (\e->e=:(Ebr "abc-gc")) o subexpressions) i.stmts
+
+	// only used with IF_SEPARATE_LOOPS
+	(slow_instrs,fast_instrs) = partition (\i->any (any (\e->e=:(Ecall _ _) || e=:(Ebr "abc-gc")) o subexpressions) i.stmts) all_instructions
+	where
+		partition p [x:xs] = let (yes,no) = partition p xs in if (p x) ([x:yes],no) (yes,[x:no])
+		partition _ [] = ([],[])
 	fast_opt_options = {rename_labels=[]}
 	slow_opt_options = {rename_labels=[("abc-loop","abc-loop-outer"),("abc-gc","abc-gc-outer")]}
 
@@ -140,25 +175,20 @@ where
 		[ "(func (export \"get_"+++{if (c=='-') '_' c \\ c <-: v}+++"\") (result i32) (global.get $g-"+++v+++"))" \\ v <- rt_vars ] ++
 		[ "(func (export \"set_"+++{if (c=='-') '_' c \\ c <-: v}+++"\") (param i32) (global.set $g-"+++v+++" (local.get 0)))" \\ v <- rt_vars ] ++
 
+		IF_GLOBAL_TEMP_VARS ["(global $vw"+++toString i+++" (mut i32) (i32.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]]] [] ++
+		IF_GLOBAL_TEMP_VARS ["(global $vq"+++toString i+++" (mut i64) (i64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]]] [] ++
+		IF_GLOBAL_TEMP_VARS ["(global $vd"+++toString i+++" (mut f64) (f64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]] [] ++
+
 		[ "(func (export \"interpret\") (result i32)" ] ++
-		[ "(local $"+++v+++" i32)" \\ v <- rt_vars ] ++
-		[ "(local $vw"+++toString i+++" i32)" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]] ] ++
-		[ "(local $vq"+++toString i+++" i64)" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]] ] ++
-		[ "(local $vd"+++toString i+++" f64)" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]] ] ++
-		[ "(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars ]
-	gc_block loop_label =
-		[ ") ;; gc"
-		, "(call $clean_gc (local.get $asp))"
-		, "(if (i32.le_s (global.get $g-hp-free) (local.get $hp-free))"
-		, "\t(then (call $clean_out_of_memory) (unreachable)))"
-		, "(local.set $hp (global.get $g-hp))"
-		, "(local.set $hp-free (global.get $g-hp-free))"
-		, "(br $"+++loop_label+++")"
-		, ") ;; loop"
-		]
+
+		IF_GLOBAL_RT_VARS [] ["(local $"+++v+++" i32)" \\ v <- rt_vars] ++
+		IF_GLOBAL_RT_VARS [] ["(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars] ++
+
+		IF_GLOBAL_TEMP_VARS [] ["(local $vw"+++toString i+++" i32)" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]]] ++
+		IF_GLOBAL_TEMP_VARS [] ["(local $vq"+++toString i+++" i64)" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]]] ++
+		IF_GLOBAL_TEMP_VARS [] ["(local $vd"+++toString i+++" f64)" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]]
 	footer =
-		[ "(unreachable)"
-		, ") ;; func"
+		[ ") ;; func"
 		, ") ;; module"
 		]
 
@@ -166,36 +196,89 @@ where
 	where
 		head = reverse [";; "+++i \\ i <- t.instrs]
 
-	switch =
-		[ if debug_instructions
-			"\t(call $clean_debug_instr (local.get $pc) (i32.load (local.get $pc)))"
+	switch inner =
+		[ if (inner && debug_instructions)
+			(toString (Ecall "clean_debug_instr" [Pc, Eload I32 I32 DontCare 0 Pc]))
 			""
 		, "\t(br_table " +++
-			foldr (+++) "" [find_label i is \\ i <- instrs_order] +++
-			"$instr_illegal (i32.load (local.get $pc)))"
+			foldr (+++) "" [find_label i (IF_SEPARATE_LOOPS (if inner fast_instrs slow_instrs) all_instructions) \\ i <- instrs_order] +++
+			illegal_label +++
+			(toString (Eload I32 I32 DontCare 0 Pc)) +++ ")"
 		]
 	where
 		find_label i [t:ts]
 		| isMember i t.instrs
 			= "$instr_"+++hd t.instrs+++" "
 			= find_label i ts
-		find_label _ [] = "$instr_illegal "
+		find_label _ [] = illegal_label
+
+		illegal_label = if (IF_SEPARATE_LOOPS inner False) "$slow-instr " "$instr_illegal "
+
+	gc_block loop_label = IF_GLOBAL_RT_VARS
+		[ ") ;; block abc-gc"
+		, toString (Eset temp Hp_free)
+		, toString (Ecall "clean_gc" [A])
+		, toString (Eif (Hp_free <=. Ivar temp))
+		,   "(then"
+		,     toString (Ecall "clean_out_of_memory" [])
+		,     toString Eunreachable
+		,   ")"
+		, ")"
+		, toString (Ebr loop_label)
+		, ") ;; loop abc-loop"
+		]
+		[ ") ;; block abc-gc"
+		, toString (Ecall "clean_gc" [A])
+		, toString (Eif (Ivar (Global "g-hp-free") <=. Hp_free))
+		,   "(then"
+		,     toString (Ecall "clean_out_of_memory" [])
+		,     toString Eunreachable
+		,   ")"
+		, ")"
+		, toString (Eset (from_Ivar Hp_free) (Ivar (Global "g-hp-free")))
+		, toString (Eset (from_Ivar Hp) (Ivar (Global "g-hp")))
+		, toString (Ebr loop_label)
+		, ") ;; loop abc-loop"
+		]
+	where
+		temp = IF_GLOBAL_TEMP_VARS Global Local "vw0"
+
+type x :== Type TypeInferenceSettings x
+type2 x y :== Type2 TypeInferenceSettings x y
+TypeInferenceSettings =:
+	{ inference_var_type = var
+	}
+where
+	var (Variable loc v)
+	| v.[0]=='v' = case v.[1] of
+		'w' -> I32
+		'q' -> I64
+		'd' -> F64
+	| v.[0]=='g' && v.[1]=='-' = var (Variable loc (v % (2,size v-1)))
+	| v=="pc"      = I32
+	| v=="asp"     = I32
+	| v=="bsp"     = I32
+	| v=="csp"     = I32
+	| v=="hp"      = I32
+	| v=="hp-free" = I32
+	| v=="hp-size" = I32
+	| otherwise    = abort ("unknown variable "+++v+++"\n")
 
 instr_unimplemented :: !Target -> Target
 instr_unimplemented t = (
 	new_local (TPtr TWord) (Ecall "clean_handle_illegal_instr"
-		[ Eget (Local "pc")
-		, Eload I32 I32 DontCare 0 (Eget (Local "pc"))
-		, Eget (Local "asp")
-		, Eget (Local "bsp")
-		, Eget (Local "csp")
-		, Eget (Local "hp")
-		, Eget (Local "hp-free")
+		[ Pc
+		, Eload I32 I32 DontCare 0 Pc
+		, A
+		, B
+		, Eget C
+		, Hp
+		, cast_expr Hp_free
 		]) \res -> let new_pc = fix_type (TPtr TWord) res in
 	if_then_else (to_word new_pc ==. lit_word 0) (
 		append (Ecall "clean_illegal_instr"
-			[ Eget (Local "pc")
-			, Eload I32 I32 DontCare 0 (Eget (Local "pc"))
+			[ Pc
+			, Eload I32 I32 DontCare 0 Pc
 			]) :.
 		append (Ereturn (Econst I32 1))
 	) [] Nothing :.
@@ -207,7 +290,7 @@ where
 
 instr_halt :: !Target -> Target
 instr_halt t = (
-	append (Ecall "clean_halt" [Eget (Local "pc"), Eget (Local "hp-free"), Eget (Local "hp-size")]) :.
+	append (Ecall "clean_halt" [cast_expr Pc, Hp_free, Eget (Global "g-hp-size")]) :.
 	append (Ereturn (Econst I32 0))
 	) t
 
@@ -591,19 +674,19 @@ where
 		ie = Econst I32 i
 
 A :: Expr (TPtr TWord)
-A = Ivar (Local "asp")
+A = Ivar (rt_var "asp")
 
 B :: Expr (TPtr TWord)
-B = Ivar (Local "bsp")
+B = Ivar (rt_var "bsp")
 
 Pc :: Expr (TPtr TWord)
-Pc = Ivar (Local "pc")
+Pc = Ivar (rt_var "pc")
 
 Hp :: Expr (TPtr TWord)
-Hp = Ivar (Local "hp")
+Hp = Ivar (rt_var "hp")
 
 Hp_free :: Expr TPtrOffset
-Hp_free = Ivar (Local "hp-free")
+Hp_free = Ivar (rt_var "hp-free")
 
 BOOL_ptr :: Expr TWord
 BOOL_ptr = Econst I64 (11*8)
@@ -652,7 +735,7 @@ where
 caf_list :: Expr (TPtr TWord)
 caf_list = Econst I32 (97*8)
 
-C = Local "csp"
+C = rt_var "csp"
 
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 push_c v t = (

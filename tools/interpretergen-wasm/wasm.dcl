@@ -86,12 +86,18 @@ instance wasm_literal Int, Char
 	| Ivar !Variable
 	| Iref !Type !Type !Int !Ex // load or store
 
+from_Ivar (Ivar v) :== v
+
 subexpressions :: !Ex -> [Ex]
 
-class type a :: !a -> Type
-type2 :: !a !a -> Type | type a
+:: TypeInferenceSettings =
+	{ inference_var_type :: !Variable -> Type
+	}
 
-instance type Ex, Variable
+class Type a :: !TypeInferenceSettings !a -> Type
+Type2 :: !TypeInferenceSettings !a !a -> Type | Type a
+
+instance Type Ex, Variable
 
 instance toString Ex
 
