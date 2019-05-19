@@ -12,7 +12,7 @@ import wasm
  * and bail out to the outer loop for other instructions. While this does
  * improve the generated code somewhat, it is still (2019-05-18) worse than
  * using globals instead of locals. */
-IF_SEPARATE_LOOPS   yes no :== no
+IF_SEPARATE_LOOPS   yes no :== yes
 
 /* Use global variables instead of locals for pc, asp, bsp, csp, hp, and
  * hp_free. This is useful because register allocators for WebAssembly tend to
@@ -23,11 +23,11 @@ IF_SEPARATE_LOOPS   yes no :== no
  * elsewhere (interpret.js, iTasks) may need to be changed and/or that
  * instructions that use WebAssembly `call`s may need to write the local status
  * into global variables which can then be updated by the callee. */
-IF_GLOBAL_RT_VARS   yes no :== yes
+IF_GLOBAL_RT_VARS   yes no :== no
 
 /* This is the same optimization as IF_GLOBAL_RT_VARS, but applies to temporary
  * variables. */
-IF_GLOBAL_TEMP_VARS yes no :== yes
+IF_GLOBAL_TEMP_VARS yes no :== no
 
 rt_var v :== IF_GLOBAL_RT_VARS (Global ("g-"+++v)) (Local v)
 
@@ -107,6 +107,7 @@ collect_instructions {debug_instructions,instructions_order=Just instrs_order} i
 		, "(block $abc-gc-outer" ] ++
 		[ "(block $instr_"+++hd i.instrs \\ i <- reverse slow_instrs] ++
 		[ "(block $slow-instr"
+		, "(call $dummy)"
 		, "(loop $abc-loop" ]
 	)
 		[ "(block $abc-gc"
@@ -117,7 +118,9 @@ collect_instructions {debug_instructions,instructions_order=Just instrs_order} i
 	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- IF_SEPARATE_LOOPS fast_instrs all_instructions] ++
 	IF_SEPARATE_LOOPS [") ;; abc-loop"] (gc_block "abc-loop") ++
 	IF_SEPARATE_LOOPS (
-		[ ") ;; block slow-instr" ] ++
+		[ "(call $dummy)"
+		, ") ;; block slow-instr"
+		] ++
 		switch False ++
 		flatten [block_body {i & stmts=map (optimize slow_opt_options) i.stmts} \\ i <- slow_instrs] ++
 		gc_block "abc-loop-outer")
@@ -172,6 +175,7 @@ where
 		, "(func $clean_out_of_memory (import \"clean\" \"out_of_memory\"))"
 		, "(func $clean_gc (import \"clean\" \"gc\") (param i32))"
 		, "(func $clean_halt (import \"clean\" \"halt\") (param i32 i32 i32))"
+		, "(func $dummy)"
 		] ++
 
 		[ "(global $g-"+++v+++" (mut i32) (i32.const 0))" \\ v <- rt_vars ] ++
