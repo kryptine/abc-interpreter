@@ -101,18 +101,21 @@ collect_instructions :: !Options ![Target] -> [String]
 collect_instructions {instructions_order=Nothing} _ = abort "no abc instructions order specified\n"
 collect_instructions {debug_instructions,instructions_order=Just instrs_order} is =
 	header ++
-	IF_SEPARATE_LOOPS (
+	IF_SEPARATE_LOOPS
+	(
 		[ "(loop $abc-loop-outer"
 		, "(block $abc-gc-outer" ] ++
 		[ "(block $instr_"+++hd i.instrs \\ i <- reverse slow_instrs] ++
-		[ "(block $slow-instr" ])
-		[] ++
-	[ "(loop $abc-loop"
-	, "(block $abc-gc" ] ++
+		[ "(block $slow-instr"
+		, "(loop $abc-loop" ]
+	)
+		[ "(block $abc-gc"
+		, "(loop $abc-loop" ]
+	++
 	[ "(block $instr_"+++hd i.instrs \\ i <- reverse (IF_SEPARATE_LOOPS fast_instrs all_instructions)] ++
 	switch True ++
 	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- IF_SEPARATE_LOOPS fast_instrs all_instructions] ++
-	gc_block "abc-loop" ++
+	IF_SEPARATE_LOOPS [") ;; abc-loop"] (gc_block "abc-loop") ++
 	IF_SEPARATE_LOOPS (
 		[ ") ;; block slow-instr" ] ++
 		switch False ++
@@ -181,12 +184,12 @@ where
 
 		[ "(func (export \"interpret\") (result i32)" ] ++
 
-		IF_GLOBAL_RT_VARS [] ["(local $"+++v+++" i32)" \\ v <- rt_vars] ++
-		IF_GLOBAL_RT_VARS [] ["(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars] ++
-
 		IF_GLOBAL_TEMP_VARS [] ["(local $vw"+++toString i+++" i32)" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]]] ++
 		IF_GLOBAL_TEMP_VARS [] ["(local $vq"+++toString i+++" i64)" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]]] ++
-		IF_GLOBAL_TEMP_VARS [] ["(local $vd"+++toString i+++" f64)" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]]
+		IF_GLOBAL_TEMP_VARS [] ["(local $vd"+++toString i+++" f64)" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]] ++
+
+		IF_GLOBAL_RT_VARS [] ["(local $"+++v+++" i32)" \\ v <- rt_vars] ++
+		IF_GLOBAL_RT_VARS [] ["(local.set $"+++v+++" (global.get $g-"+++v+++"))" \\ v <- rt_vars]
 	footer =
 		[ ") ;; func"
 		, ") ;; module"
