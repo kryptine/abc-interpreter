@@ -18,6 +18,10 @@ from target import :: Expr
 :: TPtr t = TPtr !t
 :: TPtrOffset = TPtrOffset
 
+/* Used to specify types for expressions. See this issue for discussion:
+ * https://gitlab.science.ru.nl/clean-compiler-and-rts/compiler/issues/15 */
+(:::) :: !(Expr t) t -> Expr t
+
 class to_word  t :: !(Expr t) -> Expr TWord
 class to_bool  t :: !(Expr t) -> Expr TBool
 class to_char  t :: !(Expr t) -> Expr TChar

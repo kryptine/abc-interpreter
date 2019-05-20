@@ -307,16 +307,13 @@ instr_RtoAC :: !Target -> Target
 instr_RtoAC t = (
 	new_local TReal (to_real (B @ 0)) \r ->
 	new_local TPtrOffset (Ecall "clean_RtoAC_words_needed" [r]) \lw ->
-	//ensure_hp (lw ::: TPtrOffset) :. // TODO
+	ensure_hp lw :.
 	A @ 1 .= to_word Hp :.
 	Hp .= (Ecall "clean_RtoAC" [Hp,r] ::: TPtr TWord) :.
 	advance_ptr Pc 1 :.
 	advance_ptr A 1 :.
 	advance_ptr B 1
 	) t
-where
-	(:::) :: !(Expr t) t -> Expr t
-	(:::) e _ = e
 
 lit_word :: !Int -> Expr TWord
 lit_word w = Econst I64 w
@@ -657,24 +654,18 @@ if_break_else c else t = else (append (Ebr_if 0 c) t)
 
 instance ensure_hp (Expr t) | to_ptr_offset t
 where
-	ensure_hp i t = if_then_else
-		(Elt I32 Signed Hp_free (Econst I32 0))
-		(Hp_free += to_ptr_offset i :. append (Ebr "abc-gc"))
-		[]
-		Nothing
-		((Hp_free .= Hp_free - to_ptr_offset i) t)
+	ensure_hp i t = real_ensure_hp (to_ptr_offset i) t
 
-instance ensure_hp Int
-where
-	ensure_hp i t = if_then_else
-		(Elt I32 Signed Hp_free (Econst I32 0))
-		(Hp_free += ie :. append (Ebr "abc-gc"))
-		[]
-		Nothing
-		((Hp_free .= Hp_free - ie) t)
-	where
-		ie :: Expr TPtrOffset
-		ie = Econst I32 i
+instance ensure_hp Ex  where ensure_hp i t = real_ensure_hp i t
+instance ensure_hp Int where ensure_hp i t = real_ensure_hp (Econst I32 i) t
+
+real_ensure_hp :: !(Expr TPtrOffset) !Target -> Target
+real_ensure_hp e t = if_then_else
+	(Elt I32 Signed Hp_free (Econst I32 0))
+	(Hp_free += e :. append (Ebr "abc-gc"))
+	[]
+	Nothing
+	((Hp_free .= Hp_free - e) t)
 
 A :: Expr (TPtr TWord)
 A = Ivar (rt_var "asp")
