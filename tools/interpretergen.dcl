@@ -19,7 +19,8 @@ from target import :: Expr
 :: TPtrOffset = TPtrOffset
 
 /* Used to specify types for expressions. See this issue for discussion:
- * https://gitlab.science.ru.nl/clean-compiler-and-rts/compiler/issues/15 */
+ * https://gitlab.science.ru.nl/clean-compiler-and-rts/compiler/issues/15
+ */
 (:::) :: !(Expr t) t -> Expr t
 
 class to_word  t :: !(Expr t) -> Expr TWord

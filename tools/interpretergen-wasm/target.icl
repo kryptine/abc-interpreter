@@ -109,19 +109,23 @@ collect_instructions {debug_instructions,instructions_order=Just instrs_order} i
 		[ "(block $slow-instr"
 		, "(loop $abc-loop" ]
 	)
-		[ "(block $abc-gc"
-		, "(loop $abc-loop" ]
+		[ "(loop $abc-loop"
+		, "(block $abc-gc" ]
 	++
 	[ "(block $instr_"+++hd i.instrs \\ i <- reverse (IF_SEPARATE_LOOPS fast_instrs all_instructions)] ++
 	switch True ++
 	flatten [block_body {i & stmts=map (optimize fast_opt_options) i.stmts} \\ i <- IF_SEPARATE_LOOPS fast_instrs all_instructions] ++
-	IF_SEPARATE_LOOPS [") ;; abc-loop"] (gc_block "abc-loop") ++
-	IF_SEPARATE_LOOPS (
-		[ ") ;; block slow-instr" ] ++
+	IF_SEPARATE_LOOPS
+	(
+		[ ") ;; abc-loop"
+		, ") ;; block slow-instr"
+		] ++
 		switch False ++
 		flatten [block_body {i & stmts=map (optimize slow_opt_options) i.stmts} \\ i <- slow_instrs] ++
-		gc_block "abc-loop-outer")
-		[] ++
+		gc_block "abc-loop-outer"
+	)
+		(gc_block "abc-loop")
+	++
 	[ "(unreachable)" ] ++
 	footer
 where
