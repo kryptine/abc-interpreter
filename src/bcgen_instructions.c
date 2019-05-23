@@ -4481,15 +4481,11 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			if (number_of_arguments>=0 && number_of_arguments<=32) {
 				add_instruction_label(Ceval_upd0+number_of_arguments,ea_label_name);
 				add_instruction(Chalt);
-			} else if (number_of_arguments==-1) {
+			} else if (number_of_arguments<0) { /* selectors and indirections */
 				add_instruction_label(Cjmp,ea_label_name);
 				add_instruction(Chalt);
 			} else {
-				/* to do eval_upd_n */
-				if (ea_label_name!=NULL)
-					fprintf(stderr, "Warning: .n %d %s is not implemented\n",number_of_arguments,ea_label_name);
-				else
-					fprintf(stderr, "Warning: .n %d is not implemented\n",number_of_arguments);
+				fprintf(stderr, "Warning: .n %d %s is not implemented\n",number_of_arguments,ea_label_name);
 				add_instruction(Chalt);
 				add_label(ea_label_name);
 				add_instruction(Chalt);
