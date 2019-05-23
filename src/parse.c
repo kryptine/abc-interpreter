@@ -86,6 +86,7 @@ void init_parser(struct parser *state
 	preseed_symbol_matcher(state, "REAL", (void*) &REAL);
 	preseed_symbol_matcher(state, "__ARRAY__", (void*) &__ARRAY__);
 	preseed_symbol_matcher(state, "__STRING__", (void*) &__STRING__);
+	preseed_symbol_matcher(state, "e__system__nind", (void*) &__interpreter_indirection[5]);
 #endif
 
 #ifdef LINKER

@@ -796,6 +796,8 @@
 										(br $predefined-constructor)
 									)
 								)
+								(br_if ;; e__system__nind
+									$loop (i32.eq (local.get $desc) (i32.const -54)))
 
 								(br $no-predefined-constructor)
 							)

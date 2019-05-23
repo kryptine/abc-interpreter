@@ -447,6 +447,7 @@ where
 		"REAL"     -> code_start-5*8+2
 		"INT"      -> code_start-6*8+2
 		"dINT"     -> code_start-6*8+2
+		"_ind"     -> code_start-7*8+2
 		_          -> lookup_symbol_value di mods syms
 
 	// This is like the function with the same name in GraphCopy's
@@ -533,6 +534,7 @@ where
 			| d==array_desc-4*8+2 = (1,True)  // CHAR
 			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 1 2,True) // REAL
 			| d==array_desc-6*8+2 = (1,True)  // INT/dINT
+			| d==array_desc-7*8+2 = (0,True)  // _ind
 			| otherwise = abort "internal error in serialize_for_prelinked_interpretation\n"
 		# arity = get_D_node_arity d
 		| arity<256 = (0,True)
