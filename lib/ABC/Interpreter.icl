@@ -439,7 +439,9 @@ serialize_for_prelinked_interpretation graph pie
 = replace_desc_numbers_by_descs 0 graph syms 0 pie.pie_code_start
 where
 	predef_or_lookup_symbol :: !Int !DescInfo !{#String} !{#Symbol} -> Int
-	predef_or_lookup_symbol code_start di mods syms = case di.di_name of
+	predef_or_lookup_symbol code_start di mods syms
+	# module_name = mods.[(di.di_prefix_arity_and_mod>>8)-1]
+	| module_name == "_system" = case di.di_name of
 		"_ARRAY_"  -> code_start-1*8+2
 		"_STRING_" -> code_start-2*8+2
 		"BOOL"     -> code_start-3*8+2
@@ -449,6 +451,7 @@ where
 		"dINT"     -> code_start-6*8+2
 		"_ind"     -> code_start-7*8+2
 		_          -> lookup_symbol_value di mods syms
+	| otherwise    =  lookup_symbol_value di mods syms
 
 	// This is like the function with the same name in GraphCopy's
 	// graph_copy_with_names, but it assigns even negative descriptor numbers
