@@ -3562,7 +3562,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		advance_ptr Hp 5
 	] ++
 	[ instr ("add_arg"+++toString ns) Nothing $
-		ensure_hp (2+ns) :.
+		ensure_hp (3+ns) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		pop_pc_from_c :.
@@ -3570,6 +3570,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		Hp @ 1 .= n @ 1 :.
 		Hp @ 2 .= to_word (Hp @? 3) :.
 		for [0..ns-2] (\i -> Hp @ (i+3) .= a @ i) :.
+		Hp @ (ns+2) .= A @ -1 :.
 		A @ -1 .= to_word Hp :.
 		shrink_a 1 :.
 		advance_ptr Hp (ns+3)
