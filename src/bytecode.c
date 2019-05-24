@@ -190,7 +190,7 @@ int print_label_name(char *s, size_t size, char *label) {
 					break;
 				default:
 					add_char('_');
-					add_char(*(label-1));
+					add_char(*label);
 			}
 			label++;
 		} else {
