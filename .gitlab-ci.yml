@@ -41,7 +41,7 @@ build-wasm:
   artifacts:
     paths:
       - src-js/WebPublic.tar.gz
-    expire_in: 1 week
+    expire_in: 3 months
 
 benchmark-x64:
   extends: .base
