@@ -44,6 +44,8 @@ Global
 		GenerateDLL:	False
 		ExportedNames:	
 		StripByteCode:	True
+		KeepByteCodeSymbols:	True
+		PrelinkByteCode:	True
 	Paths
 		Path:	{Project}
 	Precompile:	

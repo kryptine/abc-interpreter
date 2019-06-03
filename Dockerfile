@@ -26,8 +26,3 @@ RUN apt-get install -y -qq --no-install-recommends curl unzip libnspr4 &&\
 	rm -r /tmp/jsshell
 
 RUN	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform lib-stdlib
-
-RUN git clone https://gitlab.science.ru.nl/cstaps/clean-tools /tmp/clean-tools &&\
-	make -C /tmp/clean-tools/clm -f Makefile.linux64 &&\
-	mv /tmp/clean-tools/clm/clm /opt/clean/bin &&\
-	cd /tmp && rm -r clean-tools
