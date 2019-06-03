@@ -1,16 +1,16 @@
-Version: 1.4
+Version: 1.5
 Global
 	ProjectRoot:	.
 	Target:	StdEnv
-	Exec:	{Project}\GraphTest.exe
-	ByteCode:	{Project}\GraphTest.bc
+	Exec:	{Project}*CodeSharing
+	ByteCode:	{Project}*CodeSharing.bc
 	CodeGen
 		CheckStacks:	False
 		CheckIndexes:	True
-		OptimiseABC:	True
-		GenerateByteCode:	True
+		OptimiseABC:	False
+		GenerateByteCode:	False
 	Application
-		HeapSize:	20971520
+		HeapSize:	2097152
 		StackSize:	512000
 		ExtraMemory:	8192
 		IntialHeapSize:	204800
@@ -28,7 +28,7 @@ Global
 			Stack:	False
 			Dynamics:	False
 			GenericFusion:	False
-			DescExL:	True
+			DescExL:	False
 		Output
 			Output:	ShowConstructors
 			Font:	Monaco
@@ -43,15 +43,18 @@ Global
 		ResourceSource:	
 		GenerateDLL:	False
 		ExportedNames:	
+		StripByteCode:	True
+		KeepByteCodeSymbols:	True
+		PrelinkByteCode:	False
 	Paths
 		Path:	{Project}
-		Path:	{Project}*..*src
-		Path:	{Application}*Libraries*GraphCopy
-		Path:	{Application}*Libraries*Platform
+		Path:	{Project}*..*lib
+		Path:	{Application}*lib*GraphCopy
+		Path:	{Application}*lib*Platform
 	Precompile:	
 	Postlink:	
 MainModule
-	Name:	GraphTest
+	Name:	CodeSharing
 	Dir:	{Project}
 	Compiler
 		NeverMemoryProfile:	False
