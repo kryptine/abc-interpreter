@@ -1,16 +1,16 @@
-Version: 1.4
+Version: 1.5
 Global
 	ProjectRoot:	.
 	Target:	StdEnv
-	Exec:	{Project}/sudoku
-	ByteCode:	{Project}/sudoku.bc
+	Exec:	{Project}*CodeSharing
+	ByteCode:	{Project}*CodeSharing.bc
 	CodeGen
 		CheckStacks:	False
-		CheckIndexes:	False
-		GenerateByteCode:	True
-		OptimiseABC:	True
+		CheckIndexes:	True
+		OptimiseABC:	False
+		GenerateByteCode:	False
 	Application
-		HeapSize:	5242880
+		HeapSize:	2097152
 		StackSize:	512000
 		ExtraMemory:	8192
 		IntialHeapSize:	204800
@@ -28,7 +28,7 @@ Global
 			Stack:	False
 			Dynamics:	False
 			GenericFusion:	False
-			DescExL:	True
+			DescExL:	False
 		Output
 			Output:	ShowConstructors
 			Font:	Monaco
@@ -37,7 +37,7 @@ Global
 	Link
 		LinkMethod:	Static
 		GenerateRelocations:	False
-		GenerateSymbolTable:	False
+		GenerateSymbolTable:	True
 		GenerateLinkMap:	False
 		LinkResources:	False
 		ResourceSource:	
@@ -45,13 +45,16 @@ Global
 		ExportedNames:	
 		StripByteCode:	True
 		KeepByteCodeSymbols:	True
-		PrelinkByteCode:	True
+		PrelinkByteCode:	False
 	Paths
 		Path:	{Project}
+		Path:	{Project}*..*lib
+		Path:	{Application}*lib*GraphCopy
+		Path:	{Application}*lib*Platform
 	Precompile:	
 	Postlink:	
 MainModule
-	Name:	sudoku
+	Name:	CodeSharing
 	Dir:	{Project}
 	Compiler
 		NeverMemoryProfile:	False

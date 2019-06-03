@@ -10,7 +10,9 @@ stages:
     - ln -s "$PWD/src/abcopt" /opt/clean/lib/exe/abcopt
     - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
     - ln -s "$PWD/src/bclink" /opt/clean/lib/exe/bclink
+    - ln -s "$PWD/src/bcprelink" /opt/clean/lib/exe/bcprelink
     - ln -s "$PWD/src/bcstrip" /opt/clean/lib/exe/bcstrip
+    - sed -i '/^import code from library/d' lib/ABC/Interpreter/Util.icl
     - make -C src
 
 build:

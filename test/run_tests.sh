@@ -102,7 +102,7 @@ while true; do
 			WASM=1
 			IP="js --test-wasm-await-tier2 ../src-js/interpret.js"
 			SRCMAKETARGETS="abcopt bcgen bclink bcprelink bcstrip"
-			BC_EXTENSION="ubc"
+			BC_EXTENSION="pbc"
 			shift;;
 
 		-b)
@@ -222,8 +222,6 @@ do
 	MODULE_RUNFLAGS="-h $MODULE_HEAPSIZE -s $MODULE_STACKSIZE"
 
 	[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
-
-	[ $WASM -gt 0 ] && ../src/bcprelink "$MODULE.bc" -o "$MODULE.ubc"
 
 	if [ $BENCHMARK -gt 0 ]; then
 		/usr/bin/time -p $IP $MODULE_RUNFLAGS $RUNFLAGS $MODULE.$BC_EXTENSION 2>bm-tmp >$MODULE.result
