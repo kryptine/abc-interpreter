@@ -117,10 +117,16 @@ where
 	}
 
 getInterpreterSymbols :: !Pointer -> [Symbol]
-getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
-	[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
+getInterpreterSymbols pgm = getSymbols 0 (get_symbol_table_size pgm-1)
 where
 	symbol_table = get_symbol_table pgm
+
+	getSymbols :: !Int !Int -> [Symbol]
+	getSymbols i max
+	| i > max = []
+	# sym = getSymbol i
+	| size sym.symbol_name == 0 = []
+	= [sym:getSymbols (i+1) max]
 
 	getSymbol :: !Int -> Symbol
 	getSymbol i
