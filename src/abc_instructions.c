@@ -277,6 +277,11 @@ const char *instruction_type (BC_WORD i) {
 		case Cjmp_eval:              return "";
 		case Cjmp_eval_upd:          return "";
 		case Cjmp_false:             return "l";
+		case Cjmp_i:                 return "n";
+		case Cjmp_i0:                return "";
+		case Cjmp_i1:                return "";
+		case Cjmp_i2:                return "";
+		case Cjmp_i3:                return "";
 		case Cjmp_true:              return "l";
 		case Cjsr:                   return "l";
 		case Cjsr_eval:              return "n";
@@ -284,6 +289,11 @@ const char *instruction_type (BC_WORD i) {
 		case Cjsr_eval1:             return "";
 		case Cjsr_eval2:             return "";
 		case Cjsr_eval3:             return "";
+		case Cjsr_i:                 return "n";
+		case Cjsr_i0:                return "";
+		case Cjsr_i1:                return "";
+		case Cjsr_i2:                return "";
+		case Cjsr_i3:                return "";
 		case ClnR:                   return "";
 		case Cload_i:                return "i";
 		case Cload_module_name:      return "";
@@ -774,6 +784,7 @@ const char *instruction_type (BC_WORD i) {
 		case CA_data_IIl:            return "IIl";
 		case CA_data_IlI:            return "IlI";
 		case CA_data_IlIla:          return "IlIla";
+		case CA_data_lIlI:           return "lIlI";
 		case CA_data_la:             return "la";
 		case CA_data_a:              return "a";
 
