@@ -9,9 +9,8 @@
 *.tcl
 
 *.opt.abc
-*.obc
 *.bc
-*.ubc
+*.pbc
 
 *.graph
 

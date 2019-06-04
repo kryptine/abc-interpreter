@@ -2424,6 +2424,18 @@ void code_jmp_false(char label_name[]) {
 	add_instruction_label(Cjmp_false,label_name);
 }
 
+void code_jmp_i(int n_apply_args) {
+	last_d=0;
+
+	switch (n_apply_args) {
+		case 0: add_instruction(Cjmp_i0); break;
+		case 1: add_instruction(Cjmp_i1); break;
+		case 2: add_instruction(Cjmp_i2); break;
+		case 3: add_instruction(Cjmp_i3); break;
+		default: add_instruction_w(Cjmp_i,n_apply_args);
+	}
+}
+
 void code_jmp_true(char label_name[]) {
 	add_instruction_label(Cjmp_true,label_name);
 }
@@ -2511,6 +2523,21 @@ void code_jsr_eval(int a_offset) {
 		default:
 			add_instruction_w(Cjsr_eval,-a_offset);
 			add_instruction_w(Cswap_a,-a_offset);
+	}
+}
+
+void code_jsr_i(int n_apply_args) {
+	if (last_d) {
+		last_jsr_with_d=1;
+		last_d=0;
+	}
+
+	switch (n_apply_args) {
+		case 0: add_instruction(Cjsr_i0); break;
+		case 1: add_instruction(Cjsr_i1); break;
+		case 2: add_instruction(Cjsr_i2); break;
+		case 3: add_instruction(Cjsr_i3); break;
+		default: add_instruction_w(Cjsr_i,n_apply_args);
 	}
 }
 
@@ -4149,7 +4176,20 @@ void code_a(int n_apply_args,char *ea_label_name) {
 }
 
 void code_ai(int n_apply_args,char *ea_label_name,char *instance_member_code_name) {
-	code_a(n_apply_args,ea_label_name);
+	if (n_apply_args==0) {
+		add_instruction_label(CA_data_lIlI,instance_member_code_name);
+		add_instruction_label(Cjmp,ea_label_name);
+		add_instruction(Chalt);
+	} else if (n_apply_args<=32) {
+		add_instruction_label(CA_data_lIlI,instance_member_code_name);
+		add_instruction_label(Cadd_empty_node3+(n_apply_args-3),ea_label_name);
+		add_instruction(Chalt);
+	} else {
+		if (ea_label_name!=NULL)
+			fprintf(stderr, "Error: .ai %d %s %s\n",n_apply_args,ea_label_name,instance_member_code_name);
+		else
+			fprintf(stderr, "Error: .ai %d %s\n",n_apply_args,instance_member_code_name);
+	}
 }
 
 void code_algtype(int n_constructors) {
@@ -4481,15 +4521,11 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 			if (number_of_arguments>=0 && number_of_arguments<=32) {
 				add_instruction_label(Ceval_upd0+number_of_arguments,ea_label_name);
 				add_instruction(Chalt);
-			} else if (number_of_arguments==-1) {
+			} else if (number_of_arguments<0) { /* selectors and indirections */
 				add_instruction_label(Cjmp,ea_label_name);
 				add_instruction(Chalt);
 			} else {
-				/* to do eval_upd_n */
-				if (ea_label_name!=NULL)
-					fprintf(stderr, "Warning: .n %d %s is not implemented\n",number_of_arguments,ea_label_name);
-				else
-					fprintf(stderr, "Warning: .n %d is not implemented\n",number_of_arguments);
+				fprintf(stderr, "Warning: .n %d %s is not implemented\n",number_of_arguments,ea_label_name);
 				add_instruction(Chalt);
 				add_label(ea_label_name);
 				add_instruction(Chalt);
@@ -4541,19 +4577,27 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 }
 
 void code_o(int oa,int ob,uint32_t vector[]) {
-	if (last_jsr_with_d) {
-		if (pgrm.code[pgrm.code_size-2].value!=Cjsr) {
-			int i;
+	while (last_jsr_with_d) {
+		int i=pgrm.code[pgrm.code_size-2].value;
+		if (i==Cjsr || i==Cjsr_i)
+			break;
 
-			i=pgrm.code[pgrm.code_size-3].value;
-			if (i!=Cpop_a_jsr && i!=Cpop_b_jsr && i!=Cpush_a_jsr && i!=Cpush_b_jsr
-				&& pgrm.code[pgrm.code_size-4].value!=Cbuildh0_put_a_jsr)
-			{
-				fprintf(stderr, "Error: .o directive used incorrectly near jsr\n");
-				exit(1);
-			}
-		}
+		i=pgrm.code[pgrm.code_size-1].value;
+		if ((Cjsr_ap1<=i && i<=Cjsr_ap32) ||
+				(Cjsr_i0<=i && i<=Cjsr_i3))
+			break;
+
+		i=pgrm.code[pgrm.code_size-3].value;
+		if (i==Cpop_a_jsr || i==Cpop_b_jsr || i==Cpush_a_jsr || i==Cpush_b_jsr)
+			break;
+
+		if (pgrm.code[pgrm.code_size-4].value==Cbuildh0_put_a_jsr)
+			break;
+
+		fprintf(stderr, "Error: .o directive used incorrectly near jsr\n");
+		exit(1);
 	}
+
 	last_jsr_with_d=0;
 }
 #endif

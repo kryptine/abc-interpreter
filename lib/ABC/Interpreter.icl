@@ -117,10 +117,16 @@ where
 	}
 
 getInterpreterSymbols :: !Pointer -> [Symbol]
-getInterpreterSymbols pgm = takeWhile (\s -> size s.symbol_name <> 0)
-	[getSymbol i \\ i <- [0..get_symbol_table_size pgm-1]]
+getInterpreterSymbols pgm = getSymbols 0 (get_symbol_table_size pgm-1)
 where
 	symbol_table = get_symbol_table pgm
+
+	getSymbols :: !Int !Int -> [Symbol]
+	getSymbols i max
+	| i > max = []
+	# sym = getSymbol i
+	| size sym.symbol_name == 0 = []
+	= [sym:getSymbols (i+1) max]
 
 	getSymbol :: !Int -> Symbol
 	getSymbol i
@@ -439,7 +445,9 @@ serialize_for_prelinked_interpretation graph pie
 = replace_desc_numbers_by_descs 0 graph syms 0 pie.pie_code_start
 where
 	predef_or_lookup_symbol :: !Int !DescInfo !{#String} !{#Symbol} -> Int
-	predef_or_lookup_symbol code_start di mods syms = case di.di_name of
+	predef_or_lookup_symbol code_start di mods syms
+	# module_name = mods.[(di.di_prefix_arity_and_mod>>8)-1]
+	| module_name == "_system" = case di.di_name of
 		"_ARRAY_"  -> code_start-1*8+2
 		"_STRING_" -> code_start-2*8+2
 		"BOOL"     -> code_start-3*8+2
@@ -447,7 +455,9 @@ where
 		"REAL"     -> code_start-5*8+2
 		"INT"      -> code_start-6*8+2
 		"dINT"     -> code_start-6*8+2
+		"_ind"     -> code_start-7*8+2
 		_          -> lookup_symbol_value di mods syms
+	| otherwise    =  lookup_symbol_value di mods syms
 
 	// This is like the function with the same name in GraphCopy's
 	// graph_copy_with_names, but it assigns even negative descriptor numbers
@@ -533,6 +543,7 @@ where
 			| d==array_desc-4*8+2 = (1,True)  // CHAR
 			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 1 2,True) // REAL
 			| d==array_desc-6*8+2 = (1,True)  // INT/dINT
+			| d==array_desc-7*8+2 = (0,True)  // _ind
 			| otherwise = abort "internal error in serialize_for_prelinked_interpretation\n"
 		# arity = get_D_node_arity d
 		| arity<256 = (0,True)

@@ -7,12 +7,11 @@ make -C ../src\
 	bclink\
 	library
 
-clm -O -bytecode _system
-
 for dir in *; do
 	[ -d "$dir" ] || continue
 	echo -e "\033[0;33mTesting $dir\033[0m"
 	(cd "$dir"
-		make
+		for f in *.prj.default; do cp "$f" "${f/.default/}"; done
+		cpm make
 		./"$dir")
 done

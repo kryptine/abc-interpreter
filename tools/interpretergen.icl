@@ -1935,7 +1935,20 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			end_instruction
 		) :.
 		Pc .= to_word_ptr (d - if_i64_or_i32_expr (lit_word 40) (lit_word 20))
-	, instr "jmp_false" Nothing $
+	, instr "jmp_i" Nothing $
+		new_local TWord (Pc @ 1) \i ->
+		let n = to_word_ptr (A @ 0) in
+		let d = to_word_ptr (n @ 0 - lit_word 2) in
+		let code_entry = to_word_ptr (d @ ((i <<. lit_word 1) - lit_word 1)) in
+		Pc .= to_word_ptr (code_entry @ -4)
+	] ++
+	[ instr ("jmp_i"+++toString i) Nothing $
+		let n = to_word_ptr (A @ 0) in
+		let d = to_word_ptr (n @ 0 - lit_word 2) in
+		let code_entry = to_word_ptr (d @ ((i<<1)-1)) in
+		Pc .= to_word_ptr (code_entry @ -4)
+	\\ i <- [0..3]] ++
+	[ instr "jmp_false" Nothing $
 		shrink_b 1 :.
 		if_then (to_bool (B @ -1)) (
 			advance_ptr Pc 2 :.
@@ -1985,6 +1998,21 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		A @ 0 .= to_word n
 	\\ i <- [1..3]
 	] ++
+	[ instr "jsr_i" Nothing $
+		push_c (Pc @? 2) :.
+		new_local TWord (Pc @ 1) \i ->
+		let n = to_word_ptr (A @ 0) in
+		let d = to_word_ptr (n @ 0 - lit_word 2) in
+		let code_entry = to_word_ptr (d @ ((i <<. lit_word 1) - lit_word 1)) in
+		Pc .= to_word_ptr (code_entry @ -4)
+	] ++
+	[ instr ("jsr_i"+++toString i) Nothing $
+		push_c (Pc @? 1) :.
+		let n = to_word_ptr (A @ 0) in
+		let d = to_word_ptr (n @ 0 - lit_word 2) in
+		let code_entry = to_word_ptr (d @ ((i<<1)-1)) in
+		Pc .= to_word_ptr (code_entry @ -4)
+	\\ i <- [0..3]] ++
 	[ instr "lnR" (Just 0) $
 		new_local TReal (lnR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
@@ -3567,7 +3595,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		advance_ptr Hp 5
 	] ++
 	[ instr ("add_arg"+++toString ns) Nothing $
-		ensure_hp (2+ns) :.
+		ensure_hp (3+ns) :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		new_local (TPtr TWord) (to_word_ptr (n @ 2)) \a ->
 		pop_pc_from_c :.
@@ -3575,6 +3603,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		Hp @ 1 .= n @ 1 :.
 		Hp @ 2 .= to_word (Hp @? 3) :.
 		for [0..ns-2] (\i -> Hp @ (i+3) .= a @ i) :.
+		Hp @ (ns+2) .= A @ -1 :.
 		A @ -1 .= to_word Hp :.
 		shrink_a 1 :.
 		advance_ptr Hp (ns+3)
@@ -3709,6 +3738,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "A_data_IlI" $
 	  alias "A_data_IlIla" $
 	  alias "A_data_a" $
+	  alias "A_data_lIlI" $
 	  instr "A_data_la" Nothing $
 		instr_unimplemented
 	]

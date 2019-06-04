@@ -148,10 +148,12 @@ void load_instruction_table(void) {
 	put_instruction_name("jmp_eval",              parse_instruction,               code_jmp_eval );
 	put_instruction_name("jmp_eval_upd",          parse_instruction,               code_jmp_eval_upd );
 	put_instruction_name("jmp_false",             parse_instruction_a,             code_jmp_false );
+	put_instruction_name("jmp_i",                 parse_instruction_n,             code_jmp_i );
 	put_instruction_name("jmp_true",              parse_instruction_a,             code_jmp_true );
 	put_instruction_name("jsr",                   parse_instruction_a,             code_jsr );
-	put_instruction_name("jsr_eval",              parse_instruction_n,             code_jsr_eval );
 	put_instruction_name("jsr_ap",                parse_instruction_n,             code_jsr_ap );
+	put_instruction_name("jsr_eval",              parse_instruction_n,             code_jsr_eval );
+	put_instruction_name("jsr_i",                 parse_instruction_n,             code_jsr_i );
 	put_instruction_name("lnR",                   parse_instruction,               code_lnR );
 	put_instruction_name("load_i",                parse_instruction_i,             code_load_i );
 	put_instruction_name("load_module_name",      parse_instruction,               code_load_module_name );
