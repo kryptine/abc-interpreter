@@ -58,7 +58,6 @@ benchmark-x86:
   script:
     - cd test
     - ./run_tests.sh -3bf
-  allow_failure: true
 
 benchmark-wasm:
   extends: .base
