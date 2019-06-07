@@ -11,7 +11,6 @@
 #define max_implemented_instruction_n CMAX-1
 
 #define N_ADD_ARG_LABELS 32
-#define MAX_Cadd_arg_INSTRUCTION_N 32
 
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
@@ -398,16 +397,6 @@ struct word *add_add_arg_labels(void) {
 			if (label->label_module_n != -1) {
 				make_label_global(label);
 				label->label_offset = pgrm.code_size<<2;
-			}
-			if (i>MAX_Cadd_arg_INSTRUCTION_N) {
-				fprintf(stderr, "Error: Cadd_arg%d not yet implemented:\n",i);
-				++i;
-				while(i<N_ADD_ARG_LABELS) {
-					if (Fadd_arg_label_used[i])
-						fprintf(stderr, "Error: Cadd_arg%d not yet implemented:\n",i);
-					++i;
-				}
-				exit(1);
 			}
 			add_instruction(Cadd_arg0+i);
 		}
