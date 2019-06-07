@@ -31,7 +31,9 @@ uint32_t allocated_data_relocations_size;
 
 #define N_ADD_ARG_LABELS 32
 static uint32_t Fadd_arg_label_used[N_ADD_ARG_LABELS];
+#ifndef LINK_CLEAN_RUNTIME
 static int general_add_arg_label_used=0;
+#endif
 
 #ifndef LINK_CLEAN_RUNTIME
 int16_t warned_unsupported_instructions[128]={-1};
