@@ -168,7 +168,7 @@ instr_mulUUL t = foldl (flip append) t
 instr_RtoAC :: !Target -> Target
 instr_RtoAC t = foldl (flip append) t
 	[ "{"
-	, "char r[20];"
+	, "char r[22];"
 	, "int n=sprintf(r,\"%.15g\",*((BC_REAL*)bsp)+0.0);"
 	, "NEED_HEAP(2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2)));"
 	, "hp[0]=(BC_WORD)&__STRING__+2;"
