@@ -4267,6 +4267,10 @@ struct label *code_descriptor
 			printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,n,(arity-n)<<3);
 		store_data_l(n + (((arity-n)<<3)<<16));
 		if (n<arity-1 || (n==arity-1 && !strcmp (code_label_name,"__add__arg"))) {
+			if (n>N_ADD_ARG_LABELS) {
+				fprintf(stderr, "Error: _add_arg %d required\n",n);
+				exit(1);
+			}
 			if (list_code)
 				printf("%d\t.data4 _add_arg%d\n",pgrm.data_size<<2,n);
 			Fadd_arg_label_used[n]=1;
