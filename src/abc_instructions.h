@@ -602,6 +602,7 @@ enum {
 	INSTRUCTION(jsr_ap31)
 	INSTRUCTION(jmp_ap32)
 	INSTRUCTION(jsr_ap32)
+	INSTRUCTION(add_arg)
 	INSTRUCTION(add_arg0)
 	INSTRUCTION(add_arg1)
 	INSTRUCTION(add_arg2)

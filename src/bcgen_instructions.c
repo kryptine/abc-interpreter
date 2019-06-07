@@ -10,8 +10,6 @@
 
 #define max_implemented_instruction_n CMAX-1
 
-#define N_ADD_ARG_LABELS 32
-
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
 
@@ -31,7 +29,9 @@ uint32_t allocated_strings_size;
 uint32_t allocated_code_relocations_size;
 uint32_t allocated_data_relocations_size;
 
+#define N_ADD_ARG_LABELS 32
 static uint32_t Fadd_arg_label_used[N_ADD_ARG_LABELS];
+static int general_add_arg_label_used=0;
 
 #ifndef LINK_CLEAN_RUNTIME
 int16_t warned_unsupported_instructions[128]={-1};
@@ -400,6 +400,17 @@ struct word *add_add_arg_labels(void) {
 			}
 			add_instruction(Cadd_arg0+i);
 		}
+
+	if (general_add_arg_label_used) {
+		fprintf(stderr,"Warning: currying of functions with more than 32 arguments is not implemented.\n");
+
+		struct label *label=enter_label("_add_arg");
+		if (label->label_module_n!=-1) {
+			make_label_global(label);
+			label->label_offset=pgrm.code_size<<2;
+		}
+		add_instruction(Cadd_arg);
+	}
 
 	return pgrm.code;
 }
@@ -4267,16 +4278,18 @@ struct label *code_descriptor
 			printf("%d\t.data2 %d %d\n",pgrm.data_size<<2,n,(arity-n)<<3);
 		store_data_l(n + (((arity-n)<<3)<<16));
 		if (n<arity-1 || (n==arity-1 && !strcmp (code_label_name,"__add__arg"))) {
+			struct label *label;
 			if (n>N_ADD_ARG_LABELS) {
-				fprintf(stderr, "Error: _add_arg %d required\n",n);
-				exit(1);
+				general_add_arg_label_used=1;
+				label=enter_label("_add_arg");
+			} else {
+				Fadd_arg_label_used[n]=1;
+				char label_name[11];
+				sprintf(label_name,"_add_arg%d",n);
+				label = enter_label(label_name);
 			}
 			if (list_code)
-				printf("%d\t.data4 _add_arg%d\n",pgrm.data_size<<2,n);
-			Fadd_arg_label_used[n]=1;
-			char label_name[11];
-			sprintf(label_name,"_add_arg%d",n);
-			struct label *label = enter_label(label_name);
+				printf("%d\t.data4 %s\n",pgrm.data_size<<2,label->label_name);
 			store_data_label_value_of_label(label,0);
 		} else if (n==arity-1) {
 			if (list_code)

@@ -3708,7 +3708,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		d .= (d + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) &. if_i64_or_i32_expr (lit_word -8) (lit_word -4) :.
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
 		B @ 0 .= (to_word_ptr d @ 0) - lit_word 2
-	, alias "buildF_b" $
+	, alias "add_arg" $
+	  alias "buildF_b" $
 	  alias "ccall" $
 	  alias "centry" $
 	  alias "fillF_b" $
