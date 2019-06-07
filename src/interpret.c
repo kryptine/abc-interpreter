@@ -370,6 +370,9 @@ int ensure_interpreter_init(void) {
 	return 1;
 }
 
+#ifdef LINK_CLEAN_RUNTIME
+static BC_WORD *hp;
+#endif
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
@@ -379,7 +382,7 @@ int interpret(
 #endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
-		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *_hp,
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
 	/* When compiled with COMPUTED_GOTOS defined and stack=NULL, this function does
@@ -412,6 +415,11 @@ int interpret(
 #endif
 
 	BC_WORD *pc;
+#ifdef LINK_CLEAN_RUNTIME
+	hp=_hp;
+#else
+	BC_WORD *hp=_hp;
+#endif
 	heap_size /= 2; /* copying garbage collector */
 #ifdef LINK_CLEAN_RUNTIME
 	BC_WORD_S heap_free=heap + heap_size/(ie->options.in_first_semispace ? 2 : 1) - hp;
