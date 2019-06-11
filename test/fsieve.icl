@@ -15,8 +15,7 @@ On a machine without a math coprocessor the execution of this
 program might take a (very) long time. Set NrOfPrimes to a smaller value.
 */
 
-import StdClass
-import StdInt, StdReal
+import StdEnv
 
 NrOfPrimes :== 3000
 
