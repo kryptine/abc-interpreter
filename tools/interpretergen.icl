@@ -2079,18 +2079,16 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		// TODO optimise: make s a TPtr TPtrOffset
 		new_local (TPtr TWord) (to_word_ptr (B @ 0)) \s ->
 		shrink_b 1 :.
-		if_then (to_bool (to_word s &. lit_word 2)) // record descriptor in unboxed array
-			(s .= to_word_ptr (to_word s - lit_word 2)) :.
-		new_local TPtrOffset (to_ptr_offset (s @ 0)) \l ->
-		if_then_else (((l >>. lit_hword 16) >>. lit_hword 3) >. lit_hword 0) // function
-			(advance_ptr s (((l >>. lit_hword 16) >>. lit_hword 3) * lit_hword 2 + lit_hword 3))
-		[ else_if (l >. lit_hword 256) // record, skip arity and type string
-			(advance_ptr s (lit_hword 2 +
-				(to_ptr_offset (s @ 1) + if_i64_or_i32_expr (lit_hword 7) (lit_hword 3)) / if_i64_or_i32_expr (lit_hword 8) (lit_hword 4)))
-		] no_else :.
-		l .= to_ptr_offset (s @ 0) :.
-		new_local (TPtr TChar) (to_char_ptr (s @? 1)) \cs ->
 		advance_ptr Pc 1 :.
+		if_then (to_bool (to_word s &. lit_word 2))
+		( // record, skip arity and type string
+			s .= to_word_ptr (to_word s + if_i64_or_i32_expr (lit_word 6) (lit_word 2)) :.
+			advance_ptr s
+				((to_ptr_offset (s @ 0) + if_i64_or_i32_expr (lit_hword 7) (lit_hword 3)) >>. if_i64_or_i32_expr (lit_hword 3) (lit_hword 2)) :.
+			advance_ptr s (lit_hword 1)
+		) :.
+		new_local TPtrOffset (to_ptr_offset (s @ 0)) \l ->
+		new_local (TPtr TChar) (to_char_ptr (s @? 1)) \cs ->
 		while_do (l >. lit_hword 0) (
 			putchar (cs @ 0) :.
 			advance_ptr cs 1 :.
@@ -3712,7 +3710,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		shrink_b 1 :.
 		d .= (d + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) &. if_i64_or_i32_expr (lit_word -8) (lit_word -4) :.
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
-		B @ 0 .= (to_word_ptr d @ 0) - lit_word 2
+		B @ 0 .= to_word_ptr d @ 0
 	, alias "buildF_b" $
 	  alias "ccall" $
 	  alias "centry" $
