@@ -487,7 +487,7 @@ small_integer :: !(Expr TInt) -> Expr TWord
 small_integer i = "(BC_WORD)&small_integers[("+-+i+-+")<<1]"
 
 static_character :: !(Expr TChar) -> Expr TWord
-static_character c = "(BC_WORD)&static_characters[("+-+c+-+")<<1]"
+static_character c = "(BC_WORD)&static_characters[(unsigned char)("+-+c+-+")<<1]"
 
 static_boolean :: !(Expr TWord) -> Expr TWord
 static_boolean b = "(BC_WORD)&static_booleans[("+-+b+-+") ? 2 : 0]"
