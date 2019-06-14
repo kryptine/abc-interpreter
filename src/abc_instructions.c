@@ -618,6 +618,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cjsr_ap31:              return "";
 		case Cjmp_ap32:              return "";
 		case Cjsr_ap32:              return "";
+		case Cadd_arg:               return "";
 		case Cadd_arg0:              return "";
 		case Cadd_arg1:              return "";
 		case Cadd_arg2:              return "";

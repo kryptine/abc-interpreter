@@ -245,8 +245,6 @@ void* __interpreter_indirection[9] = {
 	(void*) Cfill_a01_pop_rtn
 };
 
-static BC_WORD *asp, *bsp, *csp, *hp = NULL;
-
 #include <setjmp.h>
 #ifdef POSIX
 # include <signal.h>
@@ -372,6 +370,9 @@ int ensure_interpreter_init(void) {
 	return 1;
 }
 
+#ifdef LINK_CLEAN_RUNTIME
+static BC_WORD *hp;
+#endif
 int interpret(
 #ifdef LINK_CLEAN_RUNTIME
 		struct interpretation_environment *ie,
@@ -381,7 +382,7 @@ int interpret(
 #endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
-		BC_WORD *_asp, BC_WORD *_bsp, BC_WORD *_csp, BC_WORD *_hp,
+		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *_hp,
 		BC_WORD *_pc) {
 #ifdef COMPUTED_GOTOS
 	/* When compiled with COMPUTED_GOTOS defined and stack=NULL, this function does
@@ -414,10 +415,11 @@ int interpret(
 #endif
 
 	BC_WORD *pc;
-	asp = _asp;
-	bsp = _bsp;
-	csp = _csp;
-	hp = _hp;
+#ifdef LINK_CLEAN_RUNTIME
+	hp=_hp;
+#else
+	BC_WORD *hp=_hp;
+#endif
 	heap_size /= 2; /* copying garbage collector */
 #ifdef LINK_CLEAN_RUNTIME
 	BC_WORD_S heap_free=heap + heap_size/(ie->options.in_first_semispace ? 2 : 1) - hp;
