@@ -185,6 +185,9 @@ instr_RtoAC t = foldl (flip append) t
 lit_word :: !Int -> Expr TWord
 lit_word i = toString i
 
+lit_hword :: !Int -> Expr TPtrOffset
+lit_hword i = toString i
+
 lit_char :: !Char -> Expr TChar
 lit_char c = {#'\'',c,'\''}
 
@@ -194,11 +197,19 @@ lit_short i = toString i
 lit_int :: !Int -> Expr TInt
 lit_int i = toString i
 
+instance to_word TWord    where to_word e = e
 instance to_word TChar    where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word TInt     where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word TShort   where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word (TPtr t) where to_word e = "(BC_WORD)("+-+e+-+")"
 instance to_word TReal    where to_word e = "*(BC_WORD*)&("+-+e+-+")"
+
+instance to_bool TWord
+where
+	to_bool e = e`
+	where
+		e` :: Expr TBool
+		e` = e
 
 instance to_char TWord where to_char e = "(char)("+-+e+-+")"
 
@@ -213,6 +224,10 @@ instance to_char_ptr  (TPtr t) where to_char_ptr  e = "(char*)("+-+e+-+")"
 instance to_short_ptr TWord    where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 instance to_short_ptr (TPtr t) where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 
+instance to_ptr_offset TWord      where to_ptr_offset w = "(int)("+-+w+-+")"
+instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
+instance to_ptr_offset TShort     where to_ptr_offset s = "(int)("+-+s+-+")"
+
 instance + (Expr t) where + a b = "("+-+a+-+"+"+-+b+-+")"
 instance - (Expr t) where - a b = "("+-+a+-+"-"+-+b+-+")"
 instance * (Expr t) where * a b = "("+-+a+-+"*"+-+b+-+")"
@@ -222,29 +237,26 @@ instance ^ (Expr TReal) where ^ a b = "pow("+-+a+-+","+-+b+-+")"
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = "("+-+a+-+"%"+-+b+-+")"
 
-(==.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(==.) infix 4 :: !(Expr a) !(Expr a) -> Expr TBool
 (==.) a b = "("+-+a+-+"=="+-+b+-+")"
 
-(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<>.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
 (<>.) a b = "("+-+a+-+"!="+-+b+-+")"
 
-(<.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<.) infix 4 :: !(Expr a) !(Expr a) -> Expr TBool
 (<.) a b = "("+-+a+-+"<"+-+b+-+")"
 
-(>.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>.) infix 4 :: !(Expr a) !(Expr a) -> Expr TBool
 (>.) a b = "("+-+a+-+">"+-+b+-+")"
 
-(<=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(<=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TBool
 (<=.) a b = "("+-+a+-+"<="+-+b+-+")"
 
-(>=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TWord
+(>=.) infix 4 :: !(Expr a) !(Expr a) -> Expr TBool
 (>=.) a b = "("+-+a+-+">="+-+b+-+")"
 
-(&&.) infixr 3 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(&&.) infixr 3 :: !(Expr TBool) !(Expr TBool) -> Expr TBool
 (&&.) a b = "("+-+a+-+"&&"+-+b+-+")"
-
-notB :: !(Expr TWord) -> Expr TWord
-notB a = "!("+-+a+-+")"
 
 (&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (&.) a b = "("+-+a+-+"&"+-+b+-+")"
@@ -315,7 +327,7 @@ if_i64_or_i32 i64 i32 t = append "#endif" (i32 (append "#else" (i64 (append "#if
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
 if_i64_or_i32_expr a b = "IF_INT_64_OR_32("+-+a+-+","+-+b+-+")"
 
-if_expr :: !(Expr TWord) !(Expr t) !(Expr t) -> Expr t
+if_expr :: !(Expr TBool) !(Expr t) !(Expr t) -> Expr t
 if_expr c t e = "("+-+c+-+" ? "+-+t+-+" : "+-+e+-+")"
 
 begin_instruction :: !String !Target -> Target
@@ -334,6 +346,7 @@ nop t = t
 (:.) first then t = then (first t)
 
 instance typename TWord  where typename _ = "BC_WORD"
+instance typename TPtrOffset where typename _ = "int"
 instance typename TChar  where typename _ = "char"
 instance typename TShort where typename _ = "int16_t"
 instance typename TInt   where typename _ = "BC_WORD_S"
@@ -348,13 +361,16 @@ where
 set :: !(Expr v) !(Expr e) !Target -> Target
 set v e t = append ("\t"+-+v+-+"="+-+e+-+";") t
 
-instance .= TWord TWord  where .= v e t = set v e t
-instance .= TWord TChar  where .= v e t = set v e t
-instance .= TWord TInt   where .= v e t = set v e t
-instance .= TWord TShort where .= v e t = set v e t
-instance .= TChar TChar  where .= v e t = set v e t
-instance .= TInt  TInt   where .= v e t = set v e t
-instance .= TInt  TWord  where .= v e t = set v e t
+instance .= TWord  TWord  where .= v e t = set v e t
+instance .= TWord  TPtrOffset where .= v e t = set v e t
+instance .= TWord  TBool  where .= v e t = set v e t
+instance .= TWord  TChar  where .= v e t = set v e t
+instance .= TWord  TInt   where .= v e t = set v e t
+instance .= TWord  TShort where .= v e t = set v e t
+instance .= TPtrOffset TPtrOffset where .= v e t = set v e t
+instance .= TChar  TChar  where .= v e t = set v e t
+instance .= TInt   TInt   where .= v e t = set v e t
+instance .= TInt   TWord  where .= v e t = set v e t
 instance .= (TPtr t) (TPtr u) where .= v e t = set v e t
 
 add_local :: !(Expr v) !(Expr e) !Target -> Target
@@ -363,7 +379,8 @@ add_local v e t = case e of
 	"1" -> append ("\t"+-+v+-+"++;") t
 	e   -> append ("\t"+-+v+-+"+="+-+e+-+";") t
 
-instance += TWord TWord where += v e t = add_local v e t
+instance += TWord  TWord  where += v e t = add_local v e t
+instance += TPtrOffset TPtrOffset where += v e t = add_local v e t
 
 sub_local :: !(Expr v) !(Expr e) !Target -> Target
 sub_local v e t = case e of
@@ -372,8 +389,8 @@ sub_local v e t = case e of
 	e   -> append ("\t"+-+v+-+"-="+-+e+-+";") t
 
 instance -= TWord  TWord  where -= v e t = sub_local v e t
+instance -= TPtrOffset TPtrOffset where -= v e t = sub_local v e t
 instance -= TShort TShort where -= v e t = sub_local v e t
-instance -= TInt   TInt   where -= v e t = sub_local v e t
 
 instance advance_ptr Int      where advance_ptr v e t = add_local v (toString e) t
 instance advance_ptr (Expr w) where advance_ptr v e t = add_local v e t
@@ -399,15 +416,15 @@ begin_block t = append "\tdo {" t
 end_block :: !Target -> Target
 end_block t = append "\t} while (0);" t
 
-while_do :: !(Expr TWord) !(Target -> Target) !Target -> Target
+while_do :: !(Expr TBool) !(Target -> Target) !Target -> Target
 while_do c f t = append "\t}" (f (append ("\twhile ("+-+c+-+") {") t))
 
 break :: !Target -> Target
 break t = append "\tbreak;" t
 
 if_then_else ::
-	!(Expr TWord) !(Target -> Target)
-	![(Expr TWord, Target -> Target)]
+	!(Expr TBool) !(Target -> Target)
+	![(Expr TBool, Target -> Target)]
 	!(Maybe (Target -> Target))
 	!Target -> Target
 if_then_else c then elifs else t
@@ -418,10 +435,10 @@ if_then_else c then elifs else t
 		-> append "\t}" (e (append "\t} else {" (drop_last_line t)))
 		-> t
 
-if_break_else :: !(Expr TWord) !(Target -> Target) !Target -> Target
+if_break_else :: !(Expr TBool) !(Target -> Target) !Target -> Target
 if_break_else c else t = concat_up_to_mark (else (append ("\t\tif ("+-+c+-+") break;") (mark t)))
 
-instance ensure_hp (Expr TWord) where ensure_hp i t = append ("\tNEED_HEAP("+-+i+-+");") t
+instance ensure_hp (Expr t) where ensure_hp i t = append ("\tNEED_HEAP("+-+i+-+");") t
 instance ensure_hp Int where ensure_hp i t = append ("\tNEED_HEAP("+-+toString i+-+");") t
 
 A :: Expr (TPtr TWord)
@@ -454,7 +471,7 @@ ARRAY__ptr = "(BC_WORD)&__ARRAY__"
 STRING__ptr :: Expr TWord
 STRING__ptr = "(BC_WORD)&__STRING__"
 
-jmp_ap_ptr :: !Int -> Expr TWord
+jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+-+toString i+-+"]"
 
 cycle_ptr :: Expr TWord
@@ -470,24 +487,24 @@ small_integer :: !(Expr TInt) -> Expr TWord
 small_integer i = "(BC_WORD)&small_integers[("+-+i+-+")<<1]"
 
 static_character :: !(Expr TChar) -> Expr TWord
-static_character c = "(BC_WORD)&static_characters[("+-+c+-+")<<1]"
+static_character c = "(BC_WORD)&static_characters[(unsigned char)("+-+c+-+")<<1]"
 
 static_boolean :: !(Expr TWord) -> Expr TWord
 static_boolean b = "(BC_WORD)&static_booleans[("+-+b+-+") ? 2 : 0]"
 
-caf_list :: Expr (TPtr (TPtr TWord))
-caf_list = "caf_list"
+caf_list :: Expr (TPtr TWord)
+caf_list = "(BC_WORD*)caf_list"
 
-push_c :: !(Expr TWord) !Target -> Target
-push_c v t = append ("\t*++csp="+-+v+-+";") t
+push_c :: !(Expr (TPtr TWord)) !Target -> Target
+push_c v t = append ("\t*++csp=(BC_WORD)"+-+v+-+";") t
 
 pop_pc_from_c :: !Target -> Target
 pop_pc_from_c t = append "\tpc=(BC_WORD*)*csp--;" t
 
-memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TWord) !Target -> Target
+memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
 memcpy d s n t = append ("\tmemcpy("+-+d+-+","+-+s+-+","+-+n+-+");") t
 
-strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TWord) -> Expr TInt
+strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
 strncmp s1 s2 n = "strncmp("+-+s1+-+","+-+s2+-+","+-+n+-+")"
 
 putchar :: !(Expr TChar) !Target -> Target

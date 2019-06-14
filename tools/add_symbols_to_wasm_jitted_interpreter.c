@@ -122,7 +122,7 @@ int add_strtab_section(Elf *e) {
 
 uint64_t *find_start_of_br_table(uint64_t *code, unsigned int size) {
 	unsigned int optimum=0;
-	unsigned int opt_size=1;
+	unsigned int opt_size=10; /* to decrease verbosity */
 
 	uint8_t *code8=(uint8_t*)code;
 	size<<=3;
@@ -134,7 +134,7 @@ uint64_t *find_start_of_br_table(uint64_t *code, unsigned int size) {
 		for (; j<(size-i)>>3; j++)
 			if ((code[j]>>24)!=this_high)
 				break;
-		if (j > opt_size) {
+		if (j >= opt_size) {
 			opt_size=j;
 			optimum=i;
 			fprintf(stderr,"new optimum %d at %d: 0x%010lx......\n",opt_size,optimum,this_high);
@@ -155,7 +155,7 @@ char *find_movabs_of_br_table(char *code, unsigned int size, uint64_t high_bytes
 			if (code[i]==0x48)
 				return &code[i];
 			if (code[i]==0x49)
-				return &code[i+1];
+				return &code[i];
 		}
 	}
 

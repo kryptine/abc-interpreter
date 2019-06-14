@@ -17,7 +17,6 @@
 	(global $js-ref-constructor (mut i32) (i32.const 0))
 	(func $js-ref-found (import "clean" "js_ref_found") (param i32))
 
-	(func $get-asp (import "clean" "get_asp") (result i32))
 	(func $set-hp (import "clean" "set_hp") (param i32))
 	(func $set-hp-free (import "clean" "set_hp_free") (param i32))
 
@@ -152,8 +151,7 @@
 		)
 	)
 
-	(func (export "gc")
-		(local $asp i32)
+	(func (export "gc") (param $asp i32)
 		(local $old i32)
 		(local $new i32)
 		(local $n i32)
@@ -163,8 +161,6 @@
 		(local $size i32)
 
 		(call $gc-start)
-
-		(local.set $asp (call $get-asp))
 
 		(if
 			(global.get $in-first-semispace)
