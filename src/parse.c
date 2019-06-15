@@ -514,6 +514,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&CHAR,16);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&REAL,21);
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "e__system__nind")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__interpreter_indirection[5], 137);
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 # ifdef DEBUG_CLEAN_LINKS
 					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);
