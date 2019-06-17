@@ -388,35 +388,6 @@ void add_instruction(int16_t i) {
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 }
 
-struct word *add_add_arg_labels(void) {
-	int i;
-
-	for(i=0; i<N_ADD_ARG_LABELS; ++i)
-		if (Fadd_arg_label_used[i]) {
-			char label_name[11];
-			sprintf(label_name,"_add_arg%d",i);
-			struct label *label = enter_label(label_name);
-			if (label->label_module_n != -1) {
-				make_label_global(label);
-				label->label_offset = pgrm.code_size<<2;
-			}
-			add_instruction(Cadd_arg0+i);
-		}
-
-	if (general_add_arg_label_used) {
-		fprintf(stderr,"Warning: currying of functions with more than 32 arguments is not implemented.\n");
-
-		struct label *label=enter_label("_add_arg");
-		if (label->label_module_n!=-1) {
-			make_label_global(label);
-			label->label_offset=pgrm.code_size<<2;
-		}
-		add_instruction(Cadd_arg);
-	}
-
-	return pgrm.code;
-}
-
 void add_code_and_data_offsets(void) {
 	int i;
 	size_t code_offset,data_offset;
@@ -935,6 +906,35 @@ void add_instruction_w_internal_label_label(int16_t i,int32_t n1,struct label *l
 	store_code_elem(2, n1);
 	store_code_internal_label_value(label,0);
 	store_code_label_value(label_name,0);
+}
+
+struct word *add_add_arg_labels(void) {
+	int i;
+
+	for(i=0; i<N_ADD_ARG_LABELS; ++i)
+		if (Fadd_arg_label_used[i]) {
+			char label_name[11];
+			sprintf(label_name,"_add_arg%d",i);
+			struct label *label = enter_label(label_name);
+			if (label->label_module_n != -1) {
+				make_label_global(label);
+				label->label_offset = pgrm.code_size<<2;
+			}
+			add_instruction(Cadd_arg0+i);
+		}
+
+	if (general_add_arg_label_used) {
+		fprintf(stderr,"Warning: currying of functions with more than 32 arguments is not implemented.\n");
+
+		struct label *label=enter_label("_add_arg");
+		if (label->label_module_n!=-1) {
+			make_label_global(label);
+			label->label_offset=pgrm.code_size<<2;
+		}
+		add_instruction(Cadd_arg);
+	}
+
+	return pgrm.code;
 }
 
 static char *specialized_jsr_labels[] = {
