@@ -3530,6 +3530,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			new_local TWord (n @ 0) \d ->
 			if_then_else (to_short_ptr d @ 0 ==. lit_short (8*ns)) (
 				new_local TShort (to_short_ptr d @ -1) \arity ->
+				fast_ap_descriptor .= d - to_word (arity <<. if_i64_or_i32_expr (lit_short 4) (lit_short 3)) :.
 				Pc .= to_word_ptr (to_word_ptr (d + (lit_word (ns*2-1) * if_i64_or_i32_expr (lit_word 8) (lit_word 4)) - lit_word 2) @ 0) :.
 				rewind_ptr Pc 3 :.
 				if_then_else (arity <=. lit_short 1) (
@@ -3560,7 +3561,27 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 				Pc .= to_word_ptr (to_word_ptr (d + if_i64_or_i32_expr (lit_word 6) (lit_word 2)) @ 0)
 			))
 	] ++
-	[ instr "add_arg0" Nothing $
+	[ instr "build_node2_rtn" Nothing $
+		ensure_hp 3 :.
+		pop_pc_from_c :.
+		Hp @ 0 .= fast_ap_descriptor + if_i64_or_i32_expr (lit_word 32) (lit_word 16) :.
+		Hp @ 1 .= A @ 0 :.
+		Hp @ 2 .= A @ -1 :.
+		A @ -1 .= to_word Hp :.
+		shrink_a 1
+	, instr "build_node_rtn" Nothing $
+		new_local TPtrOffset (to_ptr_offset (Pc @ 1)) \n_args_m_2 ->
+		ensure_hp (n_args_m_2 + lit_hword 3) :.
+		Hp @ 0 .= fast_ap_descriptor + to_word ((n_args_m_2 + lit_hword 2) <<. if_i64_or_i32_expr (lit_hword 4) (lit_hword 3)) :.
+		Hp @ 1 .= A @ 0 :.
+		Hp @ 2 .= to_word (Hp @? 3) :.
+		pop_pc_from_c :.
+		Hp @ 3 .= A @ -1 :.
+		unrolled_loop [1..32] (\i -> n_args_m_2 <. lit_hword i) (\i -> Hp @ (i+3) .= A @ (-1-i)) :.
+		shrink_a (n_args_m_2 + lit_hword 1) :.
+		A @ 0 .= to_word Hp :.
+		advance_ptr Hp (n_args_m_2 + lit_hword 3)
+	, instr "add_arg0" Nothing $
 		ensure_hp 2 :.
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \n ->
 		pop_pc_from_c :.

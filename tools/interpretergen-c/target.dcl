@@ -23,7 +23,7 @@ lit_char  :: !Char -> Expr TChar
 lit_short :: !Int -> Expr TShort
 lit_int   :: !Int -> Expr TInt
 
-instance to_word TWord, TChar, TInt, TShort, (TPtr t), TReal
+instance to_word TWord, TPtrOffset, TChar, TInt, TShort, (TPtr t), TReal
 instance to_bool TWord
 instance to_char TWord
 instance to_int TWord
@@ -51,7 +51,7 @@ instance ^ (Expr TReal)
 
 (&.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
-(<<.) infix 7 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(<<.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
 (>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
 xorI          :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 ~.            :: !(Expr TWord) -> Expr TWord
@@ -150,6 +150,7 @@ small_integer :: !(Expr TInt) -> Expr TWord
 static_character :: !(Expr TChar) -> Expr TWord
 static_boolean :: !(Expr TWord) -> Expr TWord
 caf_list :: Expr (TPtr TWord)
+fast_ap_descriptor :: Expr TWord
 
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 pop_pc_from_c :: !Target -> Target

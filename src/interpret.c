@@ -498,6 +498,7 @@ eval_to_hnf_return_failure:
 		pc = (BC_WORD*)program->symbol_table[program->start_symbol_id].offset;
 	}
 
+	BC_WORD fast_ap_descriptor=0;
 #ifdef COMPUTED_GOTOS
 	goto **(void**)pc;
 # include "interpret_instructions.h"

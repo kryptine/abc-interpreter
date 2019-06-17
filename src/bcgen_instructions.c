@@ -913,6 +913,17 @@ struct word *add_add_arg_labels(void) {
 
 	for(i=0; i<N_ADD_ARG_LABELS; ++i)
 		if (Fadd_arg_label_used[i]) {
+			if (i>0) {
+				/* Three instructions above add_arg is the code used for fast
+				 * applies of constructors. build_node returns; notB is not used. */
+				if (i==1) {
+					add_instruction(Cbuild_node2_rtn);
+					add_instruction(CnotB);
+				} else {
+					add_instruction_w(Cbuild_node_rtn,i-1);
+				}
+				add_instruction(CnotB);
+			}
 			char label_name[11];
 			sprintf(label_name,"_add_arg%d",i);
 			struct label *label = enter_label(label_name);

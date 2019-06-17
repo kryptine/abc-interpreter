@@ -78,6 +78,8 @@ enum {
 	INSTRUCTION(buildhr30)
 	INSTRUCTION(buildhr31)
 	INSTRUCTION(buildhr40)
+	INSTRUCTION(build_node_rtn)
+	INSTRUCTION(build_node2_rtn)
 	INSTRUCTION(build_r)
 	INSTRUCTION(build_ra0)
 	INSTRUCTION(build_ra1)
