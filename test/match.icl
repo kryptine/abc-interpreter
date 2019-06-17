@@ -4,7 +4,7 @@ import StdEnum
 import StdInt
 import StdList
 
-Start = match 4000
+Start = match 400
 
 match :: !Int -> Int
 match n = sum (map mtest [1..n])

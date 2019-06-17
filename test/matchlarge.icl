@@ -19,4 +19,4 @@ match H =  7
 match I =  8
 match J =  9
 
-Start = maxList [match t \\ i <- [0..10000000], t <- all_constructors]
+Start = maxList [match t \\ i <- [0..100000], t <- all_constructors]
