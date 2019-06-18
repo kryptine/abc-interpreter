@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "abc_instructions.h"
@@ -19,7 +20,8 @@ enum section_type {
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[669] = {
+uint64_t prelinker_preamble[670] = {
+		0, /* reserved */
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
 	/* 10 */ 0, 0, 0, 4, _4chars2int('B','O','O','L'),
@@ -70,24 +72,52 @@ uint64_t prelinker_preamble[669] = {
 
 void prepare_preamble(void) {
 	for (int i=0; i<=32; i++) {
-		prelinker_preamble[30+i*2]=26*8+2; /* INT+2 */
-		prelinker_preamble[30+i*2+1]=i;
+		prelinker_preamble[31+i*2]=26*8+2; /* INT+2 */
+		prelinker_preamble[31+i*2+1]=i;
 	}
 
 	for (int i=0; i<256; i++) {
-		prelinker_preamble[146+i*2]=16*8+2; /* CHAR+2 */
-		prelinker_preamble[146+i*2+1]=i;
+		prelinker_preamble[147+i*2]=16*8+2; /* CHAR+2 */
+		prelinker_preamble[147+i*2+1]=i;
 	}
 
-	prelinker_preamble[667]=prelinker_preamble[665]=11*8+2; /* BOOL+2 */
-	prelinker_preamble[666]=0;
-	prelinker_preamble[668]=1;
+	prelinker_preamble[668]=prelinker_preamble[666]=11*8+2; /* BOOL+2 */
+	prelinker_preamble[667]=0;
+	prelinker_preamble[669]=1;
 }
 
 void write_section(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {
 	fwrite(&type, 1, sizeof(uint32_t), f);
 	fwrite(&len, 1, sizeof(uint32_t), f);
 	fwrite(data, sizeof(uint64_t), len, f);
+}
+
+uint32_t leb128_encode(uint32_t len, uint64_t *data, uint64_t **dest) {
+	char *ptr=safe_malloc (len*sizeof(uint64_t)*5/4); /* rough upper bound */
+	*dest=(uint64_t*)ptr;
+
+	*(uint32_t*)ptr=len;
+	ptr+=4;
+
+	while (len--) {
+		uint64_t val=*data++;
+		do {
+			char byte=val&0x7f;
+			val>>=7;
+			if (val)
+				byte|=0x80;
+			*ptr++=byte;
+		} while (val);
+	}
+
+	return ((ptr-(char*)*dest)+7)>>3;
+}
+
+void write_section_leb128(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {
+	uint64_t *leb_encoded_data;
+	uint32_t leb_encoded_len=leb128_encode (len,data,&leb_encoded_data);
+	write_section (f,type,leb_encoded_len,leb_encoded_data);
+	free (leb_encoded_data);
 }
 
 int main(int argc, char **argv) {
@@ -137,9 +167,9 @@ int main(int argc, char **argv) {
 	struct program *program=state.program;
 
 	prepare_preamble();
-	write_section(output_file, ST_Preamble, sizeof(prelinker_preamble)/sizeof(uint64_t), prelinker_preamble);
-	write_section(output_file, ST_Code, program->code_size, program->code);
-	write_section(output_file, ST_Data, program->data_size, program->data);
+	write_section_leb128(output_file, ST_Preamble, sizeof(prelinker_preamble)/sizeof(uint64_t), prelinker_preamble);
+	write_section_leb128(output_file, ST_Code, program->code_size, program->code);
+	write_section_leb128(output_file, ST_Data, program->data_size, program->data);
 	write_section(output_file, ST_Start, 1, &program->symbol_table[program->start_symbol_id].offset);
 
 	fclose(output_file);

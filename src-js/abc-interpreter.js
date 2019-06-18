@@ -417,24 +417,47 @@ class ABCInterpreter {
 				throw new ABCError('failed to fetch bytecode');
 			return resp.arrayBuffer();
 		}).then(function(bytecode){
+			const parse_prelinked_bytecode=function (prog, to_array=null) {
+				var prog_offset=0;
+				var words_needed=0;
+
+				while (prog.length>0) {
+					switch (prog[0]) {
+						case 1: /* ST_Code */
+							me.code_offset=words_needed;
+						case 0: /* ST_Preamble */
+						case 2: /* ST_Data */
+							const words_in_section=prog[1]*2;
+							if (to_array!=null)
+								for (var k=0; k<words_in_section; k++)
+									to_array[prog_offset+k]=prog[k+2];
+							prog_offset+=words_in_section;
+							words_needed+=prog[2];
+							break;
+						case 3: /* ST_Start: ignore */
+							break;
+						default:
+							throw new ABCError ('could not parse bytecode');
+					}
+
+					prog=prog.slice(2+2*prog[1]);
+				}
+
+				return words_needed;
+			};
+
 			me.prog=new Uint32Array(bytecode);
-			const blocks_needed=Math.floor((me.prog.length*4 + me.stack_size + me.heap_size*2 + 65535) / 65536);
+
+			me.words_needed=parse_prelinked_bytecode(me.prog);
+			var data_size=me.stack_size+me.heap_size*2;
+			if (data_size<me.prog.length/4)
+				data_size=me.prog.length/4;
+			const blocks_needed=Math.floor((me.words_needed*8 + data_size + 65535) / 65536);
 
 			me.memory=new WebAssembly.Memory({initial: blocks_needed});
 			me.memory_array=new Uint32Array(me.memory.buffer);
 
-			for (var i=0; i<me.prog.length; i++)
-				me.memory_array[i]=me.prog[i];
-
-			(function(prog){
-				var i=0;
-				while (prog.length > 0) {
-					if (prog[0]==1) /* ST_Code section; see bcprelink.c */
-						me.code_offset=i+1;
-					i+=1+prog[1];
-					prog=prog.slice(2+2*prog[1]);
-				}
-			})(me.prog);
+			parse_prelinked_bytecode(me.prog, new Uint32Array(me.memory.buffer,me.words_needed*8));
 
 			const util_imports={
 				clean: {
@@ -489,6 +512,9 @@ class ABCInterpreter {
 				.then(buffer => WebAssembly.instantiate(buffer, util_imports));
 		}).then(function(util){
 			me.util=util;
+
+			me.util.instance.exports.decode_prelinked_bytecode(me.words_needed*8);
+			delete me.words_needed;
 
 			const interpreter_imports={
 				clean: {
