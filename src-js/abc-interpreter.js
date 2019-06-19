@@ -434,7 +434,8 @@ class ABCInterpreter {
 							prog_offset+=words_in_section;
 							words_needed+=prog[2];
 							break;
-						case 3: /* ST_Start: ignore */
+						case 3: /* ST_Start */
+							me.start=prog[2];
 							break;
 						default:
 							throw new ABCError ('could not parse bytecode');
@@ -636,7 +637,7 @@ class ABCInterpreter {
 			me.interpreter.instance.exports.set_csp(csp);
 			me.interpreter.instance.exports.set_hp(hp);
 			me.interpreter.instance.exports.set_hp_free(me.heap_size/8);
-			me.interpreter.instance.exports.set_hp_size(me.heap_size);
+			me.interpreter.instance.exports.set_hp_size(me.heap_size/8);
 
 			me.interpret=function (f, args) {
 				const asp=me.interpreter.instance.exports.get_asp();
