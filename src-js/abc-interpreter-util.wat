@@ -158,8 +158,9 @@
 		(local $i i32)
 		(local $byte i64)
 
-		(local $result i64)
+		(local $val i64)
 		(local $shift i64)
+		(local $neg i32)
 
 		(local.set $len (local.get $ptr))
 		(local.set $i (i32.const 0))
@@ -170,18 +171,27 @@
 			(local.set $ptr (i32.add (local.get $ptr) (i32.const 4)))
 
 			(loop $decode
-				(local.set $result (i64.const 0))
-				(local.set $shift (i64.const 0))
+				(local.set $byte (i64.load8_u (local.get $ptr)))
+				(local.set $val (i64.and (local.get $byte) (i64.const 0x3f)))
+				(local.set $neg (i32.wrap_i64 (i64.and (local.get $byte) (i64.const 0x40))))
+				(local.set $shift (i64.const -1))
 
-				(loop $lp
-					(local.set $byte (i64.load8_u (local.get $ptr)))
-					(local.set $result (i64.or (local.get $result)
-						(i64.shl (i64.and (local.get $byte) (i64.const 0x7f)) (local.get $shift))))
-					(local.set $shift (i64.add (local.get $shift) (i64.const 7)))
-					(local.set $ptr (i32.add (local.get $ptr) (i32.const 1)))
-					(br_if $lp (i32.wrap_i64 (i64.and (local.get $byte) (i64.const 0x80))))
+				(block $end-value
+					(loop $lp
+						(local.set $ptr (i32.add (local.get $ptr) (i32.const 1)))
+						(br_if $end-value (i32.eqz (i32.wrap_i64 (i64.and (local.get $byte) (i64.const 0x80)))))
+						(local.set $shift (i64.add (local.get $shift) (i64.const 7)))
+						(local.set $byte (i64.load8_u (local.get $ptr)))
+						(local.set $val (i64.or (local.get $val)
+							(i64.shl (i64.and (local.get $byte) (i64.const 0x7f)) (local.get $shift))))
+						(br $lp)
+					)
 				)
-				(i64.store (local.get $i) (local.get $result))
+				(if
+					(local.get $neg)
+					(then (local.set $val (i64.sub (i64.const 0) (local.get $val))))
+				)
+				(i64.store (local.get $i) (local.get $val))
 
 				(local.set $i (i32.add (local.get $i) (i32.const 8)))
 				(br_if $decode (local.tee $section-len (i32.sub (local.get $section-len) (i32.const 1))))

@@ -28,7 +28,6 @@ class ABCInterpreter {
 	// Just to setup properties. New instances should be created with the static
 	// method instantiate() below.
 	constructor () {
-		this.prog=null;
 		this.memory=null;
 		this.memory_array=null;
 
@@ -447,18 +446,18 @@ class ABCInterpreter {
 				return words_needed;
 			};
 
-			me.prog=new Uint32Array(bytecode);
+			bytecode=new Uint32Array(bytecode);
 
-			me.words_needed=parse_prelinked_bytecode(me.prog);
+			me.words_needed_for_program=parse_prelinked_bytecode(bytecode);
 			var data_size=me.stack_size+me.heap_size*2;
-			if (data_size<me.prog.length/4)
-				data_size=me.prog.length/4;
-			const blocks_needed=Math.floor((me.words_needed*8 + data_size + 65535) / 65536);
+			if (data_size<bytecode.length/4)
+				data_size=bytecode.length/4;
+			const blocks_needed=Math.floor((me.words_needed_for_program*8 + data_size + 65535) / 65536);
 
 			me.memory=new WebAssembly.Memory({initial: blocks_needed});
 			me.memory_array=new Uint32Array(me.memory.buffer);
 
-			parse_prelinked_bytecode(me.prog, new Uint32Array(me.memory.buffer,me.words_needed*8));
+			parse_prelinked_bytecode(bytecode, new Uint32Array(me.memory.buffer,me.words_needed_for_program*8));
 
 			const util_imports={
 				clean: {
@@ -514,8 +513,7 @@ class ABCInterpreter {
 		}).then(function(util){
 			me.util=util;
 
-			me.util.instance.exports.decode_prelinked_bytecode(me.words_needed*8);
-			delete me.words_needed;
+			me.util.instance.exports.decode_prelinked_bytecode(me.words_needed_for_program*8);
 
 			const interpreter_imports={
 				clean: {
@@ -625,7 +623,8 @@ class ABCInterpreter {
 		}).then(function(intp){
 			me.interpreter=intp;
 
-			const asp=4*me.prog.length;
+			const asp=Math.floor((me.words_needed_for_program*8+7)/8)*8;
+			delete me.words_needed_for_program;
 			const bsp=asp+me.stack_size;
 			const csp=asp+me.stack_size/2;
 			const hp=bsp+8;
@@ -682,8 +681,6 @@ class ABCInterpreter {
 				me.interpreter.instance.exports.set_pc(old_pc);
 				me.interpreter.instance.exports.set_asp(old_asp);
 			};
-
-			delete me.prog;
 
 			return me;
 		});

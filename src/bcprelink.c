@@ -92,7 +92,7 @@ void write_section(FILE *f, enum section_type type, uint32_t len, uint64_t *data
 	fwrite(data, sizeof(uint64_t), len, f);
 }
 
-uint32_t leb128_encode(uint32_t len, uint64_t *data, uint64_t **dest) {
+static uint32_t varwidth_encode(uint32_t len, uint64_t *data, uint64_t **dest) {
 	char *ptr=safe_malloc (len*sizeof(uint64_t)*5/4); /* rough upper bound */
 	*dest=(uint64_t*)ptr;
 
@@ -101,21 +101,34 @@ uint32_t leb128_encode(uint32_t len, uint64_t *data, uint64_t **dest) {
 
 	while (len--) {
 		uint64_t val=*data++;
-		do {
-			char byte=val&0x7f;
+		char byte=0x00;
+
+		if ((int64_t)val<0) {
+			val=0-(int64_t)val;
+			byte=0x40;
+		}
+
+		byte|=val&0x3f;
+		val>>=6;
+		if (val)
+			byte|=0x80;
+		*ptr++=byte;
+
+		while (val) {
+			byte=val&0x7f;
 			val>>=7;
 			if (val)
 				byte|=0x80;
 			*ptr++=byte;
-		} while (val);
+		}
 	}
 
 	return ((ptr-(char*)*dest)+7)>>3;
 }
 
-void write_section_leb128(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {
+static void write_section_varwidth(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {
 	uint64_t *leb_encoded_data;
-	uint32_t leb_encoded_len=leb128_encode (len,data,&leb_encoded_data);
+	uint32_t leb_encoded_len=varwidth_encode (len,data,&leb_encoded_data);
 	write_section (f,type,leb_encoded_len,leb_encoded_data);
 	free (leb_encoded_data);
 }
@@ -167,9 +180,9 @@ int main(int argc, char **argv) {
 	struct program *program=state.program;
 
 	prepare_preamble();
-	write_section_leb128(output_file, ST_Preamble, sizeof(prelinker_preamble)/sizeof(uint64_t), prelinker_preamble);
-	write_section_leb128(output_file, ST_Code, program->code_size, program->code);
-	write_section_leb128(output_file, ST_Data, program->data_size, program->data);
+	write_section_varwidth(output_file, ST_Preamble, sizeof(prelinker_preamble)/sizeof(uint64_t), prelinker_preamble);
+	write_section_varwidth(output_file, ST_Code, program->code_size, program->code);
+	write_section_varwidth(output_file, ST_Data, program->data_size, program->data);
 	write_section(output_file, ST_Start, 1, &program->symbol_table[program->start_symbol_id].offset);
 
 	fclose(output_file);
