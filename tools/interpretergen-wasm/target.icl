@@ -182,6 +182,8 @@ where
 		[ "(func (export \"get_"+++{if (c=='-') '_' c \\ c <-: v}+++"\") (result i32) (global.get $g-"+++v+++"))" \\ v <- rt_vars ] ++
 		[ "(func (export \"set_"+++{if (c=='-') '_' c \\ c <-: v}+++"\") (param i32) (global.set $g-"+++v+++" (local.get 0)))" \\ v <- rt_vars ] ++
 
+		[ "(global $g-fast-ap-descriptor (mut i64) (i64.const 0))" ] ++
+
 		IF_GLOBAL_TEMP_VARS ["(global $vw"+++toString i+++" (mut i32) (i32.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]]] [] ++
 		IF_GLOBAL_TEMP_VARS ["(global $vq"+++toString i+++" (mut i64) (i64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]]] [] ++
 		IF_GLOBAL_TEMP_VARS ["(global $vd"+++toString i+++" (mut f64) (f64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]] [] ++
@@ -269,6 +271,7 @@ where
 	| v=="hp"      = I32
 	| v=="hp-free" = I32
 	| v=="hp-size" = I32
+	| v=="fast-ap-descriptor" = I64
 	| otherwise    = abort ("unknown variable "+++v+++"\n")
 
 instr_unimplemented :: !Target -> Target
@@ -397,7 +400,7 @@ instance ^ (Expr TReal) where ^ a b = Ecall "clean_powR" [a,b]
 (|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (|.) a b = Eor (type2 a b) a b
 
-(<<.) infix 7 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(<<.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
 (<<.) a b = Eshl (type2 a b) a b
 
 (>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
@@ -732,6 +735,9 @@ where
 
 caf_list :: Expr (TPtr TWord)
 caf_list = Econst I32 (97*8)
+
+fast_ap_descriptor :: Expr TWord
+fast_ap_descriptor = Ivar (Global "g-fast-ap-descriptor")
 
 C = rt_var "csp"
 

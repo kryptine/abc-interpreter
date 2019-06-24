@@ -365,19 +365,14 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 }
 
 void debugger_update_a_stack(BC_WORD *ptr) {
-	char _tmp[256];
 	BC_WORD *start = asp + 1;
 	mvwprintw(winh_a, 0, 0, "A-stack  (%d)\n", ptr-start+1);
 	wrefresh(winh_a);
 
 	wmove(win_a, 0, 0);
 	while (start <= ptr) {
-		print_label(_tmp, 256, 0, (BC_WORD*) *start, program, hp, heap_size);
-		wprintw(win_a, "%3d  %s", ptr-start, _tmp);
-		if (hp <= (BC_WORD*) *start && (BC_WORD*) *start < hp + heap_size) {
-			wprintw(win_a, "  ");
-			wprint_node(win_a, (BC_WORD*) *start, 0);
-		}
+		wprintw(win_a, "%3d  ",ptr-start);
+		wprint_node(win_a, (BC_WORD*) *start, 0);
 		wprintw(win_a, "\n");
 		start++;
 	}

@@ -106,6 +106,8 @@ const char *instruction_type (BC_WORD i) {
 		case Cbuildhr30:             return "l";
 		case Cbuildhr31:             return "l";
 		case Cbuildhr40:             return "l";
+		case Cbuild_node_rtn:        return "n";
+		case Cbuild_node2_rtn:       return "";
 		case Cbuild_r:               return "nnlnn";
 		case Cbuild_ra0:             return "nnl";
 		case Cbuild_ra1:             return "nnln";

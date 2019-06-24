@@ -197,12 +197,13 @@ lit_short i = toString i
 lit_int :: !Int -> Expr TInt
 lit_int i = toString i
 
-instance to_word TWord    where to_word e = e
-instance to_word TChar    where to_word e = "(BC_WORD)("+-+e+-+")"
-instance to_word TInt     where to_word e = "(BC_WORD)("+-+e+-+")"
-instance to_word TShort   where to_word e = "(BC_WORD)("+-+e+-+")"
-instance to_word (TPtr t) where to_word e = "(BC_WORD)("+-+e+-+")"
-instance to_word TReal    where to_word e = "*(BC_WORD*)&("+-+e+-+")"
+instance to_word TWord      where to_word e = e
+instance to_word TPtrOffset where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TChar      where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TInt       where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TShort     where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word (TPtr t)   where to_word e = "(BC_WORD)("+-+e+-+")"
+instance to_word TReal      where to_word e = "*(BC_WORD*)&("+-+e+-+")"
 
 instance to_bool TWord
 where
@@ -264,7 +265,7 @@ instance ^ (Expr TReal) where ^ a b = "pow("+-+a+-+","+-+b+-+")"
 (|.) infixl 6 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 (|.) a b = "("+-+a+-+"|"+-+b+-+")"
 
-(<<.) infix 7 :: !(Expr TWord) !(Expr TWord) -> Expr TWord
+(<<.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
 (<<.) a b = "("+-+a+-+"<<"+-+b+-+")"
 
 (>>.) infix 7 :: !(Expr a) !(Expr a) -> Expr a
@@ -494,6 +495,9 @@ static_boolean b = "(BC_WORD)&static_booleans[("+-+b+-+") ? 2 : 0]"
 
 caf_list :: Expr (TPtr TWord)
 caf_list = "(BC_WORD*)caf_list"
+
+fast_ap_descriptor :: Expr TWord
+fast_ap_descriptor = "fast_ap_descriptor";
 
 push_c :: !(Expr (TPtr TWord)) !Target -> Target
 push_c v t = append ("\t*++csp=(BC_WORD)"+-+v+-+";") t
