@@ -13,7 +13,6 @@ definition module ABC.Interpreter
  *  - ByteCode: path for the main bytecode file (e.g. {Project}*app.bc)
  *  - CodeGen/GenerateByteCode: True
  *  - CodeGen/OptimiseABC: True (unless you suspect a bug in the ABC optimiser)
- *  - Link/StripByteCode: False (because we need symbols in the bytecode)
  *  - Link/GenerateSymbolTable: True (because we need symbols in the executable)
  *
  * In the Clean IDE, you can set these options in two panes:
