@@ -133,16 +133,22 @@ struct host_symbol *add_extra_host_symbol(struct program *pgm) {
 }
 # endif
 
-int print_plain_label(char *s, size_t size, BC_WORD *label,
+int print_address(char *s, size_t size, BC_WORD *addr,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
-	if (pgm->code <= label && label < pgm->code + pgm->code_size)
-		return snprintf(s, size, "<%d>", (int) (label - pgm->code));
-	else if (pgm->data <= label && label < pgm->data + pgm->data_size)
-		return snprintf(s, size, "[%d]", (int) (label - pgm->data));
-	else if (heap != NULL && heap <= label && label < heap + heap_size)
-		return snprintf(s, size, "{%d}", (int) (label - heap));
+	if (pgm->code <= addr && addr < pgm->code + pgm->code_size)
+		return snprintf(s, size, "<%d>", (int) (addr - pgm->code));
+	else if (pgm->data <= addr && addr < pgm->data + pgm->data_size)
+		return snprintf(s, size, "[%d]", (int) (addr - pgm->data));
+	else if (heap != NULL && heap <= addr && addr < heap + heap_size)
+		return snprintf(s, size, "{%d}", (int) (addr - heap));
+	else if (small_integers <= addr && addr < small_integers+sizeof(small_integers))
+		return snprintf(s, size, BC_WORD_S_FMT, addr[1]);
+	else if (static_characters <= addr && addr < static_characters+sizeof(static_characters))
+		return snprintf(s, size, "'%s'", escape(addr[1]));
+	else if (static_booleans <= addr && addr < static_booleans+sizeof(static_booleans))
+		return snprintf(s, size, "%s", addr[1] ? "True" : "False");
 	else
-		return snprintf(s, size, "0x" BC_WORD_FMT_HEX, (BC_WORD) label);
+		return snprintf(s, size, "0x" BC_WORD_FMT_HEX, (BC_WORD) addr);
 }
 
 int print_label_name(char *s, size_t size, char *label) {
@@ -250,7 +256,7 @@ init_symbols_matching(struct program *pgm) {
 # endif
 }
 
-int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
+int print_label(char *s, size_t size, int include_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size) {
 	if (((BC_WORD)label&-4) == (BC_WORD)&INT)
 		return snprintf(s, size, "INT");
@@ -267,11 +273,11 @@ int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
 	else if (&Fjmp_ap[0] <= label && label <= &Fjmp_ap[31])
 		return snprintf(s, size, "{jmp_ap %d}", (int)(label-Fjmp_ap)+1);
 	else if (heap != NULL && heap <= label && label < heap + heap_size)
-		return print_plain_label(s, size, label, pgm, heap, heap_size);
+		return print_address(s, size, label, pgm, heap, heap_size);
 
 	int used = 0;
-	if (include_plain_address) {
-		used = print_plain_label(s, size, label, pgm, heap, heap_size);
+	if (include_address) {
+		used = print_address(s, size, label, pgm, heap, heap_size);
 		if (used >= size - 1)
 			return used;
 		s[used++] = ' ';

@@ -168,13 +168,23 @@ size_t string_to_size(char *size) {
 	}
 }
 
+static char hex_digits[]="0123456789abcdef";
 char *escape(char c) {
-	static char s[2];
+	static char s[4];
+
+	if (c<' ') {
+		s[0]='\\';
+		s[1]='x';
+		s[2]=hex_digits[c>>4];
+		s[3]=hex_digits[c&0xf];
+	}
+
 	switch (c) {
 		case '\n': return "\\n";
 		case '\r': return "\\r";
 		case '\t': return "\\t";
 		case '\\': return "\\\\";
+		case '\'': return "'";
 		case '"':  return "\\\"";
 		default:
 		   s[0] = c;

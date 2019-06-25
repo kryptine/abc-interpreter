@@ -68,9 +68,9 @@ extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];
 
-extern BC_WORD small_integers[];
-extern BC_WORD static_characters[];
-extern BC_WORD static_booleans[];
+extern BC_WORD small_integers[66];
+extern BC_WORD static_characters[512];
+extern BC_WORD static_booleans[4];
 
 #ifdef LINK_CLEAN_RUNTIME
 #include "copy_interpreter_to_host.h"

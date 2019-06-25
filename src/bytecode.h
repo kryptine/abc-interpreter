@@ -102,7 +102,9 @@ void sort_host_symbols_by_location(struct program *pgm);
 struct host_symbol *add_extra_host_symbol(struct program *pgm);
 # endif
 
-int print_label(char *s, size_t size, int include_plain_address, BC_WORD *label,
+int print_address(char *s, size_t size, BC_WORD *addr,
+		struct program *pgm, BC_WORD *heap, size_t heap_size);
+int print_label(char *s, size_t size, int include_address, BC_WORD *label,
 		struct program *pgm, BC_WORD *heap, size_t heap_size);
 # ifdef DEBUG_CURSES
 #  include <curses.h>

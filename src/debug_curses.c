@@ -304,7 +304,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 			b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 		}
 	} else {
-		int16_t arity = ((int16_t*)(node[0]))[-1];
+		int16_t arity = ((int32_t*)(node[0]))[-1];
 		if (arity < 0) {
 			a_arity = 1;
 			b_arity = 0;
@@ -341,7 +341,7 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 
 		/* TODO: unboxed values */
 
-		print_label(_tmp, 256, 0, (BC_WORD*) node[1], program, hp, heap_size);
+		print_address(_tmp, 256, (BC_WORD*) node[1], program, hp, heap_size);
 		wprintw(win, " %s", _tmp);
 		if (a_arity <= 1)
 			return;
@@ -522,7 +522,7 @@ void debugger_show_node_as_tree_(WINDOW *win, BC_WORD *node, int indent, uint64_
 			b_arity = ((int16_t*)(node[0]))[-1] - 256 - a_arity;
 		}
 	} else {
-		int16_t arity = ((int16_t*)(node[0]))[-1];
+		int16_t arity = ((int32_t*)(node[0]))[-1];
 		if (arity < 0) {
 			a_arity = 1;
 			b_arity = 0;
