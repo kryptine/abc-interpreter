@@ -2913,6 +2913,21 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "testcaf" (Just 1) $
 		B @ -1 .= to_word_ptr (Pc @ 1) @ 0 :.
 		grow_b 1
+	, instr "updateAC" (Just 0) $
+		// B[0] is index; B[1] new character; A[0] the _STRING_, which is *not* unique
+		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \string ->
+		new_local TPtrOffset (to_ptr_offset (string @ 1)) \len ->
+		len .= lit_hword 2 + if_i64_or_i32_expr ((len + lit_hword 7) >>. lit_hword 3) ((len + lit_hword 3) >>. lit_hword 2) :.
+		ensure_hp len :.
+		A @ 0 .= to_word Hp :.
+		new_local TPtrOffset (len - lit_hword 1) \n ->
+		while_do (n >=. lit_hword 0) (
+			Hp @ n .= string @ n :.
+			n -= lit_hword 1
+		) :.
+		to_char_ptr (Hp @? 2) @ (B @ 0) .= to_char (B @ 1) :.
+		advance_ptr Hp len :.
+		shrink_b 2
 	, instr "update" (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		array @ (lit_hword 3 + to_ptr_offset (B @ 0)) .= A @ -1 :.

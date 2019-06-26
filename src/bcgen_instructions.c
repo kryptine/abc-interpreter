@@ -953,19 +953,20 @@ static char *specialized_jsr_labels[] = {
 	/* 1*/ "cmpAC",
 	/* 2*/ "catAC",
 	/* 3*/ "sliceAC",
-	/* 4*/ "ItoAC",
-	/* 5*/ "BtoAC",
-	/* 6*/ "RtoAC",
-	/* 7*/ "print__string__",
-	/* 8*/ "openF",
-	/* 9*/ "stdioF",
-	/*10*/ "closeF",
-	/*11*/ "readLineF",
-	/*12*/ "endF",
-	/*13*/ "writeFI",
-	/*14*/ "writeFS",
-	/*15*/ "writeFC",
-	/*16*/ "openSF"
+	/* 4*/ "updateAC",
+	/* 5*/ "ItoAC",
+	/* 6*/ "BtoAC",
+	/* 7*/ "RtoAC",
+	/* 8*/ "print__string__",
+	/* 9*/ "openF",
+	/*10*/ "stdioF",
+	/*11*/ "closeF",
+	/*12*/ "readLineF",
+	/*13*/ "endF",
+	/*14*/ "writeFI",
+	/*15*/ "writeFS",
+	/*16*/ "writeFC",
+	/*17*/ "openSF"
 };
 
 static int get_specialized_jsr_label_n(char label_name[]) {
@@ -985,10 +986,11 @@ void add_specialized_jsr_instruction(unsigned int n) {
 		case  1: add_instruction(CcmpAC); return;
 		case  2: add_instruction(CcatAC); return;
 		case  3: add_instruction(CsliceAC); return;
-		case  4: add_instruction(CItoAC); return;
-		case  5: add_instruction(CBtoAC); return;
-		case  6: add_instruction(CRtoAC); return;
-		case  7: add_instruction(Cprint_string); return;
+		case  4: add_instruction(CupdateAC); return;
+		case  5: add_instruction(CItoAC); return;
+		case  6: add_instruction(CBtoAC); return;
+		case  7: add_instruction(CRtoAC); return;
+		case  8: add_instruction(Cprint_string); return;
 		default:
 			if (n < sizeof(specialized_jsr_labels)/sizeof(char*)) {
 				fprintf(stderr,"Warning: jsr %s is not supported by the interpreter\n",specialized_jsr_labels[n]);

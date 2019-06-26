@@ -514,6 +514,7 @@ const char *instruction_type (BC_WORD i) {
 		case CtanR:                  return "";
 		case Ctestcaf:               return "C";
 		case Cupdate:                return "";
+		case CupdateAC:              return "";
 		case CupdateBOOL:            return "";
 		case CupdateCHAR:            return "";
 		case CupdateINT:             return "";
