@@ -567,13 +567,7 @@ class ABCInterpreter {
 						me.log("'"+String.fromCharCode(v)+"'");
 					},
 					print_real: function (v) {
-						me.log(Number(0+v).toLocaleString(
-							['en-US'],
-							{
-								useGrouping: false,
-								maximumSignificantDigits: 15,
-							}
-						));
+						me.log(Number(0+v).toPrecision(15));
 					},
 
 					powR: Math.pow,
@@ -587,23 +581,11 @@ class ABCInterpreter {
 					lnR: Math.log,
 					log10R: Math.log10,
 					RtoAC_words_needed: function(v) {
-						v=Number(0+v).toLocaleString(
-							['en-US'],
-							{
-								useGrouping: false,
-								maximumSignificantDigits: 15,
-							}
-						);
+						v=Number(0+v).toPrecision(15);
 						return 2+((v.length+7)>>3);
 					},
 					RtoAC: function (dest, v) {
-						v=Number(0+v).toLocaleString(
-							['en-US'],
-							{
-								useGrouping: false,
-								maximumSignificantDigits: 15,
-							}
-						);
+						v=Number(0+v).toPrecision(15);
 						me.memory_array[dest/4]=6*8+2; // __STRING__
 						me.memory_array[dest/4+1]=0;
 						me.memory_array[dest/4+2]=v.length;
