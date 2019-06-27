@@ -141,11 +141,11 @@ int print_address(char *s, size_t size, BC_WORD *addr,
 		return snprintf(s, size, "[%d]", (int) (addr - pgm->data));
 	else if (heap != NULL && heap <= addr && addr < heap + heap_size)
 		return snprintf(s, size, "{%d}", (int) (addr - heap));
-	else if (small_integers <= addr && addr < small_integers+sizeof(small_integers))
+	else if (small_integers <= addr && addr < small_integers+sizeof(small_integers)/sizeof(small_integers[0]))
 		return snprintf(s, size, BC_WORD_S_FMT, addr[1]);
-	else if (static_characters <= addr && addr < static_characters+sizeof(static_characters))
+	else if (static_characters <= addr && addr < static_characters+sizeof(static_characters)/sizeof(static_characters[0]))
 		return snprintf(s, size, "'%s'", escape(addr[1]));
-	else if (static_booleans <= addr && addr < static_booleans+sizeof(static_booleans))
+	else if (static_booleans <= addr && addr < static_booleans+sizeof(static_booleans)/sizeof(static_booleans[0]))
 		return snprintf(s, size, "%s", addr[1] ? "True" : "False");
 	else
 		return snprintf(s, size, "0x" BC_WORD_FMT_HEX, (BC_WORD) addr);
