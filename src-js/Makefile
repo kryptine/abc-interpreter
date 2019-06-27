@@ -1,13 +1,16 @@
 JS?=js
 
 WASM:=abc-interpreter.wasm abc-interpreter-util.wasm
-TARGETS:=$(WASM) abc-instructions.js
 
-all: $(TARGETS) WebPublic
+all: $(WASM) WebPublic
 
-WebPublic: $(TARGETS)
+WebPublic: $(WASM) abc-interpreter.js ../src/abc_instructions.h
 	mkdir -p WebPublic/js
-	cp $^ WebPublic/js
+	cp $(WASM) WebPublic/js
+	cp abc-interpreter.js WebPublic/js
+	echo 'ABCInterpreter.instructions=[' >> WebPublic/js/abc-interpreter.js
+	sed -n 's/^\tINSTRUCTION(\(.*\))/\t"\1",/p' ../src/abc_instructions.h >> WebPublic/js/abc-interpreter.js
+	echo '];' >> WebPublic/js/abc-interpreter.js
 
 %.wasm: %.wat
 	$(JS) ../tools/wat2wasm.js $< -o $@
@@ -15,10 +18,5 @@ WebPublic: $(TARGETS)
 abc-interpreter.wat: .FORCE
 	$(MAKE) -C ../tools interpretergenwasm
 	../tools/interpretergenwasm $(INTERPRETERGENWASMFLAGS) -i ../src/abc_instructions.h > $@
-
-abc-instructions.js: ../src/abc_instructions.h
-	echo 'var abc_instructions = [' > $@
-	sed -n 's/^\tINSTRUCTION(\(.*\))/\t"\1",/p' $< >> $@
-	echo '];' >> $@
 
 .FORCE:

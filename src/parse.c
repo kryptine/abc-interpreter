@@ -255,10 +255,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # else
 				state->program->data_size = elem32;
 # endif
-				/* The prelinker writes data size between code and data segment, so reserve this space.
-				 * TODO: better would be to use a different file format in the prelinker. */
-				state->program->code = safe_malloc(sizeof(BC_WORD) * (code_size+state->program->data_size+1));
-				state->program->data = state->program->code + code_size + 1;
+				state->program->code = safe_malloc(sizeof(BC_WORD) * (code_size+state->program->data_size));
+				state->program->data = state->program->code + code_size;
 #endif
 
 				if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
@@ -540,7 +538,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->data;
 # elif defined(PRELINKER)
-					state->program->symbol_table[state->ptr].offset += ((BC_WORD)state->program->code_size+3)*8+sizeof(prelinker_preamble);
+					state->program->symbol_table[state->ptr].offset += ((BC_WORD)state->program->code_size)*8+sizeof(prelinker_preamble);
 # endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {
@@ -577,7 +575,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # ifdef INTERPRETER
 					state->program->symbol_table[state->ptr].offset += (BC_WORD) state->program->code;
 # elif defined(PRELINKER)
-					state->program->symbol_table[state->ptr].offset += 2*8+sizeof(prelinker_preamble);
+					state->program->symbol_table[state->ptr].offset += sizeof(prelinker_preamble);
 # endif
 # ifdef LINK_CLEAN_RUNTIME
 					if (state->program->symbol_table[state->ptr].name[0]) {

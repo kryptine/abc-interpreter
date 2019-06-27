@@ -151,6 +151,57 @@
 		)
 	)
 
+	(func (export "decode_prelinked_bytecode") (param $ptr i32)
+		(local $section-len i32)
+
+		(local $len i32)
+		(local $i i32)
+		(local $byte i64)
+
+		(local $val i64)
+		(local $shift i64)
+		(local $neg i32)
+
+		(local.set $len (local.get $ptr))
+		(local.set $i (i32.const 0))
+
+		(loop $sections
+			(local.set $section-len (i32.load (local.get $ptr)))
+			(if (i32.eqz (local.get $section-len)) (return))
+			(local.set $ptr (i32.add (local.get $ptr) (i32.const 4)))
+
+			(loop $decode
+				(local.set $byte (i64.load8_u (local.get $ptr)))
+				(local.set $val (i64.and (local.get $byte) (i64.const 0x3f)))
+				(local.set $neg (i32.wrap_i64 (i64.and (local.get $byte) (i64.const 0x40))))
+				(local.set $shift (i64.const -1))
+
+				(block $end-value
+					(loop $lp
+						(local.set $ptr (i32.add (local.get $ptr) (i32.const 1)))
+						(br_if $end-value (i32.eqz (i32.wrap_i64 (i64.and (local.get $byte) (i64.const 0x80)))))
+						(local.set $shift (i64.add (local.get $shift) (i64.const 7)))
+						(local.set $byte (i64.load8_u (local.get $ptr)))
+						(local.set $val (i64.or (local.get $val)
+							(i64.shl (i64.and (local.get $byte) (i64.const 0x7f)) (local.get $shift))))
+						(br $lp)
+					)
+				)
+				(if
+					(local.get $neg)
+					(then (local.set $val (i64.sub (i64.const 0) (local.get $val))))
+				)
+				(i64.store (local.get $i) (local.get $val))
+
+				(local.set $i (i32.add (local.get $i) (i32.const 8)))
+				(br_if $decode (local.tee $section-len (i32.sub (local.get $section-len) (i32.const 1))))
+			)
+
+			(local.set $ptr (i32.and (i32.add (local.get $ptr) (i32.const 7)) (i32.const 0xfffffff8)))
+			(br $sections)
+		)
+	)
+
 	(func (export "gc") (param $asp i32)
 		(local $old i32)
 		(local $new i32)

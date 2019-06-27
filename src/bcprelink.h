@@ -1,3 +1,3 @@
 #pragma once
 
-extern uint64_t prelinker_preamble[669];
+extern uint64_t prelinker_preamble[670];
