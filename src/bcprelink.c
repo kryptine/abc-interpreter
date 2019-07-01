@@ -20,7 +20,7 @@ enum section_type {
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[670] = {
+uint64_t prelinker_preamble[665] = {
 		0, /* reserved */
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
@@ -64,10 +64,9 @@ uint64_t prelinker_preamble[670] = {
 		0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
 	/* 658 */ Cinstruction, 0, /* to return to JavaScript */
-	/* 660 */ 257, 0, 0, 7, _7chars2int('D','O','M','N','o','d','e'), /* Reference to the DOM */
-	/* 665 static booleans */
-		0,0,0,0,
-	/* 669 */
+	/* 660 static booleans */
+		(10+1)*8+2,0, (10+1)*8+2,1,
+	/* 664 */
 };
 
 void prepare_preamble(void) {
@@ -80,10 +79,6 @@ void prepare_preamble(void) {
 		prelinker_preamble[147+i*2]=16*8+2; /* CHAR+2 */
 		prelinker_preamble[147+i*2+1]=i;
 	}
-
-	prelinker_preamble[668]=prelinker_preamble[666]=11*8+2; /* BOOL+2 */
-	prelinker_preamble[667]=0;
-	prelinker_preamble[669]=1;
 }
 
 void write_section(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {

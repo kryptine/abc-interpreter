@@ -730,8 +730,8 @@ static_boolean b = case b of
 	Econst _ i -> if (is_zero i) FALSE TRUE
 	b          -> if_expr (Ewrap I32 I64 b) TRUE FALSE
 where
-	TRUE  = Econst I64 (8*668)
-	FALSE = Econst I64 (8*666)
+	TRUE  = Econst I64 (8*663)
+	FALSE = Econst I64 (8*661)
 
 caf_list :: Expr (TPtr TWord)
 caf_list = Econst I32 (97*8)

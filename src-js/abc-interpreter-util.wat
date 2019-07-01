@@ -542,7 +542,7 @@
 				(if
 					(i32.eq (local.get $d) (i32.const 90)) ;; BOOL+2
 					(then
-						(local.set $d (select (i32.const 5344) (i32.const 5328) (i32.load offset=8 (local.get $n)))) ;; static FALSE/TRUE
+						(local.set $d (select (i32.const 5304) (i32.const 5288) (i32.load offset=8 (local.get $n)))) ;; static FALSE/TRUE
 						(i64.store (local.get $ref) (i64.extend_i32_u (local.get $d)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $d) (i32.const 1))))
 						(return (local.get $hp))
