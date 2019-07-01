@@ -207,7 +207,7 @@ class ABCInterpreter {
 				this.memory_array[hp/4+3]=0;
 				hp+=16;
 				hp_free-=2;
-				this.memory_array[hp/4]=6*8+2; // _STRING_
+				this.memory_array[hp/4]=5*8+2; // _STRING_
 				this.memory_array[hp/4+1]=0;
 				this.memory_array[hp/4+2]=values[i].length;
 				this.memory_array[hp/4+3]=0;
@@ -231,7 +231,7 @@ class ABCInterpreter {
 				this.memory_array[hp/4+3]=0;
 				hp+=16;
 				hp_free-=2;
-				this.memory_array[hp/4]=1*8+2; // _ARRAY_
+				this.memory_array[hp/4]=0*8+2; // _ARRAY_
 				this.memory_array[hp/4+1]=0;
 				this.memory_array[hp/4+2]=values[i].length;
 				this.memory_array[hp/4+3]=0;
@@ -586,7 +586,7 @@ class ABCInterpreter {
 					},
 					RtoAC: function (dest, v) {
 						v=Number(0+v).toPrecision(15).replace(/\.?0*$/,'');
-						me.memory_array[dest/4]=6*8+2; // __STRING__
+						me.memory_array[dest/4]=5*8+2; // __STRING__
 						me.memory_array[dest/4+1]=0;
 						me.memory_array[dest/4+2]=v.length;
 						me.memory_array[dest/4+3]=0;
@@ -611,7 +611,7 @@ class ABCInterpreter {
 			const csp=asp+me.stack_size/2;
 			const hp=bsp+8;
 
-			me.util.instance.exports.setup_gc(hp, me.heap_size, asp, 97*8);
+			me.util.instance.exports.setup_gc(hp, me.heap_size, asp, 96*8);
 
 			me.interpreter.instance.exports.set_asp(asp);
 			me.interpreter.instance.exports.set_bsp(bsp);
@@ -630,7 +630,7 @@ class ABCInterpreter {
 				 * collection, so do that first, then set the rest of the arguments and
 				 * update asp. */
 				const copied=me.copy_js_to_clean(args, asp+8);
-				me.memory_array[asp/4]=(31+17*2)*8; // JSWorld: INT 17
+				me.memory_array[asp/4]=(30+17*2)*8; // JSWorld: INT 17
 				me.memory_array[asp/4+4]=me.shared_clean_values[f.shared_clean_value_index].ref;
 				me.interpreter.instance.exports.set_asp(asp+16);
 
@@ -638,11 +638,11 @@ class ABCInterpreter {
 				hp_free=copied.hp_free;
 
 				var csp=me.interpreter.instance.exports.get_csp();
-				me.memory_array[csp/4]=659*8; // instruction 0; to return
+				me.memory_array[csp/4]=658*8; // instruction 0; to return
 				csp+=8;
 
 				const old_pc=me.interpreter.instance.exports.get_pc();
-				me.interpreter.instance.exports.set_pc(100*8); // jmp_ap2
+				me.interpreter.instance.exports.set_pc(99*8); // jmp_ap2
 				me.interpreter.instance.exports.set_csp(csp);
 				me.interpreter.instance.exports.set_hp(hp);
 				me.interpreter.instance.exports.set_hp_free(hp_free);

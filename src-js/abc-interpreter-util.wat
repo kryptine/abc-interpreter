@@ -290,8 +290,8 @@
 					(then
 						(if
 							(i32.or
-								(i32.eq (local.get $d) (i32.const 210)) ;; INT+2
-								(i32.eq (local.get $d) (i32.const 170)) ;; REAL+2
+								(i32.eq (local.get $d) (i32.const 202)) ;; INT+2
+								(i32.eq (local.get $d) (i32.const 162)) ;; REAL+2
 								;; BOOL and CHAR are always static so cannot occur here
 							)
 							(then
@@ -301,7 +301,7 @@
 						)
 						(if
 							;; _STRING_+2
-							(i32.eq (local.get $d) (i32.const 50))
+							(i32.eq (local.get $d) (i32.const 42))
 							(then
 								(local.set $size (i32.load offset=8 (local.get $n))) ;; size
 								(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
@@ -311,14 +311,14 @@
 						)
 						(if
 							;; _ARRAY_+2
-							(i32.eq (local.get $d) (i32.const 10))
+							(i32.eq (local.get $d) (i32.const 2))
 							(then
 								(local.set $size (i32.load offset=8 (local.get $n))) ;; size
 								(local.set $d (i32.load offset=16 (local.get $n))) ;; child descriptor
 								(if
 									(i32.or ;; unboxed INT/REAL
-										(i32.eq (local.get $d) (i32.const 170))
-										(i32.eq (local.get $d) (i32.const 210))
+										(i32.eq (local.get $d) (i32.const 162))
+										(i32.eq (local.get $d) (i32.const 202))
 									)
 									(then
 										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
@@ -327,7 +327,7 @@
 									)
 								)
 								(if ;; unboxed BOOL
-									(i32.eq (local.get $d) (i32.const 90))
+									(i32.eq (local.get $d) (i32.const 82))
 									(then
 										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
 											(i32.shl (local.get $size) (i32.const 6))))) ;; 3+3
@@ -520,12 +520,12 @@
 			;; hnf
 			(then
 				(if
-					(i32.eq (local.get $d) (i32.const 210)) ;; INT+2
+					(i32.eq (local.get $d) (i32.const 202)) ;; INT+2
 					(then
 						(if
 							(i64.lt_u (i64.load offset=8 (local.get $n)) (i64.const 33))
 							(then
-								(local.set $d (i32.add (i32.const 248) (i32.shl (i32.load offset=8 (local.get $n)) (i32.const 4)))) ;; small integer
+								(local.set $d (i32.add (i32.const 240) (i32.shl (i32.load offset=8 (local.get $n)) (i32.const 4)))) ;; small integer
 								(i64.store (local.get $ref) (i64.extend_i32_u (local.get $d)))
 								(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $d) (i32.const 1))))
 								(return (local.get $hp))
@@ -540,18 +540,18 @@
 					)
 				)
 				(if
-					(i32.eq (local.get $d) (i32.const 90)) ;; BOOL+2
+					(i32.eq (local.get $d) (i32.const 82)) ;; BOOL+2
 					(then
-						(local.set $d (select (i32.const 5304) (i32.const 5288) (i32.load offset=8 (local.get $n)))) ;; static FALSE/TRUE
+						(local.set $d (select (i32.const 5296) (i32.const 5280) (i32.load offset=8 (local.get $n)))) ;; static FALSE/TRUE
 						(i64.store (local.get $ref) (i64.extend_i32_u (local.get $d)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $d) (i32.const 1))))
 						(return (local.get $hp))
 					)
 				)
 				(if
-					(i32.eq (local.get $d) (i32.const 130)) ;; CHAR+2
+					(i32.eq (local.get $d) (i32.const 122)) ;; CHAR+2
 					(then
-						(local.set $d (i32.add (i32.const 1176) (i32.shl
+						(local.set $d (i32.add (i32.const 1168) (i32.shl
 							(i32.and (i32.load8_u offset=8 (local.get $n)) (i32.const 0xff)) (i32.const 4)))) ;; static character
 						(i64.store (local.get $ref) (i64.extend_i32_u (local.get $d)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $d) (i32.const 1))))
@@ -559,7 +559,7 @@
 					)
 				)
 				(if
-					(i32.eq (local.get $d) (i32.const 170)) ;; REAL+2
+					(i32.eq (local.get $d) (i32.const 162)) ;; REAL+2
 					(then
 						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
 						(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
@@ -569,7 +569,7 @@
 				)
 				(if
 					;; _STRING_+2
-					(i32.eq (local.get $d) (i32.const 50))
+					(i32.eq (local.get $d) (i32.const 42))
 					(then
 						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
@@ -594,7 +594,7 @@
 				)
 				(if
 					;; _ARRAY_+2
-					(i32.eq (local.get $d) (i32.const 10))
+					(i32.eq (local.get $d) (i32.const 2))
 					(then
 						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
@@ -612,14 +612,14 @@
 								(i32.or
 									(i32.eqz (local.get $d)) ;; boxed
 									(i32.or ;; unboxed INT/REAL
-										(i32.eq (i32.const 170) (local.get $d))
-										(i32.eq (local.get $d) (i32.const 210))
+										(i32.eq (i32.const 162) (local.get $d))
+										(i32.eq (i32.const 202) (local.get $d))
 									)
 								)
 							)
 							(then
 								(if
-									(i32.eq (local.get $d) (i32.const 90))
+									(i32.eq (local.get $d) (i32.const 82))
 									(then ;; BOOL
 										(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
 									)
@@ -814,7 +814,7 @@
 								(if ;; BOOL
 									(i32.eq (local.get $desc) (i32.const -22))
 									(then
-										(i64.store (local.get $hp) (i64.const 90))
+										(i64.store (local.get $hp) (i64.const 82))
 										(i64.store offset=8 (local.get $hp) (i64.load offset=8 (i32.add (local.get $s) (local.get $i))))
 										(br $predefined-constructor)
 									)
@@ -822,7 +822,7 @@
 								(if ;; CHAR
 									(i32.eq (local.get $desc) (i32.const -30))
 									(then
-										(i64.store (local.get $hp) (i64.const 130))
+										(i64.store (local.get $hp) (i64.const 122))
 										(i64.store offset=8 (local.get $hp) (i64.load offset=8 (i32.add (local.get $s) (local.get $i))))
 										(br $predefined-constructor)
 									)
@@ -830,7 +830,7 @@
 								(if ;; REAL
 									(i32.eq (local.get $desc) (i32.const -38))
 									(then
-										(i64.store (local.get $hp) (i64.const 170))
+										(i64.store (local.get $hp) (i64.const 162))
 										(i64.store offset=8 (local.get $hp) (i64.load offset=8 (i32.add (local.get $s) (local.get $i))))
 										(br $predefined-constructor)
 									)
@@ -838,7 +838,7 @@
 								(if ;; INT
 									(i32.eq (local.get $desc) (i32.const -46))
 									(then
-										(i64.store (local.get $hp) (i64.const 210))
+										(i64.store (local.get $hp) (i64.const 202))
 										(i64.store offset=8 (local.get $hp) (i64.load offset=8 (i32.add (local.get $s) (local.get $i))))
 										(br $predefined-constructor)
 									)
@@ -862,7 +862,7 @@
 								(i64.store (i32.load (local.get $ptr-stack)) (i64.extend_i32_u (local.get $hp)))
 								(local.set $ptr-stack (i32.sub (local.get $ptr-stack) (i32.const 4)))
 
-								(i64.store (local.get $hp) (i64.const 50))
+								(i64.store (local.get $hp) (i64.const 42))
 								(local.set $a (i32.load offset=8 (i32.add (local.get $s) (local.get $i))))
 								(i64.store offset=8 (local.get $hp) (i64.extend_i32_u (local.get $a)))
 								(local.set $a (i32.shr_u (i32.add (local.get $a) (i32.const 7)) (i32.const 3)))
@@ -886,13 +886,13 @@
 								(local.set $a (i32.load offset=8 (i32.add (local.get $s) (local.get $i))))
 								(local.set $desc (i32.load offset=16 (i32.add (local.get $s) (local.get $i))))
 
-								(i64.store (local.get $hp) (i64.const 10))
+								(i64.store (local.get $hp) (i64.const 2))
 								(i64.store offset=8 (local.get $hp) (i64.extend_i32_u (local.get $a)))
 
 								(if ;; INT elements
 									(i32.eq (local.get $desc) (i32.const -46))
 									(then
-										(i64.store offset=16 (local.get $hp) (i64.const 210))
+										(i64.store offset=16 (local.get $hp) (i64.const 202))
 										(call $copy
 											(i32.add (local.get $hp) (i32.const 24))
 											(i32.add (local.get $s) (i32.add (local.get $i) (i32.const 24)))
@@ -906,7 +906,7 @@
 								(if ;; REAL elements
 									(i32.eq (local.get $desc) (i32.const -38))
 									(then
-										(i64.store offset=16 (local.get $hp) (i64.const 170))
+										(i64.store offset=16 (local.get $hp) (i64.const 162))
 										(call $copy
 											(i32.add (local.get $hp) (i32.const 24))
 											(i32.add (local.get $s) (i32.add (local.get $i) (i32.const 24)))
@@ -920,7 +920,7 @@
 								(if ;; BOOL elements
 									(i32.eq (local.get $desc) (i32.const -22))
 									(then
-										(i64.store offset=16 (local.get $hp) (i64.const 90))
+										(i64.store offset=16 (local.get $hp) (i64.const 82))
 										(local.set $a (i32.shr_u (i32.add (local.get $a) (i32.const 7)) (i32.const 3)))
 										(call $copy
 											(i32.add (local.get $hp) (i32.const 24))

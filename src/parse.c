@@ -500,20 +500,20 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #  define INTERPRETER_OR_PRELINKER(i,u) (u*8)
 # endif
 				if (!strcmp(state->program->symbol_table[state->ptr].name, "__ARRAY__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__ARRAY__,1);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__ARRAY__,0);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__STRING__,6);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__STRING__,5);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") ||
 						!strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&INT,26);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&INT,25);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&BOOL,11);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&BOOL,10);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "CHAR")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&CHAR,16);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&CHAR,15);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&REAL,21);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&REAL,20);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "e__system__nind")) {
-					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__interpreter_indirection[5], 137);
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__interpreter_indirection[5], 136);
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {
 # ifdef DEBUG_CLEAN_LINKS
 					EPRINTF("Warning: symbol '%s' is not defined.\n",state->program->symbol_table[state->ptr].name);

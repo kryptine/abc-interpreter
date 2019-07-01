@@ -690,51 +690,51 @@ Hp_free :: Expr TPtrOffset
 Hp_free = Ivar (rt_var "hp-free")
 
 BOOL_ptr :: Expr TWord
-BOOL_ptr = Econst I64 (11*8)
+BOOL_ptr = Econst I64 (10*8)
 
 CHAR_ptr :: Expr TWord
-CHAR_ptr = Econst I64 (16*8)
+CHAR_ptr = Econst I64 (15*8)
 
 INT_ptr :: Expr TWord
-INT_ptr = Econst I64 (26*8)
+INT_ptr = Econst I64 (25*8)
 
 REAL_ptr :: Expr TWord
-REAL_ptr = Econst I64 (21*8)
+REAL_ptr = Econst I64 (20*8)
 
 ARRAY__ptr :: Expr TWord
-ARRAY__ptr = Econst I64 (1*8)
+ARRAY__ptr = Econst I64 (0*8)
 
 STRING__ptr :: Expr TWord
-STRING__ptr = Econst I64 (6*8)
+STRING__ptr = Econst I64 (5*8)
 
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
-jmp_ap_ptr i = Econst I32 ((99+i)*8)
+jmp_ap_ptr i = Econst I32 ((98+i)*8)
 
 cycle_ptr :: Expr TWord
-cycle_ptr = Econst I64 (131*8)
+cycle_ptr = Econst I64 (130*8)
 
 indirection_ptr :: Expr TWord
-indirection_ptr = Econst I64 ((131+1+5)*8)
+indirection_ptr = Econst I64 ((131+5)*8)
 
 dNil_ptr :: Expr TWord
-dNil_ptr = Econst I64 ((141+1)*8)
+dNil_ptr = Econst I64 (141*8)
 
 small_integer :: !(Expr TInt) -> Expr TWord
-small_integer i = Eadd I64 (Econst I64 (8*31)) (Eshl I64 i (Econst I64 4))
+small_integer i = Eadd I64 (Econst I64 (8*30)) (Eshl I64 i (Econst I64 4))
 
 static_character :: !(Expr TChar) -> Expr TWord
-static_character c = Eadd I64 (Econst I64 (8*147)) (Eshl I64 c (Econst I64 4))
+static_character c = Eadd I64 (Econst I64 (8*146)) (Eshl I64 c (Econst I64 4))
 
 static_boolean :: !(Expr TWord) -> Expr TWord
 static_boolean b = case b of
 	Econst _ i -> if (is_zero i) FALSE TRUE
 	b          -> if_expr (Ewrap I32 I64 b) TRUE FALSE
 where
-	TRUE  = Econst I64 (8*663)
-	FALSE = Econst I64 (8*661)
+	TRUE  = Econst I64 (8*662)
+	FALSE = Econst I64 (8*660)
 
 caf_list :: Expr (TPtr TWord)
-caf_list = Econst I32 (97*8)
+caf_list = Econst I32 (96*8)
 
 fast_ap_descriptor :: Expr TWord
 fast_ap_descriptor = Ivar (Global "g-fast-ap-descriptor")
