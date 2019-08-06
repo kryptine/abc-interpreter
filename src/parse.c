@@ -393,7 +393,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #ifdef LINKER
 							store_code_elem(1, elem8);
 #else
-							state->program->code[state->ptr++] = elem8;
+							state->program->code[state->ptr++] = (unsigned char) elem8;
 #endif
 							break;
 						case 'i':
