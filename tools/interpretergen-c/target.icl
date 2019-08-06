@@ -212,7 +212,7 @@ where
 		e` :: Expr TBool
 		e` = e
 
-instance to_char TWord where to_char e = "(char)("+-+e+-+")"
+instance to_char TWord where to_char e = "(unsigned char)("+-+e+-+")"
 
 instance to_int  TWord where to_int  e = "(BC_WORD_S)("+-+e+-+")"
 
@@ -220,8 +220,8 @@ instance to_real TWord where to_real e = "*(BC_REAL*)&("+-+e+-+")"
 
 instance to_word_ptr  TWord    where to_word_ptr  e = "(BC_WORD*)("+-+e+-+")"
 instance to_word_ptr  (TPtr t) where to_word_ptr  e = "(BC_WORD*)("+-+e+-+")"
-instance to_char_ptr  TWord    where to_char_ptr  e = "(char*)("+-+e+-+")"
-instance to_char_ptr  (TPtr t) where to_char_ptr  e = "(char*)("+-+e+-+")"
+instance to_char_ptr  TWord    where to_char_ptr  e = "(unsigned char*)("+-+e+-+")"
+instance to_char_ptr  (TPtr t) where to_char_ptr  e = "(unsigned char*)("+-+e+-+")"
 instance to_short_ptr TWord    where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 instance to_short_ptr (TPtr t) where to_short_ptr e = "(int16_t*)("+-+e+-+")"
 
@@ -348,7 +348,7 @@ nop t = t
 
 instance typename TWord  where typename _ = "BC_WORD"
 instance typename TPtrOffset where typename _ = "int"
-instance typename TChar  where typename _ = "char"
+instance typename TChar  where typename _ = "unsigned char"
 instance typename TShort where typename _ = "int16_t"
 instance typename TInt   where typename _ = "BC_WORD_S"
 instance typename TReal  where typename _ = "BC_REAL"
@@ -509,7 +509,7 @@ memcpy :: !(Expr (TPtr a)) !(Expr (TPtr b)) !(Expr TPtrOffset) !Target -> Target
 memcpy d s n t = append ("\tmemcpy("+-+d+-+","+-+s+-+","+-+n+-+");") t
 
 strncmp :: !(Expr (TPtr TChar)) !(Expr (TPtr TChar)) !(Expr TPtrOffset) -> Expr TInt
-strncmp s1 s2 n = "strncmp("+-+s1+-+","+-+s2+-+","+-+n+-+")"
+strncmp s1 s2 n = "strncmp((char*)"+-+s1+-+",(char*)"+-+s2+-+","+-+n+-+")"
 
 putchar :: !(Expr TChar) !Target -> Target
 putchar c t = append ("\tPUTCHAR("+-+c+-+");") t
