@@ -1145,14 +1145,14 @@ void store_string(char *string,int string_length,int include_terminator) {
 	int i=0;
 	while(i+8<=string_length) {
 		store_data_l(
-				string[i] +
-				((uint64_t)string[i+1]<<8) +
-				((uint64_t)string[i+2]<<16) +
-				((uint64_t)string[i+3]<<24) +
-				((uint64_t)string[i+4]<<32) +
-				((uint64_t)string[i+5]<<40) +
-				((uint64_t)string[i+6]<<48) +
-				((uint64_t)string[i+7]<<56));
+				(unsigned char)string[i] |
+				((uint64_t)(unsigned char)string[i+1]<<8) |
+				((uint64_t)(unsigned char)string[i+2]<<16) |
+				((uint64_t)(unsigned char)string[i+3]<<24) |
+				((uint64_t)(unsigned char)string[i+4]<<32) |
+				((uint64_t)(unsigned char)string[i+5]<<40) |
+				((uint64_t)(unsigned char)string[i+6]<<48) |
+				((uint64_t)(unsigned char)string[i+7]<<56));
 		i+=8;
 	}
 	if (i!=string_length) {
@@ -1160,7 +1160,7 @@ void store_string(char *string,int string_length,int include_terminator) {
 		int s = 0;
 
 		while(i<string_length) {
-			n |= (uint64_t)string[i]<<s;
+			n |= (uint64_t)(unsigned char)string[i]<<s;
 			s+=8;
 			++i;
 		}
