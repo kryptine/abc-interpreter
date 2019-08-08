@@ -166,8 +166,7 @@ where
 		, "(func $clean_expR (import \"clean\" \"expR\") (param f64) (result f64))"
 		, "(func $clean_lnR (import \"clean\" \"lnR\") (param f64) (result f64))"
 		, "(func $clean_log10R (import \"clean\" \"log10R\") (param f64) (result f64))"
-		, "(func $clean_RtoAC_words_needed (import \"clean\" \"RtoAC_words_needed\") (param f64) (result i32))"
-		, "(func $clean_RtoAC (import \"clean\" \"RtoAC\") (param i32 f64) (result i32))"
+		, "(func $clean_RtoAC (import \"clean\" \"RtoAC\") (param f64 i32) (result i32))"
 		, if debug_instructions "(func $clean_debug_instr (import \"clean\" \"debug_instr\") (param i32 i32))" ""
 		// For illegal instructions, first the handler is called with arguments (pc,instr,asp,bsp,csp,hp,hp-free).
 		// If the result is zero, clean_illegal_instr is called with (pc,instr) and interpretation stops.

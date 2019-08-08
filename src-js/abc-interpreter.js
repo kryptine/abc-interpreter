@@ -618,21 +618,7 @@ class ABCInterpreter {
 					expR: Math.exp,
 					lnR: Math.log,
 					log10R: Math.log10,
-					RtoAC_words_needed: function(v) {
-						v=Number(0+v).toPrecision(15).replace(/\.?0*$/,'');
-						return 2+((v.length+7)>>3);
-					},
-					RtoAC: function (dest, v) {
-						v=Number(0+v).toPrecision(15).replace(/\.?0*$/,'');
-						me.memory_array[dest/4]=5*8+2; // __STRING__
-						me.memory_array[dest/4+1]=0;
-						me.memory_array[dest/4+2]=v.length;
-						me.memory_array[dest/4+3]=0;
-						const arr=new Uint8Array(me.memory_array.buffer, dest+16);
-						for (var i=0; i<v.length; i++)
-							arr[i]=v.charCodeAt(i);
-						return dest+16+(((v.length+7)>>3)<<3);
-					},
+					RtoAC: util.instance.exports.convert_real_to_string,
 				}
 			};
 			Object.assign(interpreter_imports.clean, opts.interpreter_imports);
