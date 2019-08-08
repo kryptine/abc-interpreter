@@ -1,3 +1,1 @@
 (["","a0","%0","X0","a0a1","a0%1","a0X1","%0a2","%0%2","%0X2","X0a3","X0%3","X0X3","a0a1a4","a0a1%4","a0a1X4","a0%1a5","a0%1%5","a0%1X5","a0X1a6","a0X1%6","a0X1X6","%0a2a7","%0a2%7","%0a2X7","%0%2a8","%0%2%8","%0%2X8","%0X2a9"],[True,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False,False],[True,False,True,True,False,True,False,False,True,True,False,True,True,False,True,False,False,True,True,False,True,False,False,True,False,False,True,True,False,True])
-halt at 4
-4906 257238 262144

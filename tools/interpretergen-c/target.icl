@@ -103,9 +103,7 @@ instr_unimplemented t = foldl (flip append) t
 
 instr_halt :: !Target -> Target
 instr_halt t = foldl (flip append) t
-	[ "\tPRINTF(\"halt at %d\\n\", (int) (pc-program->code));"
-	, "\tPRINTF(\"%d %d %d\\n\", (int) (heap_size-heap_free), (int) heap_free, (int) heap_size);"
-	, "#ifdef DEBUG_CURSES"
+	[ "#ifdef DEBUG_CURSES"
 	, "\tdebugger_graceful_end();"
 	, "#endif"
 	, "#ifdef LINK_CLEAN_RUNTIME"

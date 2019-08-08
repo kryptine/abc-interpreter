@@ -81,8 +81,6 @@ ABCInterpreter.instantiate({
 			crash('out of memory');
 		},
 		halt: function (pc, hp_free, hp_size) {
-			print('halt at', (pc/8)-ABC.code_offset);
-			print(hp_size-hp_free, hp_free, hp_size);
 		},
 
 		putchar: function (v) {

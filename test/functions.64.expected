@@ -1,3 +1,1 @@
-(square.2,sub5.3,(sub5.3 0 10),sumints.4,reverse.5,foldr.6,ap1.7,ap3.8,map.9,repeat.10,([(IT1 37 '!'),(IT2 37 '!')],{InternalType2 (IT1 37 '!') 1,InternalType2 (IT2 37 '!') 2},[(InternalType2 (IT1 37 '!') 1),(InternalType2 (IT2 37 '!') 2)]))
-halt at 54
-63 262081 262144
+(square.2,sub5.3,_f0.31,sumints.4,reverse.5,foldr.6,ap1.7,ap3.8,map.9,repeat.10,([(IT1 37 '!'),(IT2 37 '!')],{InternalType2 (IT1 37 '!') 1,InternalType2 (IT2 37 '!') 2},[(InternalType2 (IT1 37 '!') 1),(InternalType2 (IT2 37 '!') 2)]))
