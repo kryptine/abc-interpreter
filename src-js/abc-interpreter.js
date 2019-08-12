@@ -341,7 +341,7 @@ class ABCInterpreter {
 		this.empty_shared_clean_values.push(ref);
 	}
 
-	get_clean_string (hp_ptr, string_may_be_discarded=false) {
+	get_clean_string (hp_ptr, string_may_be_discarded=false, encoding='x-user-defined') {
 		const size=this.memory_array[hp_ptr/4+2];
 
 		if (string_may_be_discarded) {
@@ -366,8 +366,10 @@ class ABCInterpreter {
 
 		const string_buffer=new Uint8Array(this.memory.buffer, hp_ptr+16, size);
 		if (typeof TextDecoder!='undefined') {
-			return new TextDecoder('x-user-defined').decode(string_buffer);
+			return new TextDecoder(encoding).decode(string_buffer);
 		} else {
+			if (encoding!='x-user-defined')
+				console.warn('get_clean_string: this browser does not have TextDecoder; string could not be decoded using '+encoding);
 			var string='';
 			for (var i=0; i<size; i++)
 				string+=String.fromCharCode(string_buffer[i]);
