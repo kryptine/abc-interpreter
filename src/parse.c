@@ -365,12 +365,12 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 						case 'C': /* CAF label */
 						case 'S': /* String label */
 						case 's': /* String label */
-							if (provide_chars(&elem16, sizeof(elem16), 1, cp) < 0)
+							if (provide_chars(&elem32, sizeof(elem32), 1, cp) < 0)
 								return 1;
 #ifdef LINKER
-							store_code_elem(2, elem16);
+							store_code_elem(4, elem32);
 #else
-							state->program->code[state->ptr++] = elem16;
+							state->program->code[state->ptr++] = elem32;
 #endif
 							break;
 						case 'r': /* Real */
