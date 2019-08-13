@@ -160,7 +160,7 @@ class ABCInterpreter {
 		return f;
 	}
 
-	_copy_js_to_clean (values, store_ptrs, hp, hp_free) {
+	_copy_js_to_clean (values, store_ptrs, hp, hp_free, encoding) {
 		for (var i=0; i<values.length; i++) {
 			if (values[i]===null) {
 				this.memory_array[store_ptrs/4]=this.addresses.JSNull-10;
@@ -209,16 +209,37 @@ class ABCInterpreter {
 				hp_free-=2;
 				this.memory_array[hp/4]=5*8+2; // _STRING_
 				this.memory_array[hp/4+1]=0;
-				this.memory_array[hp/4+2]=values[i].length;
+				var array;
+				var length=values[i].length;
+				switch (encoding) {
+					case 'utf-8':
+						if (typeof TextEncoder!='undefined') {
+							var encoded=new TextEncoder().encode(values);
+							length=encoded.length;
+							if (encoded.length%4) { // length must be divisible by 4 to cast to Uint32Array below
+								array=new Int8Array(((encoded.length+3)>>2)<<2);
+								for (var j=0; j<encoded.length; j++)
+									array[j]=encoded[j];
+							} else {
+								array=encoded;
+							}
+						}
+						break;
+					default:
+						console.warn('copy_js_to_clean: this browser cannot encode text in '+encoding);
+					case null:
+						array=new Int8Array(((values[i].length+3)>>2)<<2);
+						for (var j=0; j<values[i].length; j++)
+							array[j]=values[i].charCodeAt(j);
+						break;
+				}
+				this.memory_array[hp/4+2]=length;
 				this.memory_array[hp/4+3]=0;
-				var array=new Int8Array(((values[i].length+3)>>2)<<2);
-				for (var j=0; j<values[i].length; j++)
-					array[j]=values[i].charCodeAt(j);
 				array=new Uint32Array(array.buffer);
-				for (var j=0; j<((values[i].length+3)>>2); j++)
+				for (var j=0; j<((length+3)>>2); j++)
 					this.memory_array[hp/4+4+j]=array[j];
-				hp+=16+(((values[i].length+7)>>3)<<3);
-				hp_free-=2+((values[i].length+7)>>3);
+				hp+=16+(((length+7)>>3)<<3);
+				hp_free-=2+((length+7)>>3);
 			} else if (Array.isArray(values[i])) {
 				this.memory_array[store_ptrs/4]=hp;
 				// On the first run, we don't have the JSArray address yet, so we use
@@ -239,7 +260,7 @@ class ABCInterpreter {
 				this.memory_array[hp/4+5]=0;
 				hp+=24;
 				hp_free-=3+values[i].length;;
-				var copied=this._copy_js_to_clean(values[i], hp, hp+8*values[i].length, hp_free);
+				var copied=this._copy_js_to_clean(values[i], hp, hp+8*values[i].length, hp_free, encoding);
 				hp=copied.hp;
 				hp_free=copied.hp_free;
 			} else if ('shared_clean_value_index' in values[i]) {
@@ -295,13 +316,13 @@ class ABCInterpreter {
 			throw new ABCError('missing case in copy_js_to_clean');
 		}
 	}
-	copy_js_to_clean (value, store_ptrs) {
+	copy_js_to_clean (value, store_ptrs, encoding='x-user-defined') {
 		const node_size=this.copied_node_size(value);
 		this.require_hp(node_size);
 		const hp=this.interpreter.instance.exports.get_hp();
 		const hp_free=this.interpreter.instance.exports.get_hp_free();
 
-		const result=this._copy_js_to_clean([value], store_ptrs, hp, hp_free);
+		const result=this._copy_js_to_clean([value], store_ptrs, hp, hp_free, encoding);
 
 		if (hp_free-result.hp_free!=node_size)
 			console.warn('copied_node_size: expected',node_size,'; got',hp_free-result.hp_free,'for',value);
@@ -394,7 +415,7 @@ class ABCInterpreter {
 		throw new ABCError('the interpreter has not been initialized yet');
 	}
 
-	static instantiate (args) {
+	static instantiate (args, encoding='x-user-defined') {
 		const opts={
 			bytecode_path: null,
 			util_path: '/js/abc-interpreter-util.wasm',
@@ -631,7 +652,7 @@ class ABCInterpreter {
 				/* NB: the order here matters: copy_js_to_clean may trigger garbage
 				 * collection, so do that first, then set the rest of the arguments and
 				 * update asp. */
-				const copied=me.copy_js_to_clean(args, asp+8);
+				const copied=me.copy_js_to_clean(args, asp+8, encoding);
 				me.memory_array[asp/4]=(30+17*2)*8; // JSWorld: INT 17
 				me.memory_array[asp/4+4]=me.shared_clean_values[f.shared_clean_value_index].ref;
 				me.interpreter.instance.exports.set_asp(asp+16);
