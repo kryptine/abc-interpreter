@@ -37,6 +37,8 @@ class ABCInterpreter {
 		this.stack_size=null;
 		this.heap_size=null;
 
+		this.encoding=null;
+
 		this.util=null;
 		this.interpreter=null;
 
@@ -160,7 +162,7 @@ class ABCInterpreter {
 		return f;
 	}
 
-	_copy_js_to_clean (values, store_ptrs, hp, hp_free, encoding) {
+	_copy_js_to_clean (values, store_ptrs, hp, hp_free) {
 		for (var i=0; i<values.length; i++) {
 			if (values[i]===null) {
 				this.memory_array[store_ptrs/4]=this.addresses.JSNull-10;
@@ -211,7 +213,7 @@ class ABCInterpreter {
 				this.memory_array[hp/4+1]=0;
 				var array;
 				var length=values[i].length;
-				switch (encoding) {
+				switch (this.encoding) {
 					case 'utf-8':
 						if (typeof TextEncoder!='undefined') {
 							var encoded=new TextEncoder().encode(values);
@@ -226,8 +228,8 @@ class ABCInterpreter {
 						}
 						break;
 					default:
-						console.warn('copy_js_to_clean: this browser cannot encode text in '+encoding);
-					case null:
+						console.warn('copy_js_to_clean: this browser cannot encode text in '+this.encoding);
+					case 'x-user-defined':
 						array=new Int8Array(((values[i].length+3)>>2)<<2);
 						for (var j=0; j<values[i].length; j++)
 							array[j]=values[i].charCodeAt(j);
@@ -260,7 +262,7 @@ class ABCInterpreter {
 				this.memory_array[hp/4+5]=0;
 				hp+=24;
 				hp_free-=3+values[i].length;;
-				var copied=this._copy_js_to_clean(values[i], hp, hp+8*values[i].length, hp_free, encoding);
+				var copied=this._copy_js_to_clean(values[i], hp, hp+8*values[i].length, hp_free);
 				hp=copied.hp;
 				hp_free=copied.hp_free;
 			} else if ('shared_clean_value_index' in values[i]) {
@@ -316,13 +318,13 @@ class ABCInterpreter {
 			throw new ABCError('missing case in copy_js_to_clean');
 		}
 	}
-	copy_js_to_clean (value, store_ptrs, encoding='x-user-defined') {
+	copy_js_to_clean (value, store_ptrs) {
 		const node_size=this.copied_node_size(value);
 		this.require_hp(node_size);
 		const hp=this.interpreter.instance.exports.get_hp();
 		const hp_free=this.interpreter.instance.exports.get_hp_free();
 
-		const result=this._copy_js_to_clean([value], store_ptrs, hp, hp_free, encoding);
+		const result=this._copy_js_to_clean([value], store_ptrs, hp, hp_free);
 
 		if (hp_free-result.hp_free!=node_size)
 			console.warn('copied_node_size: expected',node_size,'; got',hp_free-result.hp_free,'for',value);
@@ -362,7 +364,7 @@ class ABCInterpreter {
 		this.empty_shared_clean_values.push(ref);
 	}
 
-	get_clean_string (hp_ptr, string_may_be_discarded=false, encoding='x-user-defined') {
+	get_clean_string (hp_ptr, string_may_be_discarded=false) {
 		const size=this.memory_array[hp_ptr/4+2];
 
 		if (string_may_be_discarded) {
@@ -387,10 +389,10 @@ class ABCInterpreter {
 
 		const string_buffer=new Uint8Array(this.memory.buffer, hp_ptr+16, size);
 		if (typeof TextDecoder!='undefined') {
-			return new TextDecoder(encoding).decode(string_buffer);
+			return new TextDecoder(this.encoding).decode(string_buffer);
 		} else {
-			if (encoding!='x-user-defined')
-				console.warn('get_clean_string: this browser does not have TextDecoder; string could not be decoded using '+encoding);
+			if (this.encoding!='x-user-defined')
+				console.warn('get_clean_string: this browser does not have TextDecoder; string could not be decoded using '+this.encoding);
 			var string='';
 			for (var i=0; i<size; i++)
 				string+=String.fromCharCode(string_buffer[i]);
@@ -415,7 +417,7 @@ class ABCInterpreter {
 		throw new ABCError('the interpreter has not been initialized yet');
 	}
 
-	static instantiate (args, encoding='x-user-defined') {
+	static instantiate (args) {
 		const opts={
 			bytecode_path: null,
 			util_path: '/js/abc-interpreter-util.wasm',
@@ -426,6 +428,8 @@ class ABCInterpreter {
 
 			util_imports: {},
 			interpreter_imports: {},
+
+			encoding: 'x-user-defined',
 		};
 		Object.assign(opts,args);
 
@@ -433,6 +437,8 @@ class ABCInterpreter {
 
 		me.stack_size=opts.stack_size*2;
 		me.heap_size=opts.heap_size;
+
+		me.encoding=opts.encoding;
 
 		return fetch(opts.bytecode_path).then(function(resp){
 			if (!resp.ok)
@@ -652,7 +658,7 @@ class ABCInterpreter {
 				/* NB: the order here matters: copy_js_to_clean may trigger garbage
 				 * collection, so do that first, then set the rest of the arguments and
 				 * update asp. */
-				const copied=me.copy_js_to_clean(args, asp+8, encoding);
+				const copied=me.copy_js_to_clean(args, asp+8);
 				me.memory_array[asp/4]=(30+17*2)*8; // JSWorld: INT 17
 				me.memory_array[asp/4+4]=me.shared_clean_values[f.shared_clean_value_index].ref;
 				me.interpreter.instance.exports.set_asp(asp+16);
