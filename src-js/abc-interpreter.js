@@ -216,11 +216,11 @@ class ABCInterpreter {
 				switch (this.encoding) {
 					case 'utf-8':
 						if (typeof TextEncoder!='undefined') {
-							var encoded=new TextEncoder().encode(values);
+							var encoded=new TextEncoder().encode(values[i]);
 							length=encoded.length;
-							if (encoded.length%4) { // length must be divisible by 4 to cast to Uint32Array below
-								array=new Int8Array(((encoded.length+3)>>2)<<2);
-								for (var j=0; j<encoded.length; j++)
+							if (length%4) { // length must be divisible by 4 to cast to Uint32Array below
+								array=new Uint8Array(((length+3)>>2)<<2);
+								for (var j=0; j<length; j++)
 									array[j]=encoded[j];
 							} else {
 								array=encoded;
@@ -230,7 +230,7 @@ class ABCInterpreter {
 					default:
 						console.warn('copy_js_to_clean: this browser cannot encode text in '+this.encoding);
 					case 'x-user-defined':
-						array=new Int8Array(((values[i].length+3)>>2)<<2);
+						array=new Uint8Array(((values[i].length+3)>>2)<<2);
 						for (var j=0; j<values[i].length; j++)
 							array[j]=values[i].charCodeAt(j);
 						break;
@@ -302,9 +302,12 @@ class ABCInterpreter {
 			return 2;
 		else if (typeof value=='boolean')
 			return 2;
-		else if (typeof value=='string')
-			return 2+2+((value.length+7)>>3);
-		else if (Array.isArray(value)) {
+		else if (typeof value=='string') {
+			var length=value.length;
+			if (this.encoding=='utf-8' && typeof TextEncoder!='undefined')
+				length=new TextEncoder().encode(value).length;
+			return 2+2+((length+7)>>3);
+		} else if (Array.isArray(value)) {
 			var size=2+3+value.length;
 			for (var i=0; i<value.length; i++)
 				size+=this.copied_node_size(value[i]);
