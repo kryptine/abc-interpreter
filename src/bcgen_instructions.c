@@ -367,13 +367,6 @@ void add_data2_to_code(int i) {
 	store_code_elem(2, i);
 }
 
-void add_data4_to_code(int i) {
-	if (list_code)
-		printf("%d\t.data4 %d\n",pgrm.code_size,i);
-
-	store_code_elem(4, i);
-}
-
 void add_data8_to_code(int i) {
 	if (list_code)
 		printf("%d\t.data8 %d\n",pgrm.code_size,i);
@@ -4299,7 +4292,7 @@ struct label *code_descriptor
 				label=enter_label("_add_arg");
 			} else {
 				Fadd_arg_label_used[n]=1;
-				char label_name[11];
+				char label_name[19];
 				sprintf(label_name,"_add_arg%d",n);
 				label = enter_label(label_name);
 			}
@@ -4554,7 +4547,7 @@ void code_n(int32_t number_of_arguments, char *descriptor_name, char *ea_label_n
 		}
 
 		if (descriptor_name==NULL)
-			add_data4_to_code(0);
+			add_data2_to_code(0);
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name != NULL) {
@@ -4584,7 +4577,7 @@ void code_nu(int a_size,int b_size,char *descriptor_name,char *ea_label_name) {
 		add_instruction(Chalt);
 
 		if (descriptor_name==NULL)
-			add_data4_to_code(0);
+			add_data2_to_code(0);
 		else
 			add_label(descriptor_name);
 	} else if (descriptor_name!=NULL) {
