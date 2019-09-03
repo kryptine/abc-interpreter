@@ -84,6 +84,7 @@ instr_RtoAC t = foldl (flip append) t
 instr_closeF :: !Target -> Target
 instr_closeF t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "bsp++;"
@@ -104,6 +105,7 @@ instr_closeF t = foldl (flip append) t
 instr_endF :: !Target -> Target
 instr_endF t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "FILE *h;"
@@ -126,6 +128,7 @@ instr_endF t = foldl (flip append) t
 instr_errorF :: !Target -> Target
 instr_errorF t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "if (f==&clean_stdinout)"
@@ -140,6 +143,7 @@ instr_errorF t = foldl (flip append) t
 instr_openF :: !Target -> Target
 instr_openF t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "struct file *f=safe_malloc(sizeof(struct file));"
 	, "BC_WORD *clean_file_name=(BC_WORD*)asp[0];"
@@ -169,6 +173,7 @@ instr_openF t = foldl (flip append) t
 instr_readFC :: !Target -> Target
 instr_readFC t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "bsp-=2;"
@@ -187,6 +192,7 @@ instr_readFC t = foldl (flip append) t
 instr_readLineF :: !Target -> Target
 instr_readLineF t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "if (f==&clean_stdinout) {"
 	, "\thp[0]=(BC_WORD)&__STRING__+2;"
@@ -224,7 +230,8 @@ instr_readLineF t = foldl (flip append) t
 
 instr_stdioF :: !Target -> Target
 instr_stdioF t = foldl (flip append) t
-	[ "if (stdio_open)"
+	[ "CHECK_FILE_IO;"
+	, "if (stdio_open)"
 	, "\tIO_error(\"stdio: already open\");"
 	, "pc+=1;"
 	, "stdio_open=1;"
@@ -236,6 +243,7 @@ instr_stdioF t = foldl (flip append) t
 instr_writeFC :: !Target -> Target
 instr_writeFC t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "pc++;"
 	, "char c=*bsp++;"
 	, "struct file *f=(struct file*)bsp[1];"
@@ -251,6 +259,7 @@ instr_writeFC t = foldl (flip append) t
 instr_writeFS :: !Target -> Target
 instr_writeFS t = foldl (flip append) t
 	[ "{"
+	, "CHECK_FILE_IO;"
 	, "struct file *f=(struct file*)bsp[1];"
 	, "BC_WORD *n=(BC_WORD*)asp[0];"
 	, "int len=n[1];"

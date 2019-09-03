@@ -4,6 +4,7 @@
 
 struct interpretation_options {
 	int in_first_semispace:1;
+	int allow_file_io:1;
 #ifdef LINK_CLEAN_RUNTIME
 	int hyperstrict:1;
 #endif
@@ -49,6 +50,7 @@ extern void *e__ABC_PInterpreter__dDV__HeapFull;
 extern void *e__ABC_PInterpreter__dDV__StackOverflow;
 extern void *e__ABC_PInterpreter__dDV__Halt;
 extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
+extern void *e__ABC_PInterpreter__dDV__FileIOAttempted;
 extern void *e__ABC_PInterpreter__dDV__SegmentationFault;
 extern void *e__ABC_PInterpreter__dDV__HostHeapFull;
 extern void *e__ABC_PInterpreter__kDV__Ok;
@@ -112,6 +114,7 @@ int interpret(
 		int create_restore_point,
 #else
 		struct program *program,
+		struct interpretation_options options,
 #endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,

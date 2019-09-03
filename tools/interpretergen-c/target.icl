@@ -43,6 +43,22 @@ where
 		, "#endif"
 
 		, "#define NEED_HEAP(words) {if ((heap_free-=words)<0){ heap_free+=words; GARBAGE_COLLECT;}}"
+
+		, "#ifdef LINK_CLEAN_RUNTIME"
+		, "# define CHECK_FILE_IO do { \\"
+		, "\t\tif (!ie->options.allow_file_io) {\\"
+		, "\t\t\tinterpret_error=&e__ABC_PInterpreter__dDV__FileIOAttempted; \\"
+		, "\t\t\tEXIT(ie,-1); \\"
+		, "\t\t} \\"
+		, "\t} while (0)"
+		, "#else"
+		, "# define CHECK_FILE_IO do { \\"
+		, "\t\tif (!options.allow_file_io) {\\"
+		, "\t\t\tEPRINTF(\"File I/O attempted (%s) at %d\\n\", instruction_name(*pc), (int) (pc-program->code)); \\"
+		, "\t\t\tEXIT(ie,-1); \\"
+		, "\t\t} \\"
+		, "\t} while (0)"
+		, "#endif"
 		]
 
 	post :: [String]

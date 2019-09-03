@@ -20,6 +20,7 @@ defaultDeserializationSettings :: DeserializationSettings
 defaultDeserializationSettings =
 	{ heap_size  = 2 << 20
 	, stack_size = (512 << 10) * 2
+	, file_io    = False
 	}
 
 :: *SerializedGraph =
@@ -104,7 +105,7 @@ deserialize` strict dsets {graph,descinfo,modules,bytecode} thisexe w
 	pgm
 	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
-	strict
+	strict dsets.file_io
 # graph = replace_desc_numbers_by_descs 0 graph int_syms 0 0
 # graph_node = string_to_interpreter graph ie_settings
 #! (ie,_) = make_finalizer ie_settings
@@ -188,7 +189,7 @@ get_start_rule_as_expression dsets filename prog w
 	pgm
 	heap dsets.heap_size stack dsets.stack_size
 	asp bsp csp heap
-	False
+	False dsets.file_io
 # start_node = build_start_node ie_settings
 #! (ie,_) = make_finalizer ie_settings
 # ie = {ie_finalizer=ie, ie_snode_ptr=0, ie_snodes=create_array_ 1}
@@ -198,9 +199,9 @@ get_start_rule_as_expression dsets filename prog w
 	// it to the finalizer_list anyway. This is just to ensure that the first
 	// call to interpret gets the right argument.
 
-build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Bool -> Pointer
-build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp strict = code {
-	ccall build_interpretation_environment "ppIpIppppI:p"
+build_interpretation_environment :: !Pointer !Pointer !Int !Pointer !Int !Pointer !Pointer !Pointer !Pointer !Bool !Bool -> Pointer
+build_interpretation_environment pgm heap hsize stack ssize asp bsp csp hp strict file_io = code {
+	ccall build_interpretation_environment "ppIpIppppII:p"
 }
 
 build_start_node :: !Pointer -> Pointer

@@ -29,8 +29,9 @@ from StdMaybe import :: Maybe
  * expressions. You may also use {{`defaultDeserializationSettings`}}.
  */
 :: DeserializationSettings =
-	{ heap_size  :: !Int //* Heap size for the interpreter, in bytes (default: 2M)
-	, stack_size :: !Int //* Stack size for the interpreter, in bytes (default: 1M in total; 500k for A and 500k for BC stack)
+	{ heap_size  :: !Int  //* Heap size for the interpreter, in bytes (default: 2M)
+	, stack_size :: !Int  //* Stack size for the interpreter, in bytes (default: 1M in total; 500k for A and 500k for BC stack)
+	, file_io    :: !Bool //* Whether file I/O is allowed (default: False)
 	}
 
 defaultDeserializationSettings :: DeserializationSettings
@@ -94,6 +95,8 @@ deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(!M
 		//* The ABC instruction `halt` was encountered.
 	| DV_IllegalInstruction
 		//* A forbidden (ccall, etc.) or unknown ABC instruction was encountered.
+	| DV_FileIOAttempted
+		//* File I/O was attempted while the interpreter was started with file_io=False.
 	| DV_HostHeapFull
 		//* The heap of the host application has not enough space to copy the result.
 

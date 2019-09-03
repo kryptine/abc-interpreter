@@ -344,9 +344,11 @@ int ensure_interpreter_init(void) {
 #ifdef COMPUTED_GOTOS
 	/* Fetch label addresses */
 	if (instruction_labels[0]==NULL) {
-		interpret(NULL,
 # ifdef LINK_CLEAN_RUNTIME
-				0,
+		interpret(NULL, 0,
+# else
+		struct interpretation_options options;
+		interpret(NULL, options,
 # endif
 				NULL, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
@@ -383,6 +385,7 @@ int interpret(
 		int create_restore_point,
 #else
 		struct program *program,
+		struct interpretation_options options,
 #endif
 		BC_WORD *stack, size_t stack_size,
 		BC_WORD *heap, size_t heap_size,
@@ -414,8 +417,6 @@ int interpret(
 	int instr_arg; /* for jsr_eval_host_node_n */
 #else
 	void *caf_list[2] = {0, &caf_list[1]};
-	struct interpretation_options options;
-	options.in_first_semispace=1;
 #endif
 
 	BC_WORD *pc;
@@ -565,9 +566,9 @@ eval_to_hnf_return_failure:
 #ifndef LINK_CLEAN_RUNTIME
 
 # if defined(DEBUG_CURSES) || defined(COMPUTED_GOTOS)
-const char usage[] = "Usage: %s [-h SIZE] [-s SIZE] FILE\n";
+const char usage[] = "Usage: %s [-io] [-h SIZE] [-s SIZE] FILE\n";
 # else
-const char usage[] = "Usage: %s [-l] [-R] [-h SIZE] [-s SIZE] FILE\n";
+const char usage[] = "Usage: %s [-l] [-R] [-io] [-h SIZE] [-s SIZE] FILE\n";
 # endif
 
 int main(int argc, char **argv) {
@@ -578,6 +579,10 @@ int main(int argc, char **argv) {
 	FILE *input = NULL;
 	size_t stack_size = (512 << 10) * 2;
 	size_t heap_size = 2 << 20;
+
+	struct interpretation_options options;
+	options.in_first_semispace=1;
+	options.allow_file_io=0;
 
 	BC_WORD *stack;
 	BC_WORD *heap;
@@ -607,6 +612,8 @@ int main(int argc, char **argv) {
 				EPRINTF(usage, argv[0]);
 				EXIT(NULL,-1);
 			}
+		} else if (!strcmp(argv[i],"-io")) {
+			options.allow_file_io=1;
 		} else if (input) {
 			EPRINTF(usage, argv[0]);
 			EXIT(NULL,-1);
@@ -655,6 +662,7 @@ int main(int argc, char **argv) {
 #endif
 
 	interpret(state.program,
+			options,
 			stack, stack_size,
 			heap, heap_size,
 			asp, bsp, csp,

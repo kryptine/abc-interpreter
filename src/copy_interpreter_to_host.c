@@ -52,7 +52,7 @@ struct interpretation_environment *build_interpretation_environment(
 		struct program *program,
 		BC_WORD *heap, BC_WORD heap_size, BC_WORD *stack, BC_WORD stack_size,
 		BC_WORD *asp, BC_WORD *bsp, BC_WORD *csp, BC_WORD *hp,
-		int hyperstrict) {
+		int hyperstrict, int allow_file_io) {
 	struct interpretation_environment *ie = safe_malloc(sizeof(struct interpretation_environment));
 	ie->host = safe_malloc(sizeof(struct host_status));
 	ie->program = program;
@@ -68,7 +68,8 @@ struct interpretation_environment *build_interpretation_environment(
 	ie->caf_list[0] = 0;
 	ie->caf_list[1] = &ie->caf_list[1];
 	ie->options.in_first_semispace=1;
-	ie->options.hyperstrict=hyperstrict != 0;
+	ie->options.hyperstrict=hyperstrict!=0;
+	ie->options.allow_file_io=allow_file_io!=0;
 #if DEBUG_CLEAN_LINKS > 0
 	EPRINTF("Building interpretation_environment %p\n",ie);
 #endif
