@@ -1,6 +1,3 @@
-#define MAX_N_FILES 20
-#define MAX_FILE_NAME_LENGTH 255
-
 #ifdef MACH_O64
 # define NEWLINE_CHAR '\r'
 #else
@@ -23,7 +20,7 @@ struct file {
 static struct file clean_stdinout;
 static struct file clean_stderr;
 
-#define IO_error(s) do { EPRINTF("IO error: %s\n",s); goto IO_error_halt; } while (0)
+#define IO_error(s) do { EPRINTF("IO error: %s\n",s); exit(1); } while (0)
 
 static int stdio_open=0;
 
