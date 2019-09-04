@@ -11,10 +11,14 @@
 #define F_WRITE_DATA 4
 #define F_APPEND_DATA 5
 
-static char *file_modes[]={"r","w",NULL/*a*/,"rb",NULL/*wb*/,NULL/*ab*/};
+#define F_IS_TEXT_MODE(m) (0<=m && m<=2)
+#define F_IS_DATA_MODE(m) (3<=m && m<=5)
+
+static char *file_modes[]={"r","w","a","rb","wb","ab"};
 
 struct file {
 	FILE *file_handle;
+	int file_mode;
 };
 
 static struct file clean_stdinout;

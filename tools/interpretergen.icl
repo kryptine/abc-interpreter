@@ -3767,12 +3767,22 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "closeF" Nothing instr_closeF
 	, instr "endF" Nothing instr_endF
 	, instr "errorF" Nothing instr_errorF
+	, instr "flushF" Nothing instr_flushF
 	, instr "openF" Nothing instr_openF
+	, instr "positionF" Nothing instr_positionF
 	, instr "readFC" Nothing instr_readFC
+	, instr "readFI" Nothing instr_readFI
+	, instr "readFR" Nothing instr_readFR
+	, instr "readFS" Nothing instr_readFS
 	, instr "readLineF" Nothing instr_readLineF
+	, instr "seekF" Nothing instr_seekF
+	, instr "stderrF" Nothing instr_stderrF
 	, instr "stdioF" Nothing instr_stdioF
 	, instr "writeFC" Nothing instr_writeFC
+	, instr "writeFI" Nothing instr_writeFI
+	, instr "writeFR" Nothing instr_writeFR
 	, instr "writeFS" Nothing instr_writeFS
+	, instr "writeFString" Nothing instr_writeFString
 
 	, alias "add_arg" $
 	  alias "ccall" $
@@ -3795,13 +3805,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "set_finalizers" $
 
 	  alias "endSF" $
-	  alias "flushF" $
 	  alias "openSF" $
-	  alias "positionF" $
 	  alias "positionSF" $
-	  alias "readFI" $
-	  alias "readFR" $
-	  alias "readFS" $
 	  alias "readFString" $
 	  alias "readLineSF" $
 	  alias "readSFC" $
@@ -3809,13 +3814,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "readSFR" $
 	  alias "readSFS" $
 	  alias "reopenF" $
-	  alias "seekF" $
 	  alias "seekSF" $
 	  alias "shareF" $
-	  alias "stderrF" $
-	  alias "writeFI" $
-	  alias "writeFR" $
-	  alias "writeFString" $
 
 	  alias "A_data_IIIla" $
 	  alias "A_data_IIl" $

@@ -140,6 +140,21 @@ instr_errorF t = foldl (flip append) t
 	, "}"
 	]
 
+instr_flushF :: !Target -> Target
+instr_flushF t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "if (f==&clean_stdinout)"
+	, "\t*--bsp=fflush(stdout) ? 0 : 1;"
+	, "else if (f==&clean_stderr)"
+	, "\t*--bsp=fflush(stdin) ? 0 : 1;"
+	, "else"
+	, "\t*--bsp=fflush(f->file_handle) ? 0 : 1;"
+	, "}"
+	]
+
 instr_openF :: !Target -> Target
 instr_openF t = foldl (flip append) t
 	[ "{"
@@ -157,6 +172,7 @@ instr_openF t = foldl (flip append) t
 	, "if (mode==NULL)"
 	, "\tIO_error(\"openF: unimplemented mode\");"
 	, "f->file_handle=fopen(file_name,mode);"
+	, "f->file_mode=bsp[0];"
 	, "bsp-=2;"
 	, "bsp[1]=0;"
 	, "if (f->file_handle==NULL) {"
@@ -167,6 +183,19 @@ instr_openF t = foldl (flip append) t
 	, "\tbsp[2]=(BC_WORD)f;"
 	, "}"
 	, "free(file_name);"
+	, "}"
+	]
+
+instr_positionF :: !Target -> Target
+instr_positionF t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "if (f==&clean_stdinout || f==&clean_stderr)"
+	, "\tIO_error(\"FPosition: not allowed for StdIO and StdErr\");"
+	, "else"
+	, "\t*--bsp=ftell(f->file_handle);"
 	, "}"
 	]
 
@@ -186,6 +215,83 @@ instr_readFC t = foldl (flip append) t
 	, "\tbsp[1]=getc(f->file_handle);"
 	, "\tbsp[0]=ferror(f->file_handle) ? 0 : 1;"
 	, "}"
+	, "}"
+	]
+
+instr_readFI :: !Target -> Target
+instr_readFI t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "bsp-=2;"
+	, "if (f==&clean_stdinout) {"
+	, "\tbsp[0]=fscanf(stdin,BC_WORD_S_FMT,&bsp[1])==1;"
+	, "} else if (f==&clean_stderr) {"
+	, "\tIO_error(\"FReadI: can't read from StdErr\");"
+	, "} else if (F_IS_TEXT_MODE(f->file_mode)) {"
+	, "\tbsp[0]=fscanf(f->file_handle,BC_WORD_S_FMT,&bsp[1])==1;"
+	, "} else {"
+	, "\tint i;"
+	, "\tbsp[0]=1;"
+	, "\tbsp[1]=0;"
+	, "\tfor (int n=0; n<4; n++) {"
+	, "\t\tif ((i=fgetc(f->file_handle))==EOF) break;"
+	, "\t\t((char*)&bsp[1])[n]=i;"
+	, "\t}"
+	, "#if WORD_WIDTH == 64"
+	, "\tbsp[1]=*(int*)&bsp[1];"
+	, "#endif"
+	, "}"
+	, "}"
+	]
+
+instr_readFR :: !Target -> Target
+instr_readFR t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "bsp-=2;"
+	, "if (f==&clean_stdinout) {"
+	, "\tbsp[0]=fscanf(stdin,\"%lg\",(BC_REAL*)&bsp[1])==1;"
+	, "} else if (f==&clean_stderr) {"
+	, "\tIO_error(\"FReadI: can't read from StdErr\");"
+	, "} else if (F_IS_TEXT_MODE(f->file_mode)) {"
+	, "\tbsp[0]=fscanf(f->file_handle,\"%lg\",(BC_REAL*)&bsp[1])==1;"
+	, "} else {"
+	, "\tint i;"
+	, "\tbsp[0]=1;"
+	, "\t*(BC_REAL*)&bsp[1]=0.0;"
+	, "\tfor (int n=0; n<8; n++) {"
+	, "\t\tif ((i=fgetc(f->file_handle))==EOF) break;"
+	, "\t\t((char*)&bsp[1])[n]=i;"
+	, "\t}"
+	, "}"
+	, "}"
+	]
+
+instr_readFS :: !Target -> Target
+instr_readFS t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "BC_WORD len=bsp[2];"
+	, "NEED_HEAP(len);"
+	, "bsp[2]=bsp[1];"
+	, "bsp[1]=bsp[0];"
+	, "bsp++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "pc++;"
+	, "*++asp=(BC_WORD)hp;"
+	, "hp[0]=(BC_WORD)&__STRING__+2;"
+	, "if (f==&clean_stdinout) {"
+	, "\thp[1]=fread((char*)&hp[2],1,len,stdin);"
+	, "} else if (f==&clean_stderr) {"
+	, "\tIO_error(\"FReadS: can't read from StdErr\");"
+	, "} else {"
+	, "\thp[1]=fread((char*)&hp[2],1,len,f->file_handle);"
+	, "}"
+	, "hp+=2+((hp[1]+7)>>3);"
 	, "}"
 	]
 
@@ -228,6 +334,35 @@ instr_readLineF t = foldl (flip append) t
 	, "}"
 	]
 
+instr_seekF :: !Target -> Target
+instr_seekF t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "unsigned int seek_mode=bsp[3];"
+	, "int position=bsp[2];"
+	, "if (seek_mode>2)"
+	, "\tIO_error(\"FSeek: invalid mode\");"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "bsp[3]=bsp[1];"
+	, "bsp[2]=bsp[0];"
+	, "bsp++;"
+	, "if (f==&clean_stdinout || f==&clean_stderr)"
+	, "\tIO_error(\"FSeek: can't seek on StdIO and StdErr\");"
+	, "else"
+	, "\tbsp[0]=fseek(f->file_handle,position,seek_mode) ? 0 : 1;"
+	, "}"
+	]
+
+instr_stderrF :: !Target -> Target
+instr_stderrF t = foldl (flip append) t
+	[ "CHECK_FILE_IO;"
+	, "pc+=1;"
+	, "bsp[-1]=(BC_WORD)&clean_stderr;"
+	, "bsp[-2]=-1;"
+	, "bsp-=2;"
+	]
+
 instr_stdioF :: !Target -> Target
 instr_stdioF t = foldl (flip append) t
 	[ "CHECK_FILE_IO;"
@@ -256,6 +391,56 @@ instr_writeFC t = foldl (flip append) t
 	, "}"
 	]
 
+instr_writeFI :: !Target -> Target
+instr_writeFI t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "BC_WORD_S i=*bsp++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "if (f==&clean_stdinout)"
+	, "\tPRINTF(BC_WORD_S_FMT,i);"
+	, "else if (f==&clean_stderr)"
+	, "\tEPRINTF(BC_WORD_S_FMT,i);"
+	, "else if (F_IS_TEXT_MODE(f->file_mode))"
+	, "\tfprintf(f->file_handle,BC_WORD_S_FMT,i);"
+	, "else {"
+	, "\tputc(((char*)&i)[0],f->file_handle);"
+	, "\tputc(((char*)&i)[1],f->file_handle);"
+	, "\tputc(((char*)&i)[2],f->file_handle);"
+	, "\tputc(((char*)&i)[3],f->file_handle);"
+	, "}"
+	, "}"
+	]
+
+instr_writeFR :: !Target -> Target
+instr_writeFR t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "pc++;"
+	, "BC_REAL r=0.0 + *(BC_REAL*)bsp;"
+	, "bsp++;"
+	, "struct file *f=(struct file*)bsp[1];"
+	, "if (f==&clean_stdinout)"
+	, "\tPRINTF(\"%.15g\",r);"
+	, "else if (f==&clean_stderr)"
+	, "\tEPRINTF(\"%.15g\",r);"
+	, "else if (F_IS_TEXT_MODE(f->file_mode))"
+	, "\tfprintf(f->file_handle,\"%.15g\",r);"
+	, "else {"
+	, "\tBC_WORD i=bsp[-1];"
+	, "\tputc(((char*)&i)[0],f->file_handle);"
+	, "\tputc(((char*)&i)[1],f->file_handle);"
+	, "\tputc(((char*)&i)[2],f->file_handle);"
+	, "\tputc(((char*)&i)[3],f->file_handle);"
+	, "\tputc(((char*)&i)[4],f->file_handle);"
+	, "\tputc(((char*)&i)[5],f->file_handle);"
+	, "\tputc(((char*)&i)[6],f->file_handle);"
+	, "\tputc(((char*)&i)[7],f->file_handle);"
+	, "}"
+	, "}"
+	]
+
 instr_writeFS :: !Target -> Target
 instr_writeFS t = foldl (flip append) t
 	[ "{"
@@ -271,6 +456,29 @@ instr_writeFS t = foldl (flip append) t
 	, "else if (f==&clean_stderr)"
 	, "\tfor (;len;len--) EPUTCHAR(*s++);"
 	, "else"
-	, "\tIO_error(\"writeFS fallthrough\");" // TODO
+	, "\tfwrite(s,1,len,f->file_handle);"
+	, "}"
+	]
+
+instr_writeFString :: !Target -> Target
+instr_writeFString t = foldl (flip append) t
+	[ "{"
+	, "CHECK_FILE_IO;"
+	, "struct file *f=(struct file*)bsp[3];"
+	, "BC_WORD *n=(BC_WORD*)asp[0];"
+	, "BC_WORD start=bsp[0];"
+	, "BC_WORD len=bsp[1];"
+	, "if (start+len>n[1])"
+	, "\tIO_error(\"Error in fwritesubstring parameters.\");"
+	, "bsp+=2;"
+	, "pc++;"
+	, "asp--;"
+	, "char *s=(char*)&n[2]+start;"
+	, "if (f==&clean_stdinout)"
+	, "\tfor (;len;len--) PUTCHAR(*s++);"
+	, "else if (f==&clean_stderr)"
+	, "\tfor (;len;len--) EPUTCHAR(*s++);"
+	, "else"
+	, "\tfwrite(s,1,len,f->file_handle);" // TODO
 	, "}"
 	]
