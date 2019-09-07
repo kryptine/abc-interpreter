@@ -18,12 +18,12 @@ WASM=0
 INTERPRETERGENWASMFLAGS=""
 
 SRCMAKETARGETS="all"
+MAKE=1
 BENCHMARK=0
 EXPECTED_PREFIX=".64"
 BC_EXTENSION="bc"
 RUN_ONLY=()
 PROFILE=0
-RECOMPILE=1
 QUIET=0
 OPTIMISE=1
 
@@ -55,22 +55,22 @@ print_help () {
 	echo "Options:"
 	echo "  -H       Print this help"
 	echo
+	echo "  -M       Don't make ../src before running tests"
 	echo "  -o TEST  Only run test TEST"
+	echo "  -q       Don't show program results"
+	echo "  -b       Run benchmarks"
 	echo
 	echo "  -w       Use the WebAssembly interpreter (does not support all options below)"
-	echo
-	echo "  -b       Run benchmarks"
-	echo "  -f       Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
-	echo "  -h SIZE  Set heap size to SIZE"
-	echo "  -O       Skip the ABC optimisation step"
-	echo "  -s SIZE  Set stack size to SIZE"
 	echo "  -3       Run tests as if on a 32-bit machine"
-	echo "  -R       Don't recompile modules (faster, but halt addresses may be incorrect if optimisations are missed)"
+	echo "  -f       Compile the interpreter with -Ofast -fno-unsafe-math-optimizations"
+	echo "  -O       Skip the ABC optimisation step"
+	echo
+	echo "  -h SIZE  Set heap size to SIZE"
+	echo "  -s SIZE  Set stack size to SIZE"
 	echo
 	echo "  -d       Print all instructions as they are executed"
 	echo "  -l       List bytecode before execution"
 	echo "  -p       Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
-	echo "  -q       Don't show program results"
 	exit 0
 }
 
@@ -86,7 +86,7 @@ contains () {
 	return 1
 }
 
-OPTS=`getopt "Ho:wbfh:Os:3Rdlpq" "$@"` || print_usage
+OPTS=`getopt "Ho:wbMfh:Os:3dlpq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -111,6 +111,9 @@ while true; do
 		-f)
 			SRCMAKETARGETS+=" optimized"
 			shift;;
+		-M)
+			MAKE=0
+			shift;;
 		-h)
 			RUNFLAGS+=" -h $2"
 			NATIVE_RUNFLAGS+=" -h $2"
@@ -125,9 +128,6 @@ while true; do
 		-3)
 			EXPECTED_PREFIX=".32"
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
-			shift;;
-		-R)
-			RECOMPILE=0
 			shift;;
 
 		-d)
@@ -160,7 +160,7 @@ if [ $BENCHMARK -gt 0 ] && [ $WASM -eq 0 ] && [[ $SRCMAKETARGETS != *"optimized"
 	sleep 1
 fi
 
-if [ "$OS" != "Windows_NT" ]; then
+if [ "$OS" != "Windows_NT" ] && [ $MAKE -gt 0 ] ; then
 	CFLAGS="$CFLAGS" make -BC ../src $SRCMAKETARGETS || exit 1
 fi
 
@@ -170,10 +170,6 @@ if [ $WASM -gt 0 ]; then
 	if [ $BENCHMARK -gt 0 ]; then
 		RUNFLAGS+=" --time"
 	fi
-fi
-
-if [ $RECOMPILE -gt 0 ]; then
-	rm -fr Clean\ System\ Files
 fi
 
 for MODULE in *.icl
@@ -206,9 +202,6 @@ do
 		[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
 		FAILED+=("$MODULE")
 		continue
-	fi
-	if [ $RECOMPILE -gt 0 ]; then
-		cpmq project "$MODULE.prj" build
 	fi
 
 	if [ ! -f "$MODULE$EXPECTED_PREFIX.expected" ]; then

@@ -71,7 +71,7 @@ interworking-Start:
   stage: test-interworking
   script:
     - cd test
-    - ./run_tests.sh -Rqo functions
+    - ./run_tests.sh -qo functions
     - make -B test-CodeSharing
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-CodeSharing
 
