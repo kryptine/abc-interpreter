@@ -18,6 +18,7 @@
 # define BC_WORD_FMT_HEX "%"SCNx64
 # define BC_WORD_S_FMT "%"SCNd64
 # define BC_REAL double
+# define BC_REAL_SCAN_FMT "%lg"
 #else
 # define BC_WORD   uint32_t
 # define BC_WORD_S  int32_t
@@ -25,7 +26,9 @@
 # define BC_WORD_FMT_HEX "%x"
 # define BC_WORD_S_FMT "%d"
 # define BC_REAL float
+# define BC_REAL_SCAN_FMT "%g"
 #endif
+#define BC_REAL_FMT "%.15g"
 
 #define BC_BOOL uint8_t
 

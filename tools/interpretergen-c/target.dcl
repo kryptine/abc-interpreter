@@ -7,15 +7,13 @@ import interpretergen
 :: Target
 :: Expr t
 
+append :: !String !Target -> Target
+
 start :: Target
 bootstrap :: ![String] -> [String]
 collect_instructions :: !Options ![Target] -> [String]
 
 instr_unimplemented :: !Target -> Target
-instr_halt :: !Target -> Target
-instr_divLU :: !Target -> Target
-instr_mulUUL :: !Target -> Target
-instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
 lit_hword :: !Int -> Expr TPtrOffset
@@ -142,6 +140,7 @@ INT_ptr :: Expr TWord
 REAL_ptr :: Expr TWord
 ARRAY__ptr :: Expr TWord
 STRING__ptr :: Expr TWord
+FILE_ptr :: Expr TWord
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 cycle_ptr :: Expr TWord
 indirection_ptr :: Expr TWord

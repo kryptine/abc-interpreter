@@ -3,7 +3,8 @@ implementation module interpretergen
 import StdEnv
 import StdMaybe
 import ArgEnv
-import target
+
+import target, specialized
 
 Start w
 # args = getCommandLine
@@ -204,6 +205,15 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "buildC_b" (Just 1) $
 		A @ 1 .= static_character (to_char (B @ (Pc @ 1))) :.
 		grow_a 1
+	, instr "buildF_b" (Just 1) $
+		ensure_hp 3 :.
+		new_local TInt (to_int (Pc @ 1)) \bo ->
+		Hp @ 0 .= FILE_ptr + lit_word 2 :.
+		Hp @ 1 .= B @ bo :.
+		Hp @ 2 .= B @ (bo + lit_int 1) :.
+		A @ 1 .= to_word Hp :.
+		grow_a 1 :.
+		advance_ptr Hp 3
 	, instr "buildI" (Just 1) $
 		new_local TInt (to_int (Pc @ 1)) \i ->
 		if_then_else (lit_int 0 <=. i &&. i <=. lit_int 32)
@@ -1692,6 +1702,12 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		n @ 0 .= CHAR_ptr + lit_word 2 :.
 		n @ 1 .= B @ to_int (Pc @ 2)
+	, instr "fillF_b" (Just 2) $
+		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
+		new_local TInt (to_int (Pc @ 2)) \bo ->
+		n @ 0 .= FILE_ptr + lit_word 2 :.
+		n @ 1 .= B @ bo :.
+		n @ 2 .= B @ (bo + lit_int 1)
 	, instr "fillI" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 2))) \n ->
 		n @ 0 .= INT_ptr + lit_word 2 :.
@@ -3747,11 +3763,30 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		d .= (d + if_i64_or_i32_expr (lit_word 7) (lit_word 3)) &. if_i64_or_i32_expr (lit_word -8) (lit_word -4) :.
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
 		B @ 0 .= to_word_ptr d @ 0
+
+	, instr "closeF" Nothing instr_closeF
+	, instr "endF" Nothing instr_endF
+	, instr "errorF" Nothing instr_errorF
+	, instr "flushF" Nothing instr_flushF
+	, instr "openF" Nothing instr_openF
+	, instr "positionF" Nothing instr_positionF
+	, instr "readFC" Nothing instr_readFC
+	, instr "readFI" Nothing instr_readFI
+	, instr "readFR" Nothing instr_readFR
+	, instr "readFS" Nothing instr_readFS
+	, instr "readLineF" Nothing instr_readLineF
+	, instr "seekF" Nothing instr_seekF
+	, instr "stderrF" Nothing instr_stderrF
+	, instr "stdioF" Nothing instr_stdioF
+	, instr "writeFC" Nothing instr_writeFC
+	, instr "writeFI" Nothing instr_writeFI
+	, instr "writeFR" Nothing instr_writeFR
+	, instr "writeFS" Nothing instr_writeFS
+	, instr "writeFString" Nothing instr_writeFString
+
 	, alias "add_arg" $
-	  alias "buildF_b" $
 	  alias "ccall" $
 	  alias "centry" $
-	  alias "fillF_b" $
 	  alias "fill3_r" $
 	  alias "fill3_r01a" $
 	  alias "fill3_r01b" $
@@ -3768,6 +3803,20 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "pushL" $
 	  alias "pushLc" $
 	  alias "set_finalizers" $
+
+	  alias "endSF" $
+	  alias "openSF" $
+	  alias "positionSF" $
+	  alias "readFString" $
+	  alias "readLineSF" $
+	  alias "readSFC" $
+	  alias "readSFI" $
+	  alias "readSFR" $
+	  alias "readSFS" $
+	  alias "reopenF" $
+	  alias "seekSF" $
+	  alias "shareF" $
+
 	  alias "A_data_IIIla" $
 	  alias "A_data_IIl" $
 	  alias "A_data_IlI" $

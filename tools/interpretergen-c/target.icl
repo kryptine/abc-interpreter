@@ -19,6 +19,9 @@ import interpretergen
 	.o 1 0
 }
 
+append :: !String !Target -> Target
+append e t = {t & output=[e:t.output]}
+
 start :: Target
 start = {instrs=[], output=[], var_counter=0}
 
@@ -40,6 +43,22 @@ where
 		, "#endif"
 
 		, "#define NEED_HEAP(words) {if ((heap_free-=words)<0){ heap_free+=words; GARBAGE_COLLECT;}}"
+
+		, "#ifdef LINK_CLEAN_RUNTIME"
+		, "# define CHECK_FILE_IO do { \\"
+		, "\t\tif (!ie->options.allow_file_io) {\\"
+		, "\t\t\tinterpret_error=&e__ABC_PInterpreter__dDV__FileIOAttempted; \\"
+		, "\t\t\tEXIT(ie,-1); \\"
+		, "\t\t} \\"
+		, "\t} while (0)"
+		, "#else"
+		, "# define CHECK_FILE_IO do { \\"
+		, "\t\tif (!options.allow_file_io) {\\"
+		, "\t\t\tEPRINTF(\"File I/O attempted (%s) at %d\\n\", instruction_name(*pc), (int) (pc-program->code)); \\"
+		, "\t\t\tEXIT(ie,-1); \\"
+		, "\t\t} \\"
+		, "\t} while (0)"
+		, "#endif"
 		]
 
 	post :: [String]
@@ -67,7 +86,6 @@ where
 		head = ["INSTRUCTION_BLOCK("+++i+++"):" \\ i <- t.instrs]
 		out = reverse t.output
 
-append e t :== {t & output=[e:t.output]}
 mark t :== append "MARK" t
 concat_up_to_mark t=:{output} :==
 	let (ls,[_:rest]) = span ((<>) "MARK") output in
@@ -99,85 +117,6 @@ instr_unimplemented t = foldl (flip append) t
 	, "#ifdef LINK_CLEAN_RUNTIME"
 	, "\treturn -1;"
 	, "#endif"
-	]
-
-instr_halt :: !Target -> Target
-instr_halt t = foldl (flip append) t
-	[ "#ifdef DEBUG_CURSES"
-	, "\tdebugger_graceful_end();"
-	, "#endif"
-	, "#ifdef LINK_CLEAN_RUNTIME"
-	, "\t{"
-	, "\t\tEPRINTF(\"Stack trace:\\n\");"
-	, "\t\tBC_WORD *start_csp = &stack[stack_size >> 1];"
-	, "\t\tchar _tmp[256];"
-	, "\t\tfor (; csp>start_csp; csp--) {"
-	, "\t\t\tprint_label(_tmp, 256, 1, (BC_WORD*)*csp, program, ie->heap, ie->heap_size);"
-	, "\t\t\tEPRINTF(\"%s\\n\",_tmp);"
-	, "\t\t}"
-	, "\t}"
-	, "\tinterpret_error=&e__ABC_PInterpreter__dDV__Halt;"
-	, "\tEXIT(ie,1);"
-	, "\tgoto eval_to_hnf_return_failure;"
-	, "#else"
-	, "\treturn 0;"
-	, "#endif"
-	]
-
-instr_divLU :: !Target -> Target
-instr_divLU t = foldl (flip append) t
-	[ "{"
-	, "#if defined(WINDOWS) && WORD_WIDTH==64"
-	, "\tEPRINTF(\"divLU is not supported on 64-bit Windows\\n\");"
-	, "#else"
-	, "# if WORD_WIDTH==64"
-	, "\t__int128_t num=((__int128_t)bsp[0] << 64) + bsp[1];"
-	, "# else"
-	, "\tint64_t num=((int64_t)bsp[0] << 32) + bsp[1];"
-	, "# endif"
-	, "\tbsp[1]=num%bsp[2];"
-	, "\tbsp[2]=num/bsp[2];"
-	, "\tbsp+=1;"
-	, "\tpc+=1;"
-	, "\tEND_INSTRUCTION_BLOCK;"
-	, "#endif"
-	, "}"
-	]
-
-instr_mulUUL :: !Target -> Target
-instr_mulUUL t = foldl (flip append) t
-	[ "{"
-	, "#if defined(WINDOWS) && WORD_WIDTH==64"
-	, "\tEPRINTF(\"mulUUL is not supported on 64-bit Windows\\n\");"
-	, "#else"
-	, "# if WORD_WIDTH==64"
-	, "\t__uint128_t res=(__uint128_t)((__uint128_t)bsp[0] * (__uint128_t)bsp[1]);"
-	, "# else"
-	, "\tuint64_t res=(uint64_t)bsp[0] * (uint64_t)bsp[1];"
-	, "# endif"
-	, "\tbsp[0]=res>>WORD_WIDTH;"
-	, "\tbsp[1]=(BC_WORD)res;"
-	, "\tpc+=1;"
-	, "\tEND_INSTRUCTION_BLOCK;"
-	, "#endif"
-	, "}"
-	]
-
-instr_RtoAC :: !Target -> Target
-instr_RtoAC t = foldl (flip append) t
-	[ "{"
-	, "char r[22];"
-	, "int n=sprintf(r,\"%.15g\",*((BC_REAL*)bsp)+0.0);"
-	, "NEED_HEAP(2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2)));"
-	, "hp[0]=(BC_WORD)&__STRING__+2;"
-	, "hp[1]=n;"
-	, "memcpy(&hp[2],r,n);"
-	, "pc+=1;"
-	, "bsp+=1;"
-	, "asp[1]=(BC_WORD)hp;"
-	, "asp+=1;"
-	, "hp+=2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2));"
-	, "}"
 	]
 
 lit_word :: !Int -> Expr TWord
@@ -472,6 +411,9 @@ STRING__ptr = "(BC_WORD)&__STRING__"
 
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 jmp_ap_ptr i = "(BC_WORD)&Fjmp_ap["+-+toString i+-+"]"
+
+FILE_ptr :: Expr TWord
+FILE_ptr = "(BC_WORD)&d_FILE[1]"
 
 cycle_ptr :: Expr TWord
 cycle_ptr = "(BC_WORD)&__interpreter_cycle_in_spine[1]"

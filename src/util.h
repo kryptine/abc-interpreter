@@ -52,11 +52,12 @@ char *strsep(char **stringp, const char *delim);
 extern char print_buffer[];
 # ifdef STDERR_TO_FILE
 void stderr_print(int);
-# define EPRINTF(...) stderr_print(snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
+#  define EPRINTF(...) stderr_print(snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
 # else
 extern void ew_print_text(char*,int);
-# define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
+#  define EPRINTF(...) ew_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
 # endif
+# define EPUTCHAR(c)  EPRINTF("%c",c)
 extern void w_print_text(char*,int);
 extern void w_print_char(char);
 # define PRINTF(...)  w_print_text(print_buffer, snprintf(print_buffer, PRINT_BUFFER_SIZE-1, __VA_ARGS__))
@@ -66,9 +67,11 @@ extern void w_print_char(char);
 # include "debug_curses.h"
 # define EPRINTF debugger_printf
 # define PRINTF debugger_printf
+# define EPUTCHAR debugger_putchar
 # define PUTCHAR debugger_putchar
 #else
 # define EPRINTF(...) fprintf(stderr,__VA_ARGS__)
 # define PRINTF printf
+# define EPUTCHAR(c) fputc(c,stderr)
 # define PUTCHAR putchar
 #endif

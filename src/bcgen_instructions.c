@@ -891,6 +891,15 @@ void add_instruction_internal_label(int16_t i,struct label *label) {
 	store_code_internal_label_value(label,0);
 }
 
+void add_instruction_internal_label_internal_label(int16_t i,struct label *label1,struct label *label2) {
+	if (list_code || i>max_implemented_instruction_n)
+		printf("%d\t%s %d %d\n",pgrm.code_size,instruction_name (i),label1->label_offset,label2->label_offset);
+
+	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
+	store_code_internal_label_value(label1,0);
+	store_code_internal_label_value(label2,0);
+}
+
 void add_instruction_w_internal_label_label(int16_t i,int32_t n1,struct label *label,char *label_name) {
 	if (list_code || i>max_implemented_instruction_n)
 		printf("%d\t%s %d %d %s\n",pgrm.code_size,instruction_name (i),n1,label->label_offset,label_name);
@@ -941,57 +950,89 @@ struct word *add_add_arg_labels(void) {
 	return pgrm.code;
 }
 
-static char *specialized_jsr_labels[] = {
-	/* 0*/ "eqAC",
-	/* 1*/ "cmpAC",
-	/* 2*/ "catAC",
-	/* 3*/ "sliceAC",
-	/* 4*/ "updateAC",
-	/* 5*/ "ItoAC",
-	/* 6*/ "BtoAC",
-	/* 7*/ "RtoAC",
-	/* 8*/ "print__string__",
-	/* 9*/ "openF",
-	/*10*/ "stdioF",
-	/*11*/ "closeF",
-	/*12*/ "readLineF",
-	/*13*/ "endF",
-	/*14*/ "writeFI",
-	/*15*/ "writeFS",
-	/*16*/ "writeFC",
-	/*17*/ "openSF"
+struct specialized_jsr {
+	const char *label;
+	int instruction;
+	int flags;
+	int warned_flags;
+};
+
+#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags, 0},
+#define S_UNSUPPORTED 1
+#define S_IO 2
+
+static struct specialized_jsr specialized_jsr_labels[]={
+	SPECIALIZED(eqAC,0)
+	SPECIALIZED(cmpAC,0)
+	SPECIALIZED(catAC,0)
+	SPECIALIZED(sliceAC,0)
+	SPECIALIZED(updateAC,0)
+	SPECIALIZED(ItoAC,0)
+	SPECIALIZED(BtoAC,0)
+	SPECIALIZED(RtoAC,0)
+	{"print__string__",Cprint_string,0},
+
+	SPECIALIZED(closeF,       S_IO)
+	SPECIALIZED(endF,         S_IO)
+	SPECIALIZED(endSF,        S_IO | S_UNSUPPORTED)
+	SPECIALIZED(errorF,       S_IO)
+	SPECIALIZED(flushF,       S_IO)
+	SPECIALIZED(openF,        S_IO)
+	SPECIALIZED(openSF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(positionF,    S_IO)
+	SPECIALIZED(positionSF,   S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readFC,       S_IO)
+	SPECIALIZED(readFI,       S_IO)
+	SPECIALIZED(readFR,       S_IO)
+	SPECIALIZED(readFS,       S_IO)
+	SPECIALIZED(readFString,  S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readLineF,    S_IO)
+	SPECIALIZED(readLineSF,   S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFC,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFI,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFR,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(readSFS,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(reopenF,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED(seekF,        S_IO)
+	SPECIALIZED(seekSF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(shareF,       S_IO | S_UNSUPPORTED)
+	SPECIALIZED(stderrF,      S_IO)
+	SPECIALIZED(stdioF,       S_IO)
+	SPECIALIZED(writeFC,      S_IO)
+	SPECIALIZED(writeFI,      S_IO)
+	SPECIALIZED(writeFR,      S_IO)
+	SPECIALIZED(writeFS,      S_IO)
+	SPECIALIZED(writeFString, S_IO)
 };
 
 static int get_specialized_jsr_label_n(char label_name[]) {
 	int i,n;
 
-	n = sizeof(specialized_jsr_labels) / sizeof (char*);
+	n=sizeof(specialized_jsr_labels)/sizeof(struct specialized_jsr);
 	for(i=0; i<n; ++i)
-		if (!strcmp (label_name,specialized_jsr_labels[i]))
+		if (!strcmp(label_name,specialized_jsr_labels[i].label))
 			return i;
 
 	return -1;
 }
 
 void add_specialized_jsr_instruction(unsigned int n) {
-	switch (n) {
-		case  0: add_instruction(CeqAC); return;
-		case  1: add_instruction(CcmpAC); return;
-		case  2: add_instruction(CcatAC); return;
-		case  3: add_instruction(CsliceAC); return;
-		case  4: add_instruction(CupdateAC); return;
-		case  5: add_instruction(CItoAC); return;
-		case  6: add_instruction(CBtoAC); return;
-		case  7: add_instruction(CRtoAC); return;
-		case  8: add_instruction(Cprint_string); return;
-		default:
-			if (n < sizeof(specialized_jsr_labels)/sizeof(char*)) {
-				fprintf(stderr,"Warning: jsr %s is not supported by the interpreter\n",specialized_jsr_labels[n]);
-			} else {
-				fprintf(stderr,"internal error in add_specialized_jsr_instruction: %d\n",n);
-				exit(1);
-			}
+	if (n>=sizeof(specialized_jsr_labels)/sizeof(struct specialized_jsr)) {
+		fprintf(stderr,"internal error in add_specialized_jsr_instruction: %d\n",n);
+		exit(1);
 	}
+
+	struct specialized_jsr *entry=&specialized_jsr_labels[n];
+	if (entry->flags & S_UNSUPPORTED)
+		unsupported_instruction_warning(entry->instruction);
+	else if (entry->flags & S_IO) {
+		if (!(entry->warned_flags & S_IO)) {
+			fprintf(stderr,"Warning: jsr %s requires file IO\n",entry->label);
+			entry->warned_flags|=S_IO;
+		}
+	}
+
+	add_instruction(entry->instruction);
 }
 
 void add_label(char *label_name) {
@@ -1196,7 +1237,6 @@ void code_buildC_b(int b_offset) {
 }
 
 void code_buildF_b(int b_offset) {
-	unsupported_instruction_warning(CbuildF_b);
 	add_instruction_w(CbuildF_b,b_offset);
 }
 
@@ -2223,7 +2263,6 @@ void code_fillC_b(int b_offset,int a_offset) {
 }
 
 void code_fillF_b(int b_offset,int a_offset) {
-	unsupported_instruction_warning(CfillF_b);
 	add_instruction_w_w(CfillF_b,-a_offset,b_offset);
 }
 
@@ -2736,7 +2775,6 @@ void code_pushD_a(int a_offset) {
 }
 
 void code_pushF_a(int a_offset) {
-	unsupported_instruction_warning(CpushF_a);
 	add_instruction_w(CpushF_a,-a_offset);
 }
 
@@ -3670,9 +3708,31 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 		add_instruction_w_w_label(Cbuildo2,-a_offset1,-a_offset2,code_name);
 }
 
-void code_ccall (char *c_function_name,char *s,int length) {
-	unsupported_instruction_warning(Cccall);
-	add_instruction(Cccall);
+void code_ccall (char *c_function_name,char *type,int type_length) {
+	fprintf(stderr,"Warning: external C function %s cannot be packaged into the bytecode\n",c_function_name);
+
+	struct label *function_label;
+	function_label=new_internal_label();
+	function_label->label_offset=(pgrm.data_size<<2)+1;
+	store_string(c_function_name,strlen(c_function_name),0);
+
+	struct label *type_label;
+	type_label=new_internal_label();
+	type_label->label_offset=(pgrm.data_size<<2)+1;
+	for (int i=0; i<type_length; i++) {
+		switch (type[i]) {
+			case '-': type[i]=':'; break;
+			case ':': break;
+			case 'p': type[i]='I'; break;
+			case 'I': break;
+			default:
+				//fprintf(stderr,"Warning: '%c' type in ccall for %s not supported by interpreter\n",type[i],c_function_name);
+				break;
+		}
+	}
+	store_string(type,type_length,0);
+
+	add_instruction_internal_label_internal_label(Cccall,function_label,type_label);
 }
 
 void code_centry (char *c_function_name,char *clean_function_label,char *s,int length) {
