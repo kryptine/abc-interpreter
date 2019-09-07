@@ -45,26 +45,34 @@ build-wasm:
       - src-js/WebPublic.tar.gz
     expire_in: 3 months
 
-benchmark-x64:
+.benchmark:
   extends: .base
+  artifacts:
+    paths:
+      - test/*.junit.xml
+    reports:
+      junit: test/*.junit.xml
+
+benchmark-x64:
+  extends: .benchmark
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh -bf
+    - ./run_tests.sh -bfj
 
 benchmark-x86:
-  extends: .base
+  extends: .benchmark
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh -3bf
+    - ./run_tests.sh -3bfj
 
 benchmark-wasm:
-  extends: .base
+  extends: .benchmark
   stage: test-interpreter
   script:
     - cd test
-    - ./run_tests.sh -wb
+    - ./run_tests.sh -wbj
 
 interworking-Start:
   extends: .base

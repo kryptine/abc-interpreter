@@ -1,4 +1,5 @@
 *.result
+*.junit.xml
 
 acker
 arrays

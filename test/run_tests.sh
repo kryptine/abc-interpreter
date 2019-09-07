@@ -26,6 +26,7 @@ RUN_ONLY=()
 PROFILE=0
 QUIET=0
 OPTIMISE=1
+JUNIT_EXPORT=0
 
 cpprj () {
 	if [ $OPTIMISE -gt 0 ]; then
@@ -36,7 +37,7 @@ cpprj () {
 	[ "$OS" == "Windows_NT" ] && sed -i 's:\*lib\*:*Libraries*:' "$2"
 }
 
-cpmq() {
+cpmq () {
 	res="$(cpm $@)"
 	ecode=$?
 	echo "$res" | grep -i 'Error' >/dev/null
@@ -47,6 +48,30 @@ cpmq() {
 		echo "$res" | grep --color=never -i 'Finished making.'
 		return 0
 	fi
+}
+
+junit_export () {
+	MODULE="$1"
+	RESULT="$2"
+	EXPECTED_FILE="$3"
+	FAILURES=0
+	if [ "$RESULT" = "failed" ]; then
+		FAILURES=1
+	fi
+
+	echo "<?xml version=\"1.0\"?>"
+	echo "<testsuites tests=\"1\" failures=\"$FAILURES\" time=\"0\">"
+	echo "<testsuite name=\"$MODULE\" tests=\"1\" failures=\"$FAILURES\" time=\"0\">"
+	echo "<testcase id=\"$MODULE\" name=\"$MODULE\" classname=\"$MODULE\" time=\"0\">"
+	if [ "$RESULT" = "failed" ]; then
+		echo "<failure>"
+		git diff --no-index --word-diff -U0 $EXPECTED $MODULE.result \
+			| sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+		echo "</failure>"
+	fi
+	echo "</testcase>"
+	echo "</testsuite>"
+	echo "</testsuites>"
 }
 
 print_help () {
@@ -71,6 +96,7 @@ print_help () {
 	echo "  -d       Print all instructions as they are executed"
 	echo "  -l       List bytecode before execution"
 	echo "  -p       Make PDF profiles (e.g. nfib.prof.pdf) using google-pprof"
+	echo "  -j       Output JUnit style XML files (for GitLab CI)"
 	exit 0
 }
 
@@ -86,7 +112,7 @@ contains () {
 	return 1
 }
 
-OPTS=`getopt "Ho:wbMfh:Os:3dlpq" "$@"` || print_usage
+OPTS=`getopt "Ho:wbMfh:Os:3dlpjq" "$@"` || print_usage
 eval set -- "$OPTS"
 
 while true; do
@@ -142,6 +168,9 @@ while true; do
 			export CPUPROFILE=/tmp/prof.out
 			export CPUPROFILE_FREQUENCY=10000
 			PROFILE=1
+			shift;;
+		-j)
+			JUNIT_EXPORT=1
 			shift;;
 		-q)
 			QUIET=1
@@ -240,15 +269,17 @@ do
 
 	[ "$OS" == "Windows_NT" ] && dos2unix $MODULE.result
 
+	EXPECTED="$MODULE$EXPECTED_PREFIX.expected"
 	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
-		git diff --no-index --word-diff -U0 $MODULE.bm$EXPECTED_PREFIX.expected $MODULE.result
-	else
-		git diff --no-index --word-diff -U0 $MODULE$EXPECTED_PREFIX.expected $MODULE.result
+		EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
 	fi
+	git diff --no-index --word-diff -U0 $EXPECTED $MODULE.result
 	if [ $? -ne 0 ]; then
+		[ $JUNIT_EXPORT -gt 0 ] && junit_export $MODULE failed "$EXPECTED" > "$MODULE.junit.xml"
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"
 		FAILED+=("$MODULE")
 	else
+		[ $JUNIT_EXPORT -gt 0 ] && junit_export "$MODULE" passed "$EXPECTED" > "$MODULE.junit.xml"
 		echo -e "${GREEN}Passed: $MODULE$RESET"
 	fi
 done
