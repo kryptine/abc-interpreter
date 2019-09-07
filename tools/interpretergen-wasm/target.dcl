@@ -3,24 +3,32 @@ definition module target
 import StdEnv
 import StdMaybe
 import interpretergen
-from wasm import :: Type
+from wasm import :: Type, :: Ex
 
 class wasm_type a :: !a -> Type
 
 instance wasm_type TWord, TPtrOffset, TBool, TChar, TShort, TInt, TReal, (TPtr t)
 
-:: Target
+:: TempVars
+:: Target =
+	{ stmts     :: ![Ex]
+	, instrs    :: ![String]
+	, temp_vars :: !TempVars
+	}
+
+append e t :== {t & stmts=[e:t.stmts]}
+
 :: Expr t
+
+cast_expr :: !(Expr t) -> Expr u
+expr_to_ex :: !(Expr t) -> Ex
+ex_to_expr :: !Ex -> Expr t
 
 start :: Target
 bootstrap :: ![String] -> [String]
 collect_instructions :: !Options ![Target] -> [String]
 
 instr_unimplemented :: !Target -> Target
-instr_halt :: !Target -> Target
-instr_divLU :: !Target -> Target
-instr_mulUUL :: !Target -> Target
-instr_RtoAC :: !Target -> Target
 
 lit_word  :: !Int -> Expr TWord
 lit_hword :: !Int -> Expr TPtrOffset
@@ -138,6 +146,7 @@ A :: Expr (TPtr TWord)
 B :: Expr (TPtr TWord)
 Pc :: Expr (TPtr TWord)
 Hp :: Expr (TPtr TWord)
+Hp_free :: Expr TPtrOffset
 
 BOOL_ptr :: Expr TWord
 CHAR_ptr :: Expr TWord
@@ -145,6 +154,7 @@ INT_ptr :: Expr TWord
 REAL_ptr :: Expr TWord
 ARRAY__ptr :: Expr TWord
 STRING__ptr :: Expr TWord
+FILE_ptr :: Expr TWord
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 cycle_ptr :: Expr TWord
 indirection_ptr :: Expr TWord

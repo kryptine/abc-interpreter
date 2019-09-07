@@ -16,11 +16,12 @@ enum section_type {
 	ST_Start
 };
 
+#define _2chars2int(a,b)             ((uint64_t) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((uint64_t) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[664] = {
+uint64_t prelinker_preamble[669] = {
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
 	/* 10 */ 0, 0, 0, 4, _4chars2int('B','O','O','L'),
@@ -66,6 +67,8 @@ uint64_t prelinker_preamble[664] = {
 	/* 660 static booleans */
 		10*8+2,0, 10*8+2,1,
 	/* 664 */
+		258, 2, _2chars2int('i','i'), 4, _4chars2int('F','I','L','E'),
+	/* 669 */
 };
 
 void prepare_preamble(void) {

@@ -51,20 +51,12 @@ where
 	, tv_f64 :: !Int
 	}
 
-:: Target =
-	{ stmts     :: ![Ex]
-	, instrs    :: ![String]
-	, temp_vars :: !TempVars
-	}
-
 start :: Target
 start =
 	{ instrs    = []
 	, stmts     = []
 	, temp_vars = {tv_i32=0,tv_i64=0,tv_f64=0}
 	}
-
-append e t :== {t & stmts=[e:t.stmts]}
 
 new_temp_var :: !Type !Target -> (!Variable, !Target)
 new_temp_var tp t
@@ -88,8 +80,17 @@ f64_temp_vars =: {#{#'v','d',i} \\ i <- ['0'..'0']}
 
 :: Expr t :== Ex
 
-cast_expr :: !Ex -> Ex
-cast_expr e = e
+cast_expr :: !(Expr t) -> Expr u
+cast_expr e = cast e
+where
+	cast :: !Ex -> Ex
+	cast e = e
+
+expr_to_ex :: !(Expr t) -> Ex
+expr_to_ex e = e
+
+ex_to_expr :: !Ex -> Expr t
+ex_to_expr e = e
 
 bootstrap :: ![String] -> [String]
 bootstrap instrs = instrs
@@ -297,30 +298,6 @@ instr_unimplemented t = (
 where
 	fix_type :: !t !(Expr t) -> Expr t
 	fix_type _ e = e
-
-instr_halt :: !Target -> Target
-instr_halt t = (
-	append (Ecall "clean_halt" [cast_expr Pc, Hp_free, Eget (Global "g-hp-size")]) :.
-	append (Ereturn (Econst I32 0))
-	) t
-
-instr_divLU :: !Target -> Target
-instr_divLU t = instr_unimplemented t // TODO
-
-instr_mulUUL :: !Target -> Target
-instr_mulUUL t = instr_unimplemented t // TODO
-
-instr_RtoAC :: !Target -> Target
-instr_RtoAC t = (
-	new_local TReal (to_real (B @ 0)) \r ->
-	new_local TPtrOffset (Ecall "clean_RtoAC_words_needed" [r]) \lw ->
-	ensure_hp lw :.
-	A @ 1 .= to_word Hp :.
-	Hp .= (Ecall "clean_RtoAC" [Hp,r] ::: TPtr TWord) :.
-	advance_ptr Pc 1 :.
-	advance_ptr A 1 :.
-	advance_ptr B 1
-	) t
 
 lit_word :: !Int -> Expr TWord
 lit_word w = Econst I64 w
@@ -706,6 +683,9 @@ ARRAY__ptr = Econst I64 (0*8)
 
 STRING__ptr :: Expr TWord
 STRING__ptr = Econst I64 (5*8)
+
+FILE_ptr :: Expr TWord
+FILE_ptr = Econst I64 (664*8)
 
 jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 jmp_ap_ptr i = Econst I32 ((98+i)*8)
