@@ -3709,7 +3709,7 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 }
 
 void code_ccall (char *c_function_name,char *type,int type_length) {
-	fprintf(stderr,"Warning: ccall %s will not be packaged into the bytecode\n",c_function_name);
+	fprintf(stderr,"Warning: external C function %s cannot be packaged into the bytecode\n",c_function_name);
 
 	struct label *function_label;
 	function_label=new_internal_label();
@@ -3726,7 +3726,8 @@ void code_ccall (char *c_function_name,char *type,int type_length) {
 			case 'p': type[i]='I'; break;
 			case 'I': break;
 			default:
-				fprintf(stderr,"Warning: '%c' type in ccall for %s not supported by interpreter\n",type[i],c_function_name);
+				//fprintf(stderr,"Warning: '%c' type in ccall for %s not supported by interpreter\n",type[i],c_function_name);
+				break;
 		}
 	}
 	store_string(type,type_length,0);
