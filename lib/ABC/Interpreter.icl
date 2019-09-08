@@ -415,11 +415,6 @@ where
 		'\0' -> ptr
 		_    -> findNull (ptr+1)
 
-:: PrelinkedInterpretationEnvironment =
-	{ pie_symbols    :: !{#Symbol}
-	, pie_code_start :: !Int
-	}
-
 prepare_prelinked_interpretation :: !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
 prepare_prelinked_interpretation bcfile w
 # (bytecode,w) = readFile bcfile w

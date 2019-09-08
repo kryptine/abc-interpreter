@@ -23,6 +23,7 @@ definition module ABC.Interpreter
  */
 
 from StdMaybe import :: Maybe
+from symbols_in_program import :: Symbol
 
 /**
  * This type describes settings used by the interpreter to deserialize
@@ -141,7 +142,10 @@ graph_from_file :: !*File -> *(!Maybe *SerializedGraph, !*File)
  * The environment can be initialized with {{`prepare_prelinked_interpretation`}}
  * and used with {{`serialize_for_prelinked_interpretation`}}.
  */
-:: PrelinkedInterpretationEnvironment
+:: PrelinkedInterpretationEnvironment =
+	{ pie_symbols    :: !{#Symbol}
+	, pie_code_start :: !Int
+	}
 
 /**
  * See {{`PrelinkedInterpretationEnvironment`}} for documentation.
