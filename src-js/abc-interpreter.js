@@ -707,7 +707,7 @@ class ABCInterpreter {
 	}
 }
 
-module.exports={
+if (typeof module!='undefined') module.exports={
 	ABC_DEBUG: ABC_DEBUG,
 	ABCError: ABCError,
 	SharedCleanValue: SharedCleanValue,
