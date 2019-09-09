@@ -125,9 +125,14 @@ class ABCInterpreter {
 		const max_words_needed=string.length/8*4; // rough upper bound
 		this.require_hp(max_words_needed);
 
-		const array=new Uint8Array(string.length);
-		for (var i=0; i<string.length; i++)
-			array[i]=string.charCodeAt(i);
+		var array=new Uint8Array(string.length);
+		if (typeof string=='string') {
+			for (var i=0; i<string.length; i++)
+				array[i]=string.charCodeAt(i);
+		} else {
+			for (var i=0; i<string.length; i++)
+				array[i]=string[i];
+		}
 		const graph=new Uint32Array(array.buffer);
 
 		const unused_semispace=this.util.instance.exports.get_unused_semispace();
@@ -156,7 +161,7 @@ class ABCInterpreter {
 			var args=[];
 			for (var i=0; i<arguments.length; i++)
 				args[i]=arguments[i];
-			me.interpret(new SharedCleanValue(index), args);
+			return me.interpret(new SharedCleanValue(index), args);
 		};
 		f.shared_clean_value_index=index;
 		return f;
@@ -433,6 +438,7 @@ class ABCInterpreter {
 			interpreter_imports: {},
 
 			encoding: 'x-user-defined',
+			fetch: typeof fetch == 'function' ? fetch : null,
 		};
 		Object.assign(opts,args);
 
@@ -443,7 +449,7 @@ class ABCInterpreter {
 
 		me.encoding=opts.encoding;
 
-		return fetch(opts.bytecode_path).then(function(resp){
+		return opts.fetch(opts.bytecode_path).then(function(resp){
 			if (!resp.ok)
 				throw new ABCError('failed to fetch bytecode');
 			return resp.arrayBuffer();
@@ -539,7 +545,7 @@ class ABCInterpreter {
 			};
 			Object.assign(util_imports.clean, opts.util_imports);
 
-			return fetch(opts.util_path)
+			return opts.fetch(opts.util_path)
 				.then(response => response.arrayBuffer())
 				.then(buffer => WebAssembly.instantiate(buffer, util_imports));
 		}).then(function(util){
@@ -631,7 +637,7 @@ class ABCInterpreter {
 			};
 			Object.assign(interpreter_imports.clean, opts.interpreter_imports);
 
-			return fetch(opts.interpreter_path)
+			return opts.fetch(opts.interpreter_path)
 				.then(response => response.arrayBuffer())
 				.then(bytes => WebAssembly.instantiate(bytes, interpreter_imports));
 		}).then(function(intp){
@@ -700,3 +706,10 @@ class ABCInterpreter {
 		});
 	}
 }
+
+module.exports={
+	ABC_DEBUG: ABC_DEBUG,
+	ABCError: ABCError,
+	SharedCleanValue: SharedCleanValue,
+	ABCInterpreter: ABCInterpreter,
+};
