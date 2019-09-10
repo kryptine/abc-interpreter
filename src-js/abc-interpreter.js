@@ -438,7 +438,7 @@ class ABCInterpreter {
 			interpreter_imports: {},
 
 			encoding: 'x-user-defined',
-			fetch: typeof fetch == 'function' ? fetch : null,
+			fetch: path => fetch(path), // to be able to override
 		};
 		Object.assign(opts,args);
 
