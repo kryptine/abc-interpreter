@@ -28,6 +28,9 @@ INSTRUCTION_BLOCK(jsr_eval_host_node):
 		ie->hp=hp;
 	}
 
+	extern BC_WORD __Nil;
+	ie->host->clean_ie->__ie_2->__ie_shared_nodes[3+host_nodeid]=&__Nil-1;
+
 	BC_WORD *new_n;
 	int words_used=copy_to_interpreter_or_garbage_collect(ie, &new_n, host_node);
 	if (words_used<0) {
