@@ -138,7 +138,6 @@ where
 	| isSpace line.[n] = skipSpace (n+1)
 	| otherwise        = n
 
-derive bimap ParseResult
 derive parseLine` ABCInstruction, Annotation
 
 parseLine :: !String -> ABCInstruction
