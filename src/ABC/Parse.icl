@@ -11,15 +11,16 @@ import ABC.Instructions
 	| CPS_Oct !Int
 	| CPS_Hex !Int
 
-:: ParseResult a
-	= NoParseResult
-	| ParseResult !a !Int
+:: ParseResult a :== (a, !Int)
+
+ParseResult x i :== (x,i)
+NoParseResult :== (undef,-1)
 
 generic parseLine` a :: !Int !String -> ParseResult a
 parseLine`{|Int|} start line
 	| start >= size line   = NoParseResult
 	| line.[start] == '-'  = case parseLine`{|*|} (start+1) line of
-		NoParseResult       -> NoParseResult
+		r=:(_,-1)           -> r
 		ParseResult n start -> ParseResult (~n) start
 	| line.[start] == '+'  = parseLine`{|*|} (start+1) line
 	| isDigit line.[start] = int` 0 start
@@ -100,9 +101,7 @@ parseLine`{|CONS of {gcd_name,gcd_arity}|} fx 0 line
 	| not (check_start (instr_size-1)) = NoParseResult
 	| gcd_arity > 0 && not (isSpace line.[instr_size]) = NoParseResult
 	| gcd_arity == 0 && size line > instr_size && not (isSpace line.[instr_size]) = NoParseResult
-	= case fx (instr_size + 1) line of
-		NoParseResult   -> NoParseResult
-		ParseResult x i -> ParseResult (CONS x) i
+	= let (x,i) = fx (instr_size + 1) line in (CONS x,i)
 	where
 		instr_size = size gcd_name
 
@@ -117,20 +116,16 @@ parseLine`{|CONS of {gcd_name,gcd_arity}|} fx 0 line
 			'I' -> '\t' // Instruction
 			'A' -> '.'  // Annotation
 			_   -> '\0' // should not happen
-parseLine`{|OBJECT|} fx start line = case fx start line of
-	NoParseResult   -> NoParseResult
-	ParseResult x i -> ParseResult (OBJECT x) i
+parseLine`{|OBJECT|} fx start line = let (x,i) = fx start line in (OBJECT x,i)
 parseLine`{|EITHER|} fl fr start line = case fl start line of
-	ParseResult l i -> ParseResult (LEFT l) i
-	NoParseResult   -> case fr start line of
-		ParseResult r i -> ParseResult (RIGHT r) i
-		NoParseResult   -> NoParseResult
+	(_,-1) -> let (r,i) = fr start line in (RIGHT r,i)
+	(l,i)  -> (LEFT l,i)
 parseLine`{|UNIT|} start _ = ParseResult UNIT start
 parseLine`{|PAIR|} fx fy start line = case fx start line of
-	NoParseResult   -> NoParseResult
-	ParseResult x i -> case fy (skipSpace i) line of
-		NoParseResult   -> NoParseResult
-		ParseResult y i -> ParseResult (PAIR x y) (skipSpace i)
+	(_,-1) -> NoParseResult
+	(x,i)  -> case fy (skipSpace i) line of
+		(_,-1) -> NoParseResult
+		(y,i)  -> (PAIR x y,skipSpace i)
 where
 	skipSpace :: !Int -> Int
 	skipSpace n
@@ -142,13 +137,13 @@ derive parseLine` ABCInstruction, Annotation
 
 parseLine :: !String -> ABCInstruction
 parseLine s = case parseLine`{|*|} 0 s of
-	ParseResult i _ -> i
-	NoParseResult   -> case s.[0] of
+	(_,-1) -> case s.[0] of
 		'\t' -> IIns (s % (1,size s-1))
 		'.'  -> Annotation (parseAnnot s)
 		_    -> Line s
+	(i,_) -> i
 where
 	parseAnnot :: !String -> Annotation
 	parseAnnot s = case parseLine`{|*|} 0 s of
-		ParseResult a _ -> a
-		NoParseResult   -> OtherAnnotation (s % (1, size s - 1))
+		(_,-1) -> OtherAnnotation (s % (1, size s - 1))
+		(a,_)  -> a
