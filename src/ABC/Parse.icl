@@ -2,6 +2,7 @@ implementation module ABC.Parse
 
 import StdEnv
 import StdGeneric
+import StdOverloadedList
 
 import ABC.Instructions
 
@@ -83,17 +84,20 @@ where
 	| isSpace line.[start] = ParseResult (toString (reverse cs)) start
 	| otherwise            = id [line.[start]:cs] (start + 1)
 parseLine`{|StringLiteral|} start line = case line.[start] of
-	'"' -> let (sl,j) = stringlit [] (start+1) in case line.[j] of
+	'"' -> let (sl,j) = stringlit [|] (start+1) in case line.[j] of
 		'"' -> ParseResult sl (start+1)
 		_   -> NoParseResult
 	_   -> NoParseResult
 where
-	stringlit :: [Char] !Int -> (!StringLiteral, !Int)
+	// TODO: for really large strings it would be better to scan ahead until
+	// the end, allocate the result string, and fill it, without using a list
+	// for the intermediate result.
+	stringlit :: ![#Char!] !Int -> (!StringLiteral, !Int)
 	stringlit cs start
-	| start >= size line   = (StringLit (toString (reverse cs)), start)
-	| line.[start] == '\\' = stringlit [line.[start+1],line.[start]:cs] (start+2)
-	| line.[start] == '"'  = (StringLit (toString (reverse cs)), start)
-	| otherwise            = stringlit [line.[start]:cs] (start + 1)
+	| start >= size line   = (StringLit {c \\ c <|- Reverse cs}, start)
+	| line.[start] == '\\' = stringlit [|line.[start+1],line.[start]:cs] (start+2)
+	| line.[start] == '"'  = (StringLit {c \\ c <|- Reverse cs}, start)
+	| otherwise            = stringlit [|line.[start]:cs] (start + 1)
 parseLine`{|StringWithSpaces|} start line = ParseResult (StringWithSpaces (line % (start,size line-1))) (size line-1)
 
 parseLine`{|CONS of {gcd_name,gcd_arity}|} fx 0 line
