@@ -274,11 +274,21 @@ static void handle_segv(int sig, siginfo_t *info, void *context) {
 		}
 		return;
 	}
-	interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
 # endif
-	EPRINTF("Segmentation fault in interpreter\n");
+
+	if (sig==SIGFPE) {
 # ifdef LINK_CLEAN_RUNTIME
-	siglongjmp(segfault_restore_points->restore_point, SIGSEGV);
+		interpret_error=&e__ABC_PInterpreter__dDV__FloatingPointException;
+# endif
+		EPRINTF("Floating point exception during interpretation\n");
+	} else {
+# ifdef LINK_CLEAN_RUNTIME
+		interpret_error=&e__ABC_PInterpreter__dDV__StackOverflow;
+# endif
+		EPRINTF("Segmentation fault during interpretation\n");
+	}
+# ifdef LINK_CLEAN_RUNTIME
+	siglongjmp(segfault_restore_points->restore_point, sig);
 # else
 	exit(1);
 # endif
@@ -294,7 +304,7 @@ static LONG WINAPI handle_segv(struct _EXCEPTION_POINTERS *exception) {
 }
 #endif
 
-void install_interpreter_segv_handler(void) {
+static void install_signal_handlers(void) {
 #ifdef POSIX
 	stack_t signal_stack;
 	signal_stack.ss_sp=safe_malloc(SIGSTKSZ);
@@ -315,6 +325,8 @@ void install_interpreter_segv_handler(void) {
 # endif
 				) == -1)
 		perror("sigaction");
+	if (sigaction(SIGFPE, &segv_handler, NULL) == -1)
+		perror("sigaction");
 #elif defined(WINDOWS)
 	SetUnhandledExceptionFilter(&handle_segv);
 #else
@@ -331,7 +343,7 @@ int ensure_interpreter_init(void) {
 	if (interpreter_initialized)
 		return 1;
 
-	install_interpreter_segv_handler();
+	install_signal_handlers();
 
 	prepare_static_nodes();
 #ifdef LINK_CLEAN_RUNTIME
