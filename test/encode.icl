@@ -1,17 +1,17 @@
-module compress
+module encode
 
 import StdEnum
 import StdList
 
-import Data.GenCompress
+import Data.Encoding.GenBinary
 import Data.GenEq
 import Data.Maybe
 
 derive bimap Maybe, (,)
 
-derive gCompress R, ADT
-derive gUncompress R, ADT
-derive gCompressedSize R, ADT
+derive gBinaryEncode R, ADT
+derive gBinaryDecode R, ADT
+derive gBinaryEncodingSize R, ADT
 derive gEq R, ADT
 
 :: R = R !Int Int /* Data.GenCompress does not support records */
@@ -25,4 +25,4 @@ adts = [ConsA r c b \\ r <- [1.0,-2.0,37.0,-4.2], c <- ['a'..'z'], b <- [True,Fa
 // the compression is broken on a simulated 32-bit system. Hence, the expected
 // output on 32-bit systems is False.
 
-Start = uncompress (compress adts) === Just adts
+Start = decode (encode adts) === Just adts

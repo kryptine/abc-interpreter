@@ -2,8 +2,8 @@ Version: 1.4
 Global
 	ProjectRoot:	.
 	Target:	StdEnv
-	Exec:	{Project}/compress
-	ByteCode:	{Project}/compress.bc
+	Exec:	{Project}/encode
+	ByteCode:	{Project}/encode.bc
 	CodeGen
 		CheckStacks:	False
 		CheckIndexes:	False
@@ -52,7 +52,7 @@ Global
 	Precompile:	
 	Postlink:	
 MainModule
-	Name:	compress
+	Name:	encode
 	Dir:	{Project}
 	Compiler
 		NeverMemoryProfile:	False
