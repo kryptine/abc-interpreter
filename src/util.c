@@ -194,7 +194,7 @@ char *escape(char c) {
 }
 
 /* https://stackoverflow.com/a/47229318 */
-#ifdef BCGEN
+#if defined(BCGEN) || defined(LINKER)
 # ifdef MICROSOFT_C
 SSIZE_T
 # else
