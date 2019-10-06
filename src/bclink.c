@@ -10,7 +10,7 @@
 
 #define MAX_INPUT_FILES 1024
 
-const char usage[] = "Usage: %s FILE [FILE [FILE ..]] [-o FILE]\n";
+const char usage[] = "Usage: %s [-f FILE] FILE [FILE [FILE ..]] [-o FILE]\n";
 
 int main(int argc, char **argv) {
 	FILE *output_file = stdout;
@@ -19,11 +19,28 @@ int main(int argc, char **argv) {
 
 	int f=0;
 	for (int i=1; i<argc; i++) {
-		if(!strcmp("-o", argv[i]) && i <= argc-1) {
-			if((output_file = fopen(argv[i + 1], "wb")) == NULL) {
-				fprintf(stderr, "Error: Could not open output file: %s\n", argv[i + 1]);
+		if (!strcmp ("-o",argv[i]) && i <= argc-1) {
+			if ((output_file=fopen (argv[i+1],"wb")) == NULL) {
+				fprintf (stderr,"Error: Could not open output file: %s\n",argv[i+1]);
 				return -1;
 			}
+			i++;
+		} else if (!strcmp ("-f",argv[1]) && i <= argc-1) {
+			FILE *input_list_file;
+			if ((input_list_file=fopen (argv[i+1],"r")) == NULL) {
+				fprintf (stderr,"Error: Could not open input list file: %s\n",argv[i+1]);
+				return -1;
+			}
+			size_t n;
+			while (getline (&input_file_names[f],&n,input_list_file) != -1) {
+				int c=strlen (input_file_names[f])-1;
+				while (input_file_names[f][c]=='\r' || input_file_names[f][c]=='\n')
+					c--;
+				input_file_names[f][c+1]='\0';
+				f++;
+			}
+			input_file_names[f]=NULL;
+			fclose (input_list_file);
 			i++;
 		} else {
 			input_file_names[f++]=argv[i];

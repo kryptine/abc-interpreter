@@ -36,7 +36,7 @@ size_t string_to_size(char*);
 
 char *escape(char);
 
-#ifdef BCGEN
+#if defined(BCGEN) || defined(LINKER)
 # ifdef MICROSOFT_C
 #  include <BaseTsd.h>
 SSIZE_T
