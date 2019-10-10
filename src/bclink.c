@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (input_file_names[0] == NULL) {
-		fprintf(stderr, "No input files\n");
+		fprintf(stderr, "No input files.\n%s", usage);
 		exit(1);
 	}
 
