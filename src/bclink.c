@@ -38,8 +38,8 @@ int main(int argc, char **argv) {
 					c--;
 				input_file_names[f][c+1]='\0';
 				f++;
+				input_file_names[f]=NULL;
 			}
-			input_file_names[f]=NULL;
 			fclose (input_list_file);
 			i++;
 		} else {
