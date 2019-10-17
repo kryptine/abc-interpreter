@@ -48,6 +48,7 @@ struct interpretation_environment {
 extern void *e__ABC_PInterpreter__dDV__ParseError;
 extern void *e__ABC_PInterpreter__dDV__HeapFull;
 extern void *e__ABC_PInterpreter__dDV__StackOverflow;
+extern void *e__ABC_PInterpreter__dDV__FloatingPointException;
 extern void *e__ABC_PInterpreter__dDV__Halt;
 extern void *e__ABC_PInterpreter__dDV__IllegalInstruction;
 extern void *e__ABC_PInterpreter__dDV__FileIOAttempted;

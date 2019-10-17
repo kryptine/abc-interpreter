@@ -92,6 +92,8 @@ deserialize :: !DeserializationSettings !SerializedGraph !String !*World -> *(!M
 	| DV_StackOverflow
 		//* The interpreter had not enough stack to evaluate the expression.
 		//* NB: on Windows, not all stack overflows can be caught.
+	| DV_FloatingPointException
+		//* A floating point exception occurred, e.g. due to division by 0.
 	| DV_Halt
 		//* The ABC instruction `halt` was encountered.
 	| DV_IllegalInstruction

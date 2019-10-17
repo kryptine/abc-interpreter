@@ -1196,6 +1196,7 @@ BC_WORD copy_interpreter_to_host_n(void *__dummy_0, void *__dummy_1,
 	if (interpret_ie(ie, &bootstrap, with_error_reporting) != 0) {
 		EPRINTF("Failed to interpret\n");
 		__interpret__copy__node__asm_redirect_node=interpret_error-1;
+		ie->asp=old_asp;
 		return 0;
 	}
 
