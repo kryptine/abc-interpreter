@@ -7,8 +7,10 @@
 # define _NO_BOOL_TYPEDEF /* for mingw */
 # define BOOL WINBOOL
 # define CHAR WINCHAR
+# define INT WININT
 # include <windows.h>
 # include <excpt.h>
+# undef INT
 # undef BOOL
 # undef CHAR
 #endif
