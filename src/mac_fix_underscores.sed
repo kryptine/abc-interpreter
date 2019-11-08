@@ -1,7 +1,7 @@
 s/_BOOL/BOOL/g
 s/_CHAR/CHAR/g
 s/_REAL/REAL/g
-s/_dINT/dINT/g
+s/_INT/INT/g
 s/_ARRAY@/ARRAY@/g
 s/___ARRAY__@/__ARRAY__@/g
 s/___STRING__/__STRING__/g

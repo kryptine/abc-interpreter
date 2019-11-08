@@ -53,7 +53,7 @@ void* __STRING__[]        = {0, 0, &m____system, (void*) 8, _8chars2int('_','S',
 void* BOOL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('B','O','O','L')};
 void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H','A','R')};
 void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
-void* dINT[]              = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
+void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 # endif
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = { 7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
@@ -67,7 +67,7 @@ void* __STRING__[]        = { 0, 0, &m____system, (void*) 8, _4chars2int ('_','S
 void* BOOL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('B','O','O','L') };
 void* CHAR[]              = { 0, 0, &m____system, (void*) 4, _4chars2int ('C','H','A','R') };
 void* REAL[]              = { 0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
-void* dINT[]              = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
+void* INT[]               = { 0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 # endif
 #endif /* Word-width dependency */
 

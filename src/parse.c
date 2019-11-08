@@ -80,7 +80,6 @@ void init_parser(struct parser *state
 #endif
 
 	preseed_symbol_matcher(state, "INT", (void*) &INT);
-	preseed_symbol_matcher(state, "dINT", (void*) &dINT);
 	preseed_symbol_matcher(state, "BOOL", (void*) &BOOL);
 	preseed_symbol_matcher(state, "CHAR", (void*) &CHAR);
 	preseed_symbol_matcher(state, "REAL", (void*) &REAL);
@@ -503,8 +502,7 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__ARRAY__,0);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "__STRING__")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__STRING__,5);
-				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT") ||
-						!strcmp(state->program->symbol_table[state->ptr].name, "dINT")) {
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "INT")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&INT,25);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "BOOL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&BOOL,10);

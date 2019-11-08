@@ -70,7 +70,7 @@ static int export_label(const char *label) {
 		return 1;
 	else if (!strcmp(label, "__STRING__"))
 		return 1;
-	else if (!strcmp(label, "INT") || !strcmp(label, "dINT"))
+	else if (!strcmp(label, "INT"))
 		return 1;
 	else if (!strcmp(label, "BOOL"))
 		return 1;

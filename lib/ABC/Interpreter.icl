@@ -450,7 +450,6 @@ where
 		"CHAR"     -> code_start-4*8+2
 		"REAL"     -> code_start-5*8+2
 		"INT"      -> code_start-6*8+2
-		"dINT"     -> code_start-6*8+2
 		"_ind"     -> code_start-7*8+2
 		_          -> lookup_symbol_value di mods syms
 	| otherwise    =  lookup_symbol_value di mods syms
@@ -538,7 +537,7 @@ where
 			| d==array_desc-3*8+2 = (1,True)  // BOOL
 			| d==array_desc-4*8+2 = (1,True)  // CHAR
 			| d==array_desc-5*8+2 = (IF_INT_64_OR_32 1 2,True) // REAL
-			| d==array_desc-6*8+2 = (1,True)  // INT/dINT
+			| d==array_desc-6*8+2 = (1,True)  // INT
 			| d==array_desc-7*8+2 = (0,True)  // _ind
 			| otherwise = abort "internal error in serialize_for_prelinked_interpretation\n"
 		# arity = get_D_node_arity d
