@@ -136,6 +136,7 @@ void load_instruction_table(void) {
 	put_instruction_name("fill_r",                parse_instruction_a_n_n_n_n_n,   code_fill_r );
 	put_instruction_name("get_desc_arity_offset", parse_instruction,               code_get_desc_arity_offset );
 	put_instruction_name("get_node_arity",        parse_instruction_n,             code_get_node_arity );
+	put_instruction_name("get_thunk_arity",       parse_instruction,               code_get_thunk_arity );
 	put_instruction_name("get_thunk_desc",        parse_instruction,               code_get_thunk_desc );
 	put_instruction_name("getWL",                 parse_instruction_n,             code_dummy );
 	put_instruction_name("gtI",                   parse_instruction,               code_gtI );

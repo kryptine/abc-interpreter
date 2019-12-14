@@ -129,6 +129,7 @@ void code_fill_u(char descriptor_name[], int a_size, int b_size, char code_name[
 void code_fill_r(char descriptor_name[], int a_size, int b_size, int root_offset, int a_offset, int b_offset);
 void code_get_desc_arity_offset(void);
 void code_get_node_arity(int a_offset);
+void code_get_thunk_arity(void);
 void code_get_thunk_desc(void);
 void code_gtI(void);
 void code_halt(void);

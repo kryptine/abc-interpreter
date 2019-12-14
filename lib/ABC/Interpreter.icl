@@ -526,7 +526,7 @@ where
 		where
 			get_thunk_arity :: !Int -> Int // 64-bit version
 			get_thunk_arity a = code {
-				load_si32 -4
+				get_thunk_arity
 			}
 
 		get_descriptor_n_non_pointers_and_not_array :: !Int -> (!Int,!Bool)

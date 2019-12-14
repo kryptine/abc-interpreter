@@ -3792,6 +3792,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "fill3_r01b" $
 	  alias "fill_u" $
 	  alias "get_desc_arity_offset" $
+	  alias "get_thunk_arity" $
 	  alias "get_thunk_desc" $
 	  alias "instruction" $
 	  alias "load_i" $

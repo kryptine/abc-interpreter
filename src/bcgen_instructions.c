@@ -2381,6 +2381,11 @@ void code_get_node_arity(int a_offset) {
 	add_instruction_w(Cget_node_arity,-a_offset);
 }
 
+void code_get_thunk_arity(void) {
+	unsupported_instruction_warning(Cget_thunk_arity);
+	add_instruction(Cget_thunk_arity);
+}
+
 void code_get_thunk_desc(void) {
 	unsupported_instruction_warning(Cget_thunk_desc);
 	add_instruction(Cget_thunk_desc);

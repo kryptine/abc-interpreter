@@ -255,6 +255,7 @@ enum {
 	INSTRUCTION(fill_u)
 	INSTRUCTION(get_desc_arity_offset)
 	INSTRUCTION(get_node_arity)
+	INSTRUCTION(get_thunk_arity)
 	INSTRUCTION(get_thunk_desc)
 	INSTRUCTION(gtI)
 	INSTRUCTION(halt)

@@ -269,6 +269,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cfill_u:                return "nnln";
 		case Cget_desc_arity_offset: return "";
 		case Cget_node_arity:        return "n";
+		case Cget_thunk_arity:       return "";
 		case Cget_thunk_desc:        return "";
 		case CgtI:                   return "";
 		case Chalt:                  return "";
