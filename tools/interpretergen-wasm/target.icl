@@ -640,7 +640,6 @@ instance ensure_hp (Expr t) | to_ptr_offset t
 where
 	ensure_hp i t = real_ensure_hp (to_ptr_offset i) t
 
-instance ensure_hp Ex  where ensure_hp i t = real_ensure_hp i t
 instance ensure_hp Int where ensure_hp i t = real_ensure_hp (Econst I32 i) t
 
 real_ensure_hp :: !(Expr TPtrOffset) !Target -> Target
