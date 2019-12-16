@@ -26,5 +26,3 @@ RUN apt-get install -y -qq --no-install-recommends curl unzip libnspr4 &&\
 	rm -r /tmp/jsshell
 
 RUN	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform lib-stdlib
-
-RUN sed -i 's%lib/exe/linker%/usr/bin/gcc:--gc-sections%' /opt/clean/etc/IDEEnvs
