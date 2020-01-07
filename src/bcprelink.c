@@ -21,7 +21,7 @@ enum section_type {
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[669] = {
+uint64_t prelinker_preamble[690] = {
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
 	/* 10 */ 0, 0, 0, 4, _4chars2int('B','O','O','L'),
@@ -68,19 +68,50 @@ uint64_t prelinker_preamble[669] = {
 		10*8+2,0, 10*8+2,1,
 	/* 664 */
 		258, 2, _2chars2int('i','i'), 4, _4chars2int('F','I','L','E'),
-	/* 669 */
+	/* 669 power10_table (for RtoAC) */
+		0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+	/* 685 power10_table2 (for RtoAC) */
+		0,0,0,0,0,
+	/* 690 */
 };
 
 void prepare_preamble(void) {
+	/* small integers */
 	for (int i=0; i<=32; i++) {
 		prelinker_preamble[30+i*2]=25*8+2; /* INT+2 */
 		prelinker_preamble[30+i*2+1]=i;
 	}
 
+	/* static characters */
 	for (int i=0; i<256; i++) {
 		prelinker_preamble[146+i*2]=15*8+2; /* CHAR+2 */
 		prelinker_preamble[146+i*2+1]=i;
 	}
+
+	/* power10_table */
+	*(double*)&prelinker_preamble[669]=1.0e00;
+	*(double*)&prelinker_preamble[670]=1.0e01;
+	*(double*)&prelinker_preamble[671]=1.0e02;
+	*(double*)&prelinker_preamble[672]=1.0e03;
+	*(double*)&prelinker_preamble[673]=1.0e04;
+	*(double*)&prelinker_preamble[674]=1.0e05;
+	*(double*)&prelinker_preamble[675]=1.0e06;
+	*(double*)&prelinker_preamble[676]=1.0e07;
+	*(double*)&prelinker_preamble[677]=1.0e08;
+	*(double*)&prelinker_preamble[678]=1.0e09;
+	*(double*)&prelinker_preamble[679]=1.0e10;
+	*(double*)&prelinker_preamble[680]=1.0e11;
+	*(double*)&prelinker_preamble[681]=1.0e12;
+	*(double*)&prelinker_preamble[682]=1.0e13;
+	*(double*)&prelinker_preamble[683]=1.0e14;
+	*(double*)&prelinker_preamble[684]=1.0e15;
+
+	/* power10_table2 */
+	*(double*)&prelinker_preamble[685]=1.0e16;
+	*(double*)&prelinker_preamble[686]=1.0e32;
+	*(double*)&prelinker_preamble[687]=1.0e64;
+	*(double*)&prelinker_preamble[688]=1.0e128;
+	*(double*)&prelinker_preamble[689]=1.0e256;
 }
 
 void write_section(FILE *f, enum section_type type, uint32_t len, uint64_t *data) {

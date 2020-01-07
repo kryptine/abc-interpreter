@@ -132,6 +132,584 @@
 		)
 	)
 
+	(func $d-to-a (param $d f64) (param $s i32)
+		(local $i1 i32)
+		(local $i2 i32)
+		(local $n i32)
+		(local $r i32)
+		(local $d-i i64)
+		(local $d-i-1000000000 i64)
+
+		(local.set $d-i (i64.trunc_f64_s (local.get $d)))
+		(local.set $d-i-1000000000 (i64.div_u (local.get $d-i) (i64.const 1000000000)))
+		(local.set $n (i32.wrap_i64 (local.get $d-i-1000000000)))
+		(local.set $r (i32.wrap_i64 (i64.sub (local.get $d-i)
+			(i64.mul (local.get $d-i-1000000000) (i64.const 1000000000)))))
+
+		(local.set $i2 (i32.add (i32.const 1) (i32.wrap_i64
+			(i64.shr_u (i64.mul (i64.extend_i32_u (local.get $r)) (i64.const 0xabcc7712)) (i64.const 30)))))
+		(i32.store8 offset=6 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 28)) (i32.const 48))) ;; '0'
+
+		(local.set $i1 (i32.add (i32.const 1) (i32.wrap_i64
+			(i64.shr_u (i64.mul (i64.extend_i32_u (local.get $n)) (i64.const 0x0a7c5ac48)) (i64.const 30)))))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0xfffffff) (local.get $i2))))
+		(i32.store8 offset=7 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 27)) (i32.const 48)))
+
+		(i32.store8 offset=0 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 18)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x7ffffff) (local.get $i2))))
+		(i32.store8 offset=8 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 26)) (i32.const 48)))
+
+		(local.set $i1 (i32.mul (i32.const 5) (i32.and (i32.const 0x3ffff) (local.get $i1))))
+		(i32.store8 offset=1 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 17)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x3ffffff) (local.get $i2))))
+		(i32.store8 offset=9 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 25)) (i32.const 48)))
+
+		(local.set $i1 (i32.mul (i32.const 5) (i32.and (i32.const 0x1ffff) (local.get $i1))))
+		(i32.store8 offset=2 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 16)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x1ffffff) (local.get $i2))))
+		(i32.store8 offset=10 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 24)) (i32.const 48)))
+
+		(local.set $i1 (i32.mul (i32.const 5) (i32.and (i32.const 0xffff) (local.get $i1))))
+		(i32.store8 offset=3 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 15)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0xffffff) (local.get $i2))))
+		(i32.store8 offset=11 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 23)) (i32.const 48)))
+
+		(local.set $i1 (i32.mul (i32.const 5) (i32.and (i32.const 0x7fff) (local.get $i1))))
+		(i32.store8 offset=4 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 14)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x7fffff) (local.get $i2))))
+		(i32.store8 offset=12 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 22)) (i32.const 48)))
+
+		(local.set $i1 (i32.mul (i32.const 5) (i32.and (i32.const 0x3fff) (local.get $i1))))
+		(i32.store8 offset=5 (local.get $s) (i32.add (i32.shr_u (local.get $i1) (i32.const 13)) (i32.const 48)))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x3fffff) (local.get $i2))))
+		(i32.store8 offset=13 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 21)) (i32.const 48)))
+
+		(i32.store8 offset=15 (local.get $s) (i32.const 0))
+
+		(local.set $i2 (i32.mul (i32.const 5) (i32.and (i32.const 0x1fffff) (local.get $i2))))
+		(i32.store8 offset=14 (local.get $s) (i32.add (i32.shr_u (local.get $i2) (i32.const 20)) (i32.const 48)))
+	)
+
+	(func (export "convert_real_to_string") (param $d f64) (param $s i32) (result i32)
+		(local $scale-factor f64)
+		(local $exponent i32)
+		(local $n i32)
+		(local $d-i i64)
+
+		(local $exp-d i32)
+		(local $p i32)
+		(local $d-54-i i64)
+		(local $p10 f64)
+		(local $table-p i32)
+		(local $d2 f64)
+		(local $exponent-d10 i32)
+
+		(local.set $d-i (i64.reinterpret_f64 (local.get $d)))
+
+		(if
+			(f64.lt (local.get $d) (f64.const 0))
+			(then
+				(local.set $d (f64.sub (f64.const 0) (local.get $d)))
+				(i32.store8 (local.get $s) (i32.const 45)) ;; '-'
+				(local.set $s (i32.add (local.get $s) (i32.const 1)))
+			)
+		)
+
+		(if
+			(f64.eq (local.get $d) (f64.const 0))
+			(then
+				(i32.store8 (local.get $s) (i32.const 48)) ;; '0'
+				(return (i32.add (local.get $s) (i32.const 1)))
+			)
+		)
+
+		(if
+			(f64.lt (local.get $d) (f64.const 1e4))
+			(then
+				(if
+					(f64.lt (local.get $d) (f64.const 1e0))
+					(then
+						(if
+							(f64.lt (local.get $d) (f64.const 1e-4))
+							(then
+								(local.set $exp-d (i32.and (i32.wrap_i64 (i64.shr_u (local.get $d-i) (i64.const 52))) (i32.const 0x7ff)))
+								(if
+									(i32.eqz (local.get $exp-d))
+									(then
+										(local.set $d-54-i (i64.reinterpret_f64 (f64.mul (local.get $d) (f64.const 18014398509481984.0))))
+										(local.set $exp-d (i32.sub (i32.const 1077) ;; 0x3ff+54
+											(i32.and (i32.wrap_i64 (i64.shr_u (local.get $d-54-i) (i64.const 52))) (i32.const 0x7ff))))
+									)
+									(else
+										(local.set $exp-d (i32.sub (i32.const 0x3ff) (local.get $exp-d)))
+									)
+								)
+
+								(local.set $exponent (i32.wrap_i64
+									(i64.shr_u (i64.mul (i64.extend_i32_u (local.get $exp-d)) (i64.const 2711437152599295)) (i64.const 53))))
+								(local.set $p (i32.add (i32.const 14) (local.get $exponent)))
+								(local.set $exponent (i32.sub (i32.const 0) (local.get $exponent)))
+
+								(if
+									(i32.ge_s (local.get $p) (i32.const 307))
+									(then
+										(local.set $d (f64.mul (local.get $d) (f64.const 1e30)))
+										(local.set $p (i32.sub (local.get $p) (i32.const 30)))
+									)
+								)
+
+								(if
+									(i32.gt_s (local.get $p) (i32.const 0))
+									(then
+										(local.set $n (local.get $p))
+										(local.set $p10 (f64.load (i32.add (i32.const 5352) ;; power10_table
+											(i32.shl (i32.and (local.get $n) (i32.const 15)) (i32.const 3)))))
+										(local.set $n (i32.shr_u (local.get $n) (i32.const 4)))
+										(if
+											(local.get $n)
+											(then
+												(local.set $table-p (i32.const 5480)) ;; power10_table2
+												(if
+													(i32.and (local.get $n) (i32.const 1))
+													(then (local.set $p10 (f64.mul (local.get $p10) (f64.load (local.get $table-p)))))
+												)
+												(local.set $n (i32.shr_u (local.get $n) (i32.const 1)))
+												(block
+													(loop
+														(br_if 1 (i32.eqz (local.get $n)))
+														(local.set $table-p (i32.add (local.get $table-p) (i32.const 8)))
+														(if
+															(i32.and (local.get $n) (i32.const 1))
+															(then (local.set $p10 (f64.mul (local.get $p10) (f64.load (local.get $table-p)))))
+														)
+														(local.set $n (i32.shr_u (local.get $n) (i32.const 1)))
+														(br 0)
+													)
+												)
+											)
+										)
+										(local.set $scale-factor (local.get $p10))
+									)
+									(else ;; p <= 0
+										(if
+											(i32.lt_s (local.get $p) (i32.const 0))
+											(then
+												(local.set $d (f64.div (local.get $d) (f64.load (i32.add (i32.const 5352) ;; power10_table
+													(i32.shl (i32.sub (i32.const 0) (local.get $p)) (i32.const 3))))))
+											)
+										)
+										(local.set $scale-factor (f64.const 1.0))
+									)
+								)
+							)
+							(else ;; d >= 1e-4
+								(if
+									(f64.lt (local.get $d) (f64.const 1e-2))
+									(then
+										(if
+											(f64.lt (local.get $d) (f64.const 1e-3))
+											(then
+												(local.set $exponent (i32.const -4))
+												(local.set $scale-factor (f64.const 1e18))
+											)
+											(else ;; d >= 1e-3
+												(local.set $exponent (i32.const -3))
+												(local.set $scale-factor (f64.const 1e17))
+											)
+										)
+									)
+									(else ;; d >= 1e-2
+										(if
+											(f64.lt (local.get $d) (f64.const 1e-1))
+											(then
+												(local.set $exponent (i32.const -2))
+												(local.set $scale-factor (f64.const 1e16))
+											)
+											(else ;; d >= 1e-1
+												(local.set $exponent (i32.const -1))
+												(local.set $scale-factor (f64.const 1e15))
+											)
+										)
+									)
+								)
+							)
+						)
+					)
+					(else ;; d >= 1e0
+						(if
+							(f64.lt (local.get $d) (f64.const 1e2))
+							(then
+								(if
+									(f64.lt (local.get $d) (f64.const 1e1))
+									(then
+										(local.set $exponent (i32.const 0))
+										(local.set $scale-factor (f64.const 1e14))
+									)
+									(else ;; d >= 1e1
+										(local.set $exponent (i32.const 1))
+										(local.set $scale-factor (f64.const 1e13))
+									)
+								)
+							)
+							(else ;; d >= 1e2
+								(if
+									(f64.lt (local.get $d) (f64.const 1e3))
+									(then
+										(local.set $exponent (i32.const 2))
+										(local.set $scale-factor (f64.const 1e12))
+									)
+									(else ;; d >= 1e3
+										(local.set $exponent (i32.const 3))
+										(local.set $scale-factor (f64.const 1e11))
+									)
+								)
+							)
+						)
+					)
+				)
+			)
+			(else ;; d >= 1e4
+				(if
+					(f64.lt (local.get $d) (f64.const 1e8))
+					(then
+						(if
+							(f64.lt (local.get $d) (f64.const 1e6))
+							(then
+								(if
+									(f64.lt (local.get $d) (f64.const 1e5))
+									(then
+										(local.set $exponent (i32.const 4))
+										(local.set $scale-factor (f64.const 1e10))
+									)
+									(else ;; d >= 1e5
+										(local.set $exponent (i32.const 5))
+										(local.set $scale-factor (f64.const 1e9))
+									)
+								)
+							)
+							(else ;; d >= 1e6
+								(if
+									(f64.lt (local.get $d) (f64.const 1e7))
+									(then
+										(local.set $exponent (i32.const 6))
+										(local.set $scale-factor (f64.const 1e8))
+									)
+									(else ;; d >= 1e7
+										(local.set $exponent (i32.const 7))
+										(local.set $scale-factor (f64.const 1e7))
+									)
+								)
+							)
+						)
+					)
+					(else ;; d >= 1e8
+						(if
+							(f64.lt (local.get $d) (f64.const 1e12))
+							(then
+								(if
+									(f64.lt (local.get $d) (f64.const 1e10))
+									(then
+										(if
+											(f64.lt (local.get $d) (f64.const 1e9))
+											(then
+												(local.set $exponent (i32.const 8))
+												(local.set $scale-factor (f64.const 1e6))
+											)
+											(else ;; d >= 1e9
+												(local.set $exponent (i32.const 9))
+												(local.set $scale-factor (f64.const 1e5))
+											)
+										)
+									)
+									(else ;; d >= 1e10
+										(if
+											(f64.lt (local.get $d) (f64.const 1e11))
+											(then
+												(local.set $exponent (i32.const 10))
+												(local.set $scale-factor (f64.const 1e4))
+											)
+											(else ;; d >= 1e11
+												(local.set $exponent (i32.const 11))
+												(local.set $scale-factor (f64.const 1e3))
+											)
+										)
+									)
+								)
+							)
+							(else ;; d >= 1e12
+								(local.set $exp-d (i32.and (i32.wrap_i64 (i64.shr_u (local.get $d-i) (i64.const 52))) (i32.const 0x7ff)))
+
+								(if
+									(i32.eq (local.get $exp-d) (i32.const 0x7ff))
+									(then
+										(if
+											(i32.and (i32.wrap_i64 (i64.shr_u (i64.reinterpret_f64 (local.get $d)) (i64.const 53))) (i32.const 1)) ;; signbit
+											(then
+												(i32.store8 (local.get $s) (i32.const 45)) ;; '-'
+												(local.set $s (i32.add (local.get $s) (i32.const 1)))
+											)
+										)
+										(if
+											(i64.eqz (i64.and (local.get $d-i) (i64.const 0xfffffffffffff)))
+											(then
+												(i32.store8 offset=0 (local.get $s) (i32.const 105)) ;; 'i'
+												(i32.store8 offset=1 (local.get $s) (i32.const 110)) ;; 'n'
+												(i32.store8 offset=2 (local.get $s) (i32.const 102)) ;; 'f'
+											)
+											(else
+												(i32.store8 offset=0 (local.get $s) (i32.const 110)) ;; 'n'
+												(i32.store8 offset=1 (local.get $s) (i32.const  97)) ;; 'a'
+												(i32.store8 offset=2 (local.get $s) (i32.const 110)) ;; 'n'
+											)
+										)
+										(return (i32.add (local.get $s) (i32.const 3)))
+									)
+								)
+
+								(local.set $exp-d (i32.sub (local.get $exp-d) (i32.const 0x3ff)))
+
+								(local.set $exponent (i32.wrap_i64
+									(i64.shr_u (i64.mul (i64.extend_i32_u (local.get $exp-d)) (i64.const 2711437152599295)) (i64.const 53))))
+								(local.set $p (i32.sub (i32.const 14) (local.get $exponent)))
+
+								(if
+									(i32.lt_s (local.get $p) (i32.const 0))
+									(then
+										(local.set $n (i32.sub (i32.const 0) (local.get $p)))
+										(local.set $p10 (f64.load offset=5352 ;; power10_table
+											(i32.shl (i32.and (local.get $n) (i32.const 15)) (i32.const 3))))
+										(local.set $n (i32.shr_u (local.get $n) (i32.const 4)))
+										(if
+											(local.get $n)
+											(then
+												(local.set $table-p (i32.const 5480)) ;; power10_table2
+												(if
+													(i32.and (local.get $n) (i32.const 1))
+													(then (local.set $p10 (f64.mul (local.get $p10) (f64.load (local.get $table-p)))))
+												)
+												(local.set $n (i32.shr_u (local.get $n) (i32.const 1)))
+												(block
+													(loop
+														(br_if 1 (i32.eqz (local.get $n)))
+														(local.set $table-p (i32.add (local.get $table-p) (i32.const 8)))
+														(if
+															(i32.and (local.get $n) (i32.const 1))
+															(then (local.set $p10 (f64.mul (local.get $p10) (f64.load (local.get $table-p)))))
+														)
+														(local.set $n (i32.shr_u (local.get $n) (i32.const 1)))
+														(br 0)
+													)
+												)
+											)
+										)
+
+										(local.set $d2 (f64.div (local.get $d) (local.get $p10)))
+										(if
+											(f64.ge (local.get $d2) (f64.sub (f64.const 1.0e15) (f64.const 0.5)))
+											(then
+												(local.set $exponent (i32.add (local.get $exponent) (i32.const 1)))
+												(local.set $d (f64.div (local.get $d) (f64.mul (local.get $p10) (f64.const 10))))
+											)
+											(else
+												(local.set $d (local.get $d2))
+											)
+										)
+
+										(local.set $scale-factor (f64.const 1))
+									)
+									(else ;; p >= 0
+										(if
+											(i32.gt_s (local.get $p) (i32.const 0))
+											(then
+												(local.set $scale-factor (f64.load (i32.add (i32.const 5352) ;; power10_table
+													(i32.shl (local.get $p) (i32.const 3)))))
+												(if
+													(f64.ge (f64.mul (local.get $d) (local.get $scale-factor)) (f64.const 1.0e15))
+													(then
+														(local.set $scale-factor (f64.load (i32.add (i32.const 5344) ;; power10_table-1
+															(i32.shl (local.get $p) (i32.const 3)))))
+														(local.set $exponent (i32.add (local.get $exponent) (i32.const 1)))
+													)
+												)
+											)
+											(else
+												(local.set $scale-factor (f64.const 1.0))
+												(if
+													(f64.ge (local.get $d) (f64.const 1.0e15))
+													(then
+														(local.set $scale-factor (f64.const 0.1))
+														(local.set $exponent (i32.add (local.get $exponent) (i32.const 1)))
+													)
+												)
+											)
+										)
+									)
+								)
+							)
+						)
+					)
+				)
+			)
+		)
+
+		(local.set $d (f64.mul (local.get $d) (local.get $scale-factor)))
+		(if
+			(f64.lt (local.get $d) (f64.sub (f64.const 1e14) (f64.const 0.5)))
+			(then
+				(local.set $d (f64.mul (local.get $d) (f64.const 10.0)))
+				(local.set $exponent (i32.sub (local.get $exponent) (i32.const 1)))
+			)
+			(else
+				(if
+					(f64.ge (local.get $d) (f64.sub (f64.const 1e15) (f64.const 0.5)))
+					(then
+						(local.set $d (f64.div (local.get $d) (f64.const 10.0)))
+						(local.set $exponent (i32.add (local.get $exponent) (i32.const 1)))
+					)
+				)
+			)
+		)
+
+		(call $d-to-a (local.get $d) (local.get $s))
+		(local.set $s (i32.add (local.get $s) (i32.const 15)))
+
+		(if
+			(i32.or
+				(i32.gt_s (local.get $exponent) (i32.const 14))
+				(i32.lt_s (local.get $exponent) (i32.const -4)))
+			(then
+				(local.set $n (i32.const -1))
+				;; TODO: optimize this loop
+				(block
+					(loop
+						(br_if 1 (i32.lt_s (local.get $n) (i32.const -14)))
+						(i32.store8 offset=1
+							(i32.add (local.get $s) (local.get $n))
+							(i32.load8_u (i32.add (local.get $s) (local.get $n))))
+						(local.set $n (i32.sub (local.get $n) (i32.const 1)))
+						(br 0)
+					)
+				)
+				(i32.store8 (i32.sub (local.get $s) (i32.const 14)) (i32.const 46)) ;; '.'
+
+				(local.set $s (i32.add (local.get $s) (i32.const 1)))
+				(block
+					(loop
+						(br_if 1 (i32.ne (i32.load8_u (i32.sub (local.get $s) (i32.const 1))) (i32.const 48))) ;; '0'
+						(local.set $s (i32.sub (local.get $s) (i32.const 1)))
+						(br 0)
+					)
+				)
+
+				(if
+					(i32.eq (i32.load8_u (i32.sub (local.get $s) (i32.const 1))) (i32.const 46)) ;; '.'
+					(then (local.set $s (i32.sub (local.get $s) (i32.const 1))))
+				)
+
+				(i32.store8 (local.get $s) (i32.const 101)) ;; 'e'
+				(local.set $s (i32.add (local.get $s) (i32.const 1)))
+
+				(if
+					(i32.ge_s (local.get $exponent) (i32.const 0))
+					(then
+						(i32.store8 (local.get $s) (i32.const 43)) ;; '+'
+					)
+					(else
+						(i32.store8 (local.get $s) (i32.const 45)) ;; '-'
+						(local.set $exponent (i32.sub (i32.const 0) (local.get $exponent)))
+					)
+				)
+				(local.set $s (i32.add (local.get $s) (i32.const 1)))
+
+				(if
+					(i32.ge_s (local.get $exponent) (i32.const 100))
+					(then
+						(local.set $exponent-d10 (i32.div_s (local.get $exponent) (i32.const 100)))
+						(i32.store8 (local.get $s) (i32.add (i32.const 48) (local.get $exponent-d10))) ;; '0'+x
+						(local.set $s (i32.add (local.get $s) (i32.const 1)))
+						(local.set $exponent (i32.sub (local.get $exponent) (i32.mul (i32.const 100) (local.get $exponent-d10))))
+					)
+				)
+
+				(local.set $exponent-d10 (i32.div_s (local.get $exponent) (i32.const 10)))
+				(i32.store8 (local.get $s) (i32.add (i32.const 48) ;; '0'
+					(local.get $exponent-d10)))
+				(i32.store8 offset=1 (local.get $s) (i32.add (i32.const 48) ;; '0'
+					(i32.sub (local.get $exponent) (i32.mul (local.get $exponent-d10) (i32.const 10)))))
+				(local.set $s (i32.add (local.get $s) (i32.const 2)))
+			)
+			(else ;; -4 <= exponent <= 14
+				(local.set $n (i32.const -1))
+				(if
+					(i32.ge_s (local.get $exponent) (i32.const 0))
+					(then
+						;; TODO: optimize loop
+						(block
+							(loop
+								(br_if 1 (i32.lt_s (local.get $n) (i32.sub (local.get $exponent) (i32.const 14))))
+								(i32.store8 offset=1
+									(i32.add (local.get $s) (local.get $n))
+									(i32.load8_u (i32.add (local.get $s) (local.get $n))))
+								(local.set $n (i32.sub (local.get $n) (i32.const 1)))
+								(br 0)
+							)
+						)
+						(i32.store8 (i32.add (local.get $s) (i32.sub (local.get $exponent) (i32.const 14))) (i32.const 46)) ;; '.'
+						(local.set $s (i32.add (local.get $s) (i32.const 1)))
+					)
+					(else ;; exponent < 0
+						(block
+							(loop
+								(br_if 1 (i32.lt_s (local.get $n) (i32.const -15)))
+								(i32.store8 offset=1
+									(i32.add (local.get $s) (i32.sub (local.get $n) (local.get $exponent)))
+									(i32.load8_u (i32.add (local.get $s) (local.get $n))))
+								(local.set $n (i32.sub (local.get $n) (i32.const 1)))
+								(br 0)
+							)
+						)
+						(i32.store8 (i32.sub (local.get $s) (i32.const 14)) (i32.const 46)) ;; '.'
+						(i32.store8 (i32.sub (local.get $s) (i32.const 15)) (i32.const 48)) ;; '0'
+						(local.set $n (local.get $exponent))
+						(block
+							(loop
+								(br_if 1 (i32.ge_s (local.get $n) (i32.const -1)))
+								(i32.store8
+									(i32.sub (i32.add (i32.sub (local.get $s) (i32.const -13)) (local.get $n)) (local.get $exponent))
+									(i32.const 48)) ;; '0'
+								(local.set $n (i32.add (local.get $n) (i32.const 1)))
+								(br 0)
+							)
+						)
+						(local.set $s (i32.sub (i32.add (local.get $s) (i32.const 1)) (local.get $exponent)))
+					)
+				)
+
+				(block
+					(loop
+						(br_if 1 (i32.ne (i32.load8_u (i32.sub (local.get $s) (i32.const 1))) (i32.const 48))) ;; '0'
+						(local.set $s (i32.sub (local.get $s) (i32.const 1)))
+						(br 0)
+					)
+				)
+
+				(if
+					(i32.eq (i32.load8_u (i32.sub (local.get $s) (i32.const 1))) (i32.const 46)) ;; '.'
+					(then (local.set $s (i32.sub (local.get $s) (i32.const 1))))
+				)
+			)
+		)
+
+		(return (local.get $s))
+	)
+
 	(func (export "setup_gc") (param i32 i32 i32 i32)
 		(global.set $start-heap (local.get 0))
 		(global.set $half-heap (i32.add (local.get 0) (local.get 1)))
