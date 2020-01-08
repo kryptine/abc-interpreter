@@ -586,7 +586,6 @@
 				(i32.lt_s (local.get $exponent) (i32.const -4)))
 			(then
 				(local.set $n (i32.const -1))
-				;; TODO: optimize this loop
 				(block
 					(loop
 						(br_if 1 (i32.lt_s (local.get $n) (i32.const -14)))
@@ -651,9 +650,10 @@
 					(i32.ge_s (local.get $exponent) (i32.const 0))
 					(then
 						;; TODO: optimize loop
+						(local.set $exponent (i32.sub (local.get $exponent) (i32.const 14)))
 						(block
 							(loop
-								(br_if 1 (i32.lt_s (local.get $n) (i32.sub (local.get $exponent) (i32.const 14))))
+								(br_if 1 (i32.lt_s (local.get $n) (local.get $exponent)))
 								(i32.store8 offset=1
 									(i32.add (local.get $s) (local.get $n))
 									(i32.load8_u (i32.add (local.get $s) (local.get $n))))
@@ -661,7 +661,8 @@
 								(br 0)
 							)
 						)
-						(i32.store8 (i32.add (local.get $s) (i32.sub (local.get $exponent) (i32.const 14))) (i32.const 46)) ;; '.'
+						(i32.store8 (i32.add (local.get $s) (local.get $exponent)) (i32.const 46)) ;; '.'
+						(local.set $exponent (i32.add (local.get $exponent) (i32.const 14)))
 						(local.set $s (i32.add (local.get $s) (i32.const 1)))
 					)
 					(else ;; exponent < 0
