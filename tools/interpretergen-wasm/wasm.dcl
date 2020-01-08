@@ -18,7 +18,7 @@ instance toString Type
 type_width :: !Type -> Int
 type_width_shift :: !Type -> Int
 
-class wasm_literal a
+class wasm_literal a | TC a
 where
 	wasm_repr :: !a -> String
 	is_zero :: !a -> Bool

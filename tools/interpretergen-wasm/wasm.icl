@@ -275,11 +275,11 @@ optimize set e = case e of
 
 	Econst _ _ -> e
 
-	Eadd t a b -> Eadd t (optimize set a) (optimize set b)
-	Esub t a b -> Esub t (optimize set a) (optimize set b)
-	Emul t a b -> Emul t (optimize set a) (optimize set b)
-	Ediv t signed a b -> Ediv t signed (optimize set a) (optimize set b)
-	Erem t signed a b -> Erem t signed (optimize set a) (optimize set b)
+	Eadd t a b -> opt_const Eadd (+) t a b
+	Esub t a b -> opt_const Esub (-) t a b
+	Emul t a b -> opt_const Emul (*) t a b
+	Ediv t signed a b -> opt_const_signed Ediv (/) t signed a b
+	Erem t signed a b -> opt_const_signed Erem (rem) t signed a b
 
 	Eeq t a b -> case oa of
 		Econst _ v | is_zero v -> Eeqz t ob
@@ -296,11 +296,11 @@ optimize set e = case e of
 	Ege t signed a b -> Ege t signed (optimize set a) (optimize set b)
 	Eeqz t e -> Eeqz t (optimize set e)
 
-	Eand t a b -> Eand t (optimize set a) (optimize set b)
-	Eor  t a b -> Eor  t (optimize set a) (optimize set b)
-	Exor t a b -> Exor t (optimize set a) (optimize set b)
-	Eshl t a b -> Eshl t (optimize set a) (optimize set b)
-	Eshr t signed a b -> Eshr t signed (optimize set a) (optimize set b)
+	Eand t a b -> opt_const Eand (+)      t a b
+	Eor  t a b -> opt_const Eor  (bitor)  t a b
+	Exor t a b -> opt_const Exor (bitxor) t a b
+	Eshl t a b -> opt_const Eshl (<<)     t a b
+	Eshr t signed a b -> opt_const_signed Eshr (>>) t signed a b
 
 	Eabs   t e -> Eabs   t (optimize set e)
 	Efloor t e -> Efloor t (optimize set e)
@@ -325,3 +325,17 @@ optimize set e = case e of
 
 	Ivar _ -> e
 	Iref t1 t2 o a -> Eload t1 t2 DontCare o (optimize set a)
+where
+	opt_const :: !(Type Ex Ex -> Ex) !(Int Int -> Int) !Type !Ex !Ex -> Ex
+	opt_const wasmop intop type a b = case (optimize set a, optimize set b) of
+		(Econst _ a, Econst _ b) -> case (dynamic a, dynamic b) of
+			(a :: Int, b :: Int) -> Econst type (intop a b)
+			_                    -> wasmop type (Econst type a) (Econst type b)
+		(a, b)                   -> wasmop type a b
+
+	opt_const_signed :: !(Type Signedness Ex Ex -> Ex) !(Int Int -> Int) !Type !Signedness !Ex !Ex -> Ex
+	opt_const_signed wasmop intop type signed a b = case (optimize set a, optimize set b) of
+		(Econst _ a, Econst _ b) -> case (dynamic a, dynamic b) of
+			(a :: Int, b :: Int) -> Econst type (intop a b)
+			_                    -> wasmop type signed (Econst type a) (Econst type b)
+		(a, b)                   -> wasmop type signed a b

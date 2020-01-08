@@ -3,7 +3,7 @@ CFLAGS:=-Wall -Wextra -Werror -pedantic -lelf
 
 INTERPRETERGEN:=$(addprefix interpretergen,c wasm)
 CLM:=clm
-CLMFLAGS:=-h 10m -IL ArgEnv -nr -nt
+CLMFLAGS:=-IL ArgEnv -IL Dynamics -dynamics -h 10m -nr -nt
 
 all: $(INTERPRETERGEN)
 
