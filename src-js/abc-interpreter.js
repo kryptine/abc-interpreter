@@ -814,8 +814,9 @@ ABCInterpreter.interpreter_imports={
 						var js=document.createElement('script');
 						js.type='text/javascript';
 						js.async=false;
+						let current_ABC=ABC;
 						if (callback.length>0)
-							js.onload=Function(callback+'();');
+							js.onload=() => { Function('ABC',callback+'();')(current_ABC); };
 						document.head.appendChild(js);
 						js.src=url;
 						break;
