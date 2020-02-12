@@ -175,7 +175,10 @@ class ABCInterpreter {
 				const string=me.get_clean_string(me.memory_array[str_ptr/4+2], false);
 				if (ABC_DEBUG)
 					console.log('result:',string);
+				let old_ABC=ABC;
+				ABC=me;
 				result=eval('('+string+')');
+				ABC=old_ABC;
 			}
 
 			if (typeof result!='undefined')
