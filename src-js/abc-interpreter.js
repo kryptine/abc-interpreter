@@ -360,7 +360,7 @@ class ABCInterpreter {
 
 	share_clean_value (ref, component) {
 		if (typeof component.shared_clean_values=='undefined')
-			throw 'could not attach shared Clean value to an iTasks component';
+			throw 'could not attach shared Clean value to a JavaScript component';
 		if (component.shared_clean_values==null)
 			component.shared_clean_values=new Set();
 
@@ -742,7 +742,7 @@ ABCInterpreter.interpreter_imports={
 				switch (arg) {
 					case 0: /* evaluation finished */
 						return 0;
-					case 1: /* iTasks.UI.JS.Interface: set_js */
+					case 1: /* ABC.Interpreter.JavaScript: set_js */
 						var v=me.get_clean_string(me.memory_array[asp/4], true);
 						var x=me.get_clean_string(me.memory_array[asp/4-2], true);
 						if (ABC_DEBUG)
@@ -757,13 +757,13 @@ ABCInterpreter.interpreter_imports={
 						} catch (e) {}
 						Function(v+'='+x)();
 						break;
-					case 2: /* iTasks.UI.JS.Interface: eval_js */
+					case 2: /* ABC.Interpreter.JavaScript: eval_js */
 						var string=me.get_clean_string(me.memory_array[asp/4], true);
 						if (ABC_DEBUG)
 							console.log('eval',string);
 						Function(string)();
 						break;
-					case 3: /* iTasks.UI.JS.Interface: eval_js_with_return_value */
+					case 3: /* ABC.Interpreter.JavaScript: eval_js_with_return_value */
 						var string=me.get_clean_string(me.memory_array[asp/4], true);
 						if (ABC_DEBUG)
 							console.log('eval',string);
@@ -772,20 +772,20 @@ ABCInterpreter.interpreter_imports={
 						me.interpreter.instance.exports.set_hp(copied.hp);
 						me.interpreter.instance.exports.set_hp_free(copied.hp_free);
 						break;
-					case 4: /* iTasks.UI.JS.Interface: share */
+					case 4: /* ABC.Interpreter.JavaScript: share */
 						var attach_to=me.memory_array[bsp/4];
 						var index=me.share_clean_value(me.memory_array[asp/4],me.js[attach_to]);
 						me.memory_array[bsp/4]=index;
 						break;
-					case 5: /* iTasks.UI.JS.Interface: fetch */
+					case 5: /* ABC.Interpreter.JavaScript: fetch */
 						var index=me.memory_array[bsp/4];
 						me.memory_array[asp/4]=me.shared_clean_values[index].ref;
 						break;
-					case 6: /* iTasks.UI.JS.Interface: deserialize */
+					case 6: /* ABC.Interpreter.JavaScript: deserialize */
 						var hp_ptr=me.memory_array[asp/4];
 						me.memory_array[asp/4]=me.deserialize_from_unique_string(hp_ptr);
 						break;
-					case 7: /* iTasks.UI.JS.Interface: initialize_client in wrapInitUIFunction */
+					case 7: /* ABC.Interpreter.JavaScript: initialize_client in wrapInitUIFunction */
 						var array=me.memory_array[asp/4]+24;
 						me.addresses.JSInt=      me.memory_array[me.memory_array[array/4]/4];
 						me.addresses.JSBool=     me.memory_array[me.memory_array[array/4+2]/4];
@@ -799,7 +799,7 @@ ABCInterpreter.interpreter_imports={
 						me.util.instance.exports.set_js_ref_constructor(me.addresses.JSRef);
 						me.initialized=true;
 						break;
-					case 10: /* iTasks.UI.JS.Interface: add CSS */
+					case 10: /* ABC.Interpreter.JavaScript: add CSS */
 						var url=me.get_clean_string(me.memory_array[asp/4], false);
 						var css=document.createElement('link');
 						css.rel='stylesheet';
@@ -808,7 +808,7 @@ ABCInterpreter.interpreter_imports={
 						css.href=url;
 						document.head.appendChild(css);
 						break;
-					case 11: /* iTasks.UI.JS.Interface: add JS */
+					case 11: /* ABC.Interpreter.JavaScript: add JS */
 						var url=me.get_clean_string(me.memory_array[asp/4], false);
 						var callback=me.get_clean_string(me.memory_array[asp/4-2], true);
 						var js=document.createElement('script');
