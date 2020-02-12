@@ -6,6 +6,8 @@ import StdGeneric
 import StdOverloadedList
 
 import Data.Func
+import qualified Data.Map
+from Data.Map import :: Map
 import Data.Maybe
 import Text.Encodings.Base64
 import Text.GenJSON
@@ -416,6 +418,14 @@ where
 	collect_elems (JSTempField k v) = [!{key=k,val=v}!]
 	collect_elems (JSTempPair a b)  = collect_elems a ++| collect_elems b
 
+gToJS{|JSRecord|} (JSRecord vs) = JSObject {{key=k,val=v} \\ (k,v) <- 'Data.Map'.toList vs}
+
+(:>) infix 1 :: !String !a -> (String, JSVal) | gToJS{|*|} a
+(:>) key val = (key, toJS val)
+
+jsRecord :: ![(String, JSVal)] -> JSRecord
+jsRecord vs = JSRecord ('Data.Map'.fromList vs)
+
 instance .# Int
 where
 	.# arr i = case arr of
@@ -486,6 +496,7 @@ where
 		Just v  -> {toJS v}
 		Nothing -> {JSNull}
 instance toJSArgs () where toJSArgs _ = {}
+instance toJSArgs JSRecord where toJSArgs r = {toJS r}
 
 instance toJSArgs (a,b) | gToJS{|*|} a & gToJS{|*|} b
 where toJSArgs (a,b) = {toJS a, toJS b}

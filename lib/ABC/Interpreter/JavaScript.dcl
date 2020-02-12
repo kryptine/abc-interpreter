@@ -18,6 +18,7 @@ definition module ABC.Interpreter.JavaScript
 import StdGeneric
 from StdMaybe import :: Maybe
 from StdOverloaded import class toString
+from Data.Map import :: Map
 from Text.GenJSON import :: JSONNode
 from ABC.Interpreter import :: PrelinkedInterpretationEnvironment
 
@@ -39,6 +40,15 @@ derive gToJS Int, Bool, String, Real
 derive gToJS JSVal, Maybe, [], (,), (,,), (,,,), (,,,,), JSONNode
 derive gToJS PAIR, FIELD of {gfd_name}, RECORD
 toJS x :== gToJS{|*|} x
+
+:: JSRecord =: JSRecord (Map String JSVal)
+derive gToJS JSRecord
+
+//* Shorthand useful to build the argument for `jsRecord`.
+(:>) infix 1 :: !String !a -> (String, JSVal) | gToJS{|*|} a
+
+//* Shorthand to create a `JSRecord` (use `:>` for the elements).
+jsRecord :: ![(String, JSVal)] -> JSRecord
 
 /**
  * Store a Clean value in the JavaScript heap. The value must be associated to
@@ -142,7 +152,7 @@ instance .# Int // array access
  * - `()` relates to no arguments; tuples relates to lists of arguments
  */
 class toJSArgs a :: !a -> {!JSVal}
-instance toJSArgs Int, Bool, String, JSVal, [a] | gToJS{|*|} a, (Maybe a) | gToJS{|*|} a, ()
+instance toJSArgs Int, Bool, String, JSVal, [a] | gToJS{|*|} a, (Maybe a) | gToJS{|*|} a, (), JSRecord
 instance toJSArgs (a,b) | gToJS{|*|} a & gToJS{|*|} b
 instance toJSArgs (a,b,c) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c
 instance toJSArgs (a,b,c,d) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c & gToJS{|*|} d
