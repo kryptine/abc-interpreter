@@ -24,6 +24,7 @@ class SharedCleanValue {
 	}
 }
 
+var ABC=null; /* global reference to currently running interpreter, to be able to refer to it from Clean */
 class ABCInterpreter {
 	// Just to setup properties. New instances should be created with the static
 	// method instantiate() below.
@@ -57,6 +58,7 @@ class ABCInterpreter {
 			JSRef:       0,
 			JSCleanRef:  0,
 		};
+		this.initialized=false;
 
 		this.shared_clean_values=[]; // pointers to the Clean heap
 		this.empty_shared_clean_values=[]; // empty indexes in the above array
@@ -161,7 +163,23 @@ class ABCInterpreter {
 			var args=[];
 			for (var i=0; i<arguments.length; i++)
 				args[i]=arguments[i];
-			return me.interpret(new SharedCleanValue(index), args);
+			me.interpret(new SharedCleanValue(index), args);
+
+			var result=undefined;
+			const new_asp=me.interpreter.instance.exports.get_asp();
+			const hp_ptr=me.memory_array[new_asp/4];
+			if (me.memory_array[hp_ptr/4]!=25*8+2) { // INT, i.e. JSWorld
+				// Assume we have received a tuple with the first element as the result
+				// This is the case with jsWrapFunWithResult
+				const str_ptr=me.memory_array[hp_ptr/4+2];
+				const string=me.get_clean_string(me.memory_array[str_ptr/4+2], false);
+				if (ABC_DEBUG)
+					console.log('result:',string);
+				result=eval('('+string+')');
+			}
+
+			if (typeof result!='undefined')
+				return result;
 		};
 		f.shared_clean_value_index=index;
 		return f;
@@ -363,7 +381,7 @@ class ABCInterpreter {
 
 		return i;
 	}
-	clear_shared_clean_value (ref, update_component=true) {
+	clear_shared_clean_value (ref, update_component=true /* Clean library assumes true! */) {
 		const component=this.shared_clean_values[ref].component;
 		if (update_component && typeof component.shared_clean_values!='undefined')
 			component.shared_clean_values.delete(ref);
@@ -443,6 +461,11 @@ class ABCInterpreter {
 		Object.assign(opts,args);
 
 		const me=new ABCInterpreter();
+
+		if ('with_js_ffi' in args && args.with_js_ffi){
+			Object.assign(opts.util_imports,ABCInterpreter.util_imports.js_references(me));
+			Object.assign(opts.interpreter_imports,ABCInterpreter.interpreter_imports.js_ffi(me));
+		}
 
 		me.stack_size=opts.stack_size*2;
 		me.heap_size=opts.heap_size;
@@ -671,9 +694,13 @@ class ABCInterpreter {
 				me.interpreter.instance.exports.set_hp(hp);
 				me.interpreter.instance.exports.set_hp_free(hp_free);
 
+				const old_ABC=ABC;
 				try {
+					ABC=me;
 					me.interpreter.instance.exports.interpret();
+					ABC=old_ABC;
 				} catch (e) {
+					ABC=old_ABC;
 					if (e.constructor.name!='ABCError' &&
 							(e.fileName!='abc-interpreter.js' || e.lineNumber>700))
 						throw e;
@@ -692,6 +719,122 @@ class ABCInterpreter {
 		});
 	}
 }
+
+ABCInterpreter.util_imports={
+	js_references: me => ({
+		has_host_reference: function (index) {
+			if (index>=me.shared_clean_values.length)
+				return 0;
+			if (me.shared_clean_values[index]==null)
+				return -1;
+			return me.shared_clean_values[index].ref;
+		},
+		update_host_reference: function (index, new_location) {
+			me.shared_clean_values[index].ref=new_location;
+		},
+	}),
+};
+ABCInterpreter.interpreter_imports={
+	js_ffi: me => ({
+		handle_illegal_instr: function (pc, instr, asp, bsp, csp, hp, hp_free) {
+			if (ABCInterpreter.instructions[instr]=='instruction') {
+				const arg=me.memory_array[(pc+8)/4];
+				switch (arg) {
+					case 0: /* evaluation finished */
+						return 0;
+					case 1: /* iTasks.UI.JS.Interface: set_js */
+						var v=me.get_clean_string(me.memory_array[asp/4], true);
+						var x=me.get_clean_string(me.memory_array[asp/4-2], true);
+						if (ABC_DEBUG)
+							console.log(v,'.=',x);
+						try {
+							var ref=eval(v+'.shared_clean_value_index');
+							if (typeof ref != 'undefined') {
+								if (ABC_DEBUG)
+									console.log('removing old reference to Clean',ref);
+								me.clear_shared_clean_value(ref);
+							}
+						} catch (e) {}
+						Function(v+'='+x)();
+						break;
+					case 2: /* iTasks.UI.JS.Interface: eval_js */
+						var string=me.get_clean_string(me.memory_array[asp/4], true);
+						if (ABC_DEBUG)
+							console.log('eval',string);
+						Function(string)();
+						break;
+					case 3: /* iTasks.UI.JS.Interface: eval_js_with_return_value */
+						var string=me.get_clean_string(me.memory_array[asp/4], true);
+						if (ABC_DEBUG)
+							console.log('eval',string);
+						var result=eval('('+string+')'); // the parentheses are needed for {}, for instance
+						var copied=me.copy_js_to_clean(result, asp);
+						me.interpreter.instance.exports.set_hp(copied.hp);
+						me.interpreter.instance.exports.set_hp_free(copied.hp_free);
+						break;
+					case 4: /* iTasks.UI.JS.Interface: share */
+						var attach_to=me.memory_array[bsp/4];
+						var index=me.share_clean_value(me.memory_array[asp/4],me.js[attach_to]);
+						me.memory_array[bsp/4]=index;
+						break;
+					case 5: /* iTasks.UI.JS.Interface: fetch */
+						var index=me.memory_array[bsp/4];
+						me.memory_array[asp/4]=me.shared_clean_values[index].ref;
+						break;
+					case 6: /* iTasks.UI.JS.Interface: deserialize */
+						var hp_ptr=me.memory_array[asp/4];
+						me.memory_array[asp/4]=me.deserialize_from_unique_string(hp_ptr);
+						break;
+					case 7: /* iTasks.UI.JS.Interface: initialize_client in wrapInitUIFunction */
+						var array=me.memory_array[asp/4]+24;
+						me.addresses.JSInt=      me.memory_array[me.memory_array[array/4]/4];
+						me.addresses.JSBool=     me.memory_array[me.memory_array[array/4+2]/4];
+						me.addresses.JSString=   me.memory_array[me.memory_array[array/4+4]/4];
+						me.addresses.JSReal=     me.memory_array[me.memory_array[array/4+6]/4];
+						me.addresses.JSNull=     me.memory_array[me.memory_array[array/4+8]/4];
+						me.addresses.JSUndefined=me.memory_array[me.memory_array[array/4+10]/4];
+						me.addresses.JSArray=    me.memory_array[me.memory_array[array/4+12]/4];
+						me.addresses.JSRef=      me.memory_array[me.memory_array[array/4+14]/4];
+						me.addresses.JSCleanRef= me.memory_array[me.memory_array[array/4+16]/4];
+						me.util.instance.exports.set_js_ref_constructor(me.addresses.JSRef);
+						me.initialized=true;
+						break;
+					case 10: /* iTasks.UI.JS.Interface: add CSS */
+						var url=me.get_clean_string(me.memory_array[asp/4], false);
+						var css=document.createElement('link');
+						css.rel='stylesheet';
+						css.type='text/css';
+						css.async=true;
+						css.href=url;
+						document.head.appendChild(css);
+						break;
+					case 11: /* iTasks.UI.JS.Interface: add JS */
+						var url=me.get_clean_string(me.memory_array[asp/4], false);
+						var callback=me.get_clean_string(me.memory_array[asp/4-2], true);
+						var js=document.createElement('script');
+						js.type='text/javascript';
+						js.async=false;
+						if (callback.length>0)
+							js.onload=Function(callback+'();');
+						document.head.appendChild(js);
+						js.src=url;
+						break;
+					default:
+						throw new ABCError('unknown instruction',arg);
+				}
+				return pc+16;
+			}
+			return 0;
+		},
+		illegal_instr: function (addr, instr) {
+			me.empty_log_buffer();
+			if (ABCInterpreter.instructions[instr]=='instruction')
+				/* `instruction 0` ends the interpretation, so this is no error */
+				return;
+			throw new ABCError('illegal instruction',instr);
+		},
+	}),
+};
 
 if (typeof module!='undefined') module.exports={
 	ABC_DEBUG: ABC_DEBUG,
