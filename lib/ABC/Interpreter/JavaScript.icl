@@ -32,7 +32,7 @@ import ABC.Interpreter
 	| JSArray !{!JSVal}
 
 	| JSCall !JSVal !{!JSVal}
-	| JSNew !String !{!JSVal}
+	| JSNew !JSVal !{!JSVal}
 
 	| JSSel !JSVal !JSVal // x[y]
 	| JSSelPath !JSVal !String // x.path1.path2...pathn
@@ -133,7 +133,7 @@ where
 			-> (dest,i+1)
 		JSNew cons args
 			# dest & [i]='n',[i+1]='e',[i+2]='w',[i+3]=' '
-			# (dest,i) = copy_chars cons dest (i+4)
+			# (dest,i) = copy cons dest (i+4)
 			# dest & [i]='('
 			| size args==0
 				# dest & [i+1]=')'
@@ -252,8 +252,8 @@ where
 			-> count_array args (size args-1) (len fun (size args+1+l))
 		JSNew cons args
 		| size args==0
-			-> size cons+6+l
-			-> count_array args (size args-1) (size cons+5+size args+l)
+			-> len cons (6+l)
+			-> count_array args (size args-1) (len cons (5+size args+l))
 
 		JSSel obj attr -> len obj (len attr (l+2))
 		JSSelPath obj path -> len obj (l+1+size path)
@@ -527,12 +527,15 @@ where
 where
 	call = JSCall f (toJSArgs args)
 
-jsNew :: !String !a !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs a
-jsNew cons args w = case eval_js_with_return_value (js_val_to_string new) of
-	JSUnused -> abort_with_node new
-	result   -> (result, w)
+instance jsNew String where jsNew cons args w = jsNew (JSString cons) args w
+
+instance jsNew JSVal
 where
-	new = JSNew cons (toJSArgs args)
+	jsNew cons args w = case eval_js_with_return_value (js_val_to_string new) of
+		JSUnused -> abort_with_node new
+		result   -> (result, w)
+	where
+		new = JSNew cons (toJSArgs args)
 
 jsDelete :: !JSVal !*JSWorld -> *JSWorld
 jsDelete v w = case eval_js (js_val_to_string (JSDelete v)) of

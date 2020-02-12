@@ -175,7 +175,9 @@ instance toJSArgs (a,b,c,d,e,f) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c & g
  * @param The constructor arguments.
  * @result The new object.
  */
-jsNew :: !String !a !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs a
+class jsNew c :: !c !args !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs args
+instance jsNew String
+instance jsNew JSVal
 
 /**
  * Create an empty JavaScript object (`{}`).
