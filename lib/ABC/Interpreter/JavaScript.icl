@@ -527,7 +527,7 @@ where
 where
 	call = JSCall f (toJSArgs args)
 
-instance jsNew String where jsNew cons args w = jsNew (JSString cons) args w
+instance jsNew String where jsNew cons args w = jsNew (JSVar cons) args w
 
 instance jsNew JSVal
 where
