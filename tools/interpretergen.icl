@@ -2843,7 +2843,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 			_ -> grow_a (as-1)) :.
 		advance_ptr elems as :.
 		advance_ptr Pc 2 :.
-		grow_b n_b :.
+		grow_b (n_b - lit_hword 1) :.
 		for [0..4] (\i -> B @ i .= elems @ i) :.
 		unrolled_loop [6..33-as] (\i -> n_b <. lit_hword i) (\i -> B @ (i-1) .= elems @ (i-1))
 	\\ as <- [0,1,2]
@@ -2853,13 +2853,13 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TPtrOffset (to_ptr_offset (Pc @ 2)) \n_b ->
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
 		advance_ptr elems ((n_a + n_b) * to_ptr_offset (B @ 0) + lit_hword 3) :.
-		grow_a n_a :.
+		grow_a (n_a - lit_hword 1) :.
 		A @ 0 .= elems @ 0 :.
 		A @ -1 .= elems @ 1 :.
 		unrolled_loop [3..30] (\i -> n_a <. lit_hword i) (\i -> A @ (1-i) .= elems @ (i-1)) :.
 		advance_ptr elems n_a :.
-		advance_ptr Pc 4 :.
-		grow_b n_b :.
+		advance_ptr Pc 3 :.
+		grow_b (n_b - lit_hword 1) :.
 		unrolled_loop [1..30] (\i -> n_b <. lit_hword i) (\i -> B @ (i-1) .= elems @ (i-1))
 	, instr "shiftlI" (Just 0) $
 		B @ 1 .= B @ 0 <<. B @ 1 :.
