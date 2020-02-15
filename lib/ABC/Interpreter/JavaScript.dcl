@@ -246,6 +246,20 @@ jsSerializeGraph :: a !PrelinkedInterpretationEnvironment -> String
 jsDeserializeGraph :: !*String !*JSWorld -> *(!.a, !*JSWorld)
 
 /**
+ * Serialize a graph on the client side. The resulting value is a `String`, but
+ * is by default not copied to the Clean world (as it is usually not needed
+ * there). To get the string on the Clean side one has to use `jsForceFetch`:
+ *
+ * ```
+ * # (ok,s) = jsSerializeOnClient graph
+ * | not ok = abort "jsSerializeOnClient\n"
+ * # (s,w) = jsForceFetch s w
+ * # s = jsValToString` "" s
+ * ```
+ */
+jsSerializeOnClient :: !a -> (!Bool,!JSVal)
+
+/**
  * Load external CSS stylesheet by its URL.
  * @param The URL.
  */

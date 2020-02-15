@@ -577,7 +577,7 @@ where
 		// of the constructors which it needs to know.
 		init :: !{!JSVal} -> Bool
 		init _ = code {
-			instruction 7
+			instruction 8
 			pop_a 1
 			pushB FALSE
 		}
@@ -613,6 +613,12 @@ where
 	deserialize _ = code {
 		instruction 6
 	}
+
+jsSerializeOnClient :: !a -> (!Bool,!JSVal)
+jsSerializeOnClient graph = code {
+	instruction 7
+	pushB TRUE
+}
 
 addCSSFromUrl :: !String !*JSWorld -> *JSWorld
 addCSSFromUrl css w = case add_css css of

@@ -144,6 +144,32 @@ class ABCInterpreter {
 		return this._deserialize(unused_semispace, graph.length/2);
 	}
 
+	copy_to_string (node) {
+		const start=this.util.instance.exports.copy_to_string(node, this.code_offset*8);
+		this.util.instance.exports.remove_forwarding_pointers_from_graph(node, this.code_offset*8);
+		/* -8 because get_clean_string expects a _STRING_ constructor;
+		 * false because we are in the unused semispace so we don't need to clean up */
+		const string=this.get_clean_string(start-8, false);
+		/* base64 encode */
+		if (typeof btoa!='undefined') /* browsers */
+			return btoa(string);
+		else if (typeof Buffer!='undefined') /* node.js */
+			return Buffer.from(string).toString('base64');
+		else {
+			var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+			var block;
+			var enc='';
+			for (var idx=0;
+					string.charAt(idx|0) || (chars='=',idx%1);
+					enc+=chars.charAt(63 & block>>8 - idx%1 * 8)
+			) {
+				var char_code=string.charCodeAt(idx+=3 / 4);
+				block=block<<8 | char_code;
+			}
+			return enc;
+		}
+	}
+
 	share_js_value (obj) {
 		if (this.empty_js_values.length > 0) {
 			const i=this.empty_js_values.pop();
@@ -788,7 +814,18 @@ ABCInterpreter.interpreter_imports={
 						var hp_ptr=me.memory_array[asp/4];
 						me.memory_array[asp/4]=me.deserialize_from_unique_string(hp_ptr);
 						break;
-					case 7: /* ABC.Interpreter.JavaScript: initialize_client in wrapInitUIFunction */
+					case 7: /* ABC.Interpreter.Javascript: jsSerializeOnClient */
+						me.require_hp(2);
+						var string=me.copy_to_string(me.memory_array[asp/4]);
+						me.memory_array[hp/4]=me.addresses.JSRef;
+						me.memory_array[hp/4+1]=0;
+						me.memory_array[hp/4+2]=me.share_js_value(string);
+						me.memory_array[hp/4+3]=0;
+						me.memory_array[asp/4]=hp;
+						me.interpreter.instance.exports.set_hp(hp+16);
+						me.interpreter.instance.exports.set_hp_free(hp_free-2);
+						break;
+					case 8: /* ABC.Interpreter.JavaScript: initialize_client in wrapInitUIFunction */
 						var array=me.memory_array[asp/4]+24;
 						me.addresses.JSInt=      me.memory_array[me.memory_array[array/4]/4];
 						me.addresses.JSBool=     me.memory_array[me.memory_array[array/4+2]/4];
