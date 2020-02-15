@@ -136,6 +136,18 @@ instance .# Int // array access
 (.?) infixl 1 :: !JSVal !*JSWorld -> *(!JSVal, !*JSWorld)
 
 /**
+ * Like `.?`, but forces a round-trip to JavaScript. When `.?` sees that a
+ * `JSVal` in a normal environment would not trigger a computation, it does not
+ * perform a round-trip but evaluates the expression itself. However, if core
+ * JavaScript features have been overriden, this may fail. In these cases,
+ * `jsForceFetch` may be used to force a round-trip.
+ *
+ * Importantly `jsForceFetch` is also needed to copy the result of
+ * `jsSerializeOnClient` to the Clean world (as a string).
+ */
+jsForceFetch :: !JSVal !*JSWorld -> *(!JSVal, !*JSWorld)
+
+/**
  * Set a JavaScript value to another value.
  * @param The value to set.
  * @param The new value.
