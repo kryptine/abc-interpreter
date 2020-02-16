@@ -147,27 +147,26 @@ class ABCInterpreter {
 	copy_to_string (node) {
 		const start=this.util.instance.exports.copy_to_string(node, this.code_offset*8);
 		this.util.instance.exports.remove_forwarding_pointers_from_graph(node, this.code_offset*8);
-		/* -8 because get_clean_string expects a _STRING_ constructor;
-		 * false because we are in the unused semispace so we don't need to clean up */
-		const string=this.get_clean_string(start-8, false);
-		/* base64 encode */
-		if (typeof btoa!='undefined') /* browsers */
-			return btoa(string);
-		else if (typeof Buffer!='undefined') /* node.js */
-			return Buffer.from(string).toString('base64');
-		else {
-			var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-			var block;
-			var enc='';
-			for (var idx=0;
-					string.charAt(idx|0) || (chars='=',idx%1);
-					enc+=chars.charAt(63 & block>>8 - idx%1 * 8)
-			) {
-				var char_code=string.charCodeAt(idx+=3 / 4);
-				block=block<<8 | char_code;
-			}
-			return enc;
+		const arr=new Uint8Array(this.memory.buffer, start+8, this.memory_array[start/4]);
+
+		/* base64 encode: not all JS runtimes (e.g. SpiderMonkey) have a built-in */
+		var b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+		var enc='';
+
+		for (var i=0; i<arr.length; i+=3) {
+			const bitmap=(arr[i] << 16) | (arr[i+1] << 8) | arr[i+2];
+			enc+=
+				b64.charAt(bitmap >> 18 & 63) +
+				b64.charAt(bitmap >> 12 & 63) +
+				b64.charAt(bitmap >>  6 & 63) +
+				b64.charAt(bitmap       & 63);
 		}
+
+		const pad=arr.length % 3;
+		if (pad)
+			enc=enc.slice(0,pad-3) + '==='.substring(pad);
+
+		return enc;
 	}
 
 	share_js_value (obj) {
