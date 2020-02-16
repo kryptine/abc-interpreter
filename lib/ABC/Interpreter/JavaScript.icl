@@ -620,6 +620,9 @@ jsSerializeOnClient graph = code {
 	pushB TRUE
 }
 
+jsDeserializeFromClient :: !String !PrelinkedInterpretationEnvironment -> (.a, !Int)
+jsDeserializeFromClient s pie = deserialize_from_prelinked_interpreter (base64Decode s) pie
+
 addCSSFromUrl :: !String !*JSWorld -> *JSWorld
 addCSSFromUrl css w = case add_css css of
 	True -> w

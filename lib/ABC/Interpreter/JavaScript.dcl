@@ -260,6 +260,16 @@ jsDeserializeGraph :: !*String !*JSWorld -> *(!.a, !*JSWorld)
 jsSerializeOnClient :: !a -> (!Bool,!JSVal)
 
 /**
+ * Deserialize a graph serialized with `jsSerializeOnClient`. This function
+ * should be called on the server.
+ * @param The serialized graph.
+ * @param The environment (see `ABC.Interpreter`).
+ * @result The deserialized value.
+ * @result Always `0`.
+ */
+jsDeserializeFromClient :: !String !PrelinkedInterpretationEnvironment -> (.a, !Int)
+
+/**
  * Load external CSS stylesheet by its URL.
  * @param The URL.
  */

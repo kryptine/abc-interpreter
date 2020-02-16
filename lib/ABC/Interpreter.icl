@@ -10,6 +10,7 @@ import StdMaybe
 import StdMisc
 import StdOrdList
 
+import graph_copy
 import graph_copy_with_names
 import symbols_in_program
 
@@ -126,8 +127,12 @@ where
 	getSymbols i max
 	| i > max = []
 	# sym = getSymbol i
-	| size sym.symbol_name == 0 = []
-	= [sym:getSymbols (i+1) max]
+	# rest = getSymbols (i+1) max
+	| size sym.symbol_name == 0
+		= []
+	| sym.symbol_value < 0
+		= rest
+		= [sym:rest]
 
 	getSymbol :: !Int -> Symbol
 	getSymbol i
@@ -415,11 +420,13 @@ where
 		'\0' -> ptr
 		_    -> findNull (ptr+1)
 
-prepare_prelinked_interpretation :: !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
-prepare_prelinked_interpretation bcfile w
+prepare_prelinked_interpretation :: !String !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
+prepare_prelinked_interpretation exefile bcfile w
 # (bytecode,w) = readFile bcfile w
 | isNothing bytecode = (Nothing, w)
 # bytecode = fromJust bytecode
+
+# (host_syms,w) = accFiles (read_symbols exefile) w
 
 # pgm = parse {} bytecode // No matching with the host is required
 | isNothing pgm = (Nothing, w)
@@ -427,12 +434,23 @@ prepare_prelinked_interpretation bcfile w
 # code_start = get_code pgm
 
 # int_syms = {#s \\ s <- getInterpreterSymbols pgm}
-= (Just {pie_symbols=int_syms,pie_code_start=code_start}, w)
+# sorted_syms = {#s \\ s <- sortBy (\a b -> a.symbol_value < b.symbol_value) [s \\ s <-: int_syms]}
+# pie =
+	{ pie_code_start     = code_start
+	, pie_symbols        = int_syms
+	, pie_sorted_symbols = sorted_syms
+	, pie_host_symbols   = {#find_host_sym (size host_syms-1) s.symbol_name host_syms \\ s <-: sorted_syms}
+	}
+= (Just pie, w)
 where
 	get_code :: !Int -> Int
 	get_code pgm = code {
 		ccall get_code "p:p"
 	}
+
+	find_host_sym :: !Int !String !{#Symbol} -> Int
+	find_host_sym -1 _ _ = -1
+	find_host_sym i s syms = if (syms.[i].symbol_name == s) syms.[i].symbol_value (find_host_sym (i-1) s syms)
 
 serialize_for_prelinked_interpretation :: a !PrelinkedInterpretationEnvironment -> String
 serialize_for_prelinked_interpretation graph pie
@@ -503,32 +521,6 @@ where
 			= replace_desc_numbers_by_descs (i+(IF_INT_64_OR_32 24 12)+l) s symbol_a symbol_offset array_desc
 		= abort (toString l+++" "+++toString d)
 	where
-		get_word_from_string :: !{#Char} !Int -> Int // get_D_from_string_64
-		get_word_from_string s i = code inline {
-			push_a_b 0
-			pop_a 1
-			addI
-			load_i 16
-		}
-
-		store_int_in_string :: !*{#Char} !Int !Int -> *{#Char} // 64-bit variant
-		store_int_in_string s i n =
-			{s & [i]=toChar n,[i+1]=toChar (n>>8),[i+2]=toChar (n>>16),[i+3]=toChar (n>>24),
-				 [i+4]=toChar (n >> 32),[i+5]=toChar (n>>40),[i+6]=toChar (n>>48),[i+7]=toChar (n>>56)}
-
-		get_thunk_n_non_pointers:: !Int -> Int
-		get_thunk_n_non_pointers d
-		# arity = get_thunk_arity d
-		| arity<256
-			= 0
-			# b_size = arity>>8
-			= b_size
-		where
-			get_thunk_arity :: !Int -> Int // 64-bit version
-			get_thunk_arity a = code {
-				get_thunk_arity
-			}
-
 		get_descriptor_n_non_pointers_and_not_array :: !Int -> (!Int,!Bool)
 		get_descriptor_n_non_pointers_and_not_array d
 		| d<array_desc
@@ -546,12 +538,191 @@ where
 		# record_b_arity = arity-256-record_a_arity
 		= (record_b_arity,True)
 
-		get_D_node_arity :: !Int -> Int
-		get_D_node_arity d = code inline {
-			load_si16 -2
+// NB: this is 64-bit only!
+deserialize_from_prelinked_interpreter :: !*String !PrelinkedInterpretationEnvironment -> (.a,!Int)
+deserialize_from_prelinked_interpreter s pie
+#! s = replace_descs 0 s
+= copy_from_string s
+where
+	replace_descs :: !Int !*String -> *String
+	replace_descs i s
+	| i>=size s
+		| i==size s = s
+		| otherwise = abort "error in replace_descs\n"
+	#! desc = get_word_from_string s i
+	| desc<0 && desc rem 2<>0 // redirection
+		= replace_descs (i+8) s
+	#! desc = find_desc desc
+	#! s = store_int_in_string s i desc
+	| desc bitand 2==0
+		# d = get_thunk_n_non_pointers desc
+		= replace_descs (i+8+(d<<3)) s
+	#! (d,not_array) = get_descriptor_n_non_pointers_and_not_array desc
+	| not_array
+		= replace_descs (i+8+(d<<3)) s
+	#! l = get_word_from_string s (i+8)
+	| d==0 // _STRING_
+		#! l = (l+7) bitand -8
+		= replace_descs (i+16+l) s
+	| d==1 // _ARRAY_
+		#! old_elem_desc = get_word_from_string s (i+16)
+		| old_elem_desc==0
+			= replace_descs (i+24) s
+		#! elem_desc = find_desc old_elem_desc
+		#! s = store_int_in_string s (i+16) elem_desc
+		| old_elem_desc== -46 || old_elem_desc== -38 // INT or REAL
+			#! l = l<<3
+			= replace_descs (i+24+l) s
+		| old_elem_desc== -22 // BOOL
+			#! l = (l+7) bitand -8
+			= replace_descs (i+24+l) s
+		#! rec_arity = get_D_node_arity elem_desc
+		| rec_arity<256 = abort
+			("illegal array element descriptor "+++toString elem_desc+++
+				" with arity "+++toString rec_arity+++"\n")
+		#! a_arity = get_D_record_a_arity elem_desc
+		#! b_arity = rec_arity-256-a_arity
+		#! l = (l*b_arity) << 3
+		= replace_descs (i+24+l) s
+
+	find_desc :: !Int -> Int
+	find_desc d
+	| d<0 = find_predef_desc d
+	# d = d+pie.pie_code_start
+	# idx = find_desc 0 (size pie.pie_sorted_symbols-1) d
+	# sym = pie.pie_sorted_symbols.[idx]
+	# offset = fix_offset (d-sym.symbol_value)
+	# d = pie.pie_host_symbols.[idx]
+	| d<0
+		= abort ("replace_descs: descriptor "+++sym.symbol_name+++" unknown in the host\n")
+		= d+offset
+	where
+		find_predef_desc :: !Int -> Int
+		find_predef_desc d = case d of
+			-6  -> get_array_D {}
+			-14 -> get_string_D ""
+			-22 -> get_D True
+			-30 -> get_D 'a'
+			-38 -> get_D 1.0
+			-46 -> get_D 1
+			_   -> abort ("unknown predefined descriptor "+++toString d+++"\n")
+		where
+			get_array_D :: !{#Int} -> Int
+			get_array_D _ = code {
+				pushD_a 0
+				pop_a 1
+			}
+			get_string_D :: !String -> Int
+			get_string_D _ = code {
+				pushD_a 0
+				pop_a 1
+			}
+			get_D :: !a -> Int
+			get_D _ = code {
+				pushD_a 0
+				pop_a 1
+			}
+
+		find_desc :: !Int !Int !Int -> Int
+		find_desc start end d
+		| start>end
+			| start>0 && pie.pie_sorted_symbols.[start-1].symbol_value<d
+				= start-1
+				= abort "find_desc failed\n"
+		# mid = start + (end-start)/2
+		# v = pie.pie_sorted_symbols.[mid].symbol_value
+		| d<v = find_desc start (mid-1) d
+		| d>v = find_desc (mid+1) end d
+		| otherwise = mid
+
+		fix_offset :: !Int -> Int
+		fix_offset offset
+		# (arity,add) = (offset/16, offset rem 16)
+		| add==2 = get_desc_arity_offset*arity+2
+		| add==0 && arity==0 = 0
+		| otherwise = abort ("illegal offset "+++toString offset+++"\n")
+		where
+			get_desc_arity_offset :: Int
+			get_desc_arity_offset = code {
+				get_desc_arity_offset
+			}
+
+	get_descriptor_n_non_pointers_and_not_array :: !Int -> (!Int,!Bool)
+	get_descriptor_n_non_pointers_and_not_array d
+		# arity = get_D_node_arity d
+		| arity==0
+			| is_Int_D d      = (1,True)
+			| is_Char_D d     = (1,True)
+			| is_Real_D d     = (1,True)
+			| is_Bool_D d     = (1,True)
+			| is__String__D d = (0,False)
+			| is__Array__D d  = (1,False)
+			| otherwise       = (0,True)
+		| arity<256
+			= (0,True)
+			# record_a_arity = get_D_record_a_arity d
+			# record_b_arity = arity-256-record_a_arity
+			= (record_b_arity,True)
+	where
+		is_Int_D :: !Int -> Bool
+		is_Int_D d = code inline {
+			eq_desc_b INT 0
+		}
+		is_Char_D :: !Int -> Bool
+		is_Char_D d = code inline {
+			eq_desc_b CHAR 0
+		}
+		is_Real_D :: !Int -> Bool
+		is_Real_D d = code inline {
+			eq_desc_b REAL 0
+		}
+		is_Bool_D :: !Int -> Bool
+		is_Bool_D d = code inline {
+			eq_desc_b BOOL 0
+		}
+		is__String__D :: !Int -> Bool
+		is__String__D d = code inline {
+			eq_desc_b _STRING_ 0
+		}
+		is__Array__D :: !Int -> Bool
+		is__Array__D d = code inline {
+			eq_desc_b _ARRAY_ 0
 		}
 
-		get_D_record_a_arity :: !Int -> Int
-		get_D_record_a_arity d = code inline {
-			load_si16 0
-		}
+// Supporting code for serialize_for_prelinked_interpretation and
+// deserialize_from_prelinked_interpreter, taken from GraphCopy
+get_word_from_string :: !{#Char} !Int -> Int // get_D_from_string_64
+get_word_from_string s i = code inline {
+	push_a_b 0
+	pop_a 1
+	addI
+	load_i 16
+}
+
+store_int_in_string :: !*{#Char} !Int !Int -> *{#Char} // 64-bit version
+store_int_in_string s i n =
+	{s & [i]=toChar n,[i+1]=toChar (n>>8),[i+2]=toChar (n>>16),[i+3]=toChar (n>>24),
+		 [i+4]=toChar (n >> 32),[i+5]=toChar (n>>40),[i+6]=toChar (n>>48),[i+7]=toChar (n>>56)}
+
+get_thunk_n_non_pointers:: !Int -> Int
+get_thunk_n_non_pointers d
+# arity = get_thunk_arity d
+| arity<256
+	= 0
+	# b_size = arity>>8
+	= b_size
+where
+	get_thunk_arity :: !Int -> Int // 64-bit version
+	get_thunk_arity a = code {
+		get_thunk_arity
+	}
+
+get_D_node_arity :: !Int -> Int
+get_D_node_arity d = code inline {
+	load_si16 -2
+}
+
+get_D_record_a_arity :: !Int -> Int
+get_D_record_a_arity d = code inline {
+	load_si16 0
+}
