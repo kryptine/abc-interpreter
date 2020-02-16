@@ -19,7 +19,7 @@ function fetch(path) {
 	});
 }
 
-loadRelativeToScript('abc-interpreter.js');
+loadRelativeToScript('WebPublic/js/abc-interpreter.js');
 
 var stack_size=512<<10;
 var heap_size=2<<20;
