@@ -418,7 +418,9 @@ where
 	collect_elems (JSTempField k v) = [!{key=k,val=v}!]
 	collect_elems (JSTempPair a b)  = collect_elems a ++| collect_elems b
 
-gToJS{|JSRecord|} (JSRecord vs) = JSObject {{key=k,val=v} \\ (k,v) <- 'Data.Map'.toList vs}
+gToJS{|JSRecord|} (JSRecord vs) = JSObject {{key=k,val=v} \\ (k,v) <- list}
+where
+	list = 'Data.Map'.toList vs
 
 (:>) infix 1 :: !String !a -> (String, JSVal) | gToJS{|*|} a
 (:>) key val = (key, toJS val)
