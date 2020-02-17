@@ -845,4 +845,5 @@ if (typeof module!='undefined') module.exports={
 	ABCError: ABCError,
 	SharedCleanValue: SharedCleanValue,
 	ABCInterpreter: ABCInterpreter,
+	global: global
 };
