@@ -57,6 +57,13 @@ instance pure (JS st)
 instance <*> (JS st)
 instance Monad (JS st)
 
+/**
+ * Like `jsWrapFunWithResult` but with a monad.
+ * NB: When called, the monad will be evaluated with the state it had when
+ * `jsWrapMonad` was evaluated.
+ */
+jsWrapMonad :: !({!JSVal} -> JS st JSVal) -> JS st JSFun
+
 //* Type synonym used to indicate that a JavaScript value refers to a Promise.
 :: JSPromise :== JSVal
 

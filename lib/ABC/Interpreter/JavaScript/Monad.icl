@@ -55,6 +55,13 @@ where
 			# (JS f) = g x
 			-> f w
 
+jsWrapMonad :: !({!JSVal} -> JS st JSVal) -> JS st JSFun
+jsWrapMonad m = JS
+	\st=:{jsworld=w,component=c,state=s}
+		# (f,w) = jsWrapFunWithResult (\args w -> runJS s c (m args) w) c (unsafeCoerce w)
+		# st & jsworld = unsafeCoerce w
+		-> (f, st)
+
 (`then`) infixl 1 :: !(JS st JSPromise) !(JSVal -> JS st JSVal) -> JS st JSPromise
 (`then`) first then =
 	gets id >>= \st ->
