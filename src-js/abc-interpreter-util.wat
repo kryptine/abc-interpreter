@@ -2152,7 +2152,7 @@
 					)
 
 					;; thunk
-					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 8))))
+					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 4))))
 
 					(if
 						(i32.le_s (local.get $arity) (i32.const 1))
@@ -2445,7 +2445,7 @@
 					)
 
 					;; thunk
-					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 8))))
+					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 4))))
 
 					(if
 						(i32.le_s (local.get $arity) (i32.const 1))
