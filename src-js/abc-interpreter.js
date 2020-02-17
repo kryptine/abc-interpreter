@@ -758,13 +758,13 @@ ABCInterpreter.interpreter_imports={
 								me.clear_shared_clean_value(ref);
 							}
 						} catch (e) {}
-						Function(v+'='+x)();
+						eval(v+'='+x);
 						break;
 					case 2: /* ABC.Interpreter.JavaScript: eval_js */
 						var string=me.get_clean_string(me.memory_array[asp/4], true);
 						if (ABC_DEBUG)
 							console.log('eval',string);
-						Function(string)();
+						eval(string);
 						break;
 					case 3: /* ABC.Interpreter.JavaScript: eval_js_with_return_value */
 						var string=me.get_clean_string(me.memory_array[asp/4], true);
