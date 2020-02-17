@@ -144,6 +144,31 @@ class ABCInterpreter {
 		return this._deserialize(unused_semispace, graph.length/2);
 	}
 
+	copy_to_string (node) {
+		const start=this.util.instance.exports.copy_to_string(node, this.code_offset*8);
+		this.util.instance.exports.remove_forwarding_pointers_from_graph(node, this.code_offset*8);
+		const arr=new Uint8Array(this.memory.buffer, start+8, this.memory_array[start/4]);
+
+		/* base64 encode: not all JS runtimes (e.g. SpiderMonkey) have a built-in */
+		var b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+		var enc='';
+
+		for (var i=0; i<arr.length; i+=3) {
+			const bitmap=(arr[i] << 16) | (arr[i+1] << 8) | arr[i+2];
+			enc+=
+				b64.charAt(bitmap >> 18 & 63) +
+				b64.charAt(bitmap >> 12 & 63) +
+				b64.charAt(bitmap >>  6 & 63) +
+				b64.charAt(bitmap       & 63);
+		}
+
+		const pad=arr.length % 3;
+		if (pad)
+			enc=enc.slice(0,pad-3) + '==='.substring(pad);
+
+		return enc;
+	}
+
 	share_js_value (obj) {
 		if (this.empty_js_values.length > 0) {
 			const i=this.empty_js_values.pop();
@@ -788,7 +813,18 @@ ABCInterpreter.interpreter_imports={
 						var hp_ptr=me.memory_array[asp/4];
 						me.memory_array[asp/4]=me.deserialize_from_unique_string(hp_ptr);
 						break;
-					case 7: /* ABC.Interpreter.JavaScript: initialize_client in wrapInitUIFunction */
+					case 7: /* ABC.Interpreter.Javascript: jsSerializeOnClient */
+						me.require_hp(2);
+						var string=me.copy_to_string(me.memory_array[asp/4]);
+						me.memory_array[hp/4]=me.addresses.JSRef;
+						me.memory_array[hp/4+1]=0;
+						me.memory_array[hp/4+2]=me.share_js_value(string);
+						me.memory_array[hp/4+3]=0;
+						me.memory_array[asp/4]=hp;
+						me.interpreter.instance.exports.set_hp(hp+16);
+						me.interpreter.instance.exports.set_hp_free(hp_free-2);
+						break;
+					case 8: /* ABC.Interpreter.JavaScript: initialize_client in wrapInitUIFunction */
 						var array=me.memory_array[asp/4]+24;
 						me.addresses.JSInt=      me.memory_array[me.memory_array[array/4]/4];
 						me.addresses.JSBool=     me.memory_array[me.memory_array[array/4+2]/4];

@@ -722,7 +722,7 @@
 		(global.set $js-ref-constructor (local.get 0))
 	)
 
-	(func (export "get_unused_semispace") (result i32)
+	(func $get-unused-semispace (export "get_unused_semispace") (result i32)
 		(select
 			(global.get $half-heap)
 			(global.get $start-heap)
@@ -1796,5 +1796,713 @@
 		)
 
 		(local.get $hp)
+	)
+
+	(func (export "copy_to_string")
+		(param $node i32)
+		(param $code-offset i32)
+		(result i32)
+
+		(local $begin-s i32)
+		(local $s i32)
+		(local $desc i32)
+		(local $arity i32)
+		(local $a-arity i32)
+		(local $b-arity i32)
+		(local $args i32)
+		(local $begin-stack i32)
+		(local $stack i32)
+		(local $i i32)
+
+		(local.set $begin-s (call $get-unused-semispace))
+		(local.set $s (i32.add (local.get $begin-s) (i32.const 8)))
+		(local.set $begin-stack (select (global.get $end-heap) (global.get $half-heap) (global.get $in-first-semispace)))
+		(local.set $stack (i32.sub (local.get $begin-stack) (i32.const 4)))
+
+		(loop $loop
+			(block $next-node
+				(loop $continue
+					(local.set $desc (i32.load (local.get $node)))
+
+					(if ;; already copied; add a redirection
+						(i32.and (local.get $desc) (i32.const 1))
+						(then
+							(i64.store (local.get $s) (i64.extend_i32_u (i32.sub (local.get $desc) (local.get $s))))
+							(local.set $s (i32.add (local.get $s) (i32.const 8)))
+							(br $next-node)
+						)
+					)
+
+					;; new node
+					(i64.store (local.get $node) (i64.extend_i32_u (i32.add (local.get $s) (i32.const 1))))
+					(i64.store (local.get $s) (i64.extend_i32_u (i32.sub (local.get $desc) (local.get $code-offset))))
+					(local.set $s (i32.add (local.get $s) (i32.const 8)))
+
+					;;(call $debug (i32.const 1) (local.get $desc) (i32.const 0) (i32.const 0))
+
+					(if ;; hnf
+						(i32.and (local.get $desc) (i32.const 2))
+						(then
+							(local.set $arity (i32.load16_u (i32.sub (local.get $desc) (i32.const 2))))
+							;;(call $debug (i32.const 2) (local.get $arity) (i32.const 0) (i32.const 0))
+
+							(if
+								(i32.eqz (local.get $arity))
+								(then
+									(block $predefined-constructor
+										(if ;; BOOL
+											(i32.eq (local.get $desc) (i32.const 82))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -22))
+												(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+												(br $predefined-constructor)
+											)
+										)
+										(if ;; CHAR
+											(i32.eq (local.get $desc) (i32.const 122))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -30))
+												(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+												(br $predefined-constructor)
+											)
+										)
+										(if ;; REAL
+											(i32.eq (local.get $desc) (i32.const 162))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -38))
+												(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+												(br $predefined-constructor)
+											)
+										)
+										(if ;; INT
+											(i32.eq (local.get $desc) (i32.const 202))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -46))
+												(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+												(br $predefined-constructor)
+											)
+										)
+										(if ;; _STRING_
+											(i32.eq (local.get $desc) (i32.const 42))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -14))
+												(local.set $arity (i32.load offset=8 (local.get $node))) ;; length
+												(i64.store (local.get $s) (i64.extend_i32_u (local.get $arity)))
+												(local.set $s (i32.add (local.get $s) (i32.const 8)))
+												(local.set $arity (i32.shr_u (i32.add (local.get $arity) (i32.const 7)) (i32.const 3)))
+												(call $copy (local.get $s) (i32.add (local.get $node) (i32.const 16)) (local.get $arity))
+												(local.set $s (i32.add (local.get $s) (i32.shl (local.get $arity) (i32.const 3))))
+												(br $next-node)
+											)
+										)
+										(if ;; _ARRAY_
+											(i32.eq (local.get $desc) (i32.const 2))
+											(then
+												(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -6))
+
+												(local.set $args (i32.load offset=8 (local.get $node))) ;; length
+												(local.set $desc (i32.load offset=16 (local.get $node)))
+												(local.set $node (i32.add (local.get $node) (i32.const 24)))
+
+												(i64.store (local.get $s) (i64.extend_i32_u (local.get $args)))
+												(i64.store offset=8 (local.get $s) (i64.extend_i32_u (local.get $desc)))
+												(local.set $s (i32.add (local.get $s) (i32.const 16)))
+
+												(if ;; unboxed array
+													(i32.eqz (local.get $desc))
+													(then
+														(local.set $node (i32.add (local.get $node) (i32.shl (local.get $args) (i32.const 3))))
+														(loop $lp
+															(local.set $node (i32.sub (local.get $node) (i32.const 8)))
+															(i32.store (local.get $stack) (i32.load (local.get $node)))
+															(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+															(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+															(br_if $lp (local.get $args))
+														)
+														(br $next-node)
+													)
+												)
+												(if ;; {#Int}
+													(i32.eq (local.get $desc) (i32.const 202))
+													(then
+														(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -46))
+														(call $copy (local.get $s) (local.get $node) (local.get $args))
+														(local.set $s (i32.add (local.get $s) (i32.shl (local.get $args) (i32.const 3))))
+														(br $next-node)
+													)
+												)
+												(if ;; {#Real}
+													(i32.eq (local.get $desc) (i32.const 162))
+													(then
+														(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -38))
+														(call $copy (local.get $s) (local.get $node) (local.get $args))
+														(local.set $s (i32.add (local.get $s) (i32.shl (local.get $args) (i32.const 3))))
+														(br $next-node)
+													)
+												)
+												(if ;; {#Bool}
+													(i32.eq (local.get $desc) (i32.const 82))
+													(then
+														(i64.store (i32.sub (local.get $s) (i32.const 8)) (i64.const -22))
+														(local.set $args (i32.shr_u (i32.add (local.get $args) (i32.const 7)) (i32.const 3)))
+														(call $copy (local.get $s) (local.get $node) (local.get $args))
+														(local.set $s (i32.add (local.get $s) (i32.shl (local.get $args) (i32.const 3))))
+														(br $next-node)
+													)
+												)
+
+												;; unboxed record array
+												(local.set $a-arity (i32.load16_u (local.get $desc)))
+												(local.set $arity (i32.sub (i32.load16_u (i32.sub (local.get $desc) (i32.const 2))) (i32.const 256)))
+
+												(i64.store
+													(i32.sub (local.get $s) (i32.const 8))
+													(i64.extend_i32_u (i32.sub (local.get $desc) (local.get $code-offset))))
+
+												(if
+													(i32.eqz (local.get $a-arity))
+													(then
+														(local.set $args (i32.mul (local.get $args) (local.get $arity)))
+														(call $copy (local.get $s) (local.get $node) (local.get $args))
+														(local.set $s (i32.add (local.get $s) (i32.shl (local.get $args) (i32.const 3))))
+														(br $next-node)
+													)
+												)
+												(local.set $b-arity (i32.sub (local.get $arity) (local.get $a-arity)))
+												(if
+													(i32.eqz (local.get $b-arity))
+													(then
+														(local.set $args (i32.mul (local.get $args) (local.get $arity)))
+														(local.set $node (i32.add (local.get $node) (i32.shl (local.get $args) (i32.const 3))))
+														(loop $lp
+															(br_if $next-node (i32.eqz (local.get $args)))
+															(local.set $node (i32.sub (local.get $node) (i32.const 8)))
+															(i32.store (local.get $stack) (i32.load (local.get $node)))
+															(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+															(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+															(br $lp)
+														)
+													)
+												)
+												(loop $lp
+													(br_if $next-node (i32.eqz (local.get $args)))
+													;; pointers
+													(local.set $i (local.get $a-arity))
+													(local.set $node (i32.add (local.get $node) (i32.shl (local.get $a-arity) (i32.const 3))))
+													(loop
+														(local.set $node (i32.sub (local.get $node) (i32.const 8)))
+														(i32.store (local.get $stack) (i32.load (local.get $node)))
+														(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+														(local.set $i (i32.sub (local.get $i) (i32.const 1)))
+														(br_if 0 (local.get $i))
+													)
+													(local.set $node (i32.add (local.get $node) (i32.shl (local.get $a-arity) (i32.const 3))))
+													;; unboxed arguments
+													(call $copy (local.get $s) (local.get $node) (local.get $b-arity))
+													(local.set $i (i32.shl (local.get $b-arity) (i32.const 3)))
+													(local.set $s (i32.add (local.get $s) (local.get $i)))
+													(local.set $node (i32.add (local.get $node) (local.get $i)))
+													;; iterate
+													(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+													(br $lp)
+												)
+											)
+										)
+										;; not a predefined constructor
+										(br $next-node)
+									)
+									(local.set $s (i32.add (local.get $s) (i32.const 8)))
+									(br $next-node)
+								)
+							)
+							(if
+								(i32.eq (local.get $arity) (i32.const 1))
+								(then
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+							(if
+								(i32.eq (local.get $arity) (i32.const 2))
+								(then
+									(i32.store (local.get $stack) (i32.load offset=16 (local.get $node)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+							(if ;; split hnf without unboxed arguments
+								(i32.lt_s (local.get $arity) (i32.const 256))
+								(then
+									(local.set $arity (i32.sub (local.get $arity) (i32.const 2)))
+
+									(local.set $args (i32.load offset=16 (local.get $node)))
+									(local.set $args (i32.add (local.get $args) (i32.sub (i32.shl (local.get $arity) (i32.const 3)) (i32.const 16))))
+
+									(i32.store (local.get $stack) (i32.load offset=16 (local.get $args)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+									(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+
+									(block $blk
+										(loop $lp
+											(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+											(br_if $blk (local.get $arity))
+											(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
+											(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+											(br $lp)
+										)
+									)
+
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+
+							;; hnf with unboxed arguments
+							(local.set $a-arity (i32.load16_u (local.get $desc)))
+							(local.set $arity (i32.sub (local.get $arity) (i32.const 256)))
+							(if
+								(i32.eq (local.get $arity) (i32.const 1))
+								(then
+									(if
+										(i32.eqz (local.get $a-arity))
+										(then
+											(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+											(local.set $s (i32.add (local.get $s) (i32.const 8)))
+											(br $next-node)
+										)
+									)
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+							(if
+								(i32.eq (local.get $arity) (i32.const 2))
+								(then
+									(if
+										(i32.eqz (local.get $a-arity))
+										(then
+											(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+											(i64.store offset=8 (local.get $s) (i64.load offset=16 (local.get $node)))
+											(local.set $s (i32.add (local.get $s) (i32.const 16)))
+											(br $next-node)
+										)
+									)
+									(if
+										(i32.eq (local.get $a-arity) (i32.const 1))
+										(then
+											(i64.store (local.get $s) (i64.load offset=16 (local.get $node)))
+											(local.set $s (i32.add (local.get $s) (i32.const 8)))
+										)
+										(else
+											(i32.store (local.get $stack) (i32.load offset=16 (local.get $node)))
+											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+										)
+									)
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+
+							;; split hnf with unboxed arguments
+							(local.set $args (i32.load offset=16 (local.get $node)))
+							(if
+								(i32.eqz (local.get $a-arity))
+								(then ;; no pointers
+									(i64.store (local.get $s) (i64.load offset=8 (local.get $node)))
+									(local.set $s (i32.add (local.get $s) (i32.const 8)))
+									(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+									(call $copy (local.get $s) (local.get $args) (local.get $arity))
+									(local.set $s (i32.add (local.get $s) (i32.shl (local.get $arity) (i32.const 3))))
+									(br $next-node)
+								)
+							)
+
+							;; split hnf with unboxed argument and at least one pointer
+							(local.set $b-arity (i32.sub (local.get $arity) (local.get $a-arity)))
+							(if
+								(i32.gt_s (local.get $b-arity) (i32.const 0))
+								(then
+									(call $copy
+										(local.get $s)
+										(i32.sub (i32.add (local.get $args) (i32.shl (local.get $a-arity) (i32.const 3))) (i32.const 8))
+										(local.get $b-arity))
+									(local.set $s (i32.add (local.get $s) (i32.shl (local.get $b-arity) (i32.const 3))))
+								)
+							)
+							(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+							(if
+								(i32.gt_s (local.get $a-arity) (i32.const 0))
+								(then
+									(local.set $args (i32.add (local.get $args) (i32.shl (local.get $a-arity) (i32.const 3))))
+									(loop $lp
+										(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+										(i32.store (local.get $stack) (i32.load (local.get $args)))
+										(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+										(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+										(br_if $lp (local.get $a-arity))
+									)
+								)
+							)
+							(local.set $node (i32.load offset=8 (local.get $node)))
+							(br $continue)
+						)
+					)
+
+					;; thunk
+					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 4))))
+
+					(if
+						(i32.le_s (local.get $arity) (i32.const 1))
+						(then ;; arity 0, 1, or negative
+							(br_if $next-node (i32.eqz (local.get $arity)))
+
+							;; arity 1 or negative
+							(local.set $node (i32.load offset=8 (local.get $node)))
+							(br $continue)
+						)
+					)
+
+					;; arity > 1 or with unboxed arguments
+					(if
+						(i32.lt_s (local.get $arity) (i32.const 256))
+						(then ;; no unboxed arguments
+							(local.set $args (i32.add (local.get $node) (i32.shl (local.get $arity) (i32.const 3))))
+							(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+							(loop $lp
+								(i32.store (local.get $stack) (i32.load (local.get $args)))
+								(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+								(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+								(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+								(br_if $lp (local.get $arity))
+							)
+						)
+						(else ;; unboxed arguments
+							(local.set $b-arity (i32.shr_u (local.get $arity) (i32.const 8)))
+							(local.set $a-arity (i32.sub (i32.and (local.get $arity) (i32.const 255)) (local.get $b-arity)))
+							(call $copy
+								(local.get $s)
+								(i32.add (local.get $node) (i32.add (i32.const 1) (i32.shl (local.get $a-arity) (i32.const 3))))
+								(local.get $b-arity))
+							(local.set $s (i32.add (local.get $s) (i32.shl (local.get $b-arity) (i32.const 3))))
+
+							(br_if $next-node (i32.eqz (local.get $a-arity)))
+
+							(if
+								(i32.gt_s (local.get $a-arity) (i32.const 1))
+								(then
+									(local.set $args (i32.add (local.get $node) (i32.shl (local.get $a-arity) (i32.const 3))))
+									(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+									(loop $lp
+										(i32.store (local.get $stack) (i32.load (local.get $args)))
+										(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+										(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+										(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+										(br_if $lp (local.get $a-arity))
+									)
+								)
+							)
+						)
+					)
+
+					(local.set $node (i32.load offset=8 (local.get $node)))
+					(br $continue)
+				)
+			)
+
+			(local.set $stack (i32.add (local.get $stack) (i32.const 4)))
+			(if
+				(i32.eq (local.get $stack) (local.get $begin-stack))
+				(then
+					(i64.store (local.get $begin-s) (i64.extend_i32_u
+						(i32.sub (i32.sub (local.get $s) (local.get $begin-s)) (i32.const 8))))
+					(return (local.get $begin-s))
+				)
+			)
+			(local.set $node (i32.load (local.get $stack)))
+
+			(br $loop)
+		)
+
+		(i32.const 0)
+	)
+
+	(func (export "remove_forwarding_pointers_from_graph")
+		(param $node i32)
+		(param $code-offset i32)
+
+		(local $desc i32)
+		(local $arity i32)
+		(local $a-arity i32)
+		(local $b-arity i32)
+		(local $args i32)
+		(local $begin-stack i32)
+		(local $stack i32)
+		(local $i i32)
+
+		(local.set $begin-stack (select (global.get $end-heap) (global.get $half-heap) (global.get $in-first-semispace)))
+		(local.set $stack (i32.sub (local.get $begin-stack) (i32.const 4)))
+
+		(loop $loop
+			(block $next-node
+				(loop $continue
+					(local.set $desc (i32.load (local.get $node)))
+					(br_if $next-node (i32.eqz (i32.and (local.get $desc) (i32.const 1))))
+
+					(local.set $desc (i32.load (i32.sub (local.get $desc) (i32.const 1))))
+					(block $desc-translation-done
+						(if
+							(i32.lt_s (local.get $desc) (i32.const 0))
+							(then
+								(if ;; INT
+									(i32.eq (local.get $desc) (i32.const -46))
+									(then (local.set $desc (i32.const 202)) (br $desc-translation-done)))
+								(if ;; _STRING_
+									(i32.eq (local.get $desc) (i32.const -14))
+									(then (local.set $desc (i32.const 42)) (br $desc-translation-done)))
+								(if ;; BOOL
+									(i32.eq (local.get $desc) (i32.const -22))
+									(then (local.set $desc (i32.const 82)) (br $desc-translation-done)))
+								(if ;; REAL
+									(i32.eq (local.get $desc) (i32.const -38))
+									(then (local.set $desc (i32.const 162)) (br $desc-translation-done)))
+								(if ;; CHAR
+									(i32.eq (local.get $desc) (i32.const -30))
+									(then (local.set $desc (i32.const 122)) (br $desc-translation-done)))
+								(if ;; _ARRAY_
+									(i32.eq (local.get $desc) (i32.const -6))
+									(then (local.set $desc (i32.const 2)) (br $desc-translation-done)))
+								(unreachable)
+							)
+							(else
+								(local.set $desc (i32.add (local.get $desc) (local.get $code-offset)))
+							)
+						)
+					)
+					(i64.store (local.get $node) (i64.extend_i32_u (local.get $desc)))
+
+					;;(call $debug (i32.const 1) (local.get $desc) (i32.const 0) (i32.const 0))
+
+					(if ;; hnf
+						(i32.and (local.get $desc) (i32.const 2))
+						(then
+							(local.set $arity (i32.load16_u (i32.sub (local.get $desc) (i32.const 2))))
+							;;(call $debug (i32.const 2) (local.get $arity) (i32.const 0) (i32.const 0))
+
+							(if
+								(i32.eqz (local.get $arity))
+								(then
+									(br_if $next-node (i32.ne (local.get $desc) (i32.const 2))) ;; only _ARRAY_ can have pointer arguments
+
+									(local.set $args (i32.load offset=8 (local.get $node))) ;; length
+									(local.set $desc (i32.load offset=16 (local.get $node)))
+									(local.set $node (i32.add (local.get $node) (i32.const 24)))
+
+									(if ;; unboxed array
+										(i32.eqz (local.get $desc))
+										(then
+											(local.set $node (i32.add (local.get $node) (i32.shl (local.get $args) (i32.const 3))))
+											(loop $lp
+												(local.set $node (i32.sub (local.get $node) (i32.const 8)))
+												(i32.store (local.get $stack) (i32.load (local.get $node)))
+												(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+												(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+												(br_if $lp (local.get $args))
+											)
+											(br $next-node)
+										)
+									)
+									(br_if $next-node
+										(i32.or
+											(i32.eq (local.get $desc) (i32.const 202)) ;; INT
+											(i32.or
+												(i32.eq (local.get $desc) (i32.const 162)) ;; REAL
+												(i32.eq (local.get $desc) (i32.const 82))))) ;; BOOL
+
+									;; unboxed record array
+									(local.set $a-arity (i32.load16_u (local.get $desc)))
+									(br_if $next-node (i32.eqz (local.get $a-arity)))
+
+									(local.set $arity (i32.sub (i32.load16_u (i32.sub (local.get $desc) (i32.const 2))) (i32.const 256)))
+									(local.set $b-arity (i32.sub (local.get $arity) (local.get $a-arity)))
+									(if
+										(i32.eqz (local.get $b-arity))
+										(then
+											(local.set $args (i32.mul (local.get $args) (local.get $arity)))
+											(loop $lp
+												(br_if $next-node (i32.eqz (local.get $args)))
+												(i32.store (local.get $stack) (i32.load (local.get $node)))
+												(local.set $node (i32.add (local.get $node) (i32.const 8)))
+												(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+												(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+												(br $lp)
+											)
+										)
+									)
+									(local.set $b-arity (i32.shl (local.get $b-arity) (i32.const 3)))
+									(loop $lp
+										(br_if $next-node (i32.eqz (local.get $args)))
+										;; pointers
+										(local.set $i (local.get $a-arity))
+										(loop
+											(i32.store (local.get $stack) (i32.load (local.get $node)))
+											(local.set $node (i32.add (local.get $node) (i32.const 8)))
+											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+											(local.set $i (i32.sub (local.get $i) (i32.const 1)))
+											(br_if 0 (local.get $i))
+										)
+										;; unboxed arguments
+										(local.set $node (i32.add (local.get $node) (local.get $b-arity)))
+										;; iterate
+										(local.set $args (i32.sub (local.get $args) (i32.const 1)))
+										(br $lp)
+									)
+								)
+							)
+							(if
+								(i32.eq (local.get $arity) (i32.const 1))
+								(then
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+							(if
+								(i32.eq (local.get $arity) (i32.const 2))
+								(then
+									(i32.store (local.get $stack) (i32.load offset=16 (local.get $node)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+							(if ;; split hnf without unboxed arguments
+								(i32.lt_s (local.get $arity) (i32.const 256))
+								(then
+									(local.set $arity (i32.sub (local.get $arity) (i32.const 2)))
+
+									(local.set $args (i32.load offset=16 (local.get $node)))
+									(local.set $args (i32.add (local.get $args) (i32.sub (i32.shl (local.get $arity) (i32.const 3)) (i32.const 16))))
+
+									(i32.store (local.get $stack) (i32.load offset=16 (local.get $args)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+									(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
+									(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+
+									(block $blk
+										(loop $lp
+											(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+											(br_if $blk (local.get $arity))
+											(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
+											(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+											(br $lp)
+										)
+									)
+
+									(local.set $node (i32.load offset=8 (local.get $node)))
+									(br $continue)
+								)
+							)
+
+							;; hnf with unboxed arguments
+							(local.set $a-arity (i32.load16_u (local.get $desc)))
+							(br_if $next-node (i32.eqz (local.get $a-arity)))
+
+							(if
+								(i32.ge_s (local.get $a-arity) (i32.const 2))
+								(then
+									(local.set $args (i32.load offset=16 (local.get $node)))
+									(if
+										(i32.eq (local.get $a-arity) (i32.const 2))
+										(then
+											(i32.store (local.get $stack)
+												(select
+													(local.get $args)
+													(i32.load (local.get $args))
+													(i32.eq (i32.sub (local.get $arity) (i32.const 256)) (i32.const 2))))
+											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+										)
+										(else
+											(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+											(local.set $args (i32.add (local.get $args) (i32.shl (local.get $a-arity) (i32.const 3))))
+											(loop $lp
+												(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+												(i32.store (local.get $stack) (i32.load (local.get $args)))
+												(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+												(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+												(br_if $lp (local.get $a-arity))
+											)
+										)
+									)
+								)
+							)
+
+							(local.set $node (i32.load offset=8 (local.get $node)))
+							(br $continue)
+						)
+					)
+
+					;; thunk
+					(local.set $arity (i32.load (i32.sub (local.get $desc) (i32.const 4))))
+
+					(if
+						(i32.le_s (local.get $arity) (i32.const 1))
+						(then ;; arity 0, 1, or negative
+							(br_if $next-node (i32.eqz (local.get $arity)))
+
+							;; arity 1 or negative
+							(local.set $node (i32.load offset=8 (local.get $node)))
+							(br $continue)
+						)
+					)
+
+					;; arity > 1 or with unboxed arguments
+					(if
+						(i32.lt_s (local.get $arity) (i32.const 256))
+						(then ;; no unboxed arguments
+							(local.set $args (i32.add (local.get $node) (i32.shl (local.get $arity) (i32.const 3))))
+							(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+							(loop $lp
+								(i32.store (local.get $stack) (i32.load (local.get $args)))
+								(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+								(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+								(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+								(br_if $lp (local.get $arity))
+							)
+						)
+						(else ;; unboxed arguments
+							(local.set $b-arity (i32.shr_u (local.get $arity) (i32.const 8)))
+							(local.set $a-arity (i32.sub (i32.and (local.get $arity) (i32.const 255)) (local.get $b-arity)))
+
+							(br_if $next-node (i32.eqz (local.get $a-arity)))
+
+							(if
+								(i32.gt_s (local.get $a-arity) (i32.const 1))
+								(then
+									(local.set $args (i32.add (local.get $node) (i32.shl (local.get $a-arity) (i32.const 3))))
+									(local.set $a-arity (i32.sub (local.get $a-arity) (i32.const 1)))
+									(loop $lp
+										(i32.store (local.get $stack) (i32.load (local.get $args)))
+										(local.set $args (i32.sub (local.get $args) (i32.const 8)))
+										(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
+										(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
+										(br_if $lp (local.get $a-arity))
+									)
+								)
+							)
+						)
+					)
+
+					(local.set $node (i32.load offset=8 (local.get $node)))
+					(br $continue)
+				)
+			)
+
+			(local.set $stack (i32.add (local.get $stack) (i32.const 4)))
+			(local.set $node (i32.load (local.get $stack)))
+			(br_if $loop (i32.ne (local.get $stack) (local.get $begin-stack)))
+		)
 	)
 )

@@ -449,11 +449,7 @@ where
 (.?) infixl 1 :: !JSVal !*JSWorld -> *(!JSVal, !*JSWorld)
 (.?) js w
 # (done,js) = try_local_computation js
-| done
-	= (js,w)
-	= case eval_js_with_return_value (js_val_to_string js) of
-		JSUnused -> abort_with_node js
-		result   -> (result, w)
+= if done (js,w) (jsForceFetch js w)
 where
 	try_local_computation :: !JSVal -> (!Bool, !JSVal)
 	try_local_computation v = case v of
@@ -477,6 +473,11 @@ where
 		JSCleanRef _ -> (True,v)
 
 		_            -> (False,v)
+
+jsForceFetch :: !JSVal !*JSWorld -> *(!JSVal, !*JSWorld)
+jsForceFetch js w = case eval_js_with_return_value (js_val_to_string js) of
+	JSUnused -> abort_with_node js
+	result   -> (result, w)
 
 (.=) infixl 1 :: !JSVal !b !*JSWorld -> *JSWorld | gToJS{|*|} b
 (.=) sel v w
@@ -576,7 +577,7 @@ where
 		// of the constructors which it needs to know.
 		init :: !{!JSVal} -> Bool
 		init _ = code {
-			instruction 7
+			instruction 8
 			pop_a 1
 			pushB FALSE
 		}
@@ -612,6 +613,15 @@ where
 	deserialize _ = code {
 		instruction 6
 	}
+
+jsSerializeOnClient :: !a -> (!Bool,!JSVal)
+jsSerializeOnClient graph = code {
+	instruction 7
+	pushB TRUE
+}
+
+jsDeserializeFromClient :: !String !PrelinkedInterpretationEnvironment -> (.a, !Int)
+jsDeserializeFromClient s pie = deserialize_from_prelinked_interpreter (base64Decode s) pie
 
 addCSSFromUrl :: !String !*JSWorld -> *JSWorld
 addCSSFromUrl css w = case add_css css of

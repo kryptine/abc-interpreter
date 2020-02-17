@@ -145,17 +145,20 @@ graph_from_file :: !*File -> *(!Maybe *SerializedGraph, !*File)
  * and used with {{`serialize_for_prelinked_interpretation`}}.
  */
 :: PrelinkedInterpretationEnvironment =
-	{ pie_symbols    :: !{#Symbol}
-	, pie_code_start :: !Int
+	{ pie_code_start     :: !Int
+	, pie_symbols        :: !{#Symbol}
+	, pie_sorted_symbols :: {#Symbol} //* `pie_symbols` sorted by value.
+	, pie_host_symbols   :: {#Int} //* The host values of `pie_sorted_symbols`.
 	}
 
 /**
  * See {{`PrelinkedInterpretationEnvironment`}} for documentation.
  *
+ * @param The path to the executable itself.
  * @param The path to the executable's bytecode (set by the `ByteCode` option in the project file).
  * @result The result may be `Nothing` if the bytecode could not be parsed.
  */
-prepare_prelinked_interpretation :: !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
+prepare_prelinked_interpretation :: !String !String !*World -> *(!Maybe PrelinkedInterpretationEnvironment, !*World)
 
 /**
  * See {{`PrelinkedInterpretationEnvironment`}} for documentation.
@@ -164,3 +167,5 @@ prepare_prelinked_interpretation :: !String !*World -> *(!Maybe PrelinkedInterpr
  * @param The environment.
  */
 serialize_for_prelinked_interpretation :: a !PrelinkedInterpretationEnvironment -> String
+
+deserialize_from_prelinked_interpreter :: !*String !PrelinkedInterpretationEnvironment -> (.a,!Int)
