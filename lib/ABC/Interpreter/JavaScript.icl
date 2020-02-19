@@ -614,11 +614,13 @@ where
 		instruction 6
 	}
 
-jsSerializeOnClient :: !a -> (!Bool,!JSVal)
-jsSerializeOnClient graph = code {
-	instruction 7
-	pushB TRUE
-}
+jsSerializeOnClient :: .a !*JSWorld -> (!JSVal, !*JSWorld)
+jsSerializeOnClient graph w = (serialize graph, w)
+where
+	serialize :: .a -> JSVal
+	serialize _ = code {
+		instruction 7
+	}
 
 jsDeserializeFromClient :: !String !PrelinkedInterpretationEnvironment -> (.a, !Int)
 jsDeserializeFromClient s pie = deserialize_from_prelinked_interpreter (base64Decode s) pie

@@ -251,13 +251,19 @@ jsDeserializeGraph :: !*String !*JSWorld -> *(!.a, !*JSWorld)
  * there). To get the string on the Clean side one has to use `jsForceFetch`:
  *
  * ```
- * # (ok,s) = jsSerializeOnClient graph
- * | not ok = abort "jsSerializeOnClient\n"
+ * # (s,w) = jsSerializeOnClient graph w
  * # (s,w) = jsForceFetch s w
  * # s = jsValToString` "" s
  * ```
+ *
+ * However to use the value in JavaScript one can simply use the `JSVal`:
+ *
+ * ```
+ * # (s,w) = jsSerializeOnClient graph w
+ * # w = (jsGlobal "global_function" .$! s) w
+ * ```
  */
-jsSerializeOnClient :: !a -> (!Bool,!JSVal)
+jsSerializeOnClient :: .a !*JSWorld -> (!JSVal, !*JSWorld)
 
 /**
  * Deserialize a graph serialized with `jsSerializeOnClient`. This function

@@ -816,11 +816,13 @@ ABCInterpreter.interpreter_imports={
 					case 7: /* ABC.Interpreter.Javascript: jsSerializeOnClient */
 						me.require_hp(2);
 						var string=me.copy_to_string(me.memory_array[asp/4]);
+						asp-=8;
 						me.memory_array[hp/4]=me.addresses.JSRef;
 						me.memory_array[hp/4+1]=0;
 						me.memory_array[hp/4+2]=me.share_js_value(string);
 						me.memory_array[hp/4+3]=0;
 						me.memory_array[asp/4]=hp;
+						me.interpreter.instance.exports.set_asp(asp);
 						me.interpreter.instance.exports.set_hp(hp+16);
 						me.interpreter.instance.exports.set_hp_free(hp_free-2);
 						break;
