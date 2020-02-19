@@ -24,6 +24,18 @@ class SharedCleanValue {
 	}
 }
 
+/* This class represents a value in the Clean heap. When passed as an argument
+ * to a Clean function, it will not be copied to the Clean heap but a simple
+ * reference using this pointer will be created (see copy_js_to_clean).
+ * NB that the pointer is invalidated by garbage collection, and should
+ * therefore only as long as it is guaranteed that no garbage collection occurs
+ * (typically until the next call to Clean. */
+class CleanHeapValue {
+	constructor (ptr) {
+		this.ptr=ptr;
+	}
+}
+
 var ABC=null; /* global reference to currently running interpreter, to be able to refer to it from Clean */
 class ABCInterpreter {
 	// Just to setup properties. New instances should be created with the static
@@ -324,6 +336,8 @@ class ABCInterpreter {
 				this.memory_array[hp/4+3]=0;
 				hp+=16;
 				hp_free-=2;
+			} else if (typeof values[i]=='object' && values[i].constructor.name=='CleanHeapValue') {
+				this.memory_array[store_ptrs/4]=values[i].ptr;
 			} else if (typeof values[i]=='object' || typeof values[i]=='function') {
 				this.memory_array[store_ptrs/4]=hp;
 				this.memory_array[hp/4]=this.addresses.JSRef;
@@ -365,6 +379,8 @@ class ABCInterpreter {
 			return size;
 		} else if ('shared_clean_value_index' in value)
 			return 2;
+		else if (typeof value=='object' && value.constructor.name=='CleanHeapValue')
+			return 0;
 		else if (typeof value=='object' || typeof value=='function')
 			return 2;
 		else {
@@ -888,6 +904,7 @@ if (typeof module!='undefined') module.exports={
 	ABC_DEBUG: ABC_DEBUG,
 	ABCError: ABCError,
 	SharedCleanValue: SharedCleanValue,
+	CleanHeapValue: CleanHeapValue,
 	ABCInterpreter: ABCInterpreter,
 	global: global
 };
