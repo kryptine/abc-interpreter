@@ -9,11 +9,16 @@ import System._Unsafe
 
 import ABC.Interpreter.JavaScript
 
-js :: !(*JSWorld -> (a, *JSWorld)) -> JS st a
-js f = JS \st
+accJS :: !(*JSWorld -> (a, *JSWorld)) -> JS st a
+accJS f = JS \st
 	# (x,w) = (unsafeCoerce f) st.jsworld
 	# st & jsworld = w
 	-> (x,st)
+
+appJS :: !(*JSWorld -> *JSWorld) -> JS st JSVal
+appJS f = JS \st
+	# st & jsworld = (unsafeCoerce f) st.jsworld
+	-> (jsNull,st)
 
 runJS :: !st !JSVal !(JS st a) !*JSWorld -> (a, *JSWorld)
 runJS state component (JS f) w = (unsafeCoerce \w
@@ -65,9 +70,9 @@ jsWrapMonad m = JS
 (`then`) infixl 1 :: !(JS st JSPromise) !(JSVal -> JS st JSVal) -> JS st JSPromise
 (`then`) first then =
 	gets id >>= \st ->
-	js (jsWrapFunWithResult (\args w -> runJS st.state st.component (then args.[0]) w) st.component) >>= \then ->
+	accJS (jsWrapFunWithResult (\args w -> runJS st.state st.component (then args.[0]) w) st.component) >>= \then ->
 	first >>= \promise ->
-	js (promise .# "then" .$ (then, jsGlobal "(e) => console.warn ('Promise failed (%s): %s',e.name,e.message)"))
+	accJS (promise .# "then" .$ (then, jsGlobal "(e) => console.warn ('Promise failed (%s): %s',e.name,e.message)"))
 
 resolvePromise :: JS st JSPromise
-resolvePromise = js (jsGlobal "Promise" .# "resolve" .$ ())
+resolvePromise = accJS (jsGlobal "Promise" .# "resolve" .$ ())

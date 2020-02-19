@@ -43,7 +43,9 @@ import ABC.Interpreter.JavaScript
 // These two functions use casts to enforce uniqueness of the JSWorld:
 
 //* Lift a `*World` function to the `JS` monad.
-js :: !(*JSWorld -> (a, *JSWorld)) -> JS st a
+accJS :: !(*JSWorld -> (a, *JSWorld)) -> JS st a
+//* Lift a `*World` function without result to the `JS` monad (returns `null`).
+appJS :: !(*JSWorld -> *JSWorld) -> JS st JSVal
 //* Execute a `JS` monad on a `*World`.
 runJS :: !st !JSVal !(JS st a) !*JSWorld -> (a, *JSWorld)
 
