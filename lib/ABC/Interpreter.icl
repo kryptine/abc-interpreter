@@ -433,8 +433,13 @@ prepare_prelinked_interpretation exefile bcfile w
 # pgm = fromJust pgm
 # code_start = get_code pgm
 
-# int_syms = {#s \\ s <- getInterpreterSymbols pgm}
-# sorted_syms = {#s \\ s <- sortBy (\a b -> a.symbol_value < b.symbol_value) [s \\ s <-: int_syms]}
+/* NB: create the node before the array comprehension; otherwise the expression
+ * is evaluated twice (once to evaluate the length; then to fill the array). */
+#! int_syms = getInterpreterSymbols pgm
+#! int_syms = {#s \\ s <- int_syms}
+#! sorted_syms = sortBy (\a b -> a.symbol_value < b.symbol_value) [s \\ s <-: int_syms]
+#! sorted_syms = {#s \\ s <- sorted_syms}
+
 # pie =
 	{ pie_code_start     = code_start
 	, pie_symbols        = int_syms
