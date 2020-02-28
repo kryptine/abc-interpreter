@@ -172,14 +172,20 @@ instance toJSArgs (a,b,c,d,e) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c & gTo
 instance toJSArgs (a,b,c,d,e,f) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c & gToJS{|*|} d & gToJS{|*|} e & gToJS{|*|} f
 
 /**
+ * Create a JavaScript expression describing a function application.
+ * The application is not actually performed; use `.$` or `.$!` for this.
+ */
+jsCall :: !JSFun !a -> JSVal | toJSArgs a
+
+/**
  * Call a JavaScript function and return the result.
  */
-(.$) infixl 2 :: !JSFun !b !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs b
+(.$) infixl 2 :: !JSFun !a !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs a
 
 /**
  * Call a JavaScript function and discard the result.
  */
-(.$!) infixl 2 :: !JSFun !b !*JSWorld -> *JSWorld | toJSArgs b
+(.$!) infixl 2 :: !JSFun !a !*JSWorld -> *JSWorld | toJSArgs a
 
 /**
  * Use the JavaScript `new` keyword to create a new object.

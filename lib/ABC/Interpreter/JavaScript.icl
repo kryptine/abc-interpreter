@@ -516,14 +516,17 @@ where toJSArgs (a,b,c,d,e) = {toJS a, toJS b, toJS c, toJS d, toJS e}
 instance toJSArgs (a,b,c,d,e,f) | gToJS{|*|} a & gToJS{|*|} b & gToJS{|*|} c & gToJS{|*|} d & gToJS{|*|} e & gToJS{|*|} f
 where toJSArgs (a,b,c,d,e,f) = {toJS a, toJS b, toJS c, toJS d, toJS e, toJS f}
 
-(.$) infixl 2 :: !JSFun !b !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs b
+jsCall :: !JSFun !a -> JSVal | toJSArgs a
+jsCall f args = JSCall f (toJSArgs args)
+
+(.$) infixl 2 :: !JSFun !a !*JSWorld -> *(!JSVal, !*JSWorld) | toJSArgs a
 (.$) f args w = case eval_js_with_return_value (js_val_to_string call) of
 	JSUnused -> abort_with_node call
 	result   -> (result, w)
 where
 	call = JSCall f (toJSArgs args)
 
-(.$!) infixl 2 :: !JSFun !b !*JSWorld -> *JSWorld | toJSArgs b
+(.$!) infixl 2 :: !JSFun !a !*JSWorld -> *JSWorld | toJSArgs a
 (.$!) f args w = case eval_js (js_val_to_string call) of
 	True  -> w
 	False -> abort_with_node call
