@@ -604,12 +604,12 @@ where
 	where
 		find_predef_desc :: !Int -> Int
 		find_predef_desc d = case d of
-			-6  -> get_array_D {}
+			-46 -> get_D 1
 			-14 -> get_string_D ""
 			-22 -> get_D True
 			-30 -> get_D 'a'
+			-6  -> get_array_D {}
 			-38 -> get_D 1.0
-			-46 -> get_D 1
 			_   -> abort ("unknown predefined descriptor "+++toString d+++"\n")
 		where
 			get_array_D :: !{#Int} -> Int
