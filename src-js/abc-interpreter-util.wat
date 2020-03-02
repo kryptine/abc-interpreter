@@ -1827,7 +1827,7 @@
 					(if ;; already copied; add a redirection
 						(i32.and (local.get $desc) (i32.const 1))
 						(then
-							(i64.store (local.get $s) (i64.extend_i32_u (i32.sub (local.get $desc) (local.get $s))))
+							(i64.store (local.get $s) (i64.extend_i32_s (i32.sub (local.get $desc) (local.get $s))))
 							(local.set $s (i32.add (local.get $s) (i32.const 8)))
 							(br $next-node)
 						)
