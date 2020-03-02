@@ -2160,6 +2160,12 @@
 							(br_if $next-node (i32.eqz (local.get $arity)))
 
 							;; arity 1 or negative
+							(if ;; skip indirection
+								(i32.eq (local.get $arity) (i32.const -2))
+								(then
+									(local.set $s (i32.sub (local.get $s) (i32.const 8)))
+								)
+							)
 							(local.set $node (i32.load offset=8 (local.get $node)))
 							(br $continue)
 						)
