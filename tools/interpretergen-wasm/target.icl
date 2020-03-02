@@ -689,7 +689,7 @@ jmp_ap_ptr :: !Int -> Expr (TPtr TWord)
 jmp_ap_ptr i = Econst I32 ((98+i)*8)
 
 cycle_ptr :: Expr TWord
-cycle_ptr = Econst I64 (130*8)
+cycle_ptr = Econst I64 (691*8)
 
 indirection_ptr :: Expr TWord
 indirection_ptr = Econst I64 ((131+5)*8)

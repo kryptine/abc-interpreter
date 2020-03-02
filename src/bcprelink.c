@@ -21,7 +21,7 @@ enum section_type {
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[690] = {
+uint64_t prelinker_preamble[692] = {
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
 	/* 10 */ 0, 0, 0, 4, _4chars2int('B','O','O','L'),
@@ -41,9 +41,9 @@ uint64_t prelinker_preamble[690] = {
 		Cjmp_ap21, Cjmp_ap22, Cjmp_ap23, Cjmp_ap24, Cjmp_ap25,
 		Cjmp_ap26, Cjmp_ap27, Cjmp_ap28, Cjmp_ap29, Cjmp_ap30,
 		Cjmp_ap31, Cjmp_ap32,
-	/* 130 */ Chalt, /* cycle in spine */
+	/* 130 unused; old */ 0,
 	/* 131 */ Cjsr_eval0, Cfill_a01_pop_rtn, Chalt, Chalt, -2, /* indirection */
-		Cpush_node1, (131+5)*8, Cjsr_eval0, Cfill_a01_pop_rtn,
+		Cpush_node1, (690+1)*8, Cjsr_eval0, Cfill_a01_pop_rtn,
 	/* 140 */ 141*8+2, 0, 0, 0, 4, /* Nil */
 		_4chars2int('_','N','i','l'),
 	/* 146 static characters*/
@@ -72,7 +72,9 @@ uint64_t prelinker_preamble[690] = {
 		0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
 	/* 685 power10_table2 (for RtoAC) */
 		0,0,0,0,0,
-	/* 690 */
+	/* 690 cycle in spine*/
+		0, Chalt,
+	/* 692 */
 };
 
 void prepare_preamble(void) {
