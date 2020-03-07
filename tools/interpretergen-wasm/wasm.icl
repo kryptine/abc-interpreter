@@ -4,7 +4,7 @@ import StdEnv
 
 instance == Type
 where
-	== a b = case a of
+	(==) a b = case a of
 		I8  -> b=:I8
 		I16 -> b=:I16
 		I32 -> b=:I32

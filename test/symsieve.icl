@@ -9,34 +9,34 @@ import StdMisc
 
 instance == Nat
 where
-	== O     O     = True
-	== (S n) (S m) = m == n
-	== _     _     = False
+	(==) O     O     = True
+	(==) (S n) (S m) = m == n
+	(==) _     _     = False
 
 instance < Nat
 where
-	< _     O     = False
-	< O     (S _) = True
-	< (S n) (S m) = n < m
+	(<) _     O     = False
+	(<) O     (S _) = True
+	(<) (S n) (S m) = n < m
 
 instance + Nat
 where
-	+ O     n = n
-	+ (S n) m = S (n + m)
+	(+) O     n = n
+	(+) (S n) m = S (n + m)
 
 instance * Nat
 where
-	* O     _ = O
-	* _     O = O
-	* (S n) m = m + n * m
+	(*) O     _ = O
+	(*) _     O = O
+	(*) (S n) m = m + n * m
 
 instance - Nat
 where
-	- n     O     = n
-	- O     n     = abort "negative nat\n"
-	- (S n) (S m) = n - m
+	(-) n     O     = n
+	(-) O     n     = abort "negative nat\n"
+	(-) (S n) (S m) = n - m
 
-instance rem Nat where rem n m = if (n < m) n ((n-m) rem m)
+instance rem Nat where (rem) n m = if (n < m) n ((n-m) rem m)
 
 instance toInt Nat
 where

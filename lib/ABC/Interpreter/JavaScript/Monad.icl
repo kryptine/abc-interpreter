@@ -46,7 +46,7 @@ where
 
 instance <*> (JS st)
 where
-	<*> (JS f) (JS g) = JS
+	(<*>) (JS f) (JS g) = JS
 		\w
 			# (f,w) = f w
 			# (x,w) = g w

@@ -63,9 +63,9 @@ printInstruction{|CONS of d|} fx (CONS x) = case d.gcd_name of
 
 derive printInstruction ABCInstruction, Annotation
 
-instance <<< ABCInstruction where <<< f i = f <<< printInstruction{|*|} i
+instance <<< ABCInstruction where (<<<) f i = f <<< printInstruction{|*|} i
 
 instance <<< [a] | <<< a
 where
-	<<< f [] = f
-	<<< f [i:is] = f <<< i <<< is
+	(<<<) f [] = f
+	(<<<) f [i:is] = f <<< i <<< is

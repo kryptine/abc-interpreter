@@ -340,11 +340,11 @@ instance to_ptr_offset TWord      where to_ptr_offset w = Ewrap I32 I64 w
 instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
 instance to_ptr_offset TShort     where to_ptr_offset s = Ewrap I32 I64 s
 
-instance + (Expr t)     where + a b = Eadd (type2 a b) a b
-instance - (Expr t)     where - a b = Esub (type2 a b) a b
-instance * (Expr t)     where * a b = Emul (type2 a b) a b
-instance / (Expr t)     where / a b = Ediv (type2 a b) Signed a b
-instance ^ (Expr TReal) where ^ a b = Ecall "clean_powR" [a,b]
+instance + (Expr t)     where (+) a b = Eadd (type2 a b) a b
+instance - (Expr t)     where (-) a b = Esub (type2 a b) a b
+instance * (Expr t)     where (*) a b = Emul (type2 a b) a b
+instance / (Expr t)     where (/) a b = Ediv (type2 a b) Signed a b
+instance ^ (Expr TReal) where (^) a b = Ecall "clean_powR" [a,b]
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = Erem (type2 a b) Signed a b
@@ -471,21 +471,21 @@ where
 		Iref vartype loadtype offset addr
 			-> Estore vartype loadtype offset addr e
 
-instance .= TWord  TWord  where .= v e t = set v e t
-instance .= TWord  TPtrOffset where .= v e t = set v (to_word e) t
-instance .= TWord  TBool  where .= v e t = set v (to_word e) t
-instance .= TWord  TChar  where .= v e t = set v (to_word e) t
-instance .= TWord  TInt   where .= v e t = set v (to_word e) t
-instance .= TWord  TShort where .= v e t = set v (to_word e) t
+instance .= TWord  TWord  where (.=) v e t = set v e t
+instance .= TWord  TPtrOffset where (.=) v e t = set v (to_word e) t
+instance .= TWord  TBool  where (.=) v e t = set v (to_word e) t
+instance .= TWord  TChar  where (.=) v e t = set v (to_word e) t
+instance .= TWord  TInt   where (.=) v e t = set v (to_word e) t
+instance .= TWord  TShort where (.=) v e t = set v (to_word e) t
 
-instance .= TPtrOffset TPtrOffset where .= v e t = set v e t
+instance .= TPtrOffset TPtrOffset where (.=) v e t = set v e t
 
-instance .= TChar  TChar  where .= v e t = set v e t
+instance .= TChar  TChar  where (.=) v e t = set v e t
 
-instance .= TInt   TInt   where .= v e t = set v e t
-instance .= TInt   TWord  where .= v e t = set v (to_int e) t
+instance .= TInt   TInt   where (.=) v e t = set v e t
+instance .= TInt   TWord  where (.=) v e t = set v (to_int e) t
 
-instance .= (TPtr t) (TPtr u) where .= v e t = set v e t
+instance .= (TPtr t) (TPtr u) where (.=) v e t = set v e t
 
 var_add :: !Ex !Ex !Target -> Target
 var_add v e t = case e of
@@ -515,12 +515,12 @@ var_sub v e t = case e of
 				with
 					ld = Eload localtype storetype Signed offset addr
 
-instance += TWord  TWord  where += var val t = var_add var val t
-instance += TPtrOffset TPtrOffset where += var val t = var_add var val t
+instance += TWord  TWord  where (+=) var val t = var_add var val t
+instance += TPtrOffset TPtrOffset where (+=) var val t = var_add var val t
 
-instance -= TWord  TWord  where -= var val t = var_sub var val t
-instance -= TPtrOffset TPtrOffset where -= var val t = var_sub var val t
-instance -= TShort TShort where -= var val t = var_sub var val t
+instance -= TWord  TWord  where (-=) var val t = var_sub var val t
+instance -= TPtrOffset TPtrOffset where (-=) var val t = var_sub var val t
+instance -= TShort TShort where (-=) var val t = var_sub var val t
 
 instance advance_ptr Int
 where
@@ -554,7 +554,7 @@ get_type_of_ptr _ = code {
 
 instance @ Int
 where
-	@ p i
+	(@) p i
 	| i >= 0 = Iref loc_type store_type idx p
 	| otherwise = Iref loc_type store_type 0 (Esub I32 p (Econst I32 idx))
 	where
@@ -568,7 +568,7 @@ where
 
 instance @ (Expr t)
 where
-	@ p e = Iref loc_type store_type 0 (p @? e)
+	(@) p e = Iref loc_type store_type 0 (p @? e)
 	where
 		store_type = wasm_type (get_type_of_ptr p)
 		loc_type = case store_type of
@@ -578,13 +578,13 @@ where
 
 instance @? Int
 where
-	@? p i = if (i>=0) Eadd Esub I32 p (Econst I32 (abs i << s))
+	(@?) p i = if (i>=0) Eadd Esub I32 p (Econst I32 (abs i << s))
 	where
 		s = type_width_shift (wasm_type (get_type_of_ptr p))
 
 instance @? (Expr t)
 where
-	@? p e
+	(@?) p e
 	# e = if (type e==I64) (Ewrap I32 I64 e) e
 	| sft == 0  = Eadd I32 p e
 	| otherwise = Eadd I32 p (Eshl I32 e (Econst I32 sft))

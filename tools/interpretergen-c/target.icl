@@ -166,11 +166,11 @@ instance to_ptr_offset TWord      where to_ptr_offset w = "(int)("+-+w+-+")"
 instance to_ptr_offset TPtrOffset where to_ptr_offset w = w
 instance to_ptr_offset TShort     where to_ptr_offset s = "(int)("+-+s+-+")"
 
-instance + (Expr t) where + a b = "("+-+a+-+"+"+-+b+-+")"
-instance - (Expr t) where - a b = "("+-+a+-+"-"+-+b+-+")"
-instance * (Expr t) where * a b = "("+-+a+-+"*"+-+b+-+")"
-instance / (Expr t) where / a b = "("+-+a+-+"/ "+-+b+-+")"
-instance ^ (Expr TReal) where ^ a b = "pow("+-+a+-+","+-+b+-+")"
+instance + (Expr t) where (+) a b = "("+-+a+-+"+"+-+b+-+")"
+instance - (Expr t) where (-) a b = "("+-+a+-+"-"+-+b+-+")"
+instance * (Expr t) where (*) a b = "("+-+a+-+"*"+-+b+-+")"
+instance / (Expr t) where (/) a b = "("+-+a+-+"/ "+-+b+-+")"
+instance ^ (Expr TReal) where (^) a b = "pow("+-+a+-+","+-+b+-+")"
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = "("+-+a+-+"%"+-+b+-+")"
@@ -299,17 +299,17 @@ where
 set :: !(Expr v) !(Expr e) !Target -> Target
 set v e t = append ("\t"+-+v+-+"="+-+e+-+";") t
 
-instance .= TWord  TWord  where .= v e t = set v e t
-instance .= TWord  TPtrOffset where .= v e t = set v e t
-instance .= TWord  TBool  where .= v e t = set v e t
-instance .= TWord  TChar  where .= v e t = set v e t
-instance .= TWord  TInt   where .= v e t = set v e t
-instance .= TWord  TShort where .= v e t = set v e t
-instance .= TPtrOffset TPtrOffset where .= v e t = set v e t
-instance .= TChar  TChar  where .= v e t = set v e t
-instance .= TInt   TInt   where .= v e t = set v e t
-instance .= TInt   TWord  where .= v e t = set v e t
-instance .= (TPtr t) (TPtr u) where .= v e t = set v e t
+instance .= TWord  TWord  where (.=) v e t = set v e t
+instance .= TWord  TPtrOffset where (.=) v e t = set v e t
+instance .= TWord  TBool  where (.=) v e t = set v e t
+instance .= TWord  TChar  where (.=) v e t = set v e t
+instance .= TWord  TInt   where (.=) v e t = set v e t
+instance .= TWord  TShort where (.=) v e t = set v e t
+instance .= TPtrOffset TPtrOffset where (.=) v e t = set v e t
+instance .= TChar  TChar  where (.=) v e t = set v e t
+instance .= TInt   TInt   where (.=) v e t = set v e t
+instance .= TInt   TWord  where (.=) v e t = set v e t
+instance .= (TPtr t) (TPtr u) where (.=) v e t = set v e t
 
 add_local :: !(Expr v) !(Expr e) !Target -> Target
 add_local v e t = case e of
@@ -317,8 +317,8 @@ add_local v e t = case e of
 	"1" -> append ("\t"+-+v+-+"++;") t
 	e   -> append ("\t"+-+v+-+"+="+-+e+-+";") t
 
-instance += TWord  TWord  where += v e t = add_local v e t
-instance += TPtrOffset TPtrOffset where += v e t = add_local v e t
+instance += TWord  TWord  where (+=) v e t = add_local v e t
+instance += TPtrOffset TPtrOffset where (+=) v e t = add_local v e t
 
 sub_local :: !(Expr v) !(Expr e) !Target -> Target
 sub_local v e t = case e of
@@ -326,9 +326,9 @@ sub_local v e t = case e of
 	"1" -> append ("\t"+-+v+-+"--;") t
 	e   -> append ("\t"+-+v+-+"-="+-+e+-+";") t
 
-instance -= TWord  TWord  where -= v e t = sub_local v e t
-instance -= TPtrOffset TPtrOffset where -= v e t = sub_local v e t
-instance -= TShort TShort where -= v e t = sub_local v e t
+instance -= TWord  TWord  where (-=) v e t = sub_local v e t
+instance -= TPtrOffset TPtrOffset where (-=) v e t = sub_local v e t
+instance -= TShort TShort where (-=) v e t = sub_local v e t
 
 instance advance_ptr Int      where advance_ptr v e t = add_local v (toString e) t
 instance advance_ptr (Expr w) where advance_ptr v e t = add_local v e t

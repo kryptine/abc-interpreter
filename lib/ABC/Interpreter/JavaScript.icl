@@ -430,7 +430,7 @@ jsRecord vs = JSRecord ('Data.Map'.fromList vs)
 
 instance .# Int
 where
-	.# arr i = case arr of
+	(.#) arr i = case arr of
 		JSArray xs
 			| 0<=i && i<size xs -> xs.[i]
 			| otherwise         -> JSUndefined
@@ -438,7 +438,7 @@ where
 
 instance .# String
 where
-	.# obj path
+	(.#) obj path
 		| contains_dot (size path-1) path
 			= JSSelPath obj path
 			= JSSel obj (JSString path)

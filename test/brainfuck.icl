@@ -13,15 +13,15 @@ import StdEnv
 :: DataPointer :== Int
 
 instance == Command where
-	== INC INC = True
-	== DEC DEC = True
-	== INCP INCP = True
-	== DECP DECP = True
-	== OUT OUT = True
-	== IN IN = True
-	== IFZ IFZ = True
-	== IFNZ IFNZ = True
-	== _ _ = False
+	(==) INC INC = True
+	(==) DEC DEC = True
+	(==) INCP INCP = True
+	(==) DECP DECP = True
+	(==) OUT OUT = True
+	(==) IN IN = True
+	(==) IFZ IFZ = True
+	(==) IFNZ IFNZ = True
+	(==) _ _ = False
 
 // Run a program
 run :: Program [Char] -> [Char]
