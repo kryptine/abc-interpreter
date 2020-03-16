@@ -2047,7 +2047,7 @@
 									(block $blk
 										(loop $lp
 											(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
-											(br_if $blk (local.get $arity))
+											(br_if $blk (i32.eqz (local.get $arity)))
 											(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
 											(local.set $args (i32.sub (local.get $args) (i32.const 8)))
 											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
@@ -2399,7 +2399,7 @@
 									(block $blk
 										(loop $lp
 											(local.set $arity (i32.sub (local.get $arity) (i32.const 1)))
-											(br_if $blk (local.get $arity))
+											(br_if $blk (i32.eqz (local.get $arity)))
 											(i32.store (local.get $stack) (i32.load offset=8 (local.get $args)))
 											(local.set $args (i32.sub (local.get $args) (i32.const 8)))
 											(local.set $stack (i32.sub (local.get $stack) (i32.const 4)))
