@@ -50,6 +50,8 @@ import ABC.Interpreter
 	, val :: !JSVal
 	}
 
+instance toString JSVal where toString v = js_val_to_string v
+
 js_val_to_string :: !JSVal -> .String
 js_val_to_string v
 #! v = hyperstrict v

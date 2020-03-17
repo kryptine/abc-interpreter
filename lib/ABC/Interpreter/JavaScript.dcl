@@ -44,6 +44,8 @@ toJS x :== gToJS{|*|} x
 :: JSRecord =: JSRecord (Map String JSVal)
 derive gToJS JSRecord
 
+instance toString JSVal
+
 //* Shorthand useful to build the argument for `jsRecord`.
 (:>) infix 1 :: !String !a -> (String, JSVal) | gToJS{|*|} a
 
