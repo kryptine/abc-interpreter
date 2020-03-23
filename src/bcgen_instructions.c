@@ -2598,7 +2598,6 @@ void code_lnR(void) {
 }
 
 void code_load_i(CleanInt value) {
-	unsupported_instruction_warning(Cload_i);
 	add_instruction_i(Cload_i,value);
 }
 
@@ -2608,17 +2607,14 @@ void code_load_module_name(void) {
 }
 
 void code_load_si16(CleanInt value) {
-	unsupported_instruction_warning(Cload_si16);
 	add_instruction_i(Cload_si16,value);
 }
 
 void code_load_si32(CleanInt value) {
-	unsupported_instruction_warning(Cload_si32);
 	add_instruction_i(Cload_si32,value);
 }
 
 void code_load_ui8(CleanInt value) {
-	unsupported_instruction_warning(Cload_ui8);
 	add_instruction_i(Cload_ui8,value);
 }
 

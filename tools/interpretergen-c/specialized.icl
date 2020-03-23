@@ -81,6 +81,30 @@ instr_RtoAC t = foldl (flip append) t
 	, "}"
 	]
 
+instr_load_i :: !Target -> Target
+instr_load_i t = foldl (flip append) t
+	[ "bsp[0]=*(BC_WORD*)(bsp[0]+pc[1]);"
+	, "pc+=2;"
+	]
+
+instr_load_si16 :: !Target -> Target
+instr_load_si16 t = foldl (flip append) t
+	[ "bsp[0]=*(short*)(bsp[0]+pc[1]);"
+	, "pc+=2;"
+	]
+
+instr_load_si32 :: !Target -> Target
+instr_load_si32 t = foldl (flip append) t
+	[ "bsp[0]=*(int*)(bsp[0]+pc[1]);"
+	, "pc+=2;"
+	]
+
+instr_load_ui8 :: !Target -> Target
+instr_load_ui8 t = foldl (flip append) t
+	[ "bsp[0]=*(unsigned char*)(bsp[0]+pc[1]);"
+	, "pc+=2;"
+	]
+
 instr_closeF :: !Target -> Target
 instr_closeF t = foldl (flip append) t
 	[ "{"
