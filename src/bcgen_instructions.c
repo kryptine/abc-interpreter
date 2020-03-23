@@ -45,6 +45,26 @@ void unsupported_instruction_warning(int16_t instruction) {
 	warned_unsupported_instructions[warned_unsupported_instructions_i++] = instruction;
 	fprintf(stderr,"Warning: instruction %s is not supported by the interpreter\n",instruction_name(instruction));
 }
+
+char *used_ccalls[256]={NULL};
+int used_ccalls_ptr=0;
+void used_ccall_warning (char *c_function_name) {
+	for (int i=0; i<used_ccalls_ptr; i++)
+		if (!strcmp (used_ccalls[i],c_function_name))
+			return;
+	used_ccalls[used_ccalls_ptr]=safe_malloc (strlen (c_function_name)+1);
+	strcpy (used_ccalls[used_ccalls_ptr],c_function_name);
+	used_ccalls_ptr++;
+}
+
+void show_used_ccalls_warning (void) {
+	if (used_ccalls_ptr==0)
+		return;
+	fprintf(stderr,"Warning: external C functions cannot be packaged into the bytecode: ");
+	for (int i=0; i<used_ccalls_ptr-1; i++)
+		fprintf (stderr,"%s; ",used_ccalls[i]);
+	fprintf (stderr,"%s\n",used_ccalls[used_ccalls_ptr-1]);
+}
 #endif
 
 struct program *initialize_code(void) {
@@ -3710,7 +3730,9 @@ void code_buildo2(char code_name[],int a_offset1,int a_offset2) {
 }
 
 void code_ccall (char *c_function_name,char *type,int type_length) {
-	fprintf(stderr,"Warning: external C function %s cannot be packaged into the bytecode\n",c_function_name);
+#ifndef LINK_CLEAN_RUNTIME
+	used_ccall_warning (c_function_name);
+#endif
 
 	struct label *function_label;
 	function_label=new_internal_label();
@@ -4881,6 +4903,8 @@ void write_program(FILE *program_file) {
 	fwrite(&pgrm.strings_size, sizeof(pgrm.strings_size), 1, program_file);
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 
+	show_used_ccalls_warning();
+
 	int start=0, end=label_id-1;
 	count_and_renumber_labels(labels, &start, &end);
 	fwrite(&label_id, sizeof(label_id), 1, program_file);
@@ -4951,6 +4975,9 @@ static char *print_local_labels_to_string(struct label_node *node, char *ptr) {
 
 char *write_program_to_string(uint32_t *bytes_needed) {
 	int start=0, end=label_id-1;
+
+	show_used_ccalls_warning();
+
 	count_and_renumber_labels(labels, &start, &end);
 
 	*bytes_needed =
