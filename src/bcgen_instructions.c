@@ -61,9 +61,31 @@ void show_used_ccalls_warning (void) {
 	if (used_ccalls_ptr==0)
 		return;
 	fprintf(stderr,"Warning: external C functions cannot be packaged into the bytecode: ");
-	for (int i=0; i<used_ccalls_ptr-1; i++)
+	for (int i=0; i<used_ccalls_ptr-1; i++){
 		fprintf (stderr,"%s; ",used_ccalls[i]);
+		free (used_ccalls[i]);
+	}
 	fprintf (stderr,"%s\n",used_ccalls[used_ccalls_ptr-1]);
+	free (used_ccalls[used_ccalls_ptr-1]);
+}
+
+int16_t requires_file_io[256]={-1};
+int requires_file_io_ptr=0;
+void requires_file_io_warning (int16_t instruction) {
+	for (int i=0; i<requires_file_io_ptr; i++)
+		if (requires_file_io[i]==instruction)
+			return;
+	requires_file_io[requires_file_io_ptr]=instruction;
+	requires_file_io_ptr++;
+}
+
+void show_requires_file_io_warning (void) {
+	if (requires_file_io_ptr==0)
+		return;
+	fprintf(stderr,"Warning: some instructions require file I/O: ");
+	for (int i=0; i<requires_file_io_ptr-1; i++)
+		fprintf (stderr,"%s; ",instruction_name (requires_file_io[i]));
+	fprintf (stderr,"%s\n",instruction_name (requires_file_io[requires_file_io_ptr-1]));
 }
 #endif
 
@@ -974,10 +996,9 @@ struct specialized_jsr {
 	const char *label;
 	int instruction;
 	int flags;
-	int warned_flags;
 };
 
-#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags, 0},
+#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags},
 #define S_UNSUPPORTED 1
 #define S_IO 2
 
@@ -990,7 +1011,7 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(ItoAC,0)
 	SPECIALIZED(BtoAC,0)
 	SPECIALIZED(RtoAC,0)
-	{"print__string__",Cprint_string,0},
+	{"print__string__",Cprint_string},
 
 	SPECIALIZED(closeF,       S_IO)
 	SPECIALIZED(endF,         S_IO)
@@ -1045,12 +1066,8 @@ void add_specialized_jsr_instruction(unsigned int n) {
 	struct specialized_jsr *entry=&specialized_jsr_labels[n];
 	if (entry->flags & S_UNSUPPORTED)
 		unsupported_instruction_warning(entry->instruction);
-	else if (entry->flags & S_IO) {
-		if (!(entry->warned_flags & S_IO)) {
-			fprintf(stderr,"Warning: jsr %s requires file IO\n",entry->label);
-			entry->warned_flags|=S_IO;
-		}
-	}
+	else if (entry->flags & S_IO)
+		requires_file_io_warning (entry->instruction);
 
 	add_instruction(entry->instruction);
 }
@@ -4904,6 +4921,7 @@ void write_program(FILE *program_file) {
 	fwrite(&pgrm.data_size, sizeof(pgrm.data_size), 1, program_file);
 
 	show_used_ccalls_warning();
+	show_requires_file_io_warning();
 
 	int start=0, end=label_id-1;
 	count_and_renumber_labels(labels, &start, &end);
@@ -4977,6 +4995,7 @@ char *write_program_to_string(uint32_t *bytes_needed) {
 	int start=0, end=label_id-1;
 
 	show_used_ccalls_warning();
+	show_requires_file_io_warning();
 
 	count_and_renumber_labels(labels, &start, &end);
 
