@@ -4994,9 +4994,6 @@ static char *print_local_labels_to_string(struct label_node *node, char *ptr) {
 char *write_program_to_string(uint32_t *bytes_needed) {
 	int start=0, end=label_id-1;
 
-	show_used_ccalls_warning();
-	show_requires_file_io_warning();
-
 	count_and_renumber_labels(labels, &start, &end);
 
 	*bytes_needed =
