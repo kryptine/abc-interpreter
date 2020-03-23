@@ -9,6 +9,11 @@ instr_mulUUL :: !Target -> Target
 
 instr_RtoAC :: !Target -> Target
 
+instr_load_i :: !Target -> Target
+instr_load_si16 :: !Target -> Target
+instr_load_si32 :: !Target -> Target
+instr_load_ui8 :: !Target -> Target
+
 instr_closeF :: !Target -> Target
 instr_endF :: !Target -> Target
 instr_errorF :: !Target -> Target

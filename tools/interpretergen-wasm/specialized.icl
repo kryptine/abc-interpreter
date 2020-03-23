@@ -33,6 +33,25 @@ instr_RtoAC t = (
 	advance_ptr B 1
 	) t
 
+instr_load_i :: !Target -> Target
+instr_load_i t = instr_load I64 True t
+
+instr_load_si16 :: !Target -> Target
+instr_load_si16 t = instr_load I16 True t
+
+instr_load_si32 :: !Target -> Target
+instr_load_si32 t = instr_load I32 True t
+
+instr_load_ui8 :: !Target -> Target
+instr_load_ui8 t = instr_load I8 False t
+
+instr_load :: !Type !Signedness -> Target -> Target
+instr_load type signed =
+	new_local TWord (B @ 0) \ptr ->
+	ptr += (Pc @ 1) :.
+	B @ 0 .= ex_to_expr (Eload I64 type signed 0 (expr_to_ex (to_ptr_offset ptr))) ::: TWord :.
+	advance_ptr Pc 2
+
 instr_closeF :: !Target -> Target
 instr_closeF t = instr_unimplemented t
 

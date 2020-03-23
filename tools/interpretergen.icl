@@ -3764,6 +3764,11 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		d += (B @ 0 <<. if_i64_or_i32_expr (lit_word 3) (lit_word 2)) :.
 		B @ 0 .= to_word_ptr d @ 0
 
+	, instr "load_i" Nothing instr_load_i
+	, instr "load_si16" Nothing instr_load_si16
+	, instr "load_si32" Nothing instr_load_si32
+	, instr "load_ui8" Nothing instr_load_ui8
+
 	, instr "closeF" Nothing instr_closeF
 	, instr "endF" Nothing instr_endF
 	, instr "errorF" Nothing instr_errorF
@@ -3795,11 +3800,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "get_thunk_arity" $
 	  alias "get_thunk_desc" $
 	  alias "instruction" $
-	  alias "load_i" $
 	  alias "load_module_name" $
-	  alias "load_si16" $
-	  alias "load_si32" $
-	  alias "load_ui8" $
 	  alias "push_finalizers" $
 	  alias "pushL" $
 	  alias "pushLc" $
