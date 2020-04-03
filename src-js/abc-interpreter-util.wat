@@ -9,16 +9,16 @@
 	(func $has-host-reference (import "clean" "has_host_reference") (param i32) (result i32))
 	(func $update-host-reference (import "clean" "update_host_reference") (param i32 i32))
 
+	(func $set-hp (import "clean" "set_hp") (param i32))
+	(func $set-hp-free (import "clean" "set_hp_free") (param i32))
+
 	(func $gc-start (import "clean" "gc_start"))
 	(func $gc-end (import "clean" "gc_end"))
 	;; When a node with the js-ref-constructor is found, the callback is called
 	;; with its argument. This is used in iTasks to clean up the references from
 	;; wasm to JS.
-	(global $js-ref-constructor (mut i32) (i32.const 0))
 	(func $js-ref-found (import "clean" "js_ref_found") (param i32))
-
-	(func $set-hp (import "clean" "set_hp") (param i32))
-	(func $set-hp-free (import "clean" "set_hp_free") (param i32))
+	(global $js-ref-constructor (mut i32) (i32.const 0))
 
 	(global $start-heap (mut i32) (i32.const 0))
 	(global $half-heap (mut i32) (i32.const 0))
