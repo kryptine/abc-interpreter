@@ -552,7 +552,7 @@ eval_to_hnf_return_failure:
 #endif
 				);
 #ifdef DEBUG_CURSES
-		debugger_set_heap(hp+heap_free-heap_size);
+		debugger_set_heap(options.in_first_semispace ? heap : (heap+heap_size));
 #endif
 		if (heap_free <= old_heap_free) {
 			EPRINTF("Heap full (%d/%d).\n",old_heap_free,(int)heap_free);

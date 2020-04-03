@@ -13,14 +13,19 @@
 # define UPDATE_REF(old,heap_size,ref,hp,snoh) update_ref(old,heap_size,ref,hp)
 #endif
 
-static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
-		BC_WORD **ref, BC_WORD *hp
+struct heap_pointers {
+	BC_WORD *new;
+	BC_WORD *end;
+};
+
+static inline struct heap_pointers update_ref(BC_WORD *old, size_t heap_size,
+		BC_WORD **ref, struct heap_pointers hp
 #ifdef LINK_CLEAN_RUNTIME
 		, BC_WORD **shared_nodes_of_host
 #endif
 		) {
 	BC_WORD *n,d;
-	int32_t arity;
+	int32_t arity,a_arity;
 
 	n=*ref;
 
@@ -33,10 +38,10 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 		return hp;
 	}
 
-	*ref=hp;
+	*ref=hp.new;
 
 #if DEBUG_GARBAGE_COLLECTOR > 1
-	EPRINTF ("%p <- %p (d %p)\n",hp,n,(void*)d);
+	EPRINTF ("%p <- %p (d %p)\n",hp.new,n,(void*)d);
 #endif
 
 	if (d & 2) {
@@ -45,13 +50,14 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 				BC_WORD *shared_node=&small_integers[n[1]*2];
 				*ref=shared_node;
 				*n=(BC_WORD)shared_node+1;
-				return hp;
 			} else {
-				hp[0]=d;
-				hp[1]=n[1];
-				*n=(BC_WORD)hp+1;
-				return &hp[2];
+				hp.end-=2;
+				hp.end[0]=d;
+				hp.end[1]=n[1];
+				*ref=hp.end;
+				*n=(BC_WORD)hp.end+1;
 			}
+			return hp;
 		} else if (d == (BC_WORD)&BOOL+2) {
 			BC_WORD *shared_node=&static_booleans[n[1] ? 2 : 0];
 			*ref=shared_node;
@@ -63,19 +69,24 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 			*n=(BC_WORD)shared_node+1;
 			return hp;
 		} else if (d == (BC_WORD)&REAL+2) {
-			hp[0]=d;
-			hp[1]=n[1];
-			*n=(BC_WORD)hp+1;
-			return &hp[2];
+			hp.end-=2;
+			hp.end[0]=d;
+			hp.end[1]=n[1];
+			*ref=hp.end;
+			*n=(BC_WORD)hp.end+1;
+			return hp;
 		} else if (d == (BC_WORD)&__STRING__+2) {
 			unsigned int size=n[1];
 			size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-			memcpy (hp,n,(size+2)*sizeof(BC_WORD));
-			*n=(BC_WORD)hp+1;
-			return &hp[2+size];
+			hp.end-=2+size;
+			memcpy (hp.end,n,(size+2)*sizeof(BC_WORD));
+			*n=(BC_WORD)hp.end+1;
+			*ref=hp.end;
+			return hp;
 		} else if (d == (BC_WORD)&__ARRAY__+2) {
 			unsigned int size=n[1];
 			d=n[2];
+			a_arity=0;
 
 			if (d == (BC_WORD)&INT+2
 				|| d == (BC_WORD)&REAL+2
@@ -85,11 +96,20 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 				size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
 			} else {
 				size*=(((int16_t*)d)[-1]-256);
+				a_arity=((int16_t*)d)[0];
 			}
 
-			memcpy (hp,n,(size+3)*sizeof(BC_WORD));
-			*n=(BC_WORD)hp+1;
-			return &hp[3+size];
+			if (d!=0 && a_arity==0){
+				hp.end-=3+size;
+				memcpy (hp.end,n,(size+3)*sizeof(BC_WORD));
+				*ref=hp.end;
+				*n=(BC_WORD)hp.end+1;
+			} else {
+				memcpy (hp.new,n,(size+3)*sizeof(BC_WORD));
+				*n=(BC_WORD)hp.new+1;
+				hp.new+=3+size;
+			}
+			return hp;
 		}
 
 #ifdef LINK_CLEAN_RUNTIME
@@ -102,42 +122,79 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 
 		/* Not a built-in type */
 		arity=((int16_t*)d)[-1];
-		if (arity>256) /* records */
-			arity-=256;
+
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF ("\thnf %d\n",arity);
 #endif
 
-		if (arity==0) {
+		if (arity==0){
 			BC_WORD *shared_node=(BC_WORD*)(d-2)-1;
 			*ref=shared_node;
 			*n=(BC_WORD)shared_node+1;
 			return hp;
+		} else if (arity>256){ /* records */
+			arity-=256;
+			a_arity=((int16_t*)d)[0];
+
+			if (a_arity==0){
+				if (arity>2){
+					arity--;
+					hp.end-=arity;
+					BC_WORD *args=(BC_WORD*)n[2];
+					for (int i=0; i<arity; i++)
+						hp.end[i]=args[i];
+					hp.end-=3;
+					hp.end[2]=(BC_WORD)&hp.end[3];
+				} else {
+					hp.end-=arity+1;
+					if (arity==2)
+						hp.end[2]=n[2];
+				}
+				hp.end[0]=d;
+				hp.end[1]=n[1];
+				*ref=hp.end;
+				*n=(BC_WORD)hp.end+1;
+				return hp;
+			}
 		}
 
-		*n=(BC_WORD)hp+1;
-		hp[0]=d;
-		hp[1]=n[1];
+		*n=(BC_WORD)hp.new+1;
+		hp.new[0]=d;
+		hp.new[1]=n[1];
 		if (arity>2) { /* hnf spread over two blocks */
-			hp[2]=(BC_WORD)&hp[3];
-			hp+=3;
+			hp.new[2]=(BC_WORD)&hp.new[3];
+			hp.new+=3;
 			n=(BC_WORD*)n[2];
 			arity--;
 			for (int i=0; i<arity; i++)
-				hp[i]=n[i];
-			return &hp[arity];
+				hp.new[i]=n[i];
+			hp.new+=arity;
+			return hp;
 		} else {
-			hp[2]=n[2];
-			return &hp[arity+1];
+			hp.new[2]=n[2];
+			hp.new+=arity+1;
+			return hp;
 		}
 	} else {
 		arity=((int32_t*)d)[-1];
 #if DEBUG_GARBAGE_COLLECTOR > 2
 		EPRINTF ("\tthunk %d\n",arity);
 #endif
-		if (arity<0) /* negative for selectors etc. */
+		if (arity<0){ /* negative for selectors etc. */
 			arity=1;
-		arity&=0xff;
+		} else {
+			a_arity=(arity & 0xff)-((arity>>8)&0xff);
+			arity&=0xff;
+
+			if (a_arity==0){
+				hp.end-=arity>2 ? (arity+1) : 3;
+				for (int i=0; i<=arity; i++)
+					hp.end[i]=n[i];
+				*ref=hp.end;
+				*n=(BC_WORD)hp.end+1;
+				return hp;
+			}
+		}
 
 #ifdef LINK_CLEAN_RUNTIME
 		if (d == (BC_WORD)&HOST_NODE_INSTRUCTIONS[1]) {
@@ -147,10 +204,11 @@ static inline BC_WORD *update_ref(BC_WORD *old, size_t heap_size,
 #endif
 
 		for (int i=0; i<=arity; i++)
-			hp[i]=n[i];
-		*n=(BC_WORD)hp+1;
+			hp.new[i]=n[i];
+		*n=(BC_WORD)hp.new+1;
 
-		return &hp[arity>2 ? (arity+1) : 3];
+		hp.new+=arity>2 ? (arity+1) : 3;
+		return hp;
 	}
 }
 
@@ -169,8 +227,17 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 			(void*) stack, (void*) heap, (void*) code, (void*) data);
 #endif
 
-	BC_WORD *old=options->in_first_semispace ? heap : heap+heap_size;
-	BC_WORD *new=options->in_first_semispace ? heap+heap_size : heap;
+	BC_WORD *old;
+	struct heap_pointers new;
+	if (options->in_first_semispace){
+		old=heap;
+		new.new=heap+heap_size;
+		new.end=heap+(heap_size<<1);
+	} else {
+		old=heap+heap_size;
+		new.new=heap;
+		new.end=old;
+	}
 
 	BC_WORD *n,d;
 	int32_t arity,a_arity;
@@ -218,45 +285,23 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 	EPRINTF ("Breadth-first search of child nodes...\n");
 #endif
 	n=options->in_first_semispace ? heap+heap_size : heap;
-	while (n<new) {
+	while (n<new.new) {
 		d=n[0];
 #if DEBUG_GARBAGE_COLLECTOR > 1
-		EPRINTF ("%p Update %p (d %p)\n",new,n,(void*)d);
+		EPRINTF ("%p Update %p (d %p)\n",new.new,n,(void*)d);
 #endif
 
 		if (d & 2) {
-			if (d == (BC_WORD)&INT+2 || d == (BC_WORD)&REAL+2) {
-				/* CHAR and BOOL are always unboxed */
-				n+=2;
-				continue;
-			} else if (d == (BC_WORD)&__STRING__+2) {
-				unsigned int size=n[1];
-				size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-				n=&n[2+size];
-				continue;
-			} else if (d == (BC_WORD)&__ARRAY__+2) {
+			if (d == (BC_WORD)&__ARRAY__+2){
 				unsigned int size;
 				size=n[1];
 				d=n[2];
 
 				if (d == 0) {
 					arity=a_arity=1;
-				} else if (d == (BC_WORD)&INT+2
-					|| d == (BC_WORD)&REAL+2) {
-					n=&n[3+size];
-					continue;
-				} else if (d == (BC_WORD)&BOOL+2) {
-					size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
-					n=&n[3+size];
-					continue;
 				} else {
 					arity=((int16_t*)d)[-1]-256;
 					a_arity=((int16_t*)d)[0];
-				}
-
-				if (a_arity==0) {
-					n=&n[3+size*arity];
-					continue;
 				}
 
 				n=&n[3];
@@ -276,19 +321,15 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 				a_arity=((int16_t*)d)[0];
 			}
 			if (arity>2) { /* hnf spread over two blocks */
-				if (a_arity>0) {
-					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
-					while (--a_arity)
-						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2+a_arity],new,shared_nodes_of_host);
-				}
+				new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
+				while (--a_arity)
+					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2+a_arity],new,shared_nodes_of_host);
 				n+=2+arity;
 				continue;
 			} else {
-				if (a_arity>0) {
-					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
-					if (a_arity==2)
-						new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2],new,shared_nodes_of_host);
-				}
+				new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[1],new,shared_nodes_of_host);
+				if (a_arity==2)
+					new=UPDATE_REF (old,heap_size,(BC_WORD**)&n[2],new,shared_nodes_of_host);
 				n+=1+arity;
 				continue;
 			}
@@ -323,8 +364,8 @@ BC_WORD *garbage_collect(BC_WORD *stack, BC_WORD *asp,
 	}
 #endif
 
-	*heap_free=heap+(options->in_first_semispace ? 2 : 1)*heap_size-new;
+	*heap_free=new.end-new.new;
 	options->in_first_semispace=1-options->in_first_semispace;
 
-	return new;
+	return new.new;
 }
