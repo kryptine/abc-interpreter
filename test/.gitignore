@@ -1,6 +1,8 @@
 *.result
 *.junit.xml
 
+is_32_bit_clean
+
 acker
 arrays
 brainfuck
