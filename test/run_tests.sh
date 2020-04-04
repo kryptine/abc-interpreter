@@ -233,10 +233,15 @@ do
 		continue
 	fi
 
+	EXPECTED="$MODULE$EXPECTED_PREFIX.expected"
 	if [ ! -f "$MODULE$EXPECTED_PREFIX.expected" ]; then
-		echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
-		[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
-		continue
+		if [ -f "$MODULE.expected" ]; then
+			EXPECTED="$MODULE.expected"
+		else
+			echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
+			[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
+			continue
+		fi
 	fi
 
 	MODULE_HEAPSIZE="$(grep -w HeapSize "$MODULE.prj" | cut -f4 | tr -d '\r')"
@@ -269,9 +274,12 @@ do
 
 	[ "$OS" == "Windows_NT" ] && dos2unix $MODULE.result
 
-	EXPECTED="$MODULE$EXPECTED_PREFIX.expected"
-	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
-		EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
+	if [ $BENCHMARK -gt 0 ]; then
+		if [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
+			EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
+		elif [ -f "$MODULE.bm.expected" ]; then
+			EXPECTED="$MODULE.bm.expected"
+		fi
 	fi
 	git diff --no-index --word-diff --word-diff-regex='\w+' -U0 $EXPECTED $MODULE.result
 	if [ $? -ne 0 ]; then
