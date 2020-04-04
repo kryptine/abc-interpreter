@@ -25,4 +25,8 @@ RUN apt-get install -y -qq --no-install-recommends curl unzip libnspr4 &&\
 	cd - &&\
 	rm -r /tmp/jsshell
 
-RUN	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform lib-stdlib
+RUN	\
+	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform &&\
+	mv /opt/clean /opt/clean-64 &&\
+	CLEAN_PLATFORM=x86 install_clean.sh "base lib-argenv lib-dynamics lib-platform" &&\
+	mv /opt/clean /opt/clean-32
