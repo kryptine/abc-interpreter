@@ -25,11 +25,14 @@ char *instruction_name(BC_WORD i) {
 const char *instruction_type (BC_WORD i) {
 	switch (i){
 		case CabsR:                  return "";
+		case CabsR_32:               return "";
 		case CacosR:                 return "";
+		case CacosR_32:              return "";
 		case CaddI:                  return "";
 		case CaddIo:                 return "";
 		case CaddLU:                 return "";
 		case CaddR:                  return "";
+		case CaddR_32:               return "";
 		case Cadd_empty_node2:       return "l";
 		case Cadd_empty_node3:       return "l";
 		case Cadd_empty_node4:       return "l";
@@ -63,7 +66,9 @@ const char *instruction_type (BC_WORD i) {
 		case Cadd_empty_node32:      return "l";
 		case CandI:                  return "";
 		case CasinR:                 return "";
+		case CasinR_32:              return "";
 		case CatanR:                 return "";
+		case CatanR_32:              return "";
 		case Cbuild:                 return "nl";
 		case Cbuild0:                return "l";
 		case Cbuild1:                return "l";
@@ -80,7 +85,9 @@ const char *instruction_type (BC_WORD i) {
 		case CbuildI:                return "i";
 		case CbuildI_b:              return "n";
 		case CbuildR:                return "r";
+		case CbuildR_32:             return "R";
 		case CbuildR_b:              return "n";
+		case CbuildR_b_32:           return "n";
 		case Cbuildh:                return "nl";
 		case Cbuildh0:               return "l";
 		case Cbuildh1:               return "l";
@@ -145,6 +152,7 @@ const char *instruction_type (BC_WORD i) {
 		case Ccentry:                return "";
 		case CcmpAC:                 return "";
 		case CcosR:                  return "";
+		case CcosR_32:               return "";
 		case Ccreate:                return "";
 		case Ccreates:               return "n";
 		case Ccreate_array:          return "";
@@ -152,12 +160,14 @@ const char *instruction_type (BC_WORD i) {
 		case Ccreate_arrayCHAR:      return "";
 		case Ccreate_arrayINT:       return "";
 		case Ccreate_arrayREAL:      return "";
+		case Ccreate_arrayREAL_32:   return "";
 		case Ccreate_array_r:        return "nnl";
 		case Ccreate_array_:         return "";
 		case Ccreate_array_BOOL:     return "";
 		case Ccreate_array_CHAR:     return "";
 		case Ccreate_array_INT:      return "";
 		case Ccreate_array_REAL:     return "";
+		case Ccreate_array_REAL_32:  return "";
 		case Ccreate_array_r_:       return "nnl";
 		case Ccreate_array_r_a:      return "nl";
 		case Ccreate_array_r_b:      return "nl";
@@ -165,7 +175,9 @@ const char *instruction_type (BC_WORD i) {
 		case CdivI:                  return "";
 		case CdivLU:                 return "";
 		case CdivR:                  return "";
+		case CdivR_32:               return "";
 		case CentierR:               return "";
+		case CentierR_32:            return "";
 		case CeqAC:                  return "";
 		case CeqAC_a:                return "s";
 		case CeqB:                   return "";
@@ -183,11 +195,14 @@ const char *instruction_type (BC_WORD i) {
 		case CeqI_b:                 return "ni";
 		case CeqIi:                  return "i";
 		case CeqR:                   return "";
+		case CeqR_32:                return "";
 		case CeqR_b:                 return "nr";
+		case CeqR_b_32:              return "nR";
 		case Ceq_desc:               return "nl";
 		case Ceq_desc_b:             return "l";
 		case Ceq_nulldesc:           return "nl";
 		case CexpR:                  return "";
+		case CexpR_32:               return "";
 		case Cfill:                  return "nnl";
 		case Cfill0:                 return "nl";
 		case Cfill1_r0101:           return "n";
@@ -246,6 +261,7 @@ const char *instruction_type (BC_WORD i) {
 		case CfillI:                 return "in";
 		case CfillI_b:               return "nn";
 		case CfillR_b:               return "nn";
+		case CfillR_b_32:            return "nn";
 		case Cfillcaf:               return "Cnn";
 		case Cfill_a:                return "nn";
 		case Cfill_r:                return "nnnlnn";
@@ -298,28 +314,34 @@ const char *instruction_type (BC_WORD i) {
 		case Cjsr_i2:                return "";
 		case Cjsr_i3:                return "";
 		case ClnR:                   return "";
+		case ClnR_32:                return "";
 		case Cload_i:                return "i";
 		case Cload_module_name:      return "";
 		case Cload_si16:             return "i";
 		case Cload_si32:             return "i";
 		case Cload_ui8:              return "i";
 		case Clog10R:                return "";
+		case Clog10R_32:             return "";
 		case CltC:                   return "";
 		case CltI:                   return "";
 		case CltU:                   return "";
 		case CltR:                   return "";
+		case CltR_32:                return "";
 		case CmulI:                  return "";
 		case CmulIo:                 return "";
 		case CmulUUL:                return "";
 		case CmulR:                  return "";
+		case CmulR_32:               return "";
 		case CnegI:                  return "";
 		case CnegR:                  return "";
+		case CnegR_32:               return "";
 		case CnotB:                  return "";
 		case CnotI:                  return "";
 		case CorI:                   return "";
 		case Cpop_a:                 return "N";
 		case Cpop_b:                 return "N";
 		case CpowR:                  return "";
+		case CpowR_32:               return "";
 		case Cprint:                 return "s";
 		case CprintD:                return "";
 		case Cprint_char:            return "";
@@ -344,7 +366,9 @@ const char *instruction_type (BC_WORD i) {
 		case CpushL:                 return "";
 		case CpushLc:                return "";
 		case CpushR:                 return "r";
+		case CpushR_32:              return "R";
 		case CpushR_a:               return "n";
+		case CpushR_a_32:            return "n";
 		case Cpushcaf:               return "nnC";
 		case Cpushcaf10:             return "C";
 		case Cpushcaf11:             return "C";
@@ -436,6 +460,7 @@ const char *instruction_type (BC_WORD i) {
 		case CreplaceCHAR:           return "";
 		case CreplaceINT:            return "";
 		case CreplaceREAL:           return "";
+		case CreplaceREAL_32:        return "";
 		case Creplace_r:             return "nn";
 		case Crepl_args1:            return "";
 		case Crepl_args2:            return "";
@@ -482,6 +507,7 @@ const char *instruction_type (BC_WORD i) {
 		case CselectCHAR:            return "";
 		case CselectINT:             return "";
 		case CselectREAL:            return "";
+		case CselectREAL_32:         return "";
 		case Cselect_r:              return "nn";
 		case Cselect_r01:            return "";
 		case Cselect_r02:            return "";
@@ -505,14 +531,18 @@ const char *instruction_type (BC_WORD i) {
 		case CshiftrI:               return "";
 		case CshiftrU:               return "";
 		case CsinR:                  return "";
+		case CsinR_32:               return "";
 		case CsliceAC:               return "";
 		case CsubI:                  return "";
 		case CsubIo:                 return "";
 		case CsubLU:                 return "";
 		case CsubR:                  return "";
+		case CsubR_32:               return "";
 		case CsqrtR:                 return "";
+		case CsqrtR_32:              return "";
 		case Crtn:                   return "";
 		case CtanR:                  return "";
+		case CtanR_32:               return "";
 		case Ctestcaf:               return "C";
 		case Cupdate:                return "";
 		case CupdateAC:              return "";
@@ -520,6 +550,7 @@ const char *instruction_type (BC_WORD i) {
 		case CupdateCHAR:            return "";
 		case CupdateINT:             return "";
 		case CupdateREAL:            return "";
+		case CupdateREAL_32:         return "";
 		case Cupdatepop_a:           return "nn";
 		case Cupdatepop_b:           return "nn";
 		case Cupdate_a:              return "nn";
@@ -554,8 +585,11 @@ const char *instruction_type (BC_WORD i) {
 		case CItoAC:                 return "";
 		case CItoC:                  return "";
 		case CItoR:                  return "";
+		case CItoR_32:               return "";
 		case CRtoAC:                 return "";
+		case CRtoAC_32:              return "";
 		case CRtoI:                  return "";
+		case CRtoI_32:               return "";
 		case Cswap_a1:               return "";
 		case Cswap_a2:               return "";
 		case Cswap_a3:               return "";
@@ -703,6 +737,7 @@ const char *instruction_type (BC_WORD i) {
 		case CreadFC:                return "";
 		case CreadFI:                return "";
 		case CreadFR:                return "";
+		case CreadFR_32:             return "";
 		case CreadFS:                return "";
 		case CreadFString:           return "";
 		case CreadLineF:             return "";
@@ -710,6 +745,7 @@ const char *instruction_type (BC_WORD i) {
 		case CreadSFC:               return "";
 		case CreadSFI:               return "";
 		case CreadSFR:               return "";
+		case CreadSFR_32:            return "";
 		case CreadSFS:               return "";
 		case CreopenF:               return "";
 		case CseekF:                 return "";
@@ -720,6 +756,7 @@ const char *instruction_type (BC_WORD i) {
 		case CwriteFC:               return "";
 		case CwriteFI:               return "";
 		case CwriteFR:               return "";
+		case CwriteFR_32:            return "";
 		case CwriteFS:               return "";
 		case CwriteFString:          return "";
 
@@ -796,6 +833,7 @@ const char *instruction_type (BC_WORD i) {
 		case CselectCHARoo:          return "nn";
 		case CselectINToo:           return "nn";
 		case CselectREALoo:          return "nn";
+		case CselectREALoo_32:       return "nn";
 		case Cselectoo:              return "nn";
 		case Cupdate2_a:             return "nn";
 		case Cupdate2_b:             return "nn";

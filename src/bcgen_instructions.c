@@ -916,6 +916,8 @@ void add_instruction_r(int16_t i,double r) {
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(8, *((uint64_t*)(&r)));
+	if (is_32_bit)
+		store_code_elem (8,0);
 }
 
 void add_instruction_w_r(int16_t i,int32_t n,double r) {
@@ -925,6 +927,8 @@ void add_instruction_w_r(int16_t i,int32_t n,double r) {
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(2, n);
 	store_code_elem(8, *((uint64_t*)(&r)));
+	if (is_32_bit)
+		store_code_elem (8,0);
 }
 
 void add_instruction_internal_label(int16_t i,struct label *label) {
@@ -997,10 +1001,12 @@ struct word *add_add_arg_labels(void) {
 struct specialized_jsr {
 	const char *label;
 	int instruction;
+	int instruction_32;
 	int flags;
 };
 
-#define SPECIALIZED(instr,flags) {#instr, C ## instr, flags},
+#define SPECIALIZED(instr,flags) {#instr, C ## instr, C ## instr, flags},
+#define SPECIALIZED_32(instr,flags) {#instr, C ## instr, C ## instr ## _32, flags},
 #define S_UNSUPPORTED 1
 #define S_IO 2
 
@@ -1012,7 +1018,7 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(updateAC,0)
 	SPECIALIZED(ItoAC,0)
 	SPECIALIZED(BtoAC,0)
-	SPECIALIZED(RtoAC,0)
+	SPECIALIZED_32(RtoAC,0)
 	{"print__string__",Cprint_string},
 
 	SPECIALIZED(closeF,       S_IO)
@@ -1026,14 +1032,14 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(positionSF,   S_IO | S_UNSUPPORTED)
 	SPECIALIZED(readFC,       S_IO)
 	SPECIALIZED(readFI,       S_IO)
-	SPECIALIZED(readFR,       S_IO)
+	SPECIALIZED_32(readFR,    S_IO)
 	SPECIALIZED(readFS,       S_IO)
 	SPECIALIZED(readFString,  S_IO | S_UNSUPPORTED)
 	SPECIALIZED(readLineF,    S_IO)
 	SPECIALIZED(readLineSF,   S_IO | S_UNSUPPORTED)
 	SPECIALIZED(readSFC,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(readSFI,      S_IO | S_UNSUPPORTED)
-	SPECIALIZED(readSFR,      S_IO | S_UNSUPPORTED)
+	SPECIALIZED_32(readSFR,   S_IO | S_UNSUPPORTED)
 	SPECIALIZED(readSFS,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(reopenF,      S_IO | S_UNSUPPORTED)
 	SPECIALIZED(seekF,        S_IO)
@@ -1043,7 +1049,7 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(stdioF,       S_IO)
 	SPECIALIZED(writeFC,      S_IO)
 	SPECIALIZED(writeFI,      S_IO)
-	SPECIALIZED(writeFR,      S_IO)
+	SPECIALIZED_32(writeFR,   S_IO)
 	SPECIALIZED(writeFS,      S_IO)
 	SPECIALIZED(writeFString, S_IO)
 };
@@ -1071,7 +1077,7 @@ void add_specialized_jsr_instruction(unsigned int n) {
 	else if (entry->flags & S_IO)
 		requires_file_io_warning (entry->instruction);
 
-	add_instruction(entry->instruction);
+	add_instruction(is_32_bit ? entry->instruction_32 : entry->instruction);
 }
 
 void add_label(char *label_name) {
@@ -1082,11 +1088,11 @@ void add_label(char *label_name) {
 }
 
 void code_absR(void) {
-	add_instruction(CabsR);
+	add_instruction(is_32_bit ? CabsR_32 : CabsR);
 }
 
 void code_acosR(void) {
-	add_instruction(CacosR);
+	add_instruction(is_32_bit ? CacosR_32 : CacosR);
 }
 
 void code_addI(void) {
@@ -1102,7 +1108,7 @@ void code_addLU(void) {
 }
 
 void code_addR(void) {
-	add_instruction(CaddR);
+	add_instruction(is_32_bit ? CaddR_32 : CaddR);
 }
 
 void code_and(void) {
@@ -1110,11 +1116,11 @@ void code_and(void) {
 }
 
 void code_asinR(void) {
-	add_instruction(CasinR);
+	add_instruction(is_32_bit ? CasinR_32 : CasinR);
 }
 
 void code_atanR(void) {
-	add_instruction(CatanR);
+	add_instruction(is_32_bit ? CatanR_32 : CatanR);
 }
 
 void code_buildh(char descriptor_name[],int arity);
@@ -1288,11 +1294,11 @@ void code_buildI_b(int b_offset) {
 }
 
 void code_buildR(double value) {
-	add_instruction_r(CbuildR,value);
+	add_instruction_r(is_32_bit ? CbuildR_32 : CbuildR,value);
 }
 
 void code_buildR_b(int b_offset) {
-	add_instruction_w(CbuildR_b,b_offset);
+	add_instruction_w(is_32_bit ? CbuildR_b_32 : CbuildR_b,b_offset);
 }
 
 void code_buildhr(char descriptor_name[],int a_size,int b_size) {
@@ -1492,7 +1498,7 @@ void code_build_u(char descriptor_name[],int a_size,int b_size,char *code_name) 
 }
 
 void code_cosR(void) {
-	add_instruction(CcosR);
+	add_instruction(is_32_bit ? CcosR_32 : CcosR);
 }
 
 void code_create(int n_arguments) {
@@ -1542,7 +1548,7 @@ void code_create_array(char element_descriptor[],int a_size,int b_size) {
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0')
 			{
-				add_instruction(Ccreate_arrayREAL);
+				add_instruction(is_32_bit ? Ccreate_arrayREAL_32 : Ccreate_arrayREAL);
 				return;
 			}
 		case '_':
@@ -1619,7 +1625,7 @@ void code_create_array_(char element_descriptor[],int a_size,int b_size) {
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0')
 			{
-				add_instruction(Ccreate_array_REAL);
+				add_instruction(is_32_bit ? Ccreate_array_REAL_32 : Ccreate_array_REAL);
 				return;
 			}
 		case '_':
@@ -1650,11 +1656,11 @@ void code_divLU(void) {
 }
 
 void code_divR(void) {
-	add_instruction(CdivR);
+	add_instruction(is_32_bit ? CdivR_32 : CdivR);
 }
 
 void code_entierR(void) {
-	add_instruction(CentierR);
+	add_instruction(is_32_bit ? CentierR_32 : CentierR);
 }
 
 void code_eqAC_a(char *string,int string_length) {
@@ -1727,11 +1733,11 @@ void code_eqIi(CleanInt value) {
 }
 
 void code_eqR(void) {
-	add_instruction(CeqR);
+	add_instruction(is_32_bit ? CeqR_32 : CeqR);
 }
 
 void code_eqR_b(double value,int b_offset) {
-	add_instruction_w_r(CeqR_b,b_offset,value);
+	add_instruction_w_r(is_32_bit ? CeqR_b_32 : CeqR_b,b_offset,value);
 }
 
 void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
@@ -1752,7 +1758,7 @@ void code_exit_false(char label_name[]) {
 }
 
 void code_expR(void) {
-	add_instruction(CexpR);
+	add_instruction(is_32_bit ? CexpR_32 : CexpR);
 }
 
 void code_fill(char descriptor_name[],int arity,char *code_name,int a_offset) {
@@ -2314,7 +2320,7 @@ void code_fillI_b(int b_offset,int a_offset) {
 }
 
 void code_fillR_b(int b_offset,int a_offset) {
-	add_instruction_w_w(CfillR_b,-a_offset,b_offset);
+	add_instruction_w_w(is_32_bit ? CfillR_b_32 : CfillR_b,-a_offset,b_offset);
 }
 
 void code_fill_a(int from_offset,int to_offset) {
@@ -2633,7 +2639,7 @@ void code_jsr_i(int n_apply_args) {
 }
 
 void code_lnR(void) {
-	add_instruction(ClnR);
+	add_instruction(is_32_bit ? ClnR_32 : ClnR);
 }
 
 void code_load_i(CleanInt value) {
@@ -2658,7 +2664,7 @@ void code_load_ui8(CleanInt value) {
 }
 
 void code_log10R(void) {
-	add_instruction(Clog10R);
+	add_instruction(is_32_bit ? Clog10R_32 : Clog10R);
 }
 
 void code_ltC(void) {
@@ -2670,7 +2676,7 @@ void code_ltI(void) {
 }
 
 void code_ltR(void) {
-	add_instruction(CltR);
+	add_instruction(is_32_bit ? CltR_32 : CltR);
 }
 
 void code_ltU(void) {
@@ -2686,7 +2692,7 @@ void code_mulIo(void) {
 }
 
 void code_mulR(void) {
-	add_instruction(CmulR);
+	add_instruction(is_32_bit ? CmulR_32 : CmulR);
 }
 
 void code_mulUUL(void) {
@@ -2698,7 +2704,7 @@ void code_negI(void) {
 }
 
 void code_negR(void) {
-	add_instruction(CnegR);
+	add_instruction(is_32_bit ? CnegR_32 : CnegR);
 }
 
 void code_not(void) {
@@ -2722,7 +2728,7 @@ void code_pop_b(int n) {
 }
 
 void code_powR(void) {
-	add_instruction(CpowR);
+	add_instruction(is_32_bit ? CpowR_32 : CpowR);
 }
 
 void code_print(char *string,int length) {
@@ -2841,11 +2847,11 @@ void code_pushLc(char *label) {
 }
 
 void code_pushR(double r) {
-	add_instruction_r(CpushR,r);
+	add_instruction_r(is_32_bit ? CpushR_32 : CpushR,r);
 }
 
 void code_pushR_a(int a_offset) {
-	add_instruction_w(CpushR_a,-a_offset);
+	add_instruction_w(is_32_bit ? CpushR_a_32 : CpushR_a,-a_offset);
 }
 
 void code_pushcaf(char *label_name,int a_size,int b_size) {
@@ -3275,7 +3281,7 @@ void code_replace(char element_descriptor[],int a_size,int b_size) {
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0')
 			{
-				add_instruction(CreplaceREAL);
+				add_instruction(is_32_bit ? CreplaceREAL_32 : CreplaceREAL);
 				return;
 			}
 	}
@@ -3451,7 +3457,7 @@ void code_select(char element_descriptor[],int a_size,int b_size) {
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0')
 			{
-				add_instruction(CselectREAL);
+				add_instruction(is_32_bit ? CselectREAL_32 : CselectREAL);
 				return;
 			}
 		case '_':
@@ -3507,7 +3513,7 @@ void code_shiftrU(void) {
 }
 
 void code_sinR(void) {
-	add_instruction(CsinR);
+	add_instruction(is_32_bit ? CsinR_32 : CsinR);
 }
 
 void code_subI(void) {
@@ -3523,15 +3529,15 @@ void code_subLU(void) {
 }
 
 void code_subR(void) {
-	add_instruction(CsubR);
+	add_instruction(is_32_bit ? CsubR_32 : CsubR);
 }
 
 void code_sqrtR(void) {
-	add_instruction(CsqrtR);
+	add_instruction(is_32_bit ? CsqrtR_32 : CsqrtR);
 }
 
 void code_tanR(void) {
-	add_instruction(CtanR);
+	add_instruction(is_32_bit ? CtanR_32 : CtanR);
 }
 
 void code_testcaf(char *label_name) {
@@ -3566,7 +3572,7 @@ void code_update(char element_descriptor[],int a_size,int b_size) {
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0')
 			{
-				add_instruction(CupdateREAL);
+				add_instruction(is_32_bit ? CupdateREAL_32 : CupdateREAL);
 				return;
 			}
 		case '_':
@@ -3644,11 +3650,11 @@ void code_ItoC(void) {
 }
 
 void code_ItoR(void) {
-	add_instruction(CItoR);
+	add_instruction(is_32_bit ? CItoR_32 : CItoR);
 }
 
 void code_RtoI(void) {
-	add_instruction(CRtoI);
+	add_instruction(is_32_bit ? CRtoI_32 : CRtoI);
 }
 
 
@@ -4177,7 +4183,7 @@ void code_selectoo(char element_descriptor[],int a_size,int b_size,int a_offset,
 		case 'R':
 			if (element_descriptor[1]=='E' && element_descriptor[2]=='A' && element_descriptor[3]=='L' &&
 				element_descriptor[4]=='\0') {
-				add_instruction_w_w(CselectREALoo,-a_offset,b_offset);
+				add_instruction_w_w(is_32_bit ? CselectREALoo_32 : CselectREALoo,-a_offset,b_offset);
 				return;
 			}
 			break;

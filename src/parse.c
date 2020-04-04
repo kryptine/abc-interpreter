@@ -386,6 +386,26 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 #endif
 							break;
+						case 'R': /* double-position Real */
+							if (provide_chars (&elem64,sizeof (elem64),1,cp)<0)
+								return 1;
+#ifdef LINKER
+							store_code_elem (8,elem64);
+#else
+# if (WORD_WIDTH == 64)
+							state->program->code[state->ptr]=elem64;
+# else
+							*(uint64_t*)&state->program->code[state->ptr]=*(uint64_t*)&f;
+# endif
+							state->ptr+=2;
+#endif
+							if (provide_chars (&elem64,sizeof (elem64),1,cp)<0)
+								return 1;
+#ifdef LINKER
+							store_code_elem (8,elem64);
+							state->ptr++;
+#endif
+							break;
 						case 'c': /* Char */
 							if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
 								return 1;

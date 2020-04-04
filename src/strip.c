@@ -442,6 +442,13 @@ static void activate_label(struct s_label *label) {
 						store_code_elem(8, *(uint64_t*)code_block);
 						code_block+=8;
 						break;
+					case 'R': /* Double-position Real */
+						store_code_elem(8, *(uint64_t*)code_block);
+						code_block+=8;
+						store_code_elem(8, *(uint64_t*)code_block);
+						code_block+=8;
+						ci++;
+						break;
 					default:
 						EPRINTF("error in activate_label\n");
 						EXIT(NULL,-1);
@@ -531,6 +538,10 @@ void prepare_strip_bytecode(uint32_t *bytecode,
 				case 'r': /* Real */
 				case 'i': /* Int */
 					i+=8;
+					break;
+				case 'R': /* Double-position Real */
+					i+=16;
+					ci++;
 					break;
 				default:
 					EPRINTF("error in strip_bytecode\n");
