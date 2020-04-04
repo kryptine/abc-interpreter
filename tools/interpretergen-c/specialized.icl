@@ -79,6 +79,23 @@ instr_RtoAC t = foldl (flip append) t
 	, "}"
 	]
 
+instr_RtoAC_32 :: !Target -> Target
+instr_RtoAC_32 t = foldl (flip append) t
+	[ "{"
+	, "char r[22];"
+	, "int n=sprintf(r,BC_REAL_FMT,*((BC_DREAL*)bsp)+0.0);"
+	, "NEED_HEAP(2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2)));"
+	, "hp[0]=(BC_WORD)&__STRING__+2;"
+	, "hp[1]=n;"
+	, "memcpy(&hp[2],r,n);"
+	, "pc+=1;"
+	, "bsp+=2;"
+	, "asp[1]=(BC_WORD)hp;"
+	, "asp+=1;"
+	, "hp+=2+((n+IF_INT_64_OR_32(7,3))>>IF_INT_64_OR_32(3,2));"
+	, "}"
+	]
+
 instr_load_i :: !Target -> Target
 instr_load_i t = foldl (flip append) t
 	[ "bsp[0]=*(BC_WORD*)(bsp[0]+pc[1]);"

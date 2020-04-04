@@ -443,10 +443,10 @@ static void activate_label(struct s_label *label) {
 						code_block+=8;
 						break;
 					case 'R': /* Double-position Real */
-						store_code_elem(8, *(uint64_t*)code_block);
-						code_block+=8;
-						store_code_elem(8, *(uint64_t*)code_block);
-						code_block+=8;
+						store_code_elem(4, *(uint32_t*)code_block);
+						code_block+=4;
+						store_code_elem(4, *(uint32_t*)code_block);
+						code_block+=4;
 						ci++;
 						break;
 					default:
@@ -540,7 +540,7 @@ void prepare_strip_bytecode(uint32_t *bytecode,
 					i+=8;
 					break;
 				case 'R': /* Double-position Real */
-					i+=16;
+					i+=8;
 					ci++;
 					break;
 				default:

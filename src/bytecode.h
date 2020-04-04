@@ -29,6 +29,7 @@
 # define BC_REAL_SCAN_FMT "%g"
 #endif
 #define BC_REAL_FMT "%.15g"
+#define BC_DREAL double
 
 #define BC_BOOL uint8_t
 

@@ -387,23 +387,20 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 #endif
 							break;
 						case 'R': /* double-position Real */
-							if (provide_chars (&elem64,sizeof (elem64),1,cp)<0)
+							if (provide_chars (&elem32,sizeof (elem32),1,cp)<0)
 								return 1;
 #ifdef LINKER
-							store_code_elem (8,elem64);
+							store_code_elem (4,elem32);
 #else
-# if (WORD_WIDTH == 64)
-							state->program->code[state->ptr]=elem64;
-# else
-							*(uint64_t*)&state->program->code[state->ptr]=*(uint64_t*)&f;
-# endif
-							state->ptr+=2;
+							state->program->code[state->ptr++]=elem32;
 #endif
-							if (provide_chars (&elem64,sizeof (elem64),1,cp)<0)
+							if (provide_chars (&elem32,sizeof (elem32),1,cp)<0)
 								return 1;
 #ifdef LINKER
-							store_code_elem (8,elem64);
+							store_code_elem (4,elem32);
 							state->ptr++;
+#else
+							state->program->code[state->ptr++]=elem32;
 #endif
 							break;
 						case 'c': /* Char */

@@ -14,9 +14,14 @@ from target import :: Expr
 :: TShort = TShort
 :: TInt   = TInt
 :: TReal  = TReal
+:: TDReal = TDReal
 
 :: TPtr t = TPtr !t
 :: TPtrOffset = TPtrOffset
+
+class real t :: t -> t
+instance real TReal
+instance real TDReal
 
 /* Used to specify types for expressions. See this issue for discussion:
  * https://gitlab.science.ru.nl/clean-compiler-and-rts/compiler/issues/15

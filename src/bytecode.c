@@ -352,7 +352,11 @@ unsigned int print_instruction(int to_stderr, struct program *pgm, uint32_t i) {
 				WPRINTF(w, " %d", abs((int)pgm->code[i] / IF_INT_64_OR_32(8,4)));
 				break;
 			case 'r': /* Real constant */
-				WPRINTF(w, BC_REAL_FMT, (*(BC_REAL*)&pgm->code[i]) + 0.0);
+				WPRINTF(w, " " BC_REAL_FMT, (*(BC_REAL*)&pgm->code[i]) + 0.0);
+				break;
+			case 'R': /* Double-position real constant */
+				WPRINTF(w, " " BC_REAL_FMT, (*(BC_DREAL*)&pgm->code[i]) + 0.0);
+				i++;
 				break;
 			case 'a': /* Arity */
 				WPRINTF(w, " %d", abs((int16_t) ((BC_WORD_S)pgm->code[i] >> IF_INT_64_OR_32(48,16))));

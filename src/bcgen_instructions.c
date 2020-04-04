@@ -915,9 +915,12 @@ void add_instruction_r(int16_t i,double r) {
 		printf("%d\t%s %f\n",pgrm.code_size,instruction_name (i),r);
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
-	store_code_elem(8, *((uint64_t*)(&r)));
-	if (is_32_bit)
-		store_code_elem (8,0);
+	if (is_32_bit){
+		store_code_elem (4,((uint32_t*)&r)[0]);
+		store_code_elem (4,((uint32_t*)&r)[1]);
+	} else {
+		store_code_elem (8,*(uint64_t*)&r);
+	}
 }
 
 void add_instruction_w_r(int16_t i,int32_t n,double r) {
@@ -926,9 +929,12 @@ void add_instruction_w_r(int16_t i,int32_t n,double r) {
 
 	store_code_elem(BYTEWIDTH_INSTRUCTION, i);
 	store_code_elem(2, n);
-	store_code_elem(8, *((uint64_t*)(&r)));
-	if (is_32_bit)
-		store_code_elem (8,0);
+	if (is_32_bit){
+		store_code_elem (4,((uint32_t*)&r)[0]);
+		store_code_elem (4,((uint32_t*)&r)[1]);
+	} else {
+		store_code_elem (8,*(uint64_t*)&r);
+	}
 }
 
 void add_instruction_internal_label(int16_t i,struct label *label) {
@@ -1019,7 +1025,7 @@ static struct specialized_jsr specialized_jsr_labels[]={
 	SPECIALIZED(ItoAC,0)
 	SPECIALIZED(BtoAC,0)
 	SPECIALIZED_32(RtoAC,0)
-	{"print__string__",Cprint_string},
+	{"print__string__",Cprint_string,Cprint_string},
 
 	SPECIALIZED(closeF,       S_IO)
 	SPECIALIZED(endF,         S_IO)
@@ -2759,7 +2765,7 @@ void code_print_int(void) {
 }
 
 void code_print_real(void) {
-	add_instruction(Cprint_real);
+	add_instruction(is_32_bit ? Cprint_real_32 : Cprint_real);
 }
 
 void code_print_sc(char *string,int length) {

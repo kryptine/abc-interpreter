@@ -69,6 +69,7 @@ extern void* INT[];
 extern void* BOOL[];
 extern void* CHAR[];
 extern void* REAL[];
+extern void* DREAL[];
 extern void* d_FILE[];
 
 extern BC_WORD small_integers[66];

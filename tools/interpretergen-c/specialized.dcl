@@ -8,6 +8,7 @@ instr_divLU :: !Target -> Target
 instr_mulUUL :: !Target -> Target
 
 instr_RtoAC :: !Target -> Target
+instr_RtoAC_32 :: !Target -> Target
 
 instr_load_i :: !Target -> Target
 instr_load_si16 :: !Target -> Target

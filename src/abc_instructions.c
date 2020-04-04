@@ -347,6 +347,7 @@ const char *instruction_type (BC_WORD i) {
 		case Cprint_char:            return "";
 		case Cprint_int:             return "";
 		case Cprint_real:            return "";
+		case Cprint_real_32:         return "";
 		case Cprint_string:          return "";
 		case Cprint_symbol_sc:       return "n";
 		case CpushA_a:               return "n";
