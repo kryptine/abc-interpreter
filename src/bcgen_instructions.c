@@ -10,6 +10,8 @@
 
 #define max_implemented_instruction_n CMAX-1
 
+int is_32_bit=0;
+
 struct program pgrm;
 uint32_t last_d, last_jsr_with_d;
 
@@ -4343,6 +4345,8 @@ void code_caf(char *label_name,int a_size,int b_size) {
 }
 
 void code_comp(int version,char *options) {
+	if (strlen (options)<11 || options[10]=='0')
+		is_32_bit=1;
 }
 
 void code_d(int da,int db,uint32_t vector[]) {

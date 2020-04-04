@@ -1713,6 +1713,10 @@ int parse_directive_n_n_t (instruction *instruction)
 			case 'r':	case 'R':
 				vector_p[i>>LOG_SMALL_VECTOR_SIZE] |= (1<< (i & MASK_SMALL_VECTOR_SIZE));
 				i+=1;
+				if (is_32_bit){
+					vector_p[i>>LOG_SMALL_VECTOR_SIZE] |= (1<< (i & MASK_SMALL_VECTOR_SIZE));
+					i+=1;
+				}
 				break;
 			default:
 				fprintf(stderr,"B, C, F, I, P or R expected instead of '%c' (0x%02x) at line %d\n",last_char,last_char,line_number);
