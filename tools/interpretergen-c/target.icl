@@ -19,6 +19,9 @@ import interpretergen
 	.o 1 0
 }
 
+($) infixr 0
+($) f :== f
+
 append :: !String !Target -> Target
 append e t = {t & output=[e:t.output]}
 
@@ -349,12 +352,31 @@ at` arr i = "("+-+arr+-+")["+-+i+-+"]"
 ptr` :: !(Expr (TPtr t)) !String -> Expr (TPtr t)
 ptr` arr i = "&("+-+arr+-+")["+-+i+-+"]"
 
-/* TODO: get_double_real and store_double_real are incorrect for 64-bit platforms */
-get_double_real :: !(Expr (TPtr t)) -> Expr TDReal
-get_double_real ptr = "*(BC_DREAL*)("+-+ptr+-+")"
+new_double_real :: !(Expr (TPtr t)) !((Expr TDReal) Target -> Target) !Target -> Target
+new_double_real ptr cont t = cont var $ foldl (flip append) {t & var_counter=t.var_counter+1}
+	[ "\tBC_DREAL "+-+var+-+";"
+	, "#if WORD_WIDTH==32"
+	, "\t"+-+var+-+"=*(BC_DREAL*)("+-+ptr+-+");"
+	, "#else"
+	, "\t((uint32_t*)&"+-+var+-+")[0]=((BC_WORD*)("+-+ptr+-+"))[0];"
+	, "\t((uint32_t*)&"+-+var+-+")[1]=((BC_WORD*)("+-+ptr+-+"))[1];"
+	, "#endif"
+	]
+where
+	var = "v"+-+toString t.var_counter
 
 store_double_real :: !(Expr (TPtr t)) !(Expr TDReal) !Target -> Target
-store_double_real ptr r t = append ("\t*(BC_DREAL*)("+-+ptr+-+")="+-+r+-+";") t
+store_double_real ptr r t = foldl (flip append) t
+	[ "#if WORD_WIDTH==32"
+	, "\t*(BC_DREAL*)("+-+ptr+-+")="+-+r+-+";"
+	, "#else"
+	, "\t{"
+	, "\tBC_DREAL _temp_dreal="+-+r+-+";"
+	, "\t((BC_WORD*)"+-+ptr+-+")[0]=((uint32_t*)&_temp_dreal)[0];"
+	, "\t((BC_WORD*)"+-+ptr+-+")[1]=((uint32_t*)&_temp_dreal)[1];"
+	, "\t}"
+	, "#endif"
+	]
 
 begin_block :: !Target -> Target
 begin_block t = append "\tdo {" t

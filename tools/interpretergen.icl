@@ -63,12 +63,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (absR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "absR_32" (Just 0) $
-		store_double_real B (absR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (absR r)
 	, instr "acosR" (Just 0) $
 		new_local TReal (acosR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "acosR_32" (Just 0) $
-		store_double_real B (acosR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (acosR r)
 	, instr "addI" (Just 0) $
 		B @ 1 .= to_word (to_int (B @ 0) + to_int (B @ 1)) :.
 		shrink_b 1
@@ -84,7 +86,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	, instr "addR_32" (Just 0) $
-		new_local TDReal (get_double_real B + get_double_real (B @? 2)) \r ->
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		new_local TDReal (r1 + r2) \r ->
 		shrink_b 2 :.
 		store_double_real B r
 	] ++
@@ -105,12 +109,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (asinR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "asinR_32" (Just 0) $
-		store_double_real B (asinR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (asinR r)
 	, instr "atanR" (Just 0) $
 		new_local TReal (atanR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "atanR_32" (Just 0) $
-		store_double_real B (atanR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (atanR r)
 	, instr "build0" (Just 1) $
 		ensure_hp 3 :.
 		Hp @ 0 .= Pc @ 1 :.
@@ -865,7 +871,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (cosR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "cosR_32" (Just 0) $
-		store_double_real B (cosR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (cosR r)
 	, instr "create" (Just 0) $
 		ensure_hp 3 :.
 		Hp @ 0 .= cycle_ptr :.
@@ -1192,13 +1199,16 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	, instr "divR_32" (Just 0) $
-		new_local TDReal (get_double_real B / get_double_real (B @? 2)) \r ->
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		new_local TDReal (r1 / r2) \r ->
 		shrink_b 2 :.
 		store_double_real B r
 	, instr "entierR" (Just 0) $
 		B @ 0 .= entierR (to_real (B @ 0))
 	, instr "entierR_32" (Just 0) $
-		B @ 1 .= entierR (get_double_real B) :.
+		new_double_real B \r ->
+		B @ 1 .= entierR r :.
 		shrink_b 1
 	, instr "eq_desc" (Just 2) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
@@ -1276,7 +1286,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= (to_real (B @ 0) ==. to_real (B @ 1)) :.
 		shrink_b 1
 	, instr "eqR_32" (Just 0) $
-		B @ 3 .= (get_double_real B ==. get_double_real (B @? 2)) :.
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		B @ 3 .= (r1 ==. r2) :.
 		shrink_b 3
 	, instr "eqB_aFALSE" (Just 1) $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
@@ -1314,7 +1326,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (expR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "expR_32" (Just 0) $
-		store_double_real B (expR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (expR r)
 	, instr "fill" Nothing $
 		new_local (TPtr TWord) (to_word_ptr (A @ to_int (Pc @ 1))) \n ->
 		new_local TPtrOffset (to_ptr_offset (Pc @ 2)) \s ->
@@ -2083,12 +2096,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (lnR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "lnR_32" (Just 0) $
-		store_double_real B (lnR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (lnR r)
 	, instr "log10R" (Just 0) $
 		new_local TReal (log10R (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "log10R_32" (Just 0) $
-		store_double_real B (log10R (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (log10R r)
 	, alias "ltC" $
 	  instr "ltI" (Just 0) $
 		B @ 1 .= (to_int (B @ 0) <. to_int (B @ 1)) :.
@@ -2097,7 +2112,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= (to_real (B @ 0) <. to_real (B @ 1)) :.
 		shrink_b 1
 	, instr "ltR_32" (Just 0) $
-		B @ 3 .= (get_double_real B <. get_double_real (B @? 2)) :.
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		B @ 3 .= (r1 <. r2) :.
 		shrink_b 3
 	, instr "ltU" (Just 0) $
 		B @ 1 .= (B @ 0 <. B @ 1) :.
@@ -2115,7 +2132,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	, instr "mulR_32" (Just 0) $
-		new_local TDReal (get_double_real B * get_double_real (B @? 2)) \r ->
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		new_local TDReal (r1 * r2) \r ->
 		shrink_b 2 :.
 		store_double_real B r
 	, instr "mulUUL" Nothing instr_mulUUL
@@ -2128,7 +2147,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (negR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "negR_32" (Just 0) $
-		store_double_real B (negR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (negR r)
 	, instr "notB" (Just 0) $
 		B @ 0 .= (B @ 0 ==. lit_word 0)
 	, instr "notI" (Just 0) $
@@ -2145,7 +2165,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	, instr "powR_32" (Just 0) $
-		new_local TDReal (get_double_real B ^ get_double_real (B @? 2)) \r ->
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		new_local TDReal (r1 ^ r2) \r ->
 		shrink_b 2 :.
 		store_double_real B r
 	, instr "print" Nothing $
@@ -2189,7 +2211,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		, else_if (d ==. REAL_ptr + lit_word 2)
 			(print_real (to_real (n @ 1)))
 		, else_if (d ==. DREAL_ptr + lit_word 2)
-			(print_real (get_double_real (n @? 1)))
+			(new_double_real (n @? 1) \r ->
+			print_real r)
 		] (else (
 			new_local (TPtr TWord) (to_word_ptr
 				(d + if_i64_or_i32_expr (lit_word 22) (lit_word 10)
@@ -2226,7 +2249,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		print_real (to_real (B @ 0)) :.
 		shrink_b 1
 	, instr "print_real_32" (Just 0) $
-		print_real (get_double_real B) :.
+		new_double_real B \r ->
+		print_real r :.
 		shrink_b 2
 	, instr "print_string" Nothing $
 		new_local (TPtr TChar) (to_char_ptr (A @ 0 + if_i64_or_i32_expr (lit_word 16) (lit_word 8))) \s ->
@@ -2955,7 +2979,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (sinR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "sinR_32" (Just 0) $
-		store_double_real B (sinR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (sinR r)
 	, instr "sliceAC" Nothing $
 		new_local TInt (to_int (B @ 0)) \first_i ->
 		new_local TInt (to_int (B @ 1) + lit_int 1) \end_i ->
@@ -2977,7 +3002,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (sqrtR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "sqrtR_32" (Just 0) $
-		store_double_real B (sqrtR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (sqrtR r)
 	, instr "subI" (Just 0) $
 		B @ 1 .= to_int (B @ 0) - to_int (B @ 1) :.
 		shrink_b 1
@@ -2993,7 +3019,9 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		B @ 1 .= to_word r :.
 		shrink_b 1
 	, instr "subR_32" (Just 0) $
-		new_local TDReal (get_double_real B - get_double_real (B @? 2)) \r ->
+		new_double_real B \r1 ->
+		new_double_real (B @? 2) \r2 ->
+		new_local TDReal (r1 - r2) \r ->
 		shrink_b 2 :.
 		store_double_real B r
 	] ++
@@ -3016,7 +3044,8 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (tanR (to_real (B @ 0))) \r ->
 		B @ 0 .= to_word r
 	, instr "tanR_32" (Just 0) $
-		store_double_real B (tanR (get_double_real B))
+		new_double_real B \r ->
+		store_double_real B (tanR r)
 	, instr "testcaf" (Just 1) $
 		B @ -1 .= to_word_ptr (Pc @ 1) @ 0 :.
 		grow_b 1
@@ -3206,7 +3235,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local TReal (to_real (B @ 0)) \r ->
 		B @ 0 .= to_word (RtoI r)
 	, instr "RtoI_32" (Just 0) $
-		new_local TDReal (get_double_real B) \r ->
+		new_double_real B \r ->
 		shrink_b 1 :.
 		B @ 0 .= to_word (RtoI r)
 	, instr "addIi" (Just 1) $

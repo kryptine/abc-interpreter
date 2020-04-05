@@ -113,7 +113,7 @@ class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t)
 instance @  Int, (Expr t)
 instance @? Int, (Expr t)
 
-get_double_real :: !(Expr (TPtr t)) -> Expr TDReal
+new_double_real :: !(Expr (TPtr t)) !((Expr TDReal) Target -> Target) !Target -> Target
 store_double_real :: !(Expr (TPtr t)) !(Expr TDReal) !Target -> Target
 
 begin_block :: !Target -> Target
