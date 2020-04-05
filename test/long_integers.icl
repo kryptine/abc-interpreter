@@ -3,16 +3,6 @@ module long_integers
 import StdList
 import Data.Integer
 
-addIo :: !Int !Int -> (!Bool,!Int);
-addIo a b = code inline {
-	addIo
-}
-
-subIo :: !Int !Int -> (!Bool,!Int);
-subIo a b = code inline {
-	subIo
-}
-
 Start = map toString
 	[ a + b
 	, a - b
