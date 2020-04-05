@@ -325,8 +325,16 @@ void wprint_node(WINDOW *win, BC_WORD *node, int with_arguments) {
 	else if ((node[0]&-4)==(BC_WORD)&REAL)
 		wprintw(win, "REAL %.15g", *(BC_REAL*)&node[1]);
 	else if ((node[0]&-4)==(BC_WORD)&DREAL)
-		/* fix for 64-bit platforms */
-		wprintw(win, "DREAL %.15g", *(BC_DREAL*)&node[1]);
+# if WORD_WIDTH==32
+		wprintw (win,"DREAL %.15g",(*(BC_DREAL*)&node[1])+0.0);
+# else
+		{
+			BC_DREAL r;
+			((uint32_t*)&r)[0]=node[1];
+			((uint32_t*)&r)[1]=node[2];
+			wprintw (win,"DREAL %.15g",r+0.0);
+		}
+# endif
 	else if ((node[0]&-4)==(BC_WORD)&d_FILE)
 		wprintw(win, "FILE "BC_WORD_S_FMT" 0x"BC_WORD_FMT_HEX, node[1], node[2]);
 	else if ((node[0]&-4)==(BC_WORD)&__interpreter_cycle_in_spine[1])
