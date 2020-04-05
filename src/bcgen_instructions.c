@@ -1751,7 +1751,11 @@ void code_eq_desc(char descriptor_name[],int arity,int a_offset) {
 }
 
 void code_eq_desc_b(char descriptor_name[],int arity) {
-	add_instruction_label_offset(Ceq_desc_b,descriptor_name,(arity<<3)+2);
+	if (is_32_bit && descriptor_name[0]=='R' && descriptor_name[1]=='E' &&
+			descriptor_name[2]=='A' && descriptor_name[3]=='L' && descriptor_name[4]=='\0')
+		add_instruction_label_offset(Ceq_desc_b,"DREAL",(arity<<3)+2);
+	else
+		add_instruction_label_offset(Ceq_desc_b,descriptor_name,(arity<<3)+2);
 	return;
 }
 

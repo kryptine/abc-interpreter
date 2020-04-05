@@ -57,7 +57,7 @@ void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int('C','H',
 void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int('I','N','T')};
 # endif
-void* DREAL[]             = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
+void* DREAL[]             = {0, 0, &m____system, (void*) 5, _5chars2int('D','R','E','A','L')};
 #else /* assuming WORD_WIDTH == 32 */
 static BC_WORD m____system[] = {7, (BC_WORD) _4chars2int ('_','s','y','s'), (BC_WORD) _3chars2int ('t','e','m') };
 
@@ -72,7 +72,7 @@ void* CHAR[]              = {0, 0, &m____system, (void*) 4, _4chars2int ('C','H'
 void* REAL[]              = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
 void* INT[]               = {0, 0, &m____system, (void*) 3, _3chars2int ('I','N','T') };
 # endif
-void* DREAL[]             = {0, 0, &m____system, (void*) 4, _4chars2int('R','E','A','L')};
+void* DREAL[]             = {0, 0, &m____system, (void*) 5, _4chars2int('D','R','E','A'), (void*) 'L'};
 #endif /* Word-width dependency */
 
 #ifndef LINK_CLEAN_RUNTIME
