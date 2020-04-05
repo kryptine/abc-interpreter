@@ -97,6 +97,9 @@ instr_readFI t = instr_unimplemented t
 instr_readFR :: !Target -> Target
 instr_readFR t = instr_unimplemented t
 
+instr_readFR_32 :: !Target -> Target
+instr_readFR_32 t = instr_unimplemented t
+
 instr_readFS :: !Target -> Target
 instr_readFS t = instr_unimplemented t
 
@@ -120,6 +123,9 @@ instr_writeFI t = instr_unimplemented t
 
 instr_writeFR :: !Target -> Target
 instr_writeFR t = instr_unimplemented t
+
+instr_writeFR_32 :: !Target -> Target
+instr_writeFR_32 t = instr_unimplemented t
 
 instr_writeFS :: !Target -> Target
 instr_writeFS t = instr_unimplemented t

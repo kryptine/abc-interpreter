@@ -1319,6 +1319,12 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "eqR_b" (Just 2) $
 		B @ -1 .= (to_real (B @ to_int (Pc @ 1)) ==. to_real (Pc @ 2)) :.
 		grow_b 1
+	, instr "eqR_b_32" (Just 3) $
+		new_local TInt (to_int (Pc @ 1)) \offset ->
+		new_double_real (B @? offset) \r1 ->
+		new_double_real (Pc @? 2) \r2 ->
+		grow_b 2 :.
+		B @ 0 .= r1 ==. r2
 	, instr "eqD_b" (Just 1) $
 		(B @ -1) .= (B @ 0 ==. Pc @ 1) :.
 		grow_b 1
@@ -3907,6 +3913,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "readFC" Nothing instr_readFC
 	, instr "readFI" Nothing instr_readFI
 	, instr "readFR" Nothing instr_readFR
+	, instr "readFR_32" Nothing instr_readFR_32
 	, instr "readFS" Nothing instr_readFS
 	, instr "readLineF" Nothing instr_readLineF
 	, instr "seekF" Nothing instr_seekF
@@ -3915,6 +3922,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	, instr "writeFC" Nothing instr_writeFC
 	, instr "writeFI" Nothing instr_writeFI
 	, instr "writeFR" Nothing instr_writeFR
+	, instr "writeFR_32" Nothing instr_writeFR_32
 	, instr "writeFS" Nothing instr_writeFS
 	, instr "writeFString" Nothing instr_writeFString
 
@@ -3943,21 +3951,18 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "readSFC" $
 	  alias "readSFI" $
 	  alias "readSFR" $
+	  alias "readSFR_32" $
 	  alias "readSFS" $
 	  alias "reopenF" $
 	  alias "seekSF" $
 	  alias "shareF" $
 
-	  alias "readFR_32" $
-	  alias "readSFR_32" $
-	  alias "writeFR_32" $
 	  alias "selectREALoo_32" $
 	  alias "selectREAL_32" $
 	  alias "updateREAL_32" $
 	  alias "replaceREAL_32" $
 	  alias "create_arrayREAL_32" $
 	  alias "create_array_REAL_32" $
-	  alias "eqR_b_32" $
 
 	  alias "A_data_IIIla" $
 	  alias "A_data_IIl" $
