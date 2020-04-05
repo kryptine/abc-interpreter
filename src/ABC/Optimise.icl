@@ -407,7 +407,7 @@ skip_b_instructions is              n = (is,n)
 Start :: !*World -> *World
 Start w
 # args = getCommandLine
-| size args <> 4 || args.[2] <> "-o" = abort "Usage: optimise ABC_FILE -o OPTABC_FILE\n"
+| size args <> 4 || args.[2] <> "-o" = abort ("Usage: "+++args.[0]+++" ABC_FILE -o OPTABC_FILE\n")
 # {[1]=input,[3]=output} = args
 # (ok,input,w) = fopen input FReadText w
 | not ok = abort "Could not open input file\n"
