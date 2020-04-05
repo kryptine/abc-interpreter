@@ -973,7 +973,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3 :.
-		new_local TPtrOffset (to_ptr_offset (B @ 1)) \n ->
+		new_local TWord (B @ 1) \n ->
 		shrink_b 2 :.
 		advance_ptr Pc 1 :.
 		while_do (s >. lit_hword 3) (
@@ -995,7 +995,7 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp 3 :.
-		new_local TPtrOffset (to_ptr_offset (B @ 1)) \n ->
+		new_local TWord (B @ 1) \n ->
 		shrink_b 2 :.
 		advance_ptr Pc 1 :.
 		while_do (s >. lit_hword 3) (
@@ -1006,6 +1006,28 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		advance_ptr Hp s :.
 		while_do (s >. lit_hword 0) (
 			Hp @ (lit_hword 0 - s) .= n :.
+			s -= lit_hword 1
+		)
+	, instr "create_arrayREAL_32" Nothing $
+		new_local TPtrOffset (to_ptr_offset (B @ 0)) \s ->
+		ensure_hp (lit_hword 3 + (s <<. lit_hword 1)) :.
+		Hp @ 0 .= ARRAY__ptr + lit_word 2 :.
+		Hp @ 1 .= s :.
+		Hp @ 2 .= DREAL_ptr + lit_word 2 :.
+		A @ 1 .= to_word Hp :.
+		grow_a 1 :.
+		advance_ptr Hp 3 :.
+		new_double_real (B @? 1) \r ->
+		shrink_b 3 :.
+		advance_ptr Pc 1 :.
+		while_do (s >. lit_hword 3) (
+			for [0..3] (\i -> store_double_real (Hp @? (i << 1)) r) :.
+			advance_ptr Hp 8 :.
+			s -= lit_hword 4
+		) :.
+		advance_ptr Hp (s <<. lit_hword 1) :.
+		while_do (s >. lit_hword 0) (
+			store_double_real (Hp @? (lit_hword 0 - (s <<. lit_hword 1))) r :.
 			s -= lit_hword 1
 		)
 	, instr "create_array_" Nothing $
@@ -1075,6 +1097,16 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		A @ 1 .= to_word Hp :.
 		grow_a 1 :.
 		advance_ptr Hp (lit_hword 3 + s)
+	, instr "create_array_REAL_32" (Just 0) $
+		new_local TPtrOffset (to_ptr_offset (B @ 0)) \s ->
+		ensure_hp (lit_hword 3 + (s <<. lit_hword 1)) :.
+		shrink_b 1 :.
+		Hp @ 0 .= ARRAY__ptr + lit_word 2 :.
+		Hp @ 1 .= s :.
+		Hp @ 2 .= DREAL_ptr + lit_word 2 :.
+		A @ 1 .= to_word Hp :.
+		grow_a 1 :.
+		advance_ptr Hp (lit_hword 3 + (s <<. lit_hword 1))
 	, instr "create_array_r" Nothing $
 		new_local TPtrOffset (to_ptr_offset (B @ 0)) \s ->
 		new_local TPtrOffset (to_ptr_offset (Pc @ 1)) \n_ab ->
@@ -2691,6 +2723,14 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		array @ i .= B @ 1 :.
 		B @ 1 .= v :.
 		shrink_b 1
+	, instr "replaceREAL_32" (Just 0) $
+		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
+		new_local TPtrOffset (lit_hword 3 + (to_ptr_offset (B @ 0) <<. lit_hword 1)) \i ->
+		new_double_real (array @? i) \old ->
+		new_double_real (B @? 1) \new ->
+		store_double_real (array @? i) new :.
+		store_double_real (B @? 1) old :.
+		shrink_b 1
 	, instr "replace_r" Nothing $
 		new_local TPtrOffset (to_ptr_offset (Pc @ 1)) \n_a ->
 		new_local TPtrOffset (to_ptr_offset (Pc @ 2)) \n_b ->
@@ -2927,6 +2967,12 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		B @ 0 .= array @ (lit_hword 3 + to_ptr_offset (B @ 0)) :.
 		shrink_a 1
+	, instr "selectREAL_32" (Just 0) $
+		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
+		new_double_real (array @? (lit_hword 3 + (to_ptr_offset (B @ 0) <<. lit_hword 1))) \r ->
+		grow_b 1 :.
+		store_double_real B r :.
+		shrink_a 1
 	] ++
 	[ instr ("select_r"+++toString as+++toString bs) (Just 0) $
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \elems ->
@@ -3089,6 +3135,11 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
 		array @ (lit_hword 3 + to_ptr_offset (B @ 0)) .= B @ 1 :.
 		shrink_b 2
+	, instr "updateREAL_32" (Just 0) $
+		new_local (TPtr TWord) (to_word_ptr (A @ 0)) \array ->
+		new_double_real (B @? 1) \r ->
+		store_double_real (array @? (lit_hword 3 + (to_ptr_offset (B @ 0) <<. lit_hword 1))) r :.
+		shrink_b 3
 	, instr "update_a" (Just 2) $
 		A @ to_int (Pc @ 2) .= A @ to_int (Pc @ 1)
 	, instr "update_b" (Just 2) $
@@ -3558,6 +3609,11 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 		new_local (TPtr TWord) (to_word_ptr (A @ (Pc @ 1))) \array ->
 		B @ -1 .= to_word_ptr (array @? 3) @ (B @ (Pc @ 2)) :.
 		grow_b 1
+	, instr "selectREALoo_32" (Just 2) $
+		new_local (TPtr TWord) (to_word_ptr (A @ (Pc @ 1))) \array ->
+		new_double_real (array @? (lit_hword 3 + (to_ptr_offset (B @ (Pc @ 2)) <<. lit_hword 1))) \r ->
+		grow_b 2 :.
+		store_double_real B r
 	] ++
 	[ instr ("update"+++toString n+++"_a") (Just 2) $
 		new_local TPtrOffset (to_ptr_offset (Pc @ 1)) \ao_s ->
@@ -3956,13 +4012,6 @@ all_instructions opts t = bootstrap $ collect_instructions opts $ map (\i -> i t
 	  alias "reopenF" $
 	  alias "seekSF" $
 	  alias "shareF" $
-
-	  alias "selectREALoo_32" $
-	  alias "selectREAL_32" $
-	  alias "updateREAL_32" $
-	  alias "replaceREAL_32" $
-	  alias "create_arrayREAL_32" $
-	  alias "create_array_REAL_32" $
 
 	  alias "A_data_IIIla" $
 	  alias "A_data_IIl" $

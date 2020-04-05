@@ -100,9 +100,10 @@ static inline struct heap_pointers update_ref(BC_WORD *old, size_t heap_size,
 				|| d == (BC_WORD)&REAL+2
 				|| d == 0) {
 				/* size is correct */
-				/* TODO: DREAL */
 			} else if (d == (BC_WORD)&BOOL+2) {
 				size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+			} else if (d==(BC_WORD)&DREAL+2){
+				size<<=1;
 			} else {
 				size*=(((int16_t*)d)[-1]-256);
 				a_arity=((int16_t*)d)[0];
