@@ -6,9 +6,8 @@ interact with the browser DOM directly from Clean.
 
 ## Tools
 
-The WebAssembly interpreter assumes a prelinked bytecode file with the program
-memory starting at address `0x8` and the data memory starting eight bytes after
-the program memory. This file is produced by `bcprelink`:
+The WebAssembly interpreter assumes a prelinked bytecode file (i.e., one
+without relocations). This file is produced by `bcprelink`:
 
 ```bash
 bcprelink MODULE.bc -o MODULE.pbc
