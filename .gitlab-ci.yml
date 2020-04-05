@@ -18,7 +18,6 @@ stages:
     - ln -s "$PWD/src/bcprelink" /opt/clean-32/lib/exe/bcprelink
     - ln -s "$PWD/src/bcstrip" /opt/clean-32/lib/exe/bcstrip
     - sed -i '/^import code from library/d' lib/ABC/Interpreter/Util.icl
-    - ln -s /opt/clean-64 /opt/clean
 
 build:
   extends: .base

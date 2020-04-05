@@ -29,4 +29,5 @@ RUN	\
 	install_clean_nightly.sh base lib-argenv lib-directory lib-dynamics lib-graphcopy lib-platform &&\
 	mv /opt/clean /opt/clean-64 &&\
 	CLEAN_PLATFORM=x86 install_clean.sh "base lib-argenv lib-dynamics lib-platform" &&\
-	mv /opt/clean /opt/clean-32
+	mv /opt/clean /opt/clean-32 &&\
+    ln -s /opt/clean-64 /opt/clean
