@@ -540,7 +540,10 @@ void prepare_strip_bytecode(uint32_t *bytecode,
 					i+=8;
 					break;
 				case 'R': /* Double-position Real */
-					i+=8;
+					i+=4;
+					code_indices[ci].byte_index=-1;
+					code_indices[ci].incoming_labels=NULL;
+					i+=4;
 					ci++;
 					break;
 				default:
