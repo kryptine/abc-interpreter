@@ -65,7 +65,7 @@ junit_export () {
 	echo "<testcase id=\"$MODULE\" name=\"$MODULE\" classname=\"$MODULE\" time=\"0\">"
 	if [ "$RESULT" = "failed" ]; then
 		echo "<failure>"
-		git diff --no-index --word-diff -U0 $EXPECTED $MODULE.result \
+		git diff --no-index --word-diff --word-diff-regex='\w+' -U0 $EXPECTED $MODULE.result \
 			| sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 		echo "</failure>"
 	fi
@@ -273,7 +273,7 @@ do
 	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
 		EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
 	fi
-	git diff --no-index --word-diff -U0 $EXPECTED $MODULE.result
+	git diff --no-index --word-diff --word-diff-regex='\w+' -U0 $EXPECTED $MODULE.result
 	if [ $? -ne 0 ]; then
 		[ $JUNIT_EXPORT -gt 0 ] && junit_export $MODULE failed "$EXPECTED" > "$MODULE.junit.xml"
 		echo -e "${RED}FAILED: $MODULE (different result)$RESET"
