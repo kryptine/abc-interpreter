@@ -879,6 +879,13 @@
 							)
 						)
 						(if
+							(i32.eq (local.get $d) (i32.const 5538)) ;; DREAL+2
+							(then
+								(local.set $n (i32.add (local.get $n) (i32.const 24)))
+								(br $update-refs)
+							)
+						)
+						(if
 							;; _STRING_+2
 							(i32.eq (local.get $d) (i32.const 42))
 							(then
@@ -905,6 +912,7 @@
 										(br $update-refs)
 									)
 								)
+								;; TODO: unboxed DREAL
 								(if ;; unboxed BOOL
 									(i32.eq (local.get $d) (i32.const 82))
 									(then
@@ -1144,6 +1152,16 @@
 						(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
 						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
 						(return (i32.add (local.get $hp) (i32.const 16)))
+					)
+				)
+				(if
+					(i32.eq (local.get $d) (i32.const 5538)) ;; DREAL+2
+					(then
+						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
+						(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
+						(i64.store offset=16 (local.get $hp) (i64.load offset=16 (local.get $n)))
+						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
+						(return (i32.add (local.get $hp) (i32.const 24)))
 					)
 				)
 				(if

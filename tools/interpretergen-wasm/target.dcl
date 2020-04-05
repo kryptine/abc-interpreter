@@ -7,7 +7,7 @@ from wasm import :: Type, :: Ex
 
 class wasm_type a :: !a -> Type
 
-instance wasm_type TWord, TPtrOffset, TBool, TChar, TShort, TInt, TReal, (TPtr t)
+instance wasm_type TWord, TPtrOffset, TBool, TChar, TShort, TInt, TReal, TDReal, (TPtr t)
 
 :: TempVars
 :: Target =
@@ -50,7 +50,7 @@ instance + (Expr t)
 instance - (Expr t)
 instance * (Expr t)
 instance / (Expr t)
-instance ^ (Expr TReal)
+instance ^ (Expr r) | real r
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 
 (==.) infix  4 :: !(Expr a) !(Expr a) -> Expr TBool
@@ -69,21 +69,21 @@ instance ^ (Expr TReal)
 xorI          :: !(Expr TWord) !(Expr TWord) -> Expr TWord
 ~.            :: !(Expr TWord) -> Expr TWord
 
-absR    :: !(Expr TReal) -> Expr TReal
-acosR   :: !(Expr TReal) -> Expr TReal
-asinR   :: !(Expr TReal) -> Expr TReal
-atanR   :: !(Expr TReal) -> Expr TReal
-cosR    :: !(Expr TReal) -> Expr TReal
-entierR :: !(Expr TReal) -> Expr TInt
-expR    :: !(Expr TReal) -> Expr TReal
-lnR     :: !(Expr TReal) -> Expr TReal
-log10R  :: !(Expr TReal) -> Expr TReal
-negR    :: !(Expr TReal) -> Expr TReal
-sinR    :: !(Expr TReal) -> Expr TReal
-sqrtR   :: !(Expr TReal) -> Expr TReal
-tanR    :: !(Expr TReal) -> Expr TReal
-ItoR    :: !(Expr TInt)  -> Expr TReal
-RtoI    :: !(Expr TReal) -> Expr TInt
+absR    :: !(Expr r) -> Expr r | real r
+acosR   :: !(Expr r) -> Expr r | real r
+asinR   :: !(Expr r) -> Expr r | real r
+atanR   :: !(Expr r) -> Expr r | real r
+cosR    :: !(Expr r) -> Expr r | real r
+entierR :: !(Expr r) -> Expr TInt | real r
+expR    :: !(Expr r) -> Expr r | real r
+lnR     :: !(Expr r) -> Expr r | real r
+log10R  :: !(Expr r) -> Expr r | real r
+negR    :: !(Expr r) -> Expr r | real r
+sinR    :: !(Expr r) -> Expr r | real r
+sqrtR   :: !(Expr r) -> Expr r | real r
+tanR    :: !(Expr r) -> Expr r | real r
+ItoR    :: !(Expr TInt)  -> Expr r | real r
+RtoI    :: !(Expr r) -> Expr TInt | real r
 
 if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
 if_i64_or_i32_expr :: !(Expr t) !(Expr t) -> Expr t
@@ -126,6 +126,9 @@ class (@?) infix 8 a :: !(Expr (TPtr t)) !a -> Expr (TPtr t) | wasm_type t
 instance @  Int, (Expr t)
 instance @? Int, (Expr t)
 
+new_double_real :: !(Expr (TPtr t)) !((Expr TDReal) Target -> Target) !Target -> Target
+store_double_real :: !(Expr (TPtr t)) !(Expr TDReal) !Target -> Target
+
 begin_block :: !Target -> Target
 end_block :: !Target -> Target
 
@@ -152,6 +155,7 @@ BOOL_ptr :: Expr TWord
 CHAR_ptr :: Expr TWord
 INT_ptr :: Expr TWord
 REAL_ptr :: Expr TWord
+DREAL_ptr :: Expr TWord
 ARRAY__ptr :: Expr TWord
 STRING__ptr :: Expr TWord
 FILE_ptr :: Expr TWord
@@ -175,4 +179,4 @@ putchar :: !(Expr TChar) !Target -> Target
 print_bool :: !(Expr TWord) !Target -> Target
 print_char :: !Bool !(Expr TChar) !Target -> Target
 print_int :: !(Expr TInt) !Target -> Target
-print_real :: !(Expr TReal) !Target -> Target
+print_real :: !(Expr r) !Target -> Target | real r

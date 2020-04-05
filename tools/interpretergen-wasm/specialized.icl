@@ -33,6 +33,24 @@ instr_RtoAC t = (
 	advance_ptr B 1
 	) t
 
+instr_RtoAC_32 :: !Target -> Target
+instr_RtoAC_32 t = (
+	ensure_hp 5 :. // upper bound; sometimes as little as 3 words are needed
+	new_double_real B \r ->
+	A @ 1 .= to_word Hp :.
+	Hp @ 0 .= STRING__ptr + lit_word 2 :.
+	new_local TWord (to_word Hp) \old_hp ->
+	advance_ptr Hp 2 :.
+	new_local TWord (to_word (ex_to_expr (Ecall "clean_RtoAC" [expr_to_ex r,expr_to_ex Hp]) ::: TPtrOffset)) \new_hp ->
+	Hp @ -1 .= new_hp - to_word Hp :.
+	Hp .= to_word_ptr ((new_hp + lit_word 7) &. lit_word -8) :.
+	// correct hp-free counter because we use an upper bound above
+	Hp_free += lit_hword 5 - to_ptr_offset ((to_word Hp - old_hp) >>. lit_word 3) :.
+	advance_ptr Pc 1 :.
+	advance_ptr A 1 :.
+	advance_ptr B 2
+	) t
+
 instr_load_i :: !Target -> Target
 instr_load_i t = instr_load I64 True t
 

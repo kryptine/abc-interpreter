@@ -39,7 +39,6 @@ build-windows:
     - CC=x86_64-w64-mingw32-gcc OS=Windows_NT make -B -C src ByteCodeGenerator.exe ByteCodeLinker.exe ByteCodePrelinker.exe ByteCodeStripper.exe interpret.exe
 
 build-wasm:
-  allow_failure: true
   extends: .base
   stage: build
   script:

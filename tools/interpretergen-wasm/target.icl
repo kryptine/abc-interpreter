@@ -38,6 +38,7 @@ instance wasm_type TChar      where wasm_type _ = I8
 instance wasm_type TShort     where wasm_type _ = I16
 instance wasm_type TInt       where wasm_type _ = I64
 instance wasm_type TReal      where wasm_type _ = F64
+instance wasm_type TDReal     where wasm_type _ = F64
 instance wasm_type (TPtr t)   where wasm_type _ = I32
 
 instance wasm_literal String
@@ -76,7 +77,7 @@ new_temp_var tp t
 
 i32_temp_vars =: {#{#'v','w',i} \\ i <- ['0'..'9']}
 i64_temp_vars =: {#{#'v','q',i} \\ i <- ['0'..'9']}
-f64_temp_vars =: {#{#'v','d',i} \\ i <- ['0'..'0']}
+f64_temp_vars =: {#{#'v','d',i} \\ i <- ['0'..'9']}
 
 :: Expr t :== Ex
 
@@ -184,9 +185,9 @@ where
 
 		[ "(global $g-fast-ap-descriptor (mut i64) (i64.const 0))" ] ++
 
-		IF_GLOBAL_TEMP_VARS ["(global $vw"+++toString i+++" (mut i32) (i32.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]]] [] ++
-		IF_GLOBAL_TEMP_VARS ["(global $vq"+++toString i+++" (mut i64) (i64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]]] [] ++
-		IF_GLOBAL_TEMP_VARS ["(global $vd"+++toString i+++" (mut f64) (f64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]]] [] ++
+		IF_GLOBAL_TEMP_VARS ["(global $vw"+++toString i+++" (mut i32) (i32.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i32 \\ i <- is]-1]] [] ++
+		IF_GLOBAL_TEMP_VARS ["(global $vq"+++toString i+++" (mut i64) (i64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_i64 \\ i <- is]-1]] [] ++
+		IF_GLOBAL_TEMP_VARS ["(global $vd"+++toString i+++" (mut f64) (f64.const 0))" \\ i <- [0..maxList [i.temp_vars.tv_f64 \\ i <- is]-1]] [] ++
 
 		[ "(func (export \"interpret\") (result i32)" ] ++
 
@@ -344,7 +345,7 @@ instance + (Expr t)     where (+) a b = Eadd (type2 a b) a b
 instance - (Expr t)     where (-) a b = Esub (type2 a b) a b
 instance * (Expr t)     where (*) a b = Emul (type2 a b) a b
 instance / (Expr t)     where (/) a b = Ediv (type2 a b) Signed a b
-instance ^ (Expr TReal) where (^) a b = Ecall "clean_powR" [a,b]
+instance ^ (Expr r) | real r where (^) a b = Ecall "clean_powR" [a,b]
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = Erem (type2 a b) Signed a b
@@ -388,49 +389,49 @@ xorI a b = Exor (type2 a b) a b
 ~. :: !(Expr TWord) -> Expr TWord
 ~. a = Exor I64 (Econst I64 "0xffffffffffffffff") a // string literal to avoid Clean integer overflow
 
-absR :: !(Expr TReal) -> Expr TReal
+absR :: !(Expr r) -> Expr r | real r
 absR r = Eabs (type r) r
 
-acosR :: !(Expr TReal) -> Expr TReal
+acosR :: !(Expr r) -> Expr r | real r
 acosR r = Ecall "clean_acosR" [r]
 
-asinR :: !(Expr TReal) -> Expr TReal
+asinR :: !(Expr r) -> Expr r | real r
 asinR r = Ecall "clean_asinR" [r]
 
-atanR :: !(Expr TReal) -> Expr TReal
+atanR :: !(Expr r) -> Expr r | real r
 atanR r = Ecall "clean_atanR" [r]
 
-cosR :: !(Expr TReal) -> Expr TReal
+cosR :: !(Expr r) -> Expr r | real r
 cosR r = Ecall "clean_cosR" [r]
 
-entierR :: !(Expr TReal) -> Expr TInt
+entierR :: !(Expr r) -> Expr TInt | real r
 entierR r = Etrunc I64 F64 (Efloor F64 r)
 
-expR :: !(Expr TReal) -> Expr TReal
+expR :: !(Expr r) -> Expr r | real r
 expR r = Ecall "clean_expR" [r]
 
-lnR :: !(Expr TReal) -> Expr TReal
+lnR :: !(Expr r) -> Expr r | real r
 lnR r = Ecall "clean_lnR" [r]
 
-log10R :: !(Expr TReal) -> Expr TReal
+log10R :: !(Expr r) -> Expr r | real r
 log10R r = Ecall "clean_log10R" [r]
 
-negR :: !(Expr TReal) -> Expr TReal
+negR :: !(Expr r) -> Expr r | real r
 negR r = Eneg (type r) r
 
-sinR :: !(Expr TReal) -> Expr TReal
+sinR :: !(Expr r) -> Expr r | real r
 sinR r = Ecall "clean_sinR" [r]
 
-sqrtR :: !(Expr TReal) -> Expr TReal
+sqrtR :: !(Expr r) -> Expr r | real r
 sqrtR r = Esqrt (type r) r
 
-tanR :: !(Expr TReal) -> Expr TReal
+tanR :: !(Expr r) -> Expr r | real r
 tanR r = Ecall "clean_tanR" [r]
 
-ItoR :: !(Expr TInt)  -> Expr TReal
+ItoR :: !(Expr TInt)  -> Expr r | real r
 ItoR i = Econvert F64 I64 i
 
-RtoI :: !(Expr TReal) -> Expr TInt
+RtoI :: !(Expr r) -> Expr TInt | real r
 RtoI i = Etrunc I64 F64 i
 
 if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
@@ -592,6 +593,22 @@ where
 		ptr_type = wasm_type (get_type_of_ptr p)
 		sft = type_width_shift ptr_type
 
+new_double_real :: !(Expr (TPtr t)) !((Expr TDReal) Target -> Target) !Target -> Target
+new_double_real ptr cont t
+	# (var,t) = new_temp_var (wasm_type TDReal) t
+	= cont (Ivar var) (append (Eset var expr) t)
+where
+	expr = Ereinterpret F64 I64
+		(Eor I64
+			(Eload I64 I32 Unsigned 0 ptr)
+			(Eshl I64 (Eload I64 I32 Unsigned 8 ptr) (Econst I64 32)))
+
+store_double_real :: !(Expr (TPtr t)) !(Expr TDReal) !Target -> Target
+store_double_real ptr r t = (
+	append (Estore I64 I32 0 ptr (Ereinterpret I64 F64 r)) :.
+	append (Estore I64 I64 8 ptr (Eshr I64 Unsigned (Ereinterpret I64 F64 r) (Econst I64 32)))
+	) t
+
 begin_block :: !Target -> Target
 begin_block t = append Eblock t
 
@@ -676,6 +693,9 @@ INT_ptr = Econst I64 (25*8)
 REAL_ptr :: Expr TWord
 REAL_ptr = Econst I64 (20*8)
 
+DREAL_ptr :: Expr TWord
+DREAL_ptr = Econst I64 (692*8)
+
 ARRAY__ptr :: Expr TWord
 ARRAY__ptr = Econst I64 (0*8)
 
@@ -755,5 +775,5 @@ where
 	high = Ewrap I32 I64 (Eshr I64 Unsigned c (Econst I64 32))
 	low = Ewrap I32 I64 c
 
-print_real :: !(Expr TReal) !Target -> Target
+print_real :: !(Expr r) !Target -> Target | real r
 print_real c t = append (Ecall "clean_print_real" [c]) t
