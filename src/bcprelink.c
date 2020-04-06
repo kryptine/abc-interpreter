@@ -19,9 +19,10 @@ enum section_type {
 #define _2chars2int(a,b)             ((uint64_t) (a+(b<<8)))
 #define _3chars2int(a,b,c)           ((uint64_t) (a+(b<<8)+(c<<16)))
 #define _4chars2int(a,b,c,d)         ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)))
+#define _5chars2int(a,b,c,d,e)       ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)))
 #define _7chars2int(a,b,c,d,e,f,g)   ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)))
 #define _8chars2int(a,b,c,d,e,f,g,h) ((uint64_t) (a+(b<<8)+(c<<16)+(d<<24)+((uint64_t)e<<32)+((uint64_t)f<<40)+((uint64_t)g<<48)+((uint64_t)h<<56)))
-uint64_t prelinker_preamble[692] = {
+uint64_t prelinker_preamble[697] = {
 	/*  0 */ 0, 0, 0, 7, _7chars2int('_','A','R','R','A','Y','_'),
 	/*  5 */ 0, 0, 0, 8, _8chars2int('_','S','T','R','I','N','G','_'),
 	/* 10 */ 0, 0, 0, 4, _4chars2int('B','O','O','L'),
@@ -75,6 +76,8 @@ uint64_t prelinker_preamble[692] = {
 	/* 690 cycle in spine*/
 		0, Chalt,
 	/* 692 */
+		0, 0, 0, 5, _5chars2int('D','R','E','A','L'),
+	/* 697 */
 };
 
 void prepare_preamble(void) {

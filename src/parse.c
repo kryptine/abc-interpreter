@@ -83,6 +83,7 @@ void init_parser(struct parser *state
 	preseed_symbol_matcher(state, "BOOL", (void*) &BOOL);
 	preseed_symbol_matcher(state, "CHAR", (void*) &CHAR);
 	preseed_symbol_matcher(state, "REAL", (void*) &REAL);
+	preseed_symbol_matcher(state, "DREAL", (void*) &DREAL);
 	preseed_symbol_matcher(state, "__ARRAY__", (void*) &__ARRAY__);
 	preseed_symbol_matcher(state, "__STRING__", (void*) &__STRING__);
 	preseed_symbol_matcher(state, "e__system__nind", (void*) &__interpreter_indirection[5]);
@@ -386,6 +387,23 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 # endif
 #endif
 							break;
+						case 'R': /* double-position Real */
+							if (provide_chars (&elem32,sizeof (elem32),1,cp)<0)
+								return 1;
+#ifdef LINKER
+							store_code_elem (4,elem32);
+#else
+							state->program->code[state->ptr++]=elem32;
+#endif
+							if (provide_chars (&elem32,sizeof (elem32),1,cp)<0)
+								return 1;
+#ifdef LINKER
+							store_code_elem (4,elem32);
+							state->ptr++;
+#else
+							state->program->code[state->ptr++]=elem32;
+#endif
+							break;
 						case 'c': /* Char */
 							if (provide_chars(&elem8, sizeof(elem8), 1, cp) < 0)
 								return 1;
@@ -510,6 +528,8 @@ int parse_program(struct parser *state, struct char_provider *cp) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&CHAR,15);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "REAL")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&REAL,20);
+				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "DREAL")) {
+					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&DREAL,692);
 				} else if (!strcmp(state->program->symbol_table[state->ptr].name, "e__system__nind")) {
 					state->program->symbol_table[state->ptr].offset = (BC_WORD) INTERPRETER_OR_PRELINKER(&__interpreter_indirection[5], 136);
 				} else if (state->program->symbol_table[state->ptr].offset == -1) {

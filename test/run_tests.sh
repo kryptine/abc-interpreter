@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Runs tests from the same directory and checks the outcome against the
+# .expected file.
+#
+# In principle, the outcome for MODULE.icl is in MODULE.expected. However, in
+# cases where the outcome depends on the platform, this can be overridden. For
+# instance, MODULE.64_32.expected is the outcome when MODULE is compiled with
+# 64-bit Clean and run on a 32-bit interpreter.
+
 IP=../src/interpret
 [ "$OS" == "Windows_NT" ] && IP=../src/interpret.exe
 
@@ -20,7 +28,7 @@ INTERPRETERGENWASMFLAGS=""
 SRCMAKETARGETS="all"
 MAKE=1
 BENCHMARK=0
-EXPECTED_PREFIX=".64"
+EXPECTED_PREFIX="64"
 BC_EXTENSION="bc"
 RUN_ONLY=()
 PROFILE=0
@@ -152,7 +160,7 @@ while true; do
 			NATIVE_RUNFLAGS+=" -s $2"
 			shift 2;;
 		-3)
-			EXPECTED_PREFIX=".32"
+			EXPECTED_PREFIX="32"
 			CFLAGS+=" -m32 -DWORD_WIDTH=32"
 			shift;;
 
@@ -201,11 +209,18 @@ if [ $WASM -gt 0 ]; then
 	fi
 fi
 
+clm -nt is_32_bit_clean -o is_32_bit_clean
+if [[ "$(./is_32_bit_clean)" == "True" ]]; then
+	EXPECTED_PREFIX=".32_$EXPECTED_PREFIX"
+else
+	EXPECTED_PREFIX=".64_$EXPECTED_PREFIX"
+fi
+
 for MODULE in *.icl
 do
 	MODULE="${MODULE/.icl/}"
 
-	if [[ "$MODULE" == "CodeSharing" ]] || [[ "$MODULE" == "GraphTest" ]]; then
+	if [[ "$MODULE" == "CodeSharing" ]] || [[ "$MODULE" == "GraphTest" ]] || [[ "$MODULE" == "is_32_bit_clean" ]]; then
 		continue
 	elif [[ "$MODULE" == "long_integers" ]] && [ $WASM -gt 0 ]; then
 		continue
@@ -233,10 +248,15 @@ do
 		continue
 	fi
 
+	EXPECTED="$MODULE$EXPECTED_PREFIX.expected"
 	if [ ! -f "$MODULE$EXPECTED_PREFIX.expected" ]; then
-		echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
-		[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
-		continue
+		if [ -f "$MODULE.expected" ]; then
+			EXPECTED="$MODULE.expected"
+		else
+			echo -e "${YELLOW}Skipping $MODULE (no expected outcome)${RESET}"
+			[ $BENCHMARK -gt 0 ] && mv "$MODULE.icl.nobm" "$MODULE.icl"
+			continue
+		fi
 	fi
 
 	MODULE_HEAPSIZE="$(grep -w HeapSize "$MODULE.prj" | cut -f4 | tr -d '\r')"
@@ -269,9 +289,12 @@ do
 
 	[ "$OS" == "Windows_NT" ] && dos2unix $MODULE.result
 
-	EXPECTED="$MODULE$EXPECTED_PREFIX.expected"
-	if [ $BENCHMARK -gt 0 ] && [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
-		EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
+	if [ $BENCHMARK -gt 0 ]; then
+		if [ -f "$MODULE.bm$EXPECTED_PREFIX.expected" ]; then
+			EXPECTED="$MODULE.bm$EXPECTED_PREFIX.expected"
+		elif [ -f "$MODULE.bm.expected" ]; then
+			EXPECTED="$MODULE.bm.expected"
+		fi
 	fi
 	git diff --no-index --word-diff --word-diff-regex='\w+' -U0 $EXPECTED $MODULE.result
 	if [ $? -ne 0 ]; then

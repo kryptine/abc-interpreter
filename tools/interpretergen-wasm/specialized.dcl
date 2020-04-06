@@ -8,6 +8,7 @@ instr_divLU :: !Target -> Target
 instr_mulUUL :: !Target -> Target
 
 instr_RtoAC :: !Target -> Target
+instr_RtoAC_32 :: !Target -> Target
 
 instr_load_i :: !Target -> Target
 instr_load_si16 :: !Target -> Target
@@ -23,6 +24,7 @@ instr_positionF :: !Target -> Target
 instr_readFC :: !Target -> Target
 instr_readFI :: !Target -> Target
 instr_readFR :: !Target -> Target
+instr_readFR_32 :: !Target -> Target
 instr_readFS :: !Target -> Target
 instr_readLineF :: !Target -> Target
 instr_seekF :: !Target -> Target
@@ -31,5 +33,6 @@ instr_stdioF :: !Target -> Target
 instr_writeFC :: !Target -> Target
 instr_writeFI :: !Target -> Target
 instr_writeFR :: !Target -> Target
+instr_writeFR_32 :: !Target -> Target
 instr_writeFS :: !Target -> Target
 instr_writeFString :: !Target -> Target

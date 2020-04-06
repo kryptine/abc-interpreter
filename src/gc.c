@@ -75,6 +75,14 @@ static inline struct heap_pointers update_ref(BC_WORD *old, size_t heap_size,
 			*ref=hp.end;
 			*n=(BC_WORD)hp.end+1;
 			return hp;
+		} else if (d == (BC_WORD)&DREAL+2) {
+			hp.end-=3;
+			hp.end[0]=d;
+			hp.end[1]=n[1];
+			hp.end[2]=n[2];
+			*ref=hp.end;
+			*n=(BC_WORD)hp.end+1;
+			return hp;
 		} else if (d == (BC_WORD)&__STRING__+2) {
 			unsigned int size=n[1];
 			size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
@@ -94,6 +102,8 @@ static inline struct heap_pointers update_ref(BC_WORD *old, size_t heap_size,
 				/* size is correct */
 			} else if (d == (BC_WORD)&BOOL+2) {
 				size=(size+IF_INT_64_OR_32(7,3))/IF_INT_64_OR_32(8,4);
+			} else if (d==(BC_WORD)&DREAL+2){
+				size<<=1;
 			} else {
 				size*=(((int16_t*)d)[-1]-256);
 				a_arity=((int16_t*)d)[0];

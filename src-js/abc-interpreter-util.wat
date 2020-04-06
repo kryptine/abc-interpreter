@@ -879,6 +879,13 @@
 							)
 						)
 						(if
+							(i32.eq (local.get $d) (i32.const 5538)) ;; DREAL+2
+							(then
+								(local.set $n (i32.add (local.get $n) (i32.const 24)))
+								(br $update-refs)
+							)
+						)
+						(if
 							;; _STRING_+2
 							(i32.eq (local.get $d) (i32.const 42))
 							(then
@@ -902,6 +909,14 @@
 									(then
 										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
 											(i32.shl (local.get $size) (i32.const 3)))))
+										(br $update-refs)
+									)
+								)
+								(if ;; unboxed DREAL
+									(i32.eq (local.get $d) (i32.const 5538))
+									(then
+										(local.set $n (i32.add (local.get $n) (i32.add (i32.const 24)
+											(i32.shl (local.get $size) (i32.const 4)))))
 										(br $update-refs)
 									)
 								)
@@ -1147,6 +1162,16 @@
 					)
 				)
 				(if
+					(i32.eq (local.get $d) (i32.const 5538)) ;; DREAL+2
+					(then
+						(i64.store (local.get $hp) (i64.extend_i32_u (local.get $d)))
+						(i64.store offset=8 (local.get $hp) (i64.load offset=8 (local.get $n)))
+						(i64.store offset=16 (local.get $hp) (i64.load offset=16 (local.get $n)))
+						(i64.store (local.get $n) (i64.extend_i32_u (i32.add (local.get $hp) (i32.const 1))))
+						(return (i32.add (local.get $hp) (i32.const 24)))
+					)
+				)
+				(if
 					;; _STRING_+2
 					(i32.eq (local.get $d) (i32.const 42))
 					(then
@@ -1202,9 +1227,17 @@
 									(then ;; BOOL
 										(local.set $size (i32.shr_u (i32.add (local.get $size) (i32.const 7)) (i32.const 3)))
 									)
-									(else ;; unboxed record
-										(local.set $size (i32.mul (local.get $size)
-											(i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256))))
+									(else
+										(if
+											(i32.eq (local.get $d) (i32.const 5538))
+											(then ;; DREAL
+												(local.set $size (i32.shl (local.get $size) (i32.const 1)))
+											)
+											(else ;; unboxed record
+												(local.set $size (i32.mul (local.get $size)
+													(i32.sub (i32.load16_s (i32.sub (local.get $d) (i32.const 2))) (i32.const 256))))
+											)
+										)
 									)
 								)
 							)

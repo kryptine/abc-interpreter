@@ -19,6 +19,9 @@ import interpretergen
 	.o 1 0
 }
 
+($) infixr 0
+($) f :== f
+
 append :: !String !Target -> Target
 append e t = {t & output=[e:t.output]}
 
@@ -170,7 +173,7 @@ instance + (Expr t) where (+) a b = "("+-+a+-+"+"+-+b+-+")"
 instance - (Expr t) where (-) a b = "("+-+a+-+"-"+-+b+-+")"
 instance * (Expr t) where (*) a b = "("+-+a+-+"*"+-+b+-+")"
 instance / (Expr t) where (/) a b = "("+-+a+-+"/ "+-+b+-+")"
-instance ^ (Expr TReal) where (^) a b = "pow("+-+a+-+","+-+b+-+")"
+instance ^ (Expr r) | real r where (^) a b = "pow("+-+a+-+","+-+b+-+")"
 
 (%.)  infixl 6 :: !(Expr TInt) !(Expr TInt) -> Expr TInt
 (%.) a b = "("+-+a+-+"%"+-+b+-+")"
@@ -214,49 +217,49 @@ xorI a b = "("+-+a+-+"^"+-+b+-+")"
 ~. :: !(Expr TWord) -> Expr TWord
 ~. a = "(~"+-+a+-+")"
 
-absR :: !(Expr TReal) -> Expr TReal
+absR :: !(Expr r) -> Expr r | real r
 absR e = "fabs("+-+e+-+")"
 
-acosR :: !(Expr TReal) -> Expr TReal
+acosR :: !(Expr r) -> Expr r | real r
 acosR e = "acos("+-+e+-+")"
 
-asinR :: !(Expr TReal) -> Expr TReal
+asinR :: !(Expr r) -> Expr r | real r
 asinR e = "asin("+-+e+-+")"
 
-atanR :: !(Expr TReal) -> Expr TReal
+atanR :: !(Expr r) -> Expr r | real r
 atanR e = "atan("+-+e+-+")"
 
-cosR :: !(Expr TReal) -> Expr TReal
+cosR :: !(Expr r) -> Expr r | real r
 cosR e = "cos("+-+e+-+")"
 
-entierR :: !(Expr TReal) -> Expr TInt
+entierR :: !(Expr r) -> Expr TInt | real r
 entierR e = "floor("+-+e+-+")"
 
-expR :: !(Expr TReal) -> Expr TReal
+expR :: !(Expr r) -> Expr r | real r
 expR e = "exp("+-+e+-+")"
 
-lnR :: !(Expr TReal) -> Expr TReal
+lnR :: !(Expr r) -> Expr r | real r
 lnR e = "log("+-+e+-+")"
 
-log10R :: !(Expr TReal) -> Expr TReal
+log10R :: !(Expr r) -> Expr r | real r
 log10R e = "log10("+-+e+-+")"
 
-negR :: !(Expr TReal) -> Expr TReal
+negR :: !(Expr r) -> Expr r | real r
 negR e = "-("+-+e+-+")"
 
-sinR :: !(Expr TReal) -> Expr TReal
+sinR :: !(Expr r) -> Expr r | real r
 sinR e = "sin("+-+e+-+")"
 
-sqrtR :: !(Expr TReal) -> Expr TReal
+sqrtR :: !(Expr r) -> Expr r | real r
 sqrtR e = "sqrt("+-+e+-+")"
 
-tanR :: !(Expr TReal) -> Expr TReal
+tanR :: !(Expr r) -> Expr r | real r
 tanR e = "tan("+-+e+-+")"
 
-ItoR :: !(Expr TInt) -> Expr TReal
+ItoR :: !(Expr TInt) -> Expr r | real r
 ItoR e = "(BC_REAL)("+-+e+-+")"
 
-RtoI :: !(Expr TReal) -> Expr TInt
+RtoI :: !(Expr r) -> Expr TInt | real r
 RtoI e = "(BC_WORD_S)("+-+e+-+")"
 
 if_i64_or_i32 :: !(Target -> Target) !(Target -> Target) !Target -> Target
@@ -289,6 +292,7 @@ instance typename TChar  where typename _ = "unsigned char"
 instance typename TShort where typename _ = "int16_t"
 instance typename TInt   where typename _ = "BC_WORD_S"
 instance typename TReal  where typename _ = "BC_REAL"
+instance typename TDReal  where typename _ = "BC_DREAL"
 instance typename (TPtr t) | typename t where typename (TPtr t) = typename t+-+"*"
 
 new_local :: !t !(Expr t) !((Expr t) Target -> Target) !Target -> Target | typename t
@@ -348,6 +352,32 @@ at` arr i = "("+-+arr+-+")["+-+i+-+"]"
 ptr` :: !(Expr (TPtr t)) !String -> Expr (TPtr t)
 ptr` arr i = "&("+-+arr+-+")["+-+i+-+"]"
 
+new_double_real :: !(Expr (TPtr t)) !((Expr TDReal) Target -> Target) !Target -> Target
+new_double_real ptr cont t = cont var $ foldl (flip append) {t & var_counter=t.var_counter+1}
+	[ "\tBC_DREAL "+-+var+-+";"
+	, "#if WORD_WIDTH==32"
+	, "\t"+-+var+-+"=*(BC_DREAL*)("+-+ptr+-+");"
+	, "#else"
+	, "\t((uint32_t*)&"+-+var+-+")[0]=((BC_WORD*)("+-+ptr+-+"))[0];"
+	, "\t((uint32_t*)&"+-+var+-+")[1]=((BC_WORD*)("+-+ptr+-+"))[1];"
+	, "#endif"
+	]
+where
+	var = "v"+-+toString t.var_counter
+
+store_double_real :: !(Expr (TPtr t)) !(Expr TDReal) !Target -> Target
+store_double_real ptr r t = foldl (flip append) t
+	[ "#if WORD_WIDTH==32"
+	, "\t*(BC_DREAL*)("+-+ptr+-+")="+-+r+-+";"
+	, "#else"
+	, "\t{"
+	, "\tBC_DREAL _temp_dreal="+-+r+-+";"
+	, "\t((BC_WORD*)"+-+ptr+-+")[0]=((uint32_t*)&_temp_dreal)[0];"
+	, "\t((BC_WORD*)"+-+ptr+-+")[1]=((uint32_t*)&_temp_dreal)[1];"
+	, "\t}"
+	, "#endif"
+	]
+
 begin_block :: !Target -> Target
 begin_block t = append "\tdo {" t
 
@@ -402,6 +432,9 @@ INT_ptr = "(BC_WORD)&INT"
 
 REAL_ptr :: Expr TWord
 REAL_ptr = "(BC_WORD)&REAL"
+
+DREAL_ptr :: Expr TWord
+DREAL_ptr = "(BC_WORD)&DREAL"
 
 ARRAY__ptr :: Expr TWord
 ARRAY__ptr = "(BC_WORD)&__ARRAY__"
@@ -463,5 +496,5 @@ print_char quotes c t = append (if quotes "\tPRINTF(\"'%c'\"," "\tPRINTF(\"%c\",
 print_int :: !(Expr TInt) !Target -> Target
 print_int c t = append ("\tPRINTF(BC_WORD_S_FMT,"+-+c+-+");") t
 
-print_real :: !(Expr TReal) !Target -> Target
+print_real :: !(Expr r) !Target -> Target | real r
 print_real c t = append ("\tPRINTF(\"%.15g\","+-+c+-+" + 0.0);") t

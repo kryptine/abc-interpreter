@@ -7,13 +7,17 @@ stages:
 .base:
   image: camilstaps/abc-interpreter
   before_script:
-    - ln -s "$PWD/src/abcopt" /opt/clean/lib/exe/abcopt
-    - ln -s "$PWD/src/bcgen" /opt/clean/lib/exe/bcgen
-    - ln -s "$PWD/src/bclink" /opt/clean/lib/exe/bclink
-    - ln -s "$PWD/src/bcprelink" /opt/clean/lib/exe/bcprelink
-    - ln -s "$PWD/src/bcstrip" /opt/clean/lib/exe/bcstrip
+    - ln -s "$PWD/src/abcopt" /opt/clean-64/lib/exe/abcopt
+    - ln -s "$PWD/src/bcgen" /opt/clean-64/lib/exe/bcgen
+    - ln -s "$PWD/src/bclink" /opt/clean-64/lib/exe/bclink
+    - ln -s "$PWD/src/bcprelink" /opt/clean-64/lib/exe/bcprelink
+    - ln -s "$PWD/src/bcstrip" /opt/clean-64/lib/exe/bcstrip
+    - ln -s "$PWD/src/abcopt" /opt/clean-32/lib/exe/abcopt
+    - ln -s "$PWD/src/bcgen" /opt/clean-32/lib/exe/bcgen
+    - ln -s "$PWD/src/bclink" /opt/clean-32/lib/exe/bclink
+    - ln -s "$PWD/src/bcprelink" /opt/clean-32/lib/exe/bcprelink
+    - ln -s "$PWD/src/bcstrip" /opt/clean-32/lib/exe/bcstrip
     - sed -i '/^import code from library/d' lib/ABC/Interpreter/Util.icl
-    - make -C src
 
 build:
   extends: .base
@@ -53,24 +57,48 @@ build-wasm:
     reports:
       junit: test/*.junit.xml
 
-benchmark-x64:
+benchmark-x64-64:
   extends: .benchmark
   stage: test-interpreter
   script:
     - cd test
     - ./run_tests.sh -bfj
 
-benchmark-x86:
+benchmark-x64-32:
   extends: .benchmark
   stage: test-interpreter
   script:
     - cd test
     - ./run_tests.sh -3bfj
 
-benchmark-wasm:
+benchmark-x64-wasm:
   extends: .benchmark
   stage: test-interpreter
   script:
+    - cd test
+    - ./run_tests.sh -wbj
+
+benchmark-x86-64:
+  extends: .benchmark
+  stage: test-interpreter
+  script:
+    - rm /opt/clean; ln -s /opt/clean-32 /opt/clean
+    - cd test
+    - ./run_tests.sh -bfj
+
+benchmark-x86-32:
+  extends: .benchmark
+  stage: test-interpreter
+  script:
+    - rm /opt/clean; ln -s /opt/clean-32 /opt/clean
+    - cd test
+    - ./run_tests.sh -3bfj
+
+benchmark-x86-wasm:
+  extends: .benchmark
+  stage: test-interpreter
+  script:
+    - rm /opt/clean; ln -s /opt/clean-32 /opt/clean
     - cd test
     - ./run_tests.sh -wbj
 
@@ -78,6 +106,7 @@ interworking-Start:
   extends: .base
   stage: test-interworking
   script:
+    - make -C src
     - cd test
     - ./run_tests.sh -qo functions
     - make -B test-CodeSharing
@@ -87,6 +116,7 @@ interworking-GraphCopy:
   extends: .base
   stage: test-interworking
   script:
+    - make -C src
     - cd test
     - make -B test-GraphTest
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
@@ -96,6 +126,7 @@ interworking-GraphCopy-clang:
   stage: test-interworking
   script:
     - export OS=Linux CC=clang
+    - make -C src
     - cd test
     - make -B test-GraphTest
     - CFLAGS='-DCOMPUTED_GOTOS -Ofast -fno-unsafe-math-optimizations' make -B test-GraphTest
@@ -104,5 +135,6 @@ examples:
   extends: .base
   stage: examples
   script:
+    - make -C src
     - cd examples
     - ./test.sh

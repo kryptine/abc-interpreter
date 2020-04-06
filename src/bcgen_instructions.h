@@ -5,6 +5,8 @@
 #endif
 #include "bytecode.h"
 
+extern int is_32_bit;
+
 struct label {
 	char *label_name;
 	int32_t label_offset; /* multiple of 2, lowest bit indicates code(0) or data(1) */

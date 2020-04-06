@@ -1,6 +1,6 @@
 module reals
 
-import StdReal, StdString
+import StdEnv
 
 Start =
 	(
@@ -33,6 +33,12 @@ Start =
 	, toReal (entier 5.5)
 	]
 	, toString 37.42
+	, (update {#37.42 \\ _ <- [0..9]} 5 42.37).[5]
+	, (snd (replace {#37.42 \\ _ <- [0..9]} 5 42.37)).[5]
+	, thd3 (test_selectoo (createArray 10 37.42) 5)
 	)
 
 pi :== 3.14159265359
+
+test_selectoo :: !{#Real} !Int -> (!Int, !{#Real}, !Real)
+test_selectoo arr i = (i, arr, arr.[i])
